@@ -1,0 +1,6 @@
+
+{
+  "name": "claude_code",
+  "instruction_file": "CLAUDE.md",
+  "config_file": ".claude/settings.json"
+}
