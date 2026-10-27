@@ -1,4 +1,4 @@
-# AgentForge - Platform Artifact Research
+﻿# AgentForge - Platform Artifact Research
 
 ## Objective
 Research the artifact formats used by Claude Code
@@ -134,7 +134,9 @@ https://code.claude.com/docs/en/settings
 
 https://developers.openai.com/codex/skills
 
-https://developers.openai.com/codex/config/
+
+https://developers.openai.com/codex/config-basic
+
 
 ## Artifact Mapping
 
