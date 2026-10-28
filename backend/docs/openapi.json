@@ -1,0 +1,694 @@
+
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "AgentForge Backend",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Home",
+        "operationId": "home__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects": {
+      "post": {
+        "tags": ["Projects"],
+        "summary": "Create a project",
+        "operationId": "createProject",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Project created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid request data"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Projects"],
+        "summary": "List projects",
+        "operationId": "listProjects",
+        "responses": {
+          "200": {
+            "description": "List of projects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProjectResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}": {
+      "get": {
+        "tags": ["Projects"],
+        "summary": "Get project by ID",
+        "operationId": "getProjectById",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found"
+          },
+          "422": {
+            "description": "Invalid project ID"
+          }
+        }
+      }
+    },
+    "/api/v1/agent-spec/validate": {
+      "post": {
+        "tags": ["AgentSpec"],
+        "summary": "Validate an AgentDefinition",
+        "operationId": "validateAgentSpec",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentDefinition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AgentDefinition is valid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["valid"],
+                  "properties": {
+                    "valid": {
+                      "type": "boolean",
+                      "const": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "AgentDefinition validation failed"
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{project_id}/versions": {
+      "post": {
+        "tags": ["Versions"],
+        "summary": "Create an AgentSpec version",
+        "operationId": "createAgentSpecVersion",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentDefinition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Version created"
+          },
+          "404": {
+            "description": "Project not found"
+          },
+          "409": {
+            "description": "Version conflict"
+          },
+          "422": {
+            "description": "Invalid AgentDefinition"
+          }
+        }
+      },
+      "get": {
+        "tags": ["Versions"],
+        "summary": "List AgentSpec versions for a project",
+        "operationId": "listAgentSpecVersions",
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Project versions retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "project_id",
+                      "version_number",
+                      "spec_data",
+                      "created_at"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "project_id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "version_number": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "spec_data": {
+                        "$ref": "#/components/schemas/AgentDefinition"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Project not found"
+          },
+          "422": {
+            "description": "Invalid project ID"
+          }
+        }
+      }
+    },
+    "/api/v1/runs": {
+      "post": {
+        "tags": ["Runs"],
+        "summary": "Create a compiler run",
+        "operationId": "createRun",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Run created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent version not found"
+          },
+          "422": {
+            "description": "Invalid request"
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}": {
+      "get": {
+        "tags": ["Runs"],
+        "summary": "Get compiler run status",
+        "operationId": "getRunById",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Run found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found"
+          },
+          "422": {
+            "description": "Invalid run ID"
+          }
+        }
+      }
+    },
+    "/api/v1/runs/{run_id}/result": {
+      "post": {
+        "tags": ["Runs"],
+        "summary": "Submit compiler run result",
+        "operationId": "submitRunResult",
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunResultCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Run result recorded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Run not found"
+          },
+          "409": {
+            "description": "Invalid run status transition"
+          },
+          "422": {
+            "description": "Invalid result data"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ProjectCreate": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "ProjectResponse": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": ["string", "null"]
+          }
+        }
+      },
+      "AgentSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {"type": "string"},
+              {"type": "null"}
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "runtime": {
+            "enum": ["python", "node", "container"],
+            "title": "Runtime",
+            "type": "string"
+          },
+          "entrypoint": {
+            "minLength": 1,
+            "title": "Entrypoint",
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          },
+          "environment": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Environment",
+            "type": "object"
+          },
+          "config": {
+            "additionalProperties": true,
+            "title": "Config",
+            "type": "object"
+          },
+          "constraints": {
+            "$ref": "#/components/schemas/ConstraintsSpec"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/WorkflowSpec"
+          },
+          "quality": {
+            "$ref": "#/components/schemas/QualitySpec"
+          },
+          "autonomy": {
+            "$ref": "#/components/schemas/AutonomySpec"
+          }
+        },
+        "required": ["name", "runtime", "entrypoint"],
+        "title": "AgentSpec",
+        "type": "object"
+      },
+      "AutonomySpec": {
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "default": "medium",
+            "enum": ["low", "medium", "high"],
+            "title": "Level",
+            "type": "string"
+          }
+        },
+        "title": "AutonomySpec",
+        "type": "object"
+      },
+      "ConstraintsSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rules",
+            "type": "array"
+          }
+        },
+        "title": "ConstraintsSpec",
+        "type": "object"
+      },
+      "ProjectSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {"type": "string"},
+              {"type": "null"}
+            ],
+            "default": null,
+            "title": "Description"
+          }
+        },
+        "required": ["name"],
+        "title": "ProjectSpec",
+        "type": "object"
+      },
+      "QualitySpec": {
+        "additionalProperties": false,
+        "properties": {
+          "criteria": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Criteria",
+            "type": "array"
+          }
+        },
+        "title": "QualitySpec",
+        "type": "object"
+      },
+      "ToolSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {"type": "string"},
+              {"type": "null"}
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "enabled": {
+            "default": true,
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": ["name"],
+        "title": "ToolSpec",
+        "type": "object"
+      },
+      "WorkflowSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "steps": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Steps",
+            "type": "array"
+          }
+        },
+        "title": "WorkflowSpec",
+        "type": "object"
+      },
+      "AgentDefinition": {
+        "additionalProperties": false,
+        "properties": {
+          "agent": {
+            "$ref": "#/components/schemas/AgentSpec"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectSpec"
+          },
+          "tools": {
+            "items": {
+              "$ref": "#/components/schemas/ToolSpec"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": ["agent", "project"],
+        "title": "AgentDefinition",
+        "type": "object"
+      },
+      "RunCreate": {
+        "type": "object",
+        "required": [
+          "project_id",
+          "spec_version_id",
+          "target_platform"
+        ],
+        "properties": {
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "spec_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "target_platform": {
+            "type": "string",
+            "enum": ["claude_code", "codex"]
+          }
+        },
+        "additionalProperties": false
+      },
+      "RunResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "project_id",
+          "spec_version_id",
+          "target_platform",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "project_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "spec_version_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "target_platform": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "running",
+              "completed",
+              "failed"
+            ]
+          }
+        }
+      },
+      "RunResultCreate": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["completed", "failed"]
+          },
+          "artifacts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "error": {
+            "type": ["string", "null"]
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
