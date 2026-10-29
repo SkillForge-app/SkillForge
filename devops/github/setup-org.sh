@@ -25,15 +25,20 @@ TEAMS=(
 )
 
 # Members: "team user role". Anyone not listed here is removed from the team.
+# The lead (zaid2658a-debug) is in every team so they can approve any department's PRs. As org owner,
+# GitHub always shows them as maintainer, whatever role is set here.
 MEMBERS=(
   "ai zaid2658a-debug maintainer"
   "ai engyousefk04-dot member"
   "backend AbdelrahmanMohamedahmed22 member"
   "backend abdonader061-wq member"
+  "backend zaid2658a-debug member"
   "data-engineering Mo-mgay1 member"
   "data-engineering mohamed-shahba-dev member"
+  "data-engineering zaid2658a-debug member"
   "frontend omark243 member"
   "frontend mohammedhamdy33 member"
+  "frontend zaid2658a-debug member"
   "devops zaid2658a-debug maintainer"
   "devops engyousefk04-dot member"
 )

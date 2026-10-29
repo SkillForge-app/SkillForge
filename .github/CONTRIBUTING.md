@@ -81,6 +81,8 @@ The file `.github/CODEOWNERS` decides who must approve a pull request into `main
 - Repo-wide files (`.gitignore`, `.gitattributes`, `LICENSE`) need DevOps approval.
 - When you push new commits, earlier approvals are cleared, so ask for a new review.
 - All review comments must be resolved before merging.
+- The lead (zaid2658a-debug) is a member of every department team, so the lead's approval counts as that
+  department's approval when a department reviewer isn't available.
 
 ### Contract changes
 
@@ -100,6 +102,11 @@ Frontend), `ai/core/pipeline/interface.py` (AI, Backend), `data/db/knowledge_vie
 | AI pipeline interface (functions the worker calls) | AI | Backend |
 | Knowledge retrieval (query + domain → passages with sources) | Data Engineering + AI | AI |
 | Analytics event schema | Data Engineering | Frontend, Backend |
+
+**The lead's approval doesn't replace the consumer teams.** The lead is in every team, so on GitHub one approval
+from the lead counts for all of them. On a contract change, still request review from every consumer team. The
+lead approves alone only when the change is urgent, and then says so in the PR: why it's urgent, and that the lead's
+approval stands in for the consumer teams.
 
 ## Issues
 
