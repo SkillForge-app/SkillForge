@@ -1,0 +1,4 @@
+# Normalize line endings in the repo; each checkout uses its own platform's endings.
+* text=auto
+# Shell scripts must keep LF, or they fail in Linux containers and CI.
+*.sh text eol=lf
