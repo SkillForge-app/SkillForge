@@ -66,12 +66,12 @@ run gh api -X PATCH "orgs/$ORG" --silent \
   -f default_repository_permission=read \
   -F members_can_create_repositories=false
 
+# Merge commits only: squashing a long-lived department branch makes the next `git pull origin main` conflict.
 echo "== Repo settings"
 run gh api -X PATCH "repos/$ORG/$REPO" --silent \
-  -F allow_merge_commit=true -F allow_squash_merge=true -F allow_rebase_merge=false \
+  -F allow_merge_commit=true -F allow_squash_merge=false -F allow_rebase_merge=false \
   -F delete_branch_on_merge=false \
   -f merge_commit_title=PR_TITLE -f merge_commit_message=BLANK \
-  -f squash_merge_commit_title=PR_TITLE -f squash_merge_commit_message=COMMIT_MESSAGES \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
 run gh api -X PUT "repos/$ORG/$REPO/actions/permissions/workflow" --silent \

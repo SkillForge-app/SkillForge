@@ -58,8 +58,8 @@ git push origin <your-branch>
 - Fill in the template: task ID, Definition of Done, contract change.
 - GitHub asks your department to review automatically.
 
-**4. To merge**, once it is approved, use **Create a merge commit**. Don't use "Squash and merge": it makes step 5
-conflict later.
+**4. To merge**, once it is approved, click **Create a merge commit**. It is the only merge option. Squash and rebase
+are turned off, because they would make step 5 conflict.
 
 **5. After it merges**, bring `main` back into your branch:
 
