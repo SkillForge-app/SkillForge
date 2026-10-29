@@ -19,7 +19,44 @@
         "dismiss_stale_reviews_on_push": true,
         "require_last_push_approval": false,
         "required_review_thread_resolution": true,
-        "allowed_merge_methods": ["merge"]
+        "allowed_merge_methods": ["merge"],
+        "required_reviewers": [
+          {
+            "reviewer": { "id": 20415930, "type": "Team" },
+            "minimum_approvals": 1,
+            "file_patterns": [
+              "ai/core/spec/schema.json",
+              "ai/core/spec/models.py",
+              "ai/core/analysis/analyzed_request.schema.json",
+              "ai/core/pipeline/interface.py",
+              "data/db/knowledge_views.sql"
+            ]
+          },
+          {
+            "reviewer": { "id": 20415931, "type": "Team" },
+            "minimum_approvals": 1,
+            "file_patterns": [
+              "ai/core/spec/schema.json",
+              "ai/core/spec/models.py",
+              "ai/core/analysis/analyzed_request.schema.json",
+              "ai/core/pipeline/interface.py"
+            ]
+          },
+          {
+            "reviewer": { "id": 20415935, "type": "Team" },
+            "minimum_approvals": 1,
+            "file_patterns": [
+              "ai/core/spec/schema.json",
+              "ai/core/spec/models.py",
+              "ai/core/analysis/analyzed_request.schema.json"
+            ]
+          },
+          {
+            "reviewer": { "id": 20415934, "type": "Team" },
+            "minimum_approvals": 1,
+            "file_patterns": ["data/db/knowledge_views.sql"]
+          }
+        ]
       }
     }
   ]

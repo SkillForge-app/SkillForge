@@ -87,6 +87,10 @@ The file `.github/CODEOWNERS` decides who must approve a pull request into `main
 Some files are shared contracts. If your PR changes one, tick **Contract change** in the template, add the
 `contract-change` label, and ask the consumers to review as well:
 
+For these files GitHub enforces it: the PR can't merge until every listed team has approved (see `ruleset-main.json`):
+`ai/core/spec/schema.json`, `ai/core/spec/models.py`, `ai/core/analysis/analyzed_request.schema.json` (AI, Backend,
+Frontend), `ai/core/pipeline/interface.py` (AI, Backend), `data/db/knowledge_views.sql` (Data Engineering, AI).
+
 | Contract | Owner | Consumers |
 |---|---|---|
 | SkillSpec schema (Python models + `schema.json`) | AI | Backend, Frontend |
