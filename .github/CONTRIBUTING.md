@@ -130,12 +130,16 @@ the PR merges.
 
 ## Owner bypass (DevOps only)
 
-The organization owner can merge a pull request without the required approval. This is allowed only when **all**
-of these are true:
+The organization owner may merge their own DevOps pull requests without waiting for a review. This is allowed only
+when **all** of these are true:
 
 1. It is the owner's own pull request.
-2. It only changes `devops/` or `.github/`.
-3. Nobody has answered the review request within 24 hours.
+2. It only changes `devops/`, `.github/`, or other files that only DevOps owns in CODEOWNERS (such as the root
+   `.gitignore`).
+3. `ci-ok` is green. CI is required for everyone, the owner included: the `main-ci` ruleset has no bypass.
+
+Contract files still need the consumer teams' approval, also on the owner's PRs: `ai/core/spec/*`,
+`ai/core/analysis/analyzed_request.schema.json`, `ai/core/pipeline/interface.py` and `data/db/knowledge_views.sql`.
 
 The bypass is never used to skip another department's review. Every use is ticked in the PR template, and GitHub
 records it under Settings → Rules → Insights.

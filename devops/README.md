@@ -8,7 +8,8 @@ places (listed below).
 | Path | What it is |
 |---|---|
 | `github/setup-org.sh` | Applies the GitHub settings: org defaults, repo settings, teams and members, labels, rulesets. Safe to re-run |
-| `github/ruleset-main.json` | Protection for `main`: PR required, code owner approval, no force push, no deletion |
+| `github/ruleset-main.json` | Protection for `main`: PR required, code owner approval, no force push, no deletion. The org owner may bypass it on PRs |
+| `github/ruleset-main-ci.json` | `main` requires the `ci-ok` check. No bypass, not even for the owner |
 | `github/ruleset-departments.json` | Protection for the 5 department branches: no force push, no deletion |
 | `github/mirror.sh` | The one-time copy from `mmtrabya/AgentForge` (kept for the record) |
 | `ci/changed-folders.sh` | CI: which department folders a PR changed |
@@ -43,7 +44,7 @@ devops/github/setup-org.sh
 - **Add or remove a person:** edit `MEMBERS` in `setup-org.sh` and re-run. New people get an org invite. People
   not listed are removed from that team.
 - **Change branch protection:** edit the ruleset JSON and re-run. The script updates the ruleset with the same name.
-- **CI checks (OPS-02):** add a `required_status_checks` rule to `ruleset-main.json`. Only do this after the CI job
+- **CI checks (OPS-02):** required checks live in `ruleset-main-ci.json` (no bypass). Only add a new one after the CI job
   has run once, or every PR will wait for a check that never reports.
 
 ## Files outside devops/

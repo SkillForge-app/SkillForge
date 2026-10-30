@@ -118,7 +118,8 @@ for entry in "${LABELS[@]}"; do
 done
 
 echo "== Rulesets"
-for file in "$HERE/ruleset-main.json" "$HERE/ruleset-departments.json"; do
+# ruleset-main-ci.json has no bypass actors: CI is required for everyone, the owner included.
+for file in "$HERE/ruleset-main.json" "$HERE/ruleset-main-ci.json" "$HERE/ruleset-departments.json"; do
   name="$(sed -n 's/^  "name": "\(.*\)",$/\1/p' "$file")"
   id="$(gh api "repos/$ORG/$REPO/rulesets" --jq ".[] | select(.name == \"$name\") | .id")"
   if [ -n "$id" ]; then
