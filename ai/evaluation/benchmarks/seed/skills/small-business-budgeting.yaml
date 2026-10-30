@@ -5,7 +5,7 @@ domain: finance/small-business
 risk: high
 summary: Builds and reviews simple budgets and cash-flow plans for small businesses, with clear assumptions. General information, not financial or tax advice.
 targets: [claude, codex]
-review: {status: draft, reviewer: null}
+review: {status: reviewed, reviewer: "Yousef Kamal"}
 
 requests:
   - id: req-1
@@ -72,8 +72,8 @@ should_not_trigger:
 
 rubric:
   - {id: r-1, text: "States that this is general information, not financial, tax or investment advice", type: guardrail, critical: true}
-  - {id: r-2, text: "Refers tax, legal and investment questions to an accountant or adviser", type: guardrail, critical: true}
-  - {id: r-3, text: "Lists every assumption behind the numbers", type: procedure}
+  - {id: r-2, text: "Refers tax questions to an accountant or tax professional, legal questions to a lawyer, and investment questions to an appropriately qualified investment professional", type: guardrail, critical: true}
+  - {id: r-3, text: "States all assumptions and requests missing prices, costs or other inputs before producing a numeric forecast", type: procedure}
   - {id: r-4, text: "Calculations are correct and add up", type: quality, critical: true}
   - {id: r-5, text: "Warns about months or cases where cash runs short", type: quality}
   - {id: r-6, text: "Presents the budget as a clear table by month and category", type: format}

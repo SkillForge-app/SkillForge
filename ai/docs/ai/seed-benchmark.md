@@ -28,7 +28,7 @@ The seed benchmark is the fixed test set every SkillForge skill version is measu
 - 5 to 8 rubric items, each of type `quality`, `procedure`, `guardrail` or `format`. A `critical` item fails the answer if it is missed.
 - 3 labelled skill requests, one each of the styles `clear`, `vague` and `detailed`.
 
-**Totals:** 80 test prompts, 60 should-not-trigger prompts (40 near-misses), 62 rubric items and 30 labelled requests. All of it is synthetic, with no real people, companies or personal data.
+**Totals:** 80 test prompts, 60 should-not-trigger prompts (41 near-misses), 62 rubric items and 30 labelled requests. All of it is synthetic, with no real people, companies or personal data.
 
 ## Editing
 

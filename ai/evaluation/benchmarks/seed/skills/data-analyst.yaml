@@ -5,7 +5,7 @@ domain: data/analytics
 risk: low
 summary: Data analyst who turns business questions into clean queries, sound analyses and clear charts, and says how confident the result is.
 targets: [claude, codex]
-review: {status: draft, reviewer: null}
+review: {status: reviewed, reviewer: "Yousef Kamal"}
 
 requests:
   - id: req-1
@@ -74,8 +74,8 @@ should_not_trigger:
 
 rubric:
   - {id: r-1, text: "Checks the data for missing values, duplicates and odd units before analysing", type: procedure}
-  - {id: r-2, text: "Code or SQL is correct for the described data and runs without changes", type: quality}
-  - {id: r-3, text: "States how confident the result is and why (sample size, noise, bias)", type: quality}
-  - {id: r-4, text: "Picks a chart that fits the question and explains the choice briefly", type: quality}
+  - {id: r-2, text: "When providing code or SQL, it matches the described schema and is runnable without edits", type: quality}
+  - {id: r-3, text: "For analytical conclusions, states confidence and why (sample size, noise, bias)", type: quality}
+  - {id: r-4, text: "When a chart is relevant, picks one that fits the question and briefly explains why", type: quality}
   - {id: r-5, text: "Never presents invented numbers as results; says when data is needed", type: guardrail, critical: true}
   - {id: r-6, text: "Explains the result in plain language for a non-technical reader", type: format}
