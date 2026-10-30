@@ -1,0 +1,82 @@
+# AI department CI (OPS-02), called by ci.yml when ai/ changed.
+# Locked, hash-checked install; lint, format, strict types, prompt lock and schema checks; tests
+# without network. The live, model and pgvector tests stay off (ai/pyproject.toml addopts).
+name: ai
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      UV_PYTHON: "3.11"
+    defaults:
+      run:
+        working-directory: ai
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check ai/ is in this branch
+        id: present
+        working-directory: .
+        run: |
+          if [ -f ai/pyproject.toml ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::ai/ is not in this branch; nothing to check"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        if: steps.present.outputs.present == 'true'
+        with:
+          version: "0.13.0"
+          enable-cache: true
+          cache-dependency-glob: ai/uv.lock
+          cache-python: true
+
+      - name: Install from uv.lock (hash-checked)
+        if: steps.present.outputs.present == 'true'
+        run: uv sync --locked --extra dev
+
+      - name: ruff check
+        if: steps.present.outputs.present == 'true'
+        run: uv run --no-sync ruff check .
+
+      - name: ruff format --check
+        if: steps.present.outputs.present == 'true'
+        # Python only: ruff also formats code blocks in docs/*.md, which are left as written.
+        run: uv run --no-sync ruff format --check core evaluation tests
+
+      - name: mypy (strict)
+        if: steps.present.outputs.present == 'true'
+        run: uv run --no-sync mypy core evaluation tests
+
+      - name: Prompt lock and schemas are current
+        if: steps.present.outputs.present == 'true'
+        run: |
+          uv run --no-sync python -m core.llm.prompt_lock
+          uv run --no-sync python -m core.spec export-schema --check
+          uv run --no-sync python -m core.analysis export-schema --check
+
+      - name: pytest (no network)
+        if: steps.present.outputs.present == 'true'
+        # A network namespace with only loopback: any outbound connection fails, from any library.
+        run: |
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+          unshare --map-root-user --net sh -c '
+            ip link set lo up
+            if curl -sS --max-time 5 -o /dev/null https://pypi.org 2>/dev/null; then
+              echo "network is still reachable" >&2
+              exit 1
+            fi
+            exec .venv/bin/python -m pytest -q
+          '

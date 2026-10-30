@@ -13,5 +13,11 @@
 /devops/     @SkillForge-app/devops
 /.github/    @SkillForge-app/devops
 
+# Each department's CI workflow: DevOps or that department can approve
+/.github/workflows/ai.yml        @SkillForge-app/devops @SkillForge-app/ai
+/.github/workflows/backend.yml   @SkillForge-app/devops @SkillForge-app/backend
+/.github/workflows/frontend.yml  @SkillForge-app/devops @SkillForge-app/frontend
+/.github/workflows/data.yml      @SkillForge-app/devops @SkillForge-app/data-engineering
+
 # Shared documentation: any department may approve
 /docs/       @SkillForge-app/ai @SkillForge-app/backend @SkillForge-app/frontend @SkillForge-app/data-engineering @SkillForge-app/devops
