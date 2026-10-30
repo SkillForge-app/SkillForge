@@ -1,0 +1,18 @@
+# Repo-wide safety net. Each department folder keeps its own .gitignore for its tools.
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Environments and caches
+.venv/
+venv/
+__pycache__/
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db

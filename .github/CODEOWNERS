@@ -1,0 +1,17 @@
+# Who must approve a pull request into main (OPS-01).
+# The last matching line wins. When a line lists several teams, an approval from any one of them is enough.
+# Teams and members: devops/github/setup-org.sh
+
+# Everything not matched below: repo-wide files (.gitignore, .gitattributes, LICENSE, ...)
+*            @SkillForge-app/devops
+
+# Department folders
+/ai/         @SkillForge-app/ai
+/backend/    @SkillForge-app/backend
+/frontend/   @SkillForge-app/frontend
+/data/       @SkillForge-app/data-engineering
+/devops/     @SkillForge-app/devops
+/.github/    @SkillForge-app/devops
+
+# Shared documentation: any department may approve
+/docs/       @SkillForge-app/ai @SkillForge-app/backend @SkillForge-app/frontend @SkillForge-app/data-engineering @SkillForge-app/devops
