@@ -45,7 +45,9 @@ jobs:
 
       - name: Install from uv.lock (hash-checked)
         if: steps.present.outputs.present == 'true'
-        run: uv sync --locked --extra dev
+        # pgvector: mypy type-checks core/knowledge/store.py's psycopg code; the pgvector tests stay
+        # off through their marker.
+        run: uv sync --locked --extra dev --extra pgvector
 
       - name: ruff check
         if: steps.present.outputs.present == 'true'

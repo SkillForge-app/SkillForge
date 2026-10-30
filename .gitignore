@@ -13,6 +13,11 @@ venv/
 __pycache__/
 node_modules/
 
+# ai/ local files: ignored on every branch, not only AI (ai/.gitignore exists only where ai/ is checked in)
+ai/.data/
+ai/.venv/
+ai/.env
+
 # OS files
 .DS_Store
 Thumbs.db
