@@ -362,6 +362,21 @@
           "title": "Id",
           "type": "string"
         },
+        "licence": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The source licence, when known, e.g. CC BY 4.0. Omit it if unknown.",
+          "title": "Licence"
+        },
         "retrieved": {
           "description": "Date the page was retrieved (YYYY-MM-DD).",
           "format": "date",
