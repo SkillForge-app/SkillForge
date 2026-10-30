@@ -215,6 +215,7 @@ class Source(SpecModel):
     url: HttpUrl
     retrieved: date = Field(description="Date the page was retrieved (YYYY-MM-DD).")
     title: Line | None = Field(default=None, description="The page's own title.")
+    licence: Line | None = Field(default=None, description="The source licence, when known, e.g. CC BY 4.0. Omit it if unknown.")
 
 
 class Evaluation(SpecModel):

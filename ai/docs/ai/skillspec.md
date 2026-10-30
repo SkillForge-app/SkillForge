@@ -96,9 +96,9 @@ The full definition is `schema.json`; every field there has a `description` that
 | `guardrails[]` | `id`, `rule`, `severity` (`must` / `should`), `category` (`general`, `accuracy`, `safety`, `privacy`, `scope`, `disclaimer`, `human_review`) |
 | `tools` | `required`, `optional`: abstract capabilities only (`filesystem_read`, `filesystem_write`, `terminal`, `code_execution`, `web_search`, `web_fetch`, `browser`) |
 | `knowledge.references[]` | `id`, `file` (`references/<name>.md`), `title`, `sources` (at least one source id) |
-| `sources[]` | `id`, `url` (http or https), `retrieved` (YYYY-MM-DD), `title` |
+| `sources[]` | `id`, `url` (http or https), `retrieved` (YYYY-MM-DD), `title`, `licence` (optional) |
 | `evaluation` | `test_prompts` (at least one), `rubric` (at least one), `should_not_trigger` (for trigger-accuracy tests) |
-| `targets` | At least one of `claude`, `codex`, `chatgpt`, `generic` |
+| `targets` | At least one of `claude`, `codex`, `chatgpt`, `generic`; `chatgpt` and `generic` produce the non-blocking `target_not_available_in_v1` warning |
 
 Domain areas (a closed list): `technology`, `data`, `design`, `product`, `marketing`, `sales`, `customer-support`, `operations`, `hr`, `education`, `writing`, `research`, `finance`, `legal`, `medical`, `general`. Of these, `legal`, `medical` and `finance` are high risk.
 
