@@ -1,0 +1,106 @@
+# Minimal root project so Track A can ship the LLM gateway (AI-02/AI-03).
+# DevOps (OPS-01) owns the monorepo setup and may restructure this file.
+[project]
+name = "skillforge"
+version = "0.1.0"
+description = "SkillForge: build agent skills for Claude, Codex and ChatGPT"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2.7,<3",
+    "jinja2>=3.1,<4",
+    "pyyaml>=6,<7",
+    # Exact pin: LiteLLM has had compromised PyPI releases. Only move to a release that is
+    # at least two weeks old, then re-run `uv lock` and the full test suite.
+    "litellm==1.104.2",
+    "python-dotenv>=1,<2",
+    # The Skill Architect (AI-07) is a LangGraph flow. Same rule as LiteLLM: exact pin, and
+    # only a release that is at least two weeks old.
+    "langgraph==1.2.14",
+    # Extraction and NLP (AI-10): main content, quality checks, language, concepts, chunking.
+    "trafilatura>=2.3,<3",
+    "beautifulsoup4>=4.13,<5",
+    "charset-normalizer>=3,<4",
+    "lxml>=6,<7",
+    "py3langid>=0.3,<1",
+    "spacy>=3.8,<3.9",
+    # spaCy's English pipeline is not on PyPI; uv.lock records this wheel's hash.
+    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl",
+    # Local embedding model for retrieval (AI-11): ONNX runtime, no torch. Exact pin, like
+    # LiteLLM: it decides where model files come from (the files are also pinned by revision
+    # and sha256 in core/llm/models.yaml).
+    "fastembed==0.9.0",
+]
+
+[project.optional-dependencies]
+# The pgvector index backend (DE-02). Not needed for the default local index.
+pgvector = [
+    "psycopg[binary]>=3.3,<4",
+    "pgvector>=0.5,<0.6",
+]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.6",
+    "mypy>=1.10",
+    "types-PyYAML",
+    "jsonschema>=4.20,<5",
+    "types-jsonschema",
+]
+
+[tool.uv]
+# Supply-chain rule: `uv lock` may only pick releases published before this date, for every
+# package including transitive ones. Keep it at least two weeks behind the day you re-lock;
+# move it forward on purpose when upgrading (then run the full test suite and the live tests).
+exclude-newer = "2026-10-10T00:00:00Z"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["core", "evaluation"]
+
+# en-core-web-sm is a direct URL dependency (hash-pinned in uv.lock); hatchling refuses to build the
+# package with one unless this is set. Needed whenever ai/ is installed, e.g. `uv sync` or Backend.
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+# Live tests spend real money: they never run by default, only with `pytest -m live`
+# (and each one still skips when its provider key is missing).
+addopts = "-m 'not live and not model and not pgvector'"
+markers = [
+    "live: calls a real LLM provider; run only with `pytest -m live`",
+    "model: loads the real local embedding model (download it first); `pytest -m model`",
+    "pgvector: needs a PostgreSQL with pgvector at SKILLFORGE_PGVECTOR_DSN; `pytest -m pgvector`",
+]
+filterwarnings = [
+    # Raised by LiteLLM's own Pydantic models, not by our code.
+    "ignore:Item 'summary' on TypedDict class 'ChatCompletionReasoningItem':UserWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+
+# LiteLLM is large and only partly typed: treat it as Any instead of type-checking its source.
+[[tool.mypy.overrides]]
+module = ["litellm", "litellm.*"]
+follow_imports = "skip"
+ignore_missing_imports = true
+
+# Extraction libraries without type information (AI-10).
+[[tool.mypy.overrides]]
+module = ["py3langid", "py3langid.*", "lxml", "lxml.*"]
+ignore_missing_imports = true

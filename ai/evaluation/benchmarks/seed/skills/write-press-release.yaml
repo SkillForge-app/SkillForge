@@ -1,0 +1,80 @@
+name: write-press-release
+title: Write a Press Release
+kind: task
+domain: writing/public-relations
+risk: low
+summary: Writes clear, newsworthy press releases in standard format, with accurate facts and quotes approved by the people quoted.
+targets: [claude, codex]
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: Make a skill that writes press releases for product launches and company news.
+    labels: {kind: task, domain: writing/public-relations, risk: low, targets: [claude]}
+  - id: req-2
+    style: vague
+    text: I need something for announcements
+    labels: {kind: task, domain: writing/public-relations, risk: low, targets: [claude]}
+  - id: req-3
+    style: detailed
+    text: >-
+      Our communications team writes about two press releases a month and they always come back
+      from editors. I want a skill that writes them in standard press-release format (headline,
+      dateline, lead paragraph that answers who, what, when, where and why, quotes, boilerplate,
+      media contact), keeps them under 500 words and marks every fact we still need to confirm.
+    labels: {kind: task, domain: writing/public-relations, risk: low, targets: [claude, codex]}
+
+test_prompts:
+  - id: tp-1
+    text: Write a press release announcing that our accounting app now supports invoices in 12 languages.
+  - id: tp-2
+    text: Announce our new CEO in a press release. Here are her background notes.
+  - id: tp-3
+    text: Turn these bullet points about our charity fun run into a press release for local newspapers.
+  - id: tp-4
+    text: Our press release draft is 1,200 words. Cut it to a standard length without losing the news.
+    tags: [edge-case]
+  - id: tp-5
+    text: Write a short press release for our bakery's tenth anniversary.
+    tags: [short]
+  - id: tp-6
+    text: >-
+      We are announcing a partnership with a larger company, but they have not approved any quote
+      yet. Write the press release so it is ready once they do.
+    tags: [detailed, edge-case]
+  - id: tp-7
+    text: Write a headline and lead paragraph for news that we raised a seed funding round.
+  - id: tp-8
+    text: Draft the press release for our app's 1 million downloads milestone.
+
+should_not_trigger:
+  - id: nt-1
+    text: Write five tweets to promote our product launch
+    tags: [near-miss]
+    closer_skill: marketing-strategist
+  - id: nt-2
+    text: Plan the whole go-to-market strategy for our new app
+    tags: [near-miss]
+    closer_skill: marketing-strategist
+  - id: nt-3
+    text: Write the internal postmortem for last week's outage
+    tags: [near-miss]
+    closer_skill: incident-postmortem
+  - id: nt-4
+    text: Proofread my university essay on climate policy
+    tags: [near-miss]
+  - id: nt-5
+    text: What is the capital of Australia?
+    tags: [unrelated]
+  - id: nt-6
+    text: Help me fix my Wi-Fi connection
+    tags: [unrelated]
+
+rubric:
+  - {id: r-1, text: "Uses press-release structure: headline, dateline, lead, body, quote, boilerplate, contact", type: format}
+  - {id: r-2, text: "The lead paragraph answers who, what, when, where and why", type: quality}
+  - {id: r-3, text: "Never invents facts, figures or quotes; marks what must be confirmed", type: guardrail, critical: true}
+  - {id: r-4, text: "Keeps a neutral news tone without heavy marketing language", type: quality}
+  - {id: r-5, text: "Stays within a standard length (about 300 to 500 words) unless asked otherwise", type: format}
+  - {id: r-6, text: "Asks for missing essentials (date, place, contact) or leaves clear placeholders", type: procedure}

@@ -1,0 +1,4 @@
+# fetched 2026-10-26 from https://nitc.nebraska.gov/robots.txt (HTTP 200)
+User-agent: *
+Allow: /
+Sitemap: https://nitc.nebraska.gov/sitemap.xml

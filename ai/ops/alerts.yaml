@@ -1,0 +1,193 @@
+# AI-21: Prometheus alerting rules for the AI services, for OPS-10 to load.
+# Metrics: ai/ops/metrics.yaml (derived from the metadata-only JSON logs).
+# Severity: `page` wakes the on-call (OPS-18), `ticket` goes to the AI team's queue, `test`
+# exists only to prove routing (OPS-10's done-when). Every rule links its runbook section;
+# prefix runbook_url with the repository URL when loading. `threshold` repeats the number in
+# `expr` for tests and dashboards. Thresholds for spend and skill cost come from the production
+# profile in ai/core/ops/environments.yaml (skill_budget_usd 1.50, daily_spend_usd 150).
+# Check with: promtool check rules ai/ops/alerts.yaml
+groups:
+  - name: skillforge-ai-models
+    rules:
+      - alert: AILLMErrorRateHigh
+        expr: |
+          sum by (role) (rate(skillforge_llm_attempts_total{status="error"}[10m]))
+            / sum by (role) (rate(skillforge_llm_attempts_total[10m])) > 0.10
+        for: 10m
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "More than 10% of {{ $labels.role }} model calls fail"
+          threshold: "0.10"
+          runbook_url: ai/docs/ai/runbook.md#aillmerrorratehigh
+
+      - alert: AILLMErrorRateCritical
+        expr: |
+          sum by (role) (rate(skillforge_llm_attempts_total{status="error"}[5m]))
+            / sum by (role) (rate(skillforge_llm_attempts_total[5m])) > 0.25
+        for: 5m
+        labels: {severity: page, team: ai}
+        annotations:
+          summary: "More than 25% of {{ $labels.role }} model calls fail"
+          threshold: "0.25"
+          runbook_url: ai/docs/ai/runbook.md#aillmerrorratecritical
+
+      - alert: AILLMAllModelsFailing
+        expr: |
+          sum(rate(skillforge_step_total{status="retry_later",error_code="provider_unavailable"}[10m]))
+            / sum(rate(skillforge_step_total[10m])) > 0.05
+        for: 10m
+        labels: {severity: page, team: ai}
+        annotations:
+          summary: "More than 5% of pipeline steps fail because every model in the chain failed"
+          threshold: "0.05"
+          runbook_url: ai/docs/ai/runbook.md#aillmallmodelsfailing
+
+      - alert: AIFallbackRateHigh
+        expr: |
+          sum by (role) (rate(skillforge_llm_attempts_total{fallback!="0"}[15m]))
+            / sum by (role) (rate(skillforge_llm_attempts_total[15m])) > 0.05
+        for: 15m
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "More than 5% of {{ $labels.role }} calls use a fallback model (higher cost)"
+          threshold: "0.05"
+          runbook_url: ai/docs/ai/runbook.md#aifallbackratehigh
+
+      - alert: AILatencyHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le, role) (rate(skillforge_llm_latency_ms_bucket{status="ok",role!="architect"}[15m]))) > 30000
+        for: 15m
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "p95 latency of {{ $labels.role }} calls is above 30 s"
+          threshold: "30000"
+          runbook_url: ai/docs/ai/runbook.md#ailatencyhigh
+
+      - alert: AIArchitectLatencyHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(skillforge_llm_latency_ms_bucket{status="ok",role="architect"}[15m]))) > 180000
+        for: 15m
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "p95 latency of Skill Architect calls is above 180 s"
+          threshold: "180000"
+          runbook_url: ai/docs/ai/runbook.md#aiarchitectlatencyhigh
+
+      - alert: AIUnpricedModel
+        expr: sum(increase(skillforge_llm_unpriced_total[1h])) > 0
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "Model calls with an unknown cost: spend and budgets under-count"
+          threshold: "0"
+          runbook_url: ai/docs/ai/runbook.md#aiunpricedmodel
+
+  - name: skillforge-ai-cost
+    rules:
+      - alert: AILLMSpendRateHigh
+        expr: sum(increase(skillforge_llm_cost_usd_total[1h])) > 18.75
+        labels: {severity: page, team: ai}
+        annotations:
+          summary: "Model spend in the last hour is over 3x the daily budget's hourly share ($150/24)"
+          threshold: "18.75"
+          runbook_url: ai/docs/ai/runbook.md#aillmspendratehigh
+
+      - alert: AISkillCostHigh
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(skillforge_skill_cost_usd_bucket[1h]))) > 1.20
+        for: 30m
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "p95 cost per skill is above 80% of the $1.50 budget"
+          threshold: "1.20"
+          runbook_url: ai/docs/ai/runbook.md#aiskillcosthigh
+
+      - alert: AIBudgetExceeded
+        expr: sum(increase(skillforge_step_total{error_code="budget_exceeded"}[1h])) > 0
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "Skills stopped because their model budget was used up"
+          threshold: "0"
+          runbook_url: ai/docs/ai/runbook.md#aibudgetexceeded
+
+      - alert: AISkillCostDrift
+        expr: |
+          histogram_quantile(0.5, sum by (le) (rate(skillforge_skill_cost_usd_bucket[1h])))
+            > 1.5 * histogram_quantile(0.5, sum by (le) (rate(skillforge_skill_cost_usd_bucket[7d])))
+        for: 1h
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "Median cost per skill is 1.5x its 7-day level"
+          threshold: "1.5"
+          runbook_url: ai/docs/ai/runbook.md#aiskillcostdrift
+
+  - name: skillforge-ai-safety-quality
+    rules:
+      - alert: AISafetyUnavailable
+        expr: |
+          sum(rate(skillforge_llm_attempts_total{role="safety",status="error"}[5m]))
+            / sum(rate(skillforge_llm_attempts_total{role="safety"}[5m])) > 0.25
+        for: 5m
+        labels: {severity: page, team: ai}
+        annotations:
+          summary: "The safety screen is failing: requests cannot be screened, so none proceed"
+          threshold: "0.25"
+          runbook_url: ai/docs/ai/runbook.md#aisafetyunavailable
+
+      - alert: AISafetyBlockRateDrift
+        expr: |
+          (sum(rate(skillforge_safety_decisions_total{verdict="block"}[1h]))
+            / sum(rate(skillforge_safety_decisions_total[1h])))
+          > 2 * (sum(rate(skillforge_safety_decisions_total{verdict="block"}[7d]))
+            / sum(rate(skillforge_safety_decisions_total[7d])))
+          and sum(increase(skillforge_safety_decisions_total{verdict="block"}[1h])) >= 5
+        for: 30m
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "The safety block rate is over 2x its 7-day level"
+          threshold: "2"
+          runbook_url: ai/docs/ai/runbook.md#aisafetyblockratedrift
+
+      - alert: AIInjectionRejectionsSpike
+        expr: |
+          sum(increase(skillforge_ingest_pages_total{reason="injection"}[1h]))
+            > 3 * (sum(increase(skillforge_ingest_pages_total{reason="injection"}[7d])) / 168)
+          and sum(increase(skillforge_ingest_pages_total{reason="injection"}[1h])) >= 3
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "Pages rejected for prompt injection in the last hour are over 3x the usual rate"
+          threshold: "3"
+          runbook_url: ai/docs/ai/runbook.md#aiinjectionrejectionsspike
+
+      - alert: AIDesignFailureDrift
+        expr: |
+          (sum(rate(skillforge_step_total{step="design",error_code="invalid_spec"}[1h]))
+            / sum(rate(skillforge_step_total{step="design"}[1h])))
+          > 2 * (sum(rate(skillforge_step_total{step="design",error_code="invalid_spec"}[7d]))
+            / sum(rate(skillforge_step_total{step="design"}[7d])))
+          and sum(increase(skillforge_step_total{step="design",error_code="invalid_spec"}[1h])) >= 3
+        for: 30m
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "Designs failing validation are over 2x their 7-day rate"
+          threshold: "2"
+          runbook_url: ai/docs/ai/runbook.md#aidesignfailuredrift
+
+      - alert: AIQualitySamplingStopped
+        expr: |
+          sum(increase(skillforge_quality_samples_total[24h])) == 0
+          and sum(increase(skillforge_step_total{step="design",status="ok"}[24h])) >= 100
+        labels: {severity: ticket, team: ai}
+        annotations:
+          summary: "No published spec was sampled for quality review in 24 h despite 100+ designs"
+          threshold: "0"
+          runbook_url: ai/docs/ai/runbook.md#aiqualitysamplingstopped
+
+  - name: skillforge-ai-routing-test
+    rules:
+      - alert: AIAlertPipelineTest
+        expr: vector(1)
+        labels: {severity: test, team: ai}
+        annotations:
+          summary: "Always firing: proves AI alerts reach the on-call channel (OPS-10). Silence after the test."
+          threshold: "1"
+          runbook_url: ai/docs/ai/runbook.md#aialertpipelinetest

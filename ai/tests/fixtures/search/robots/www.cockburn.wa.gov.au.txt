@@ -1,0 +1,9 @@
+User-Agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /CityOfCockburn/media/Audio-Files/
+Disallow: /cmspages/
+Disallow: /cmsdesk/
+Disallow: /cmshelp/
+Disallow: /TESTING-AREAS/
+Sitemap: https://www.cockburn.wa.gov.au/sitemap.xml

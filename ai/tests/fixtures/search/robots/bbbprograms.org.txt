@@ -1,0 +1,19 @@
+User-agent: PerplexityBot
+User-agent: Google-Extended
+User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: *
+Disallow: /search
+Disallow: /Search
+Disallow: /*/search?*
+Disallow: /oops/
+Disallow: /test/
+Disallow: /staging/
+Disallow: /admin/
+Disallow: /login/
+
+# Completely block CCBot from the entire site
+User-agent: CCBot
+Disallow: /
+
+Sitemap: https://bbbprograms.org/sitemap.xml

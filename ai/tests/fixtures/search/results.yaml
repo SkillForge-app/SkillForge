@@ -1,0 +1,2940 @@
+# Recorded search results for FakeSearchProvider (AI-09). Each query was run once on
+# 2026-10-26 with the AI assistant's web search tool (a US web index), and the results are
+# kept as returned: provider rank, URL and title (no snippets: that tool returns none).
+# Queries are the ones build_queries() makes for the 10 seed domains with their seed skill,
+# plus some from earlier registry versions that are no longer run (kept for the tests).
+# Tests never search; to refresh, run the queries again and replace this file.
+# Results whose title was only the host name were fetched once (2026-10-26, robots.txt
+# honoured) for their real <title>; the search tool's title is kept as search_title.
+version: 1.0.0
+recorded: '2026-10-26'
+results:
+  AI engineer guide:
+  - rank: 1
+    url: https://medium.com/@jeslurrahman/ai-engineer-roadmap-2026-step-by-step-guide-to-become-an-ai-engineer-with-free-resources-5beba43677d1
+    title: 'AI Engineer Roadmap 2026: Step-by-Step Guide to Become an AI Engineer (With Free Resources)'
+  - rank: 2
+    url: https://iterai.beehiiv.com/p/ai-engineering-a-clear-and-simple-guide-to-skills-and-how-to-become-an-ai-engineer
+    title: ai engineering a clear and simple guide to skills and how to become an ai engineer
+  - rank: 3
+    url: https://www.bestblogs.dev/en/article/a1bf0f
+    title: The AI Engineering Handbook – How to Start a Career and E...
+    search_title: www.bestblogs.dev
+  - rank: 4
+    url: https://www.wscubetech.com/blog/ai-engineer-roadmap/
+    title: 'AI Engineer Roadmap: Step-by-Step Beginner Guide 2026'
+  - rank: 5
+    url: https://www.thriftbooks.com/w/practical-guide-for-ai-engineers/57178271/
+    title: Practical Guide for AI Engineers book
+    search_title: www.thriftbooks.com
+  - rank: 6
+    url: https://git.handmade.network/a-practical-guide-to-becoming-an-ai-engineer-2026.html
+    title: a practical guide to becoming an ai engineer 2026
+  - rank: 7
+    url: https://www.naukri.com/blog/how-to-become-an-artificial-intelligence-engineer-a-complete-guide/amp
+    title: 'How to Become an Artificial Intelligence Engineer: A Complete Guide'
+  - rank: 8
+    url: https://payhip.com/b/wUFWD
+    title: payhip.com
+  - rank: 9
+    url: https://roadmap.sh/ai-engineer?fl=0
+    title: AI Engineer
+  AI official documentation:
+  - rank: 1
+    url: https://theartofservice.com/glossary/ai-documentation
+    title: ai documentation
+  - rank: 2
+    url: https://www.cryengine.com/docs/static/engines/cryengine-3/categories/1638401/pages/1605731
+    title: AI Technical Documentation
+  - rank: 3
+    url: https://github.com/Neumron/docs
+    title: 'GitHub - Neumron/docs: Documentation and public site for Neumron — The Cognitive Infrastructure Layer for AI. · GitHub'
+    search_title: github.com
+  - rank: 4
+    url: https://github.com/eazuka/deepstack-docs
+    title: deepstack docs
+  - rank: 5
+    url: https://libraries.io/pypi/ai
+    title: ai 0.8.0 on PyPI - Libraries.io - security & maintenance data for open source software
+    search_title: libraries.io
+  - rank: 6
+    url: https://quizzly.ai/play/documentation-and-runbook-standards-for-ai
+    title: documentation and runbook standards for ai
+  - rank: 7
+    url: https://credencial.imasters.com.br/unlocking-ai-your-guide-to-openai-documentation
+    title: News & Updates
+  - rank: 8
+    url: https://br.tradingview.com/charting-library-docs/latest/getting_started/llm-context
+    title: llm context
+  - rank: 9
+    url: https://ai-brain.readthedocs.io/en/latest/_sources/index.rst.txt
+    title: ai-brain.readthedocs.io
+  - rank: 10
+    url: https://galactic-ai.readthedocs.io/en/stable/
+    title: Welcome to galactic-ai’s documentation! — galactic-ai documentation
+    search_title: galactic-ai.readthedocs.io
+  AI best practices:
+  - rank: 1
+    url: https://www.castmagic.io/blog/ai-best-practices
+    title: ai best practices
+  - rank: 2
+    url: https://cioindex.com/index/artificial-intelligence-best-practice
+    title: artificial intelligence best practice
+  - rank: 3
+    url: https://auralis.ai/blog/tag/best-practices-in-ai
+    title: Best practices in AI
+  - rank: 4
+    url: https://cioindex.com/references/artificial-intelligence-best-practice/
+    title: Artificial Intelligence Best Practices Collection
+  - rank: 5
+    url: https://spoke.ai/glossary/ai-development-best-practices
+    title: AI development best practices
+  - rank: 6
+    url: https://opencourser.com/topic/ry8xpt/ai-best-practices
+    title: ai best practices
+  - rank: 7
+    url: https://www.cybrary.it/course/ai-best-practices
+    title: ai best practices
+  - rank: 8
+    url: https://learning.atlassian.com/learning/course/make-ai-a-part-of-the-team/lesson/ai-best-practices-for-employees
+    title: AI best practices for teams and individuals
+  - rank: 9
+    url: https://insights.nandbox.com/?p=42089
+    title: 'Best Practices for AI Development: Navigating the Complex Landscape'
+  - rank: 10
+    url: https://aragonresearch.com/ai-best-practices/
+    title: AI Best Practices
+  AI guidelines site:.gov:
+  - rank: 1
+    url: https://www.nist.gov/itl/ai/ai-standards-and-guidelines-group
+    title: ai standards and guidelines group
+  - rank: 2
+    url: https://www.nist.gov/nist-organizations/nist-headquarters/laboratory-programs/information-technology-laboratory/ai-1
+    title: ai 1
+  - rank: 3
+    url: https://www.nist.gov/node/1855021
+    title: Guidelines | NIST
+    search_title: www.nist.gov
+  - rank: 4
+    url: https://www.nist.gov/caissi/guidelines
+    title: Guidelines | NIST
+    search_title: www.nist.gov
+  - rank: 5
+    url: https://its.idaho.gov/?p=11145
+    title: Idaho Official Government Website
+  - rank: 6
+    url: https://www.govinfo.gov/content/pkg/FR-2020-12-08/pdf/2020-27065.pdf
+    title: www.govinfo.gov
+  - rank: 7
+    url: https://watech.wa.gov/node/1816
+    title: watech.wa.gov
+  - rank: 8
+    url: https://www.govinfo.gov/link/cpd/executiveorder/13960
+    title: www.govinfo.gov
+  - rank: 9
+    url: https://uidl.naswa.org/handle/20.500.11941/5036
+    title: naswa.org
+  AI guide site:.edu:
+  - rank: 1
+    url: https://resource.clas.uiowa.edu/node/7516
+    title: New AI website to support learning, teaching, research, and innovation
+  - rank: 2
+    url: https://library.montevallo.edu/ai
+    title: Introduction - Artificial Intelligence (AI) Guide - LibGuides at University of Montevallo
+    search_title: library.montevallo.edu
+  - rank: 3
+    url: https://guides.lib.uiowa.edu/c.php?g=1456354
+    title: Home - AI for Research & Development - Guides at University of Iowa
+    search_title: guides.lib.uiowa.edu
+  - rank: 4
+    url: https://libguides.library.ohio.edu/AI
+    title: AI Tools at Ohio University - Artificial Intelligence (AI) - Library Guides at Ohio University
+    search_title: libguides.library.ohio.edu
+  - rank: 5
+    url: https://libguides.usu.edu/aiandresearch
+    title: Home - AI and Research - LibGuides at Utah State University
+    search_title: libguides.usu.edu
+  - rank: 6
+    url: https://infoguides.pepperdine.edu/c.php?g=1452543
+    title: Home - GSEP Artificial Intelligence Guide - Guides at Pepperdine University
+    search_title: infoguides.pepperdine.edu
+  - rank: 7
+    url: https://guides.library.unlv.edu/ai-basics
+    title: ai basics
+  - rank: 8
+    url: https://library.osuit.edu/AI
+    title: See Something Missing?
+  - rank: 9
+    url: https://ai.berkeley.edu/node/16
+    title: Sandbox | AI Hub
+    search_title: ai.berkeley.edu
+  - rank: 10
+    url: https://www.uab.cat/en/libraries/ai-guide
+    title: Go to main content
+  AI standards:
+  - rank: 1
+    url: https://arxiv.org/pdf/2504.13979
+    title: 'Framework, Standards, Applications and Best practices of Responsible AI : A Comprehensive Survey'
+  - rank: 2
+    url: https://deepgram.com/ai-glossary/ai-standards
+    title: AI Standards
+  - rank: 3
+    url: https://insertchat.com/glossary/ai-standards
+    title: AI Standards
+  - rank: 4
+    url: https://www.osler.com/?p=95943
+    title: AI standards
+  - rank: 5
+    url: https://www.modulos.ai/?p=19994
+    title: The Evolution and Importance of AI Standards
+  - rank: 6
+    url: https://arxiv.org/pdf/2503.02675
+    title: State of play and future directions in industrial computer vision AI standards
+  - rank: 7
+    url: https://ojs.aaai.org/index.php/AIES/article/download/43252/50812/47358
+    title: ojs.aaai.org
+  - rank: 8
+    url: https://www.nist.gov/document/nist-ai-rfi-ctr-data-innovation-001pdf
+    title: nist ai rfi ctr data innovation 001pdf
+  - rank: 9
+    url: https://www.iapp.org/news/a/notes-from-the-ai-governance-center-the-complexity-of-ai-standardization
+    title: notes from the ai governance center the complexity of ai standardization
+  code reviewer software engineering guide:
+  - rank: 1
+    url: https://github.com/google/eng-practices/blob/master/review/index.md
+    title: eng-practices/review/index.md at master · google/eng-practices · GitHub
+    search_title: github.com
+  - rank: 2
+    url: https://korahome.substack.com/p/effective-code-review-practices-a
+    title: 'Effective Code Review Practices: A Comprehensive Guide'
+  - rank: 3
+    url: https://docs.pullrequest.com
+    title: Reviewer Guides
+  - rank: 4
+    url: https://slab.com/library/code-review-guidelines/
+    title: Code Review Guidelines
+  - rank: 5
+    url: https://emg.nysbc.org/projects/appion/wiki/Code_Review_Guide/2/annotate
+    title: Code Review Guide » History » Version 2
+  - rank: 6
+    url: https://google.github.io/eng-practices/review/
+    title: Introduction {#intro} | eng-practices
+    search_title: google.github.io
+  - rank: 7
+    url: https://redstamp.com/employee-resources/efficient-code-review-developer-guide
+    title: google document
+  - rank: 8
+    url: https://emg.nysbc.org/projects/appion/wiki/Code_Review_Guide/3/annotate
+    title: Code Review Guide » History » Version 3
+  - rank: 9
+    url: https://emg.nysbc.org/projects/appion/wiki/Code_Review_Guide/10/diff
+    title: emg.nysbc.org
+  software engineering official documentation:
+  - rank: 1
+    url: https://www.nist.gov/publications/management-guide-software-documentation
+    title: management guide software documentation
+  - rank: 2
+    url: https://www.scribd.com/document/866987973/Software-Engineering-Final
+    title: 0% found this document useful (0 votes)
+  - rank: 3
+    url: https://mail.norml.org/software-engineering-documentation-examples.html
+    title: SOFTWARE ENGINEERING DOCUMENTATION EXAMPLES intelligence overview
+  - rank: 4
+    url: https://swehb.nasa.gov/x/F4EIAw
+    title: 1. Requirements
+  - rank: 5
+    url: https://www.nist.gov/node/1758651
+    title: 'Management guide for software documentation: | NIST'
+    search_title: www.nist.gov
+  - rank: 6
+    url: https://redmine.oas.inaf.it/projects/sw_eng-standards/wiki
+    title: redmine.oas.inaf.it
+  - rank: 7
+    url: https://clickup.com/th/blog/238692/software-engineering-documentation
+    title: software engineering documentation
+  - rank: 8
+    url: https://redmine.iasfbo.inaf.it/projects/sw_eng-standards/wiki
+    title: redmine.iasfbo.inaf.it
+  - rank: 9
+    url: https://www.spaceo.ca/glossary/software-terms/what-is-software-documentation.md
+    title: what is software documentation
+  software engineering best practices:
+  - rank: 1
+    url: https://www.mheducation.com/highered/mhp/product/software-engineering-best-practices?pd=search
+    title: software engineering best practices
+  - rank: 2
+    url: https://techvify.com/software-engineering-best-practices
+    title: 'Master the Craft: 9 Software Engineering Best Practices'
+  - rank: 3
+    url: https://orientsoftware.com/blog/software-engineering-practices
+    title: 21 Essential Software Engineering Practices
+  - rank: 4
+    url: https://search.worldcat.org/oclc/471500462
+    title: 'Front cover image for Software engineering best practices : lessons from successful projects in the top companies'
+  - rank: 5
+    url: https://search.worldcat.org/title/Software-engineering-best-practices-:-lessons-from-successful-projects-in-the-top-companies/oclc/471500462
+    title: 'Front cover image for Software engineering best practices : lessons from successful projects in the top companies'
+  - rank: 6
+    url: https://litslink.com/blog/what-are-software-engineering-best-practices
+    title: 04 Jun, 2026
+  - rank: 7
+    url: https://dev.to/ankansaha/software-engineering-best-practices-16ml
+    title: DEV Community
+  - rank: 8
+    url: https://kitemetric.com/blogs/6-best-practices-for-software-engineers
+    title: image_header_6 Best Practices for Software Engineers
+  - rank: 9
+    url: https://softwareoutlook.ac.uk/?p=33824
+    title: Best Practices in Software Engineering
+  software engineering guidelines site:.gov:
+  - rank: 1
+    url: https://www.nist.gov/node/665226
+    title: A Perspective on Software Engineering Standards | NIST
+    search_title: www.nist.gov
+  - rank: 2
+    url: https://www.nist.gov/node/644981
+    title: High Integrity Software Standards and Guidelines | NIST
+    search_title: www.nist.gov
+  - rank: 3
+    url: https://lb-140-82-114-3-iad.github.com/18F/development-guide
+    title: development guide
+  - rank: 4
+    url: https://www.nist.gov/node/709416
+    title: Guide to Software Engineering Environment Assessment and Evaluation | NIST
+    search_title: www.nist.gov
+  - rank: 5
+    url: https://www.nist.gov/node/656991
+    title: An official website of the United States government
+  - rank: 6
+    url: https://www.nist.gov/node/707626
+    title: Making Sense of Software Engineering Environment Framework Standards | NIST
+    search_title: www.nist.gov
+  - rank: 7
+    url: https://www.nist.gov/node/1796326
+    title: 'High integrity software standards and guidelines: | NIST'
+    search_title: www.nist.gov
+  - rank: 8
+    url: https://voyager.gsfc.nasa.gov/Library/Software_Guide_HSTX.pdf
+    title: Software Guide HSTX
+  - rank: 9
+    url: https://www.nist.gov/publications/report-planning-session-software-engineering-handbook
+    title: report planning session software engineering handbook
+  - rank: 10
+    url: https://www.nist.gov/node/1751676
+    title: 'Report on planning session on software engineering handbook: | NIST'
+    search_title: www.nist.gov
+  software engineering guide site:.edu:
+  - rank: 1
+    url: https://en.wikipedia.org/wiki/Outline_of_software_engineering
+    title: Outline of software engineering
+  - rank: 2
+    url: https://sceweb.uhcl.edu/helm/SWEBOK_IEEE/SWEBOK_Guide_2004.pdf
+    title: SWEBOK Guide 2004
+  - rank: 3
+    url: https://www.inf.ed.ac.uk/teaching/courses/seoc/2004_2005/resources/SWEBOK_2004.pdf
+    title: SWEBOK 2004
+  - rank: 4
+    url: https://www.librarything.com/work/3487982
+    title: 'The Road Map to Software Engineering: A Standards-Based Guide (Software Engineering Standards Series)'
+  - rank: 5
+    url: https://voyager.gsfc.nasa.gov/Library/Software_Guide_HSTX.pdf
+    title: Software Guide HSTX
+  - rank: 6
+    url: https://www.lifescapes.org/read/301413.htm
+    title: A Deep Dive into software engineering guide
+  - rank: 7
+    url: https://bibsonomy.org/bibtex/71f2a73744854489fa230b28723bbf1f
+    title: BibSonomy
+    search_title: bibsonomy.org
+  - rank: 8
+    url: https://goodreads.com/book/show/34696764
+    title: Jump to ratings and reviews
+  - rank: 9
+    url: https://campusstore.miamioh.edu/road-map-software-engineering/bk/9780471683629
+    title: The Road Map to Software Engineering A Standards-Based Guide
+  software engineering standards:
+  - rank: 1
+    url: https://technav.ieee.org/topic/software-standards/
+    title: Software standards
+  - rank: 2
+    url: https://www.institutedata.com/?p=70966
+    title: Understanding Standards and Guidelines in Software Engineering
+  - rank: 3
+    url: https://campusstore.miamioh.edu/road-map-software-engineering/bk/9780471683629
+    title: The Road Map to Software Engineering A Standards-Based Guide
+  - rank: 4
+    url: https://gov.wiley.com/WileyCDA/WileyTitle/productCd-0818680083,descCd-tableOfContents.html
+    title: 'Software Engineerng Standards: A User''s Road MapISBN: 978-0-8186-8008-3'
+  - rank: 5
+    url: https://www.math.unipd.it/~tullio/IS-1/2009/Dispense/L03.pdf
+    title: www.math.unipd.it
+  - rank: 6
+    url: https://www.futureskillsprime.in/pathways/ieee-standards-for-software-engineering/
+    title: ieee standards for software engineering
+  - rank: 7
+    url: https://www.institutedata.com/nz/blog/standards-and-guidelines-in-software-engineering/
+    title: Understanding Standards and Guidelines in Software Engineering
+  - rank: 8
+    url: https://www.math.unipd.it/~tullio/IS-1/2008/Dispense/L03.pdf
+    title: www.math.unipd.it
+  - rank: 9
+    url: https://sceweb.uhcl.edu/helm/SWEBOK_IEEE/papers/11%20reprint%206.pdf
+    title: sceweb.uhcl.edu
+  incident postmortem response guide:
+  - rank: 1
+    url: https://docs.gitscrum.com/en/how-to/incident-response-and-postmortems
+    title: incident response and postmortems
+  - rank: 2
+    url: https://tessl.io/registry/skills/github/fernandezbaptiste/skill-review-sandbox/incident-response
+    title: incident response
+  - rank: 3
+    url: https://rootly.com/incident-postmortems.md
+    title: '# A comprehensive guide to incident postmortems'
+  - rank: 4
+    url: https://ilert.com/the-ultimate-incident-management-guide/post-incident-reviews
+    title: Guide Overview
+  - rank: 5
+    url: https://monday.com/blog/project-management/post-mortem-template/
+    title: post mortem template
+  - rank: 6
+    url: https://www.pagerduty.com/?p=51736
+    title: 'PagerDuty: The AI-First Operations Platform'
+    search_title: '- PagerDuty /'
+  - rank: 7
+    url: https://my-test.valpo.edu/incident-post-mortem-template-90957
+    title: Conduct Effective Incident Analysis With Post Mortem Template
+  - rank: 8
+    url: https://www2.paloaltonetworks.com/blog/?p=113756
+    title: The Top Seven Steps for Conducting a Post-Mortem Following a Security Incident
+  - rank: 9
+    url: https://www.paloaltonetworks.com/blog/security-operations/the-top-seven-steps-for-conducting-a-post-mortem-following-a-security-incident
+    title: The Top Seven Steps for Conducting a Post-Mortem Following a Security Incident
+  incident response official documentation:
+  - rank: 1
+    url: https://github.com/albertico-gov/incident-response-docs/blob/master/docs/about.md
+    title: incident-response-docs/docs/about.md at master · albertico-gov/incident-response-docs · GitHub
+    search_title: github.com
+  - rank: 2
+    url: https://response.pagerduty.com/about/
+    title: About - PagerDuty Incident Response Documentation
+    search_title: response.pagerduty.com
+  - rank: 3
+    url: https://docs.n8n.io/privacy-and-security/incident-response.md
+    title: incident response
+  - rank: 4
+    url: https://docs.n8n.io/privacy-and-security/incident-response
+    title: incident response
+  - rank: 5
+    url: https://www.upguard.com/compliance/nist-sp-800-53/ir/ir-1
+    title: 'IR-1: Policy and Procedures'
+  - rank: 6
+    url: https://www.pagerduty.com/?p=27745
+    title: Open-Sourcing Our Incident Response Documentation
+  - rank: 7
+    url: https://sdtimes.com/pagerduty-open-sources-incident-response-documentation/
+    title: PagerDuty open-sources its Incident Response Documentation
+  - rank: 8
+    url: https://www.upguard.com/compliance/nist-sp-800-53/ir/ir-1.md
+    title: '# IR-1: Policy and Procedures'
+  - rank: 9
+    url: https://sdtimes.com/?p=22765
+    title: PagerDuty open-sources its Incident Response Documentation
+  - rank: 10
+    url: https://sdtimes.com/communication/pagerduty-open-sources-incident-response-documentation
+    title: pagerduty open sources incident response documentation
+  incident response best practices:
+  - rank: 1
+    url: https://securityscorecard.com/blog/6-incident-response-best-practices-you-should-follow/
+    title: 6 incident response best practices you should follow
+  - rank: 2
+    url: https://www.techtarget.com/searchsecurity/tip/Incident-response-best-practices-for-your-organization
+    title: Incident response best practices for your organization
+  - rank: 3
+    url: https://simeononsecurity.com/articles/the-art-of-incident-response
+    title: 'The Art of Incident Response: Best Practices and Real-World Examples'
+  - rank: 4
+    url: https://www.techtarget.com/cybersecurity/tip/13-incident-response-best-practices-for-your-organization
+    title: 13 incident response best practices for your organization
+  - rank: 5
+    url: https://www.techtarget.com/cybersecurity/tip/13-incident-response-best-practices-for-your-organization?amp=1
+    title: 13 incident response best practices for your organization
+  - rank: 6
+    url: https://searchcloudcomputing.techtarget.com/tip/5-steps-to-kick-start-your-cloud-incident-response-strategy
+    title: 13 incident response best practices for your organization
+  - rank: 7
+    url: https://purplesec.us/?p=32092
+    title: 'The top 10 best practices for incident response in 2025 are:'
+  - rank: 8
+    url: https://rootly.com/incident-response/best-practices
+    title: 'Incident Response Best Practices: Proven Strategies for Modern Teams'
+  - rank: 9
+    url: https://simeononsecurity-com.onrender.com/articles/the-art-of-incident-response/
+    title: Table of Contents
+  incident response guidelines site:.gov:
+  - rank: 1
+    url: https://www.nist.gov/node/392186
+    title: Updated NIST Guide is a How-To for Dealing With Computer Security Incidents | NIST
+    search_title: www.nist.gov
+  - rank: 2
+    url: https://www.nist.gov/publications/computer-security-incident-handling-guide
+    title: computer security incident handling guide
+  - rank: 3
+    url: https://nist.gov/publications/computer-security-incident-handling-guide-1
+    title: computer security incident handling guide 1
+  - rank: 4
+    url: https://www.nist.gov/node/617971
+    title: 'Handling Computer Security Incidents: NIST Issues Updated Guidelines | NIST'
+    search_title: www.nist.gov
+  - rank: 5
+    url: https://www.nist.gov/node/1310141
+    title: Respond | NIST
+    search_title: www.nist.gov
+  - rank: 6
+    url: https://www.nist.gov/node/563301
+    title: Computer Security Incident Handling Guide | NIST
+    search_title: www.nist.gov
+  - rank: 7
+    url: https://www.nist.gov/node/401906
+    title: NIST Requests Comments on Updated Guide to Handling Computer Security Incidents | NIST
+    search_title: www.nist.gov
+  - rank: 8
+    url: https://nitc.nebraska.gov/technical_panel/meetings/documents/20080212/08-401_DRAFT_20071221_comment.pdf
+    title: 08 401 DRAFT 20071221 comment
+  - rank: 9
+    url: https://www.fbi.gov/file-repository/incident-response-policy.pdf
+    title: incident response policy
+  incident response guide site:.edu:
+  - rank: 1
+    url: https://www.it.northwestern.edu/about/policies/incident.html
+    title: www.it.northwestern.edu
+  - rank: 2
+    url: https://utia.tennessee.edu/wp-content/uploads/2021/06/IncidentResponse.pdf
+    title: tennessee.edu
+  - rank: 3
+    url: https://ohio.edu/oit/security/policy-practices/standards/ohio-university-information-security
+    title: ohio university information security
+  - rank: 4
+    url: https://security.psu.edu/incident-response/
+    title: Incident Response
+  - rank: 5
+    url: https://informationsecurity.iu.edu/doc/incident-response-template-2025.pdf
+    title: incident response template 2025
+  - rank: 6
+    url: https://security.gatech.edu/incident-response-1
+    title: Incident Response
+  - rank: 7
+    url: https://it.vt.edu/resources/annual-report/2024/featured-highlights/itso-quick-response-guide.html
+    title: itso quick response guide
+  - rank: 8
+    url: https://security.utoronto.ca/?p=1165
+    title: Information Security Incident Response Plan - Information Security at University of Toronto
+    search_title: security.utoronto.ca
+  - rank: 9
+    url: https://security.s4.es.cloud.vt.edu/docs/incident/incident_response.pdf
+    title: incident response
+  incident response standards:
+  - rank: 1
+    url: https://www.nctcog.org/getmedia/10d50bfb-5c79-48b7-a8d6-dbc03d90a2a9/incident-response-standard.docx
+    title: incident response standard
+  - rank: 2
+    url: https://www.techtarget.com/cybersecurity/tip/How-to-build-an-incident-response-framework?amp=1
+    title: How to build an incident response framework
+  - rank: 3
+    url: https://www.techtarget.com/cybersecurity/tip/How-to-build-an-incident-response-framework
+    title: How to build an incident response framework
+  - rank: 4
+    url: https://nebraska.edu/offices/information-technology-services/policies-and-standards/its-07
+    title: 'Effective: 08/08/2022'
+  - rank: 5
+    url: https://lehigh.atlassian.net/wiki/spaces/LSP/pages/62226553/Incident+Response+Standard
+    title: Incident Response Standard
+  - rank: 6
+    url: https://www.ed.gov/media/document/2025-incident-response-standard-signed-109739.pdf
+    title: 2025 incident response standard signed 109739
+  - rank: 7
+    url: https://usnh.edu/it/departments/cybersecurity/cybersecurity-policies-standards/incident-response-standard-cybersecurity
+    title: incident response standard cybersecurity
+  - rank: 8
+    url: https://doit.maryland.gov/policies/ci/Documents/MD-STD-308-IR-01-Incident-Response-Standard.pdf
+    title: MD STD 308 IR 01 Incident Response Standard
+  - rank: 9
+    url: https://www2.ed.gov/fund/contract/about/acs/2023-ir-incident-response-standard-1.pdf
+    title: 2023 ir incident response standard 1
+  data analyst analytics guide:
+  - rank: 1
+    url: https://dev.to/kadenge75/data-analyst-guide-2023-2148
+    title: DEV Community
+  - rank: 2
+    url: https://chaindesk.ai/tools/youtube-summarizer/what-is-data-analytics-an-introduction-full-guide-yZvFH7B6gKI
+    title: What Is Data Analytics? - An Introduction (Full Guide)
+  - rank: 3
+    url: https://selar.com/69l1dl9ze4
+    title: 'The Complete Data Analytics Guide: From Beginner to Professional'
+  - rank: 4
+    url: https://lists.norml.org/wlg/data-analyst-guide-pdf.html
+    title: Research Center
+  - rank: 5
+    url: https://careerfoundry.com/en/blog/data-analytics/what-is-data-analytics/
+    title: What is Data Analytics? A Complete Guide for Beginners
+  - rank: 6
+    url: https://www.scribd.com/document/918574503/Roadmap-to-Data-Analyst
+    title: 0% found this document useful (0 votes)
+  - rank: 7
+    url: https://www.knowledgeleader.com/tools/data-analytics-and-audit-coverage-guide
+    title: Data Analytics and Audit Coverage Guide
+  - rank: 8
+    url: https://sanandres.uep.edu.py/default.aspx/TXz4OR/702291/Data Analysis Study Guide.pdf
+    title: Data Analysis Study Guide
+  - rank: 9
+    url: https://dev.to/s-jt/the-ultimate-guide-to-data-analytics-16ha
+    title: DEV Community
+  data analytics guide:
+  - rank: 1
+    url: https://www.amplitude.com/explore/data/what-data-analytics.md
+    title: '# The Full Data Analytics Guide'
+  - rank: 2
+    url: https://dev.to/gekika/the-ultimate-guide-to-data-analytics-410f
+    title: DEV Community
+  - rank: 3
+    url: https://dev.to/octavia_wellsi_5a738282dc/the-ultimate-guide-to-data-analytics-3bkk
+    title: DEV Community
+  - rank: 4
+    url: https://www.slq.qld.gov.au/blog/hbr-guide-data-analytics-basics-managers-hbr-guide-series-ebook
+    title: hbr guide data analytics basics managers hbr guide series ebook
+  - rank: 5
+    url: https://www.scribd.com/document/1015045188/Data-Analytics-Guide
+    title: 0% found this document useful (0 votes)
+  - rank: 6
+    url: https://enterprisedna.co/infographics/foundations-of-data-analytics-starter-guide
+    title: foundations of data analytics starter guide
+  - rank: 7
+    url: https://www.vonmatt.ch/detail/ISBN-2244061220757/Shiva/Data-Analytics
+    title: Data Analytics
+  - rank: 8
+    url: https://www.zucisystems.com/?p=13293
+    title: The Data Analytics Strategy Guide
+  - rank: 9
+    url: https://enterprisedna.co/resource-packs/foundations-of-data-analytics-starter-guide
+    title: Resource packs
+  - rank: 10
+    url: https://mitpressbookstore.mit.edu/book/9781119296249
+    title: mitpressbookstore.mit.edu
+  data analytics best practices:
+  - rank: 1
+    url: https://jhnomondi.gumroad.com/l/qzsbv
+    title: Data Analytics best practices.
+    search_title: jhnomondi.gumroad.com
+  - rank: 2
+    url: https://rikkeisoft.com/en/blog/data-analytics-best-practices/
+    title: November 30, 2023
+  - rank: 3
+    url: https://rikkeisoft.com/blog/data-analytics-best-practices-top-15-tried-and-true-methods
+    title: November 30, 2023
+  - rank: 4
+    url: https://rikkeisoft.com/th/blog-th/data-analytics-best-practices-top-15-tried-and-true-methods/
+    title: August 8, 2024
+  - rank: 5
+    url: https://datacalculus.com/en/knowledge-hub/data-analytics-best-practices-guide
+    title: data analytics best practices guide
+  - rank: 6
+    url: https://technicspub.com/analyticsbestpractices/
+    title: Analytics Best Practices
+  - rank: 7
+    url: https://solutionsreview.com/business-intelligence/?p=7572
+    title: Business Intelligence Buyer's Guide
+  - rank: 8
+    url: https://www.toucantoco.com/en/blog/10-analytics-best-practices-that-guarantee-success
+    title: 7 Analytics Best Practices that Guarantee Success
+  - rank: 9
+    url: https://www.ebay.com/itm/156946215473
+    title: 'Analytics Best Practices: A Business-drive n Playbook for Creating Value through'
+  data analytics guidelines site:.gov:
+  - rank: 1
+    url: https://agwb.cag.gov.in/userfiles/files/A&EWB/Administration/Policies/Guidelines_on_Data_Analytics.pdf
+    title: Guidelines on Data Analytics
+  - rank: 2
+    url: https://www.alexandriava.gov/sites/default/files/2023-08/Data Analytics Service Guidelines.pdf
+    title: Data Analytics Service Guidelines
+  - rank: 3
+    url: https://cag.gov.in/uploads/journal/journal-en-january-2018/compliance-audit1.html
+    title: Guidelines on Data Analytics
+  - rank: 4
+    url: https://cag.gov.in/uploads/media/Guidelines-on-Data-Analytics-20200804153915.pdf
+    title: Guidelines on Data Analytics 20200804153915
+  - rank: 5
+    url: https://docs.data-community.publishing.service.gov.uk/analysis/
+    title: Analysis - Data Community Technical Documentation
+    search_title: docs.data-community.publishing.service.gov.uk
+  - rank: 6
+    url: https://cag.gov.in/uploads/media/Guidelines-on-Data-Analytics-new-06aa2830dd26732-77450360.pdf
+    title: Guidelines on Data Analytics new 06aa2830dd26732 77450360
+  - rank: 7
+    url: https://handbook.tts.gsa.gov/tools/analytics
+    title: handbook.tts.gsa.gov
+  - rank: 8
+    url: https://saiindia.gov.in/uploads/journal/journal-en-january-2018/compliance-audit1.html
+    title: ISSUE 8-January 2018
+  - rank: 9
+    url: https://coe.gsa.gov/2020/10/19/da-update-9.html
+    title: da update 9
+  data analytics guide site:.edu:
+  - rank: 1
+    url: https://libraryguides.binghamton.edu/dataanalytics
+    title: Subject Guides
+  - rank: 2
+    url: https://guides.library.jhu.edu/data-analytics-retired/home
+    title: Data Analytics and Policy
+  - rank: 3
+    url: https://libguides.dickinson.edu/dataanalytics
+    title: Home - Data Analytics - Research Guides at Dickinson College
+    search_title: libguides.dickinson.edu
+  - rank: 4
+    url: https://libguides.pratt.edu/data_analytics
+    title: data analytics
+  - rank: 5
+    url: https://guides.ou.edu/medicine/analysis
+    title: Working with Research Data
+  - rank: 6
+    url: https://guides.library.pdx.edu/businessdataanalytics
+    title: 'Data Analytics for Business: Home'
+  - rank: 7
+    url: https://enflomaplata.uep.edu.py/Download_PDFS/TFurS0/706840/Guide To Business Data Analytics.pdf
+    title: Guide To Business Data Analytics
+  - rank: 8
+    url: https://sanandres.uep.edu.py/default.aspx/TXz4OR/702291/Data Analysis Study Guide.pdf
+    title: Data Analysis Study Guide
+  - rank: 9
+    url: https://www.amplitude.com/explore/data/what-data-analytics.md
+    title: '# The Full Data Analytics Guide'
+  - rank: 10
+    url: https://guides.library.upenn.edu/c.php?g=1114748
+    title: Overview - Business Analytics Guide - Guides at Penn Libraries
+    search_title: guides.library.upenn.edu
+  data analytics standards:
+  - rank: 1
+    url: https://www.softwebsolutions.com/resources/industry-standards-for-data-analytics-services/
+    title: The industry standards for data analytics services
+  - rank: 2
+    url: https://aistandardshub.org/?p=8542
+    title: 'Big data analytics need standards to thrive: what standards are and why they matter'
+  - rank: 3
+    url: https://www.brookings.edu/articles/using-standards-to-make-big-data-analytics-that-work
+    title: using standards to make big data analytics that work
+  - rank: 4
+    url: https://acceldata.io/blog/data-standards-the-key-to-efficiency-governance-and-compliance
+    title: data standards the key to efficiency governance and compliance
+  - rank: 5
+    url: https://www.rosen-group.com/en/expertise/experience-center/blog/how-data-analytics-and-big-data-are-transforming-industry-standards-and-regulations
+    title: how data analytics and big data are transforming industry standards and regulations
+  - rank: 6
+    url: https://help.aliyun.com/en/dataphin/semimanaged-v4/user-guide/data-standards-overview
+    title: Data standard overview
+  - rank: 7
+    url: https://help.aliyun.com/en/dataphin/fullmanaged/user-guide/data-standards-overview
+    title: Data standard overview
+  - rank: 8
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10995743/
+    title: 'Navigating data standards in public health: A brief report from a data-standards meeting'
+  - rank: 9
+    url: https://benton.org/headlines/using-standards-make-big-data-analytics-work
+    title: Using Standards to Make Big Data Analytics That Work
+  explain medical results patient education guide:
+  - rank: 1
+    url: https://www.optimaldx.com/blog/5-essential-strategies-for-explaining-functional-lab-results-to-patients
+    title: Optimal - The Blog
+  - rank: 2
+    url: https://www.mypathologyreport.ca/our-team/
+    title: our team
+  - rank: 3
+    url: https://igentify.com/resources/carrier-screening-patient-education
+    title: carrier screening patient education
+  - rank: 4
+    url: https://getoncourse.ai/revision/us-medical-pg/ccs-cases/follow-up/patient-education-essentials/
+    title: Patient education essentials
+  - rank: 5
+    url: https://nursing.wsu.edu/?p=990004
+    title: 'Seeing Results in the ED: Pause, ASK, Plan'
+  - rank: 6
+    url: https://www.cockburnlibraries.com.au/elibrary/pathology-tests-explained/
+    title: pathology tests explained
+  - rank: 7
+    url: https://venngage.com/templates/infographics/patient-education-condition-guide-infographic-4142e086-346c-467e-ae57-6bb84c2feda5
+    title: Log inSign up for free
+  - rank: 8
+    url: https://elearning.rcgp.org.uk/pluginfile.php/179161/mod_book/chapter/764/Introducing%20Online%20Test%20Results%20v2.0.pdf
+    title: 'Course: Clinical toolkits | RCGP Learning'
+    search_title: rcgp.org.uk
+  - rank: 9
+    url: https://therapyinsights.com/relevance_identifier/test-scores/
+    title: Understanding and Explaining Test Scores with Use of a Bell Curve
+  patient education clinical guidance:
+  - rank: 1
+    url: https://dalspace.library.dal.ca/handle/10222/15014
+    title: Patient Education Based on Clinical Practice Guideline Recommendations to Improve Shared Decision Making in Healthcare Using Semantic Web Technology
+    search_title: dalspace.library.dal.ca
+  - rank: 2
+    url: https://dalspace.library.dal.ca/items/d57a9487-56b7-4a9e-b416-397c0cfc5efe
+    title: Repository logo
+  - rank: 3
+    url: https://dalspaceb.library.dal.ca/server/api/core/bitstreams/dceca691-ffc4-4732-aa93-30c76612fbfc/content
+    title: dalspaceb.library.dal.ca
+  - rank: 4
+    url: https://www.wolterskluwer.com/cs-cz/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery
+    title: Zdravotnictví28 dubna, 2025
+  - rank: 5
+    url: https://www.wolterskluwer.com/hu-hu/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery
+    title: Egészség28 április, 2025
+  - rank: 6
+    url: https://www.wolterskluwer.com/fr-ca/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery
+    title: Santéavril 28, 2025
+  - rank: 7
+    url: https://www.wolterskluwer.com/fr-fr/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery
+    title: Santé28 avril, 2025
+  - rank: 8
+    url: https://www.wolterskluwer.com/pt-br/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery
+    title: Saúde28 abril, 2025
+  - rank: 9
+    url: https://www.wolterskluwer.com/pl-pl/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery
+    title: Ochrona zdrowia28 kwietnia, 2025
+  patient education best practices:
+  - rank: 1
+    url: https://www.heidihealth.com/blog/patient-education
+    title: patient education
+  - rank: 2
+    url: https://www.heidihealth.com/en-au/blog/patient-education
+    title: What is Patient Education?
+  - rank: 3
+    url: https://www.iasp-pain.org/publications/relief-news/article/best-practice-patient-education/
+    title: best practice patient education
+  - rank: 4
+    url: https://simbo.ai/blog/?p=20650
+    title: 'Enhancing Patient Education Resources: Best Practices for Healthcare Providers to Improve Patient Understanding'
+  - rank: 5
+    url: https://medicalacademy.org/en/course/PatientEducationBestPractices--57221
+    title: Patient Education | Best Practices
+  - rank: 6
+    url: https://www.reliasmedia.com/articles/61190-discover-the-8216-best-8217-practices-for-comparison
+    title: Discover the ‘best’ practices for comparison
+  - rank: 7
+    url: https://www.medicalacademy.org/portal/event/view/2031/patient-education-best-practices
+    title: Patient Education | Best Practices
+  - rank: 8
+    url: https://ce.mayo.edu/node/180293
+    title: 'Patient Education Best Practices: Highlighting Clinician All-Stars - Live (in-person)'
+  - rank: 9
+    url: https://archive2023.aarc.org/an21-best-practices-for-bedside-teaching
+    title: an21 best practices for bedside teaching
+  patient education guidelines site:.gov:
+  - rank: 1
+    url: https://medlineplus.gov/ency/patientinstructions/000455.htm
+    title: 'Choosing effective patient education materials: MedlinePlus Medical Encyclopedia'
+    search_title: medlineplus.gov
+  - rank: 2
+    url: https://profiles.nlm.nih.gov/101584666X450
+    title: profiles.nlm.nih.gov
+  - rank: 3
+    url: https://ihs.gov/forproviders/patiented
+    title: Patient Education
+  - rank: 4
+    url: https://www.ttuhsc.edu/pharmacy/documents/current/students/patient_education_resources_brochure.pdf
+    title: patient education resources brochure
+  - rank: 5
+    url: https://profiles.nlm.nih.gov/catalog/nlm:nlmuid-101584666X450-doc
+    title: nlm:nlmuid 101584666X450 doc
+  - rank: 6
+    url: https://www.dac.nc.gov/documents/files/patient-education-october-2014-pe-2/open
+    title: www.dac.nc.gov
+  - rank: 7
+    url: https://www.ihs.gov/healthed/resources
+    title: www.ihs.gov
+  - rank: 8
+    url: https://effectivehealthcare.ahrq.gov/sites/default/files/nt_docs/topic-brief-patient-education.pdf
+    title: topic brief patient education
+  - rank: 9
+    url: https://www.cancercareontario.ca/en/guidelines-advice/modality/patient-education?page=1
+    title: patient education
+  patient education guide site:.edu:
+  - rank: 1
+    url: https://libguides.utoledo.edu/HealthLiteracy/PatientEdMaterials
+    title: Patient education Tab
+  - rank: 2
+    url: https://libguides.rutgers.edu/surgery/surgery_patienteducation
+    title: surgery patienteducation
+  - rank: 3
+    url: https://louisiana.libguides.com/nursing/patient-education
+    title: '- Edith Garland Dupré Library'
+  - rank: 4
+    url: https://hslguides.med.nyu.edu/healthlit
+    title: Home - Health Literacy and Patient Education - Specialty Guides at NYU Health Sciences Library
+    search_title: hslguides.med.nyu.edu
+  - rank: 5
+    url: https://pteducation.med.umich.edu/home
+    title: Care Guides from Your Clinician
+  - rank: 6
+    url: https://www.clinician.com/articles/68699-web-alert-site-offers-handouts-for-your-patients
+    title: 68699 web alert site offers handouts for your patients
+  - rank: 7
+    url: https://alvernia.libguides.com/patient_education/home
+    title: Home - Patient Education - LibGuides at Alvernia University
+    search_title: alvernia.libguides.com
+  - rank: 8
+    url: https://guides.atsu.edu/consumerhealth
+    title: Consumer Health Resources - Consumer Health & Patient Resources - LibGuides at A.T. Still University of Health Sciences
+    search_title: guides.atsu.edu
+  - rank: 9
+    url: https://guides.atsu.edu/consumerhealth/resources
+    title: Consumer Health Resources - Consumer Health & Patient Resources - LibGuides at A.T. Still University of Health Sciences
+    search_title: atsu.edu
+  - rank: 10
+    url: https://open.umich.edu/find/open-educational-resources/medical/university-michigan-health-system-patient-education-clearinghouse
+    title: University of Michigan Health System Patient Education Clearinghouse
+  patient education standards:
+  - rank: 1
+    url: https://springerpflege.de/the-development-of-practice-standards-for-patient-education-in-n/50629702
+    title: Client Challenge
+    search_title: springerpflege.de
+  - rank: 2
+    url: https://bmcnurs.biomedcentral.com/articles/10.1186/s12912-023-01444-0/tables/3
+    title: Domain | Standards | Agreement | Â | Disagreement | Agreement percent | ||
+  - rank: 3
+    url: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10464384/
+    title: 'The development of practice standards for patient education in nurse-led clinics: a mixed-method study'
+  - rank: 4
+    url: https://reliasmedia.com/articles/9548-complying-with-joint-commission-patient-education-standards
+    title: Complying with Joint Commission patient education standards
+  - rank: 5
+    url: https://www.beckershospitalreview.com/patient-experience/nqf-releases-patient-education-resources-standards/
+    title: NQF releases patient education resources standards
+  - rank: 6
+    url: https://www.clinician.com/articles/44203-patient-education-quarterly-diabetes-education-helped-by-regulatory-agencies
+    title: 44203 patient education quarterly diabetes education helped by regulatory agencies
+  - rank: 7
+    url: https://oalib-perpustakaan.upi.edu/Record/doaj_26cbb475ddfe44178b7ff90496042f0a/Description
+    title: 'The development of practice standards for patient education in nurse-led clinics: a mixed-method study'
+  - rank: 8
+    url: https://www.slideshare.net/slideshow/patient-education-in-nursing-foundationpptx/266533377
+    title: Patient Education
+  - rank: 9
+    url: https://www.clinician.com/articles/61185-does-your-patient-education-measure-up
+    title: Does your patient education measure up?
+  HR recruiter recruiting guide:
+  - rank: 1
+    url: https://www.koganpage.com/hr-learning-development/the-recruiter-s-handbook-9781586444655
+    title: the recruiter s handbook 9781586444655
+  - rank: 2
+    url: https://www.skillsoft.com/book/the-recruiters-handbook-a-complete-guide-for-sourcing-selecting-and-engaging-the-best-talent-d799e205-c99e-43c3-96a5-c73072877ebd
+    title: 'The Recruiter''s Handbook: A Complete Guide for Sourcing, Selecting, and Engaging the Best Talent'
+  - rank: 3
+    url: https://mtas.tennessee.edu/librarycatalog/recruiters-handbook-complete-guide-sourcing-selecting-and-engaging-best-talent
+    title: 'The recruiter''s handbook : a complete guide for sourcing, selecting, and engaging the best talent'
+  - rank: 4
+    url: https://www.koganpage.com/product/the-recruiter-s-handbook-9781586444655
+    title: FREE UK and US shipping | Get the ebook free with your print copy when you select the "bundle" option | T&Cs apply
+  - rank: 5
+    url: https://store.shrm.org/The-Recruiters-Handbook-A-Complete-Guide-for-Sourcing-Selecting-and-Engaging-the-Best
+    title: The Recruiters Handbook A Complete Guide for Sourcing Selecting and Engaging the Best
+  - rank: 6
+    url: https://www.ebay.com.au/itm/204986259516
+    title: www.ebay.com.au
+  - rank: 7
+    url: https://xobin.com/job-descriptions/hr-recruiter/
+    title: HR Recruiter
+  - rank: 8
+    url: https://web2.hays.com/hiring-guide
+    title: The Hiring Essentials Guide
+  - rank: 9
+    url: https://ebook.yourcloudlibrary.com/library/oclc/detail/r1aph89
+    title: ebook.yourcloudlibrary.com
+  - rank: 10
+    url: https://www.shortform.com/best-books/book/the-recruiters-handbook-book-reviews-sharlyn-lauby
+    title: The Recruiter’s Handbook
+  recruiting employer guidance:
+  - rank: 1
+    url: https://stockton.edu/career-education-development/employer-recruiting-guidelines.html
+    title: Employer Recruiting Guidelines
+  - rank: 2
+    url: https://socialwork.columbia.edu/sites/default/files/content/CSSW%20Employer%20Guide_%20Recruiting%20Policies%20and%20Guidelines.pdf
+    title: CSSW%20Employer%20Guide %20Recruiting%20Policies%20and%20Guidelines
+  - rank: 3
+    url: https://oudev.stockton.edu/career-education-development/employer-recruiting-guidelines.html
+    title: Employer Recruiting Guidelines
+  - rank: 4
+    url: https://uk.indeed.com/hire/resource-library-editorial-guidelines
+    title: resource library editorial guidelines
+  - rank: 5
+    url: https://tyomarkkinatori.fi/en/news/saat-tyontekijan-rekrytointi-oppaasta-ohjeet-sujuvaan-rekrytointiin
+    title: In the Recruiting an employee guide, you will find instructions for a smooth recruitment
+  - rank: 6
+    url: https://tyomarkkinatori.fi/en/news/saat-tyontekijan-rekrytointi-oppaasta-ohjeet-sujuvaan-rekrytointiin1
+    title: In the Recruiting an employee guide, you will find instructions for a smooth recruitment
+  - rank: 7
+    url: https://cdn.prod.web.uta.edu/-/media/project/website/engineering/documents-and-forms/office-of-the-dean/employer-recruiting-guidelines-policies.pdf
+    title: employer recruiting guidelines policies
+  - rank: 8
+    url: https://www.computing.co.uk/news/1836481/easy-fres-promises
+    title: Easy does it, Fres promises
+  - rank: 9
+    url: https://www.thehrdirector.com/legal-updates/legal-updates-2015/acas-publish-guides-to-help-employers-manage-recruitment-and-induction
+    title: Acas publish guides to help employers manage recruitment and induction
+  recruiting best practices:
+  - rank: 1
+    url: https://topechelon.com/blog/recruiting-best-practices/
+    title: recruiting best practices
+  - rank: 2
+    url: https://www.socialtalent.com/?p=72643
+    title: 8 Recruiting Best Practices Every Company Should Use
+  - rank: 3
+    url: https://www.wga.com/news/best-practices-effective-recruiting/
+    title: best practices effective recruiting
+  - rank: 4
+    url: https://livedashboard.hrpartner.io/?p=18895
+    title: 'Recruiting and Hiring Best Practices: A Comprehensive Guide'
+  - rank: 5
+    url: https://textexpander.com/?p=11214
+    title: Your guide to recruitment best practices
+  - rank: 6
+    url: https://clutch.co/resources/10-recruiting-best-practices-for-hiring-the-right-person-fast
+    title: • Post a Project
+  - rank: 7
+    url: https://www.techtarget.com/searchhrsoftware/podcast/Six-secrets-of-competitive-recruiting-best-practices
+    title: Six secrets of competitive recruiting best practices
+  - rank: 8
+    url: https://www.techtarget.com/enterprise-software/podcast/Six-secrets-of-competitive-recruiting-best-practices
+    title: Six secrets of competitive recruiting best practices
+  - rank: 9
+    url: https://textexpander.com/tag/inspiration/feed/
+    title: Your guide to recruitment best practices
+  recruiting guidelines site:.gov:
+  - rank: 1
+    url: https://www.oregon.gov/das/HR/Pages/recruit.aspx
+    title: 'Department of Administrative Services : Recruiting Toolkit : Chief Human Resources Office : State of Oregon'
+    search_title: www.oregon.gov
+  - rank: 2
+    url: https://www.oregon.gov/das/HR/Pages/Recruit.aspx
+    title: 'Department of Administrative Services : Recruiting Toolkit : Chief Human Resources Office : State of Oregon'
+    search_title: www.oregon.gov
+  - rank: 3
+    url: https://www.oregon.gov/das/hr/pages/recruit.aspx
+    title: 'Department of Administrative Services : Recruiting Toolkit : Chief Human Resources Office : State of Oregon'
+    search_title: www.oregon.gov
+  - rank: 4
+    url: https://www.opm.gov/policy-data-oversight/hiring-information/federal-attorney-recruiting-and-hiring/
+    title: federal attorney recruiting and hiring
+  - rank: 5
+    url: https://www.in.gov/isp/files/Recruitment-for-Trooper-Trainee.pdf
+    title: Recruitment for Trooper Trainee
+  - rank: 6
+    url: https://team.georgia.gov/?p=9600
+    title: 'Recruiter Resource Guide:'
+  - rank: 7
+    url: https://www.pct.edu/media/4106/download
+    title: www.pct.edu
+  - rank: 8
+    url: https://corpora.tika.apache.org/base/docs/govdocs1/709/709224.pdf
+    title: corpora.tika.apache.org
+  - rank: 9
+    url: https://codes.ohio.gov/assets/laws/administrative-code/authenticated/3337/0/40/3337-40-121_20260908.pdf
+    title: codes.ohio.gov
+  - rank: 10
+    url: https://socialwork.columbia.edu/content/recruiting-policies-and-guidelines
+    title: Recruiting Policies and Guidelines
+  recruiting guide site:.edu:
+  - rank: 1
+    url: https://www.academia.edu/8313813/Recruiting_system_user_guide
+    title: Recruiting system user guide
+  - rank: 2
+    url: https://hr.umn.edu/Employee-Support/Supervisors/Recruiting-and-Hiring
+    title: Recruiting and Hiring
+  - rank: 3
+    url: https://cdo.mit.edu/mit-sloan-recruiting-guidelines/
+    title: mit sloan recruiting guidelines
+  - rank: 4
+    url: https://www.scribd.com/document/129274310/Recruiting-Guide
+    title: 0% found this document useful (0 votes)
+  - rank: 5
+    url: https://career-advising.ndsu.edu/resources/ndsu-employer-recruiting-guide/
+    title: NDSU Employer Recruiting Guide
+  - rank: 6
+    url: https://medicine.uams.edu/research/recruitment-process
+    title: Recruitment Guide
+  - rank: 7
+    url: https://hr.fullerton.edu/talent-acquisition/guides.php
+    title: 404 - Page Not Found | CSUF - Human Resources and Inclusive Excellence
+    search_title: hr.fullerton.edu
+  - rank: 8
+    url: https://hr.wfu.edu/?p=14582
+    title: Staff Search Guide - Human Resources
+    search_title: hr.wfu.edu
+  - rank: 9
+    url: https://recruit.ap.uci.edu/downloads/Basic-Tutorial.pdf
+    title: Basic Tutorial
+  recruiting standards:
+  - rank: 1
+    url: https://topechelon.com/blog/setting-managing-standards-recruiters/
+    title: setting managing standards recruiters
+  - rank: 2
+    url: https://topechelon.com/?p=238969
+    title: Recruitment Standards | Setting Standards for Recruiters
+    search_title: topechelon.com
+  - rank: 3
+    url: https://www.nbcbayarea.com/news/local/army-raises-bar-on-recruitment-standards/1966731
+    title: Army Raises the Bar on Recruiting Standards
+  - rank: 4
+    url: https://www.nbcbayarea.com/news/local/army-raises-bar-on-recruitment-standards/1966731/?amp=1
+    title: Army Raises the Bar on Recruiting Standards
+  - rank: 5
+    url: https://sofrep.com/news/military-may-relax-recruiting-standards-fitness-pot-use/
+    title: military may relax recruiting standards fitness pot use
+  - rank: 6
+    url: https://sofrep.com/amp/news/military-may-relax-recruiting-standards-fitness-pot-use
+    title: military may relax recruiting standards fitness pot use
+  - rank: 7
+    url: https://abcnews.go.com/WNT/story?id=2828686
+    title: With Troop Surge, Pressure on Standards
+  - rank: 8
+    url: https://www.everycrsreport.com/files/2026-01-13_R48793_381b81079fde823d88c9639ada84e2eab9748ac4.html
+    title: 'Future Servicemember Preparatory Courses: Background and Issues for Congress'
+  - rank: 9
+    url: https://www.humanresourcesmanager.de/recruiting/4-gruende-fuer-mehr-mindeststandards-im-recruiting/
+    title: 4 Gründe für mehr Mindeststandards im Recruiting
+  marketing strategist strategy guide:
+  - rank: 1
+    url: https://www.storytel.se/se/books/marketing-strategy-7-easy-steps-to-master-marketing-fundamentals-advertising-strategy-marketing-management-research-2531205
+    title: marketing strategy 7 easy steps to master marketing fundamentals advertising strategy marketing management research 2531205
+  - rank: 2
+    url: https://discover.aclib.us/Hoopla/16065704
+    title: 'Marketing Strategy: 7 Easy Steps to Master Marketing Fundamentals, Advertising Strategy, Marketing Management & Research'
+  - rank: 3
+    url: https://prod-01.tunein.com/podcasts/Business--Economics/Marketing-Strategy-7-Easy-Steps-to-Master-Marketing-Fundamentals-Advertising-Strategy-Marketing-Management--Research-p3762138
+    title: Marketing Strategy 7 Easy Steps to Master Marketing Fundamentals Advertising Strategy Marketing Management  Research p3762138
+  - rank: 4
+    url: https://www.abebooks.co.uk/9781854181398/Marketing-Strategy-Desktop-Guide-S-1854181394/plp
+    title: 'The Marketing Strategy Desktop Guide (Desktop Guide S.) - Paley, Norton: 9781854181398 - AbeBooks'
+    search_title: www.abebooks.co.uk
+  - rank: 5
+    url: https://www.sanmin.com.tw/product/index/011966863
+    title: www.sanmin.com.tw
+  - rank: 6
+    url: https://ratings.koha-community.org/en/marketing-strategist-salary-illinois.html
+    title: 'The Ultimate 2024 Guide to a Marketing Strategist Salary in Illinois: Unlocking Your Earning Potential'
+  - rank: 7
+    url: https://www.freelancer.cz/jobs/marketing-strategy/
+    title: marketing strategy
+  - rank: 8
+    url: https://www.freelancer.com/articles/freelance-writing/the-ultimate-guide-to-hiring-a-marketing-strategist
+    title: the ultimate guide to hiring a marketing strategist
+  - rank: 9
+    url: https://www.surveymonkey.com/resources/premium/4-strategies-marketing/
+    title: 4 strategies marketing
+  marketing strategy guide:
+  - rank: 1
+    url: https://theweeklyconcepts.gumroad.com/l/marketing-strategy-guide
+    title: marketing strategy guide
+  - rank: 2
+    url: https://www.betterread.com.au/book/marketing-strategy-book-9798223957447.do
+    title: marketing strategy book 9798223957447
+  - rank: 3
+    url: https://www.wallstreetmojo.com/marketing-resources/marketing-strategy/
+    title: Marketing guide
+  - rank: 4
+    url: https://infotectvision1.getsub.page/create-the-article-for-marketing-strategy
+    title: create the article for marketing strategy
+  - rank: 5
+    url: https://www.wallstreetmojo.com/?p=60854
+    title: Marketing guide
+  - rank: 6
+    url: https://www.copy.ai/blog/marketing-strategy
+    title: November 26, 2024
+  - rank: 7
+    url: https://www.schweitzer-online.de/buch/Stevens/Marketing-Planning-Guide/9780789001122/A3582175/
+    title: Marketing Planning Guide
+  - rank: 8
+    url: https://aokmarketing.com/a-beginners-guide-to-a-marketing-strategy/
+    title: A Beginner’s Guide to a Marketing Strategy
+  - rank: 9
+    url: https://www.schweitzer-online.de/buch/Stevens/Marketing-Planning-Guide/9781560240846/A15199467/
+    title: Marketing Planning Guide
+  marketing strategy best practices:
+  - rank: 1
+    url: https://haveignition.com/best-practices/marketing-strategy-best-practices-for-marketing-planning
+    title: Best practices
+  - rank: 2
+    url: https://www.haveignition.com/best-practices/marketing-strategy-best-practices-for-market-development
+    title: Best practices
+  - rank: 3
+    url: https://www.haveignition.com/best-practices/marketing-strategy-best-practices-for-targeting
+    title: Best practices
+  - rank: 4
+    url: https://www.haveignition.com/best-practices/marketing-strategy-best-practices-for-best-practices
+    title: Best practices
+  - rank: 5
+    url: https://www.figpii.com/glossary/marketing-strategy
+    title: marketing strategy
+  - rank: 6
+    url: https://haveignition.com/best-practices/marketing-strategy-best-practices-for-market-share-analysis
+    title: Best practices
+  - rank: 7
+    url: https://haveignition.com/best-practices
+    title: best practices
+  - rank: 8
+    url: https://haveignition.com/best-practices/marketing-strategy-best-practices-for-trend-analysis
+    title: Best practices
+  - rank: 9
+    url: https://www.haveignition.com/best-practices/marketing-strategy-best-practices-for-product-marketing
+    title: Best practices
+  marketing strategy guidelines site:.gov:
+  - rank: 1
+    url: https://www.epa.gov/sites/default/files/2015-03/documents/volprg_marketing.pdf
+    title: volprg marketing
+  - rank: 2
+    url: https://www.af.mil/News/Featured-Videos/dvpTag/busy/dvpmoduleid/5832/videoid/997984/
+    title: www.af.mil
+  - rank: 3
+    url: https://www.hhs.gov/guidance/document/medicare-marketing-guidelines
+    title: medicare marketing guidelines
+  - rank: 4
+    url: https://buildstatus.puri.sm/create-marketing-plan
+    title: How To Create A Marketing Plan
+  - rank: 5
+    url: https://www.hhs.gov/guidance/document/medicare-marketing-guidelines-and-pre-enrollment-web-site-content
+    title: medicare marketing guidelines and pre enrollment web site content
+  - rank: 6
+    url: https://www.hhs.gov/guidance/document/medicare-marketing-guidelines-1
+    title: medicare marketing guidelines 1
+  - rank: 7
+    url: https://hhs.gov/guidance/document/part-d-marketing-guidelines-training
+    title: part d marketing guidelines training
+  - rank: 8
+    url: https://www.hhs.gov/guidance/document/medicare-marketing-guidelines-0
+    title: medicare marketing guidelines 0
+  - rank: 9
+    url: https://www.hhs.gov/guidance/document/medicare-marketing-guidelines-updated-2019
+    title: medicare marketing guidelines updated 2019
+  - rank: 10
+    url: https://www.hhs.gov/guidance/document/medicare-marketing-guidelines-ma-plans-ma-pdps-pdps-and-section-1876-cost-plans
+    title: medicare marketing guidelines ma plans ma pdps pdps and section 1876 cost plans
+  marketing strategy guide site:.edu:
+  - rank: 1
+    url: https://guides.lib.uiowa.edu/MKTG3000
+    title: '- UI Libraries home'
+  - rank: 2
+    url: https://libraries.etsu.edu/research/guides/marketing
+    title: Home - Marketing - Libraries at East Tennessee State University
+    search_title: libraries.etsu.edu
+  - rank: 3
+    url: https://library.ucc.edu.jm/marketing-management
+    title: marketing management
+  - rank: 4
+    url: https://www.london.edu/faculty-and-research/academic-research/m/marketing-strategy-a-decisionfocused-approach-6th-eds
+    title: 'Marketing strategy: A decision-focused approach 6th eds.,'
+  - rank: 5
+    url: https://lib.hpu.edu.vn/handle/123456789/30163
+    title: Marketing Strategy
+    search_title: lib.hpu.edu.vn
+  - rank: 6
+    url: https://cs.grinnell.edu/^93935300/ycavnsista/bchokom/rquistiong/Marketing+(Quickstudy+Reference+Guides+++Academic).pdf
+    title: cs.grinnell.edu
+  - rank: 7
+    url: https://cs.grinnell.edu/^94247421/kbehavev/fresemblet/bdatad/Marketing+(Quickstudy+Reference+Guides+++Academic).pdf
+    title: cs.grinnell.edu
+  - rank: 8
+    url: https://digitalcommons.usu.edu/marketing
+    title: Marketing and Strategy | Utah State University Research | DigitalCommons@USU
+  - rank: 9
+    url: https://www.scribd.com/presentation/498485977/Introduction
+    title: 0% found this document useful (0 votes)
+  - rank: 10
+    url: https://libguides.fau.edu/MKT4803
+    title: Home - MKT 4803 Marketing Strategy - LibGuides at Florida Atlantic University
+    search_title: libguides.fau.edu
+  marketing strategy standards:
+  - rank: 1
+    url: https://en.wikipedia.org/wiki/Marketing_strategy
+    title: Marketing strategy
+  - rank: 2
+    url: https://yogesh0724.gumroad.com/l/cwcvxx
+    title: Marketing Strategy
+    search_title: yogesh0724.gumroad.com
+  - rank: 3
+    url: https://www.ukstandards.org.uk/en/nos-finder/INSMAR019/develop-strategies-and-plans-for-marketing-campaigns-and-activities
+    title: Develop strategies and plans for marketing campaigns and activities
+  - rank: 4
+    url: https://www.cliffsnotes.com/study-notes/26521358
+    title: 'Essential Marketing Concepts: Strategies and Planning Explained'
+  - rank: 5
+    url: https://hkqf.gov.hk/files/record/insurance-scs/2/EN/105546L5.pdf
+    title: hkqf.gov.hk
+  - rank: 6
+    url: https://doe.sd.gov/CTE/documents/Marketing-Strategies.pdf
+    title: Marketing Strategies
+  - rank: 7
+    url: https://hkqf.gov.hk/files/record/logistics-scs/2/EN/LOCUSM505A.pdf
+    title: hkqf.gov.hk
+  - rank: 8
+    url: https://www.kbmanage.com/concept/marketing-strategies
+    title: Marketing Strategies
+  - rank: 9
+    url: https://lawinsider.com/dictionary/marketing-strategy
+    title: Marketing Strategy definition
+  review NDA contracts guide:
+  - rank: 1
+    url: https://www.spotdraft.com/blog/how-to-review-non-disclosure-agreements-ndas-a-comprehensive-guide
+    title: 'How to Review Non-Disclosure Agreements (NDAs): A Comprehensive Guide'
+  - rank: 2
+    url: https://www.docsum.ai/blog/a-guide-to-ndas
+    title: a guide to ndas
+  - rank: 3
+    url: https://blog.lexcheck.com/one-way-and-mutual-nda-contract-review-strategies-lc
+    title: one way and mutual nda contract review strategies lc
+  - rank: 4
+    url: https://lexology.com/pro/content/checklist-what-consider-when-reviewing-confidentiality-agreement-uk
+    title: checklist what consider when reviewing confidentiality agreement uk
+  - rank: 5
+    url: https://www.contractworks.com/nda-checklist-contractworks
+    title: nda checklist contractworks
+  - rank: 6
+    url: https://www.lawxyai.com/articles/nda-review-a-practical-guide-for-clearer-decisions
+    title: 'NDA Review: A Practical Guide for Clearer Decisions'
+  - rank: 7
+    url: https://www.scribd.com/document/670265602/tech-contracts
+    title: 0% found this document useful (0 votes)
+  - rank: 8
+    url: https://www.lawtrades.com/whitepapers/nda-playbook
+    title: Learn/The NDA Playbook
+  - rank: 9
+    url: https://www.lawxyai.com/articles/how-to-review-an-nda-a-practical-legal-guide
+    title: 'How to Review an NDA: A Practical Legal Guide'
+  contracts law:
+  - rank: 1
+    url: https://en.wikipedia.org/wiki/United_States_contract_law
+    title: United States contract law
+  - rank: 2
+    url: https://autoconfig.bps.go.id/BOOK/text/pb/3091116B3P260708/the-law_of__contract.pdf
+    title: the law of  contract
+  - rank: 3
+    url: https://saude.arapiraca.al.gov.br/course/PLAY/^33792LE/152904LE99/contracts__law__study-e.pdf
+    title: contracts  law  study e
+  - rank: 4
+    url: https://saude.arapiraca.al.gov.br/doc/DOC/_O58985M/O69351465M/contracts__law-study-e.pdf
+    title: contracts  law study e
+  - rank: 5
+    url: https://lugbs.linux.it/default.aspx/G-bKLn/450429/What Is The Contract Law.pdf
+    title: What Is The Contract Law
+  - rank: 6
+    url: https://openjurist.org/law/contract-law/west-virginia
+    title: west virginia
+  - rank: 7
+    url: https://analytics-origin.php.net/itourc/iw/IW90866900260702/contracts-law-study__e.pdf
+    title: contracts law study  e
+  - rank: 8
+    url: https://demo2.wcbi.com/Download_PDFS/u29EEC/243157/Essentials Of Contract Law.pdf
+    title: Essentials Of Contract Law
+  - rank: 9
+    url: https://openjurist.org/law/contract-law/texas
+    title: openjurist.org
+  contracts best practices:
+  - rank: 1
+    url: https://www.harvey.ai/blog/contract-management-best-practices
+    title: contract management best practices
+  - rank: 2
+    url: https://www.zoho.com/contracts/impact/contract-management-best-practices.html
+    title: Best practices in contract management
+  - rank: 3
+    url: https://www.harvey.ai/en-US/blog/contract-management-best-practices
+    title: contract management best practices
+  - rank: 4
+    url: https://www.freshworks.com/freshservice/contract-management-software/contract-management-software-best-practices/
+    title: Contract management and it’s best practices
+  - rank: 5
+    url: https://freshworks.com/contract-management/best-practices
+    title: Contract management and it’s best practices
+  - rank: 6
+    url: https://worldofprocurement.substack.com/p/5-contract-management-best-practices
+    title: 5 Contract Management Best Practices
+  - rank: 7
+    url: https://www.lawinsider.com/resources/blog/best-practices-for-contract-management
+    title: Best Practices For Contract Management You Need To Know
+  - rank: 8
+    url: https://www.thoughtriver.com/resources/mastering-contract-management-best-practices-for-success
+    title: mastering contract management best practices for success
+  - rank: 9
+    url: https://tagteam.harvard.edu/hub_feeds/4607/feed_items/15998933
+    title: Best Practices for Legal Contract Management
+  - rank: 10
+    url: https://www.volody.com/resource/contract-management-best-practices-in-2024
+    title: Top 10 Contract Management Best Practices in 2024
+  contracts guidelines site:.gov:
+  - rank: 1
+    url: https://Comptroller.Texas.Gov/purchasing/docs/sb20/tmd.pdf
+    title: comptroller.texas.gov
+  - rank: 2
+    url: https://occc.texas.gov/sites/default/files/2025-07/2025_ContractManagementHandbook.pdf
+    title: 2025 ContractManagementHandbook
+  - rank: 3
+    url: https://esd.ny.gov/sites/default/files/media/document/JDA-Procurement-Guidelines-2025-2026.pdf
+    title: JDA Procurement Guidelines 2025 2026
+  - rank: 4
+    url: https://govukdiff.njk.onl/update/2025-05-13T15:30:00+01:00/www.gov.uk/government/publications/procurement-act-2023-guidance-documents-plan-phase
+    title: Change of https://www.gov.uk/government/publications/procurement-act-2023-guidance-documents-plan-phase
+  - rank: 5
+    url: https://law.justia.com/codes/washington/2005/title39/39.29.100.html
+    title: View Our Newest Version Here
+  - rank: 6
+    url: https://www.gov.ie/en/department-of-education/circulars/good-practice-guidelines-in-relation-to-contracts-for-the-provision-of-goods-andor-services-2
+    title: good practice guidelines in relation to contracts for the provision of goods andor services 2
+  - rank: 7
+    url: https://www.hhs.gov/guidance/document/contractual-terms-and-conditions-and-their-potential-impact-information-technology-it
+    title: contractual terms and conditions and their potential impact information technology it
+  - rank: 8
+    url: https://esd.ny.gov/sites/default/files/media/document/JDA-Procurement-Guidelines-2026-2027.pdf
+    title: JDA Procurement Guidelines 2026 2027
+  - rank: 9
+    url: https://www.usda.gov/media/37807
+    title: www.usda.gov
+  contracts guide site:.edu:
+  - rank: 1
+    url: https://bcbp.berkeley.edu/sites/default/files/Contracts%20Guide_Final%205-13-15.pdf
+    title: Contracts%20Guide Final%205 13 15
+  - rank: 2
+    url: https://guides.highpoint.edu/law/contracts
+    title: guides.highpoint.edu
+  - rank: 3
+    url: https://www.uregina.ca/president/executive-team/provost-vp-academic/avp-academic/Projects-and-Initiatives1/Academic_Contracts.html
+    title: Academic Contracts Guide
+  - rank: 4
+    url: https://libguides.nova.edu/contracts
+    title: Contracts - Contracts - Library Guides at Nova Southeastern University
+    search_title: libguides.nova.edu
+  - rank: 5
+    url: https://libguides.law.ucla.edu/secondarypractice/contracts
+    title: Contracts - Secondary and Practice Guides - LibGuides at UCLA School of Law - Hugh & Hazel Darling Law Library
+    search_title: libguides.law.ucla.edu
+  - rank: 6
+    url: https://procurement.ofa.ncsu.edu/?p=8752
+    title: Contract Administration Guide
+  - rank: 7
+    url: https://news-rac.berkeley.edu/2015/05/new-uc-berkeley-guide-to-contracting.html
+    title: May 14, 2015
+  - rank: 8
+    url: https://libguides.law.widener.edu/contracts/blogs-news
+    title: blogs news
+  - rank: 9
+    url: https://law-duq.libguides.com/contracts/introduction
+    title: Introduction - Contracts - Research Guides Home at Law Library
+    search_title: law-duq.libguides.com
+  - rank: 10
+    url: https://libguides.law.rutgers.edu/guides_contracts
+    title: guides contracts
+  contracts standards:
+  - rank: 1
+    url: https://www.iaccm.com/contract-standards/
+    title: Contract Standards
+  - rank: 2
+    url: https://gatekeeperhq.com/blog/how-to-manage-your-contracting-standards
+    title: how to manage your contracting standards
+  - rank: 3
+    url: https://www.lawinsider.com/clause/contract-standards/_1
+    title: Common use of Contract Standards Clause in Contracts
+  - rank: 4
+    url: https://www.lawinsider.com/clause/standards/_10
+    title: Common use of Standards Clause in Contracts
+  - rank: 5
+    url: https://oreilly.com/library/view/contracts-for-engineers/9781439852866/xhtml/20_Chapter09.xhtml
+    title: Standards, Codes, and Regulations
+  - rank: 6
+    url: https://www.hyperbots.com/glossary/contract-governance-standards
+    title: What are Contract Governance Standards?
+  - rank: 7
+    url: https://infostore.saiglobal.com/en-au/key-standards/as-contract-standards/
+    title: General Conditions of Contract
+  - rank: 8
+    url: https://oneflow.com/blog/the-benefits-of-standardized-contracts.md
+    title: '# The benefits of standardized contracts'
+  - rank: 9
+    url: https://www.scl.org/8962-establishing-norms-for-contract-terms-a-fool-s-errand-or-the-future-of-contracting/
+    title: Establishing Norms for Contract Terms – A Fool’s Errand or the Future of Contracting?
+  small business budgeting finance guide:
+  - rank: 1
+    url: https://grasshopper.bank/5-financial-guides-for-small-business-owners
+    title: 5 financial guides for small business owners
+  - rank: 2
+    url: https://www.sage.com/en-ca/blog/a-guide-to-budgeting-and-goal-setting-for-small-businesses/
+    title: Strategy, Legal & Operations
+  - rank: 3
+    url: https://live.ncuscr.org/Download_PDFS/G-NiEX/448325/How To Budget A Small Business.pdf
+    title: How To Budget A Small Business
+  - rank: 4
+    url: https://licm.mcgill.ca/default.aspx/G-NiEX/448325/How To Budget A Small Business.pdf
+    title: How To Budget A Small Business
+  - rank: 5
+    url: https://www.xero.com/au/guides/create-small-business-budget/?x=boma
+    title: Limited time only
+  - rank: 6
+    url: https://www.fsb1879.com/blog/the-ultimate-checklist-for-small-business-budgeting
+    title: the ultimate checklist for small business budgeting
+  - rank: 7
+    url: https://webinopoly.com/blogs/news/budgeting-with-shopify-a-comprehensive-guide-for-small-business-financial-landscape-navigation
+    title: 'Budgeting with Shopify: A Comprehensive Guide for Small Business Finan | Webinopoly'
+  - rank: 8
+    url: https://gea.gov.gh/tag/small-business-budgeting-tips/
+    title: small business budgeting tips
+  - rank: 9
+    url: https://www.xero.com/au/guides/create-small-business-budget/
+    title: Get 80% off your plan for your first 3 months*
+  small business finance government guidance:
+  - rank: 1
+    url: https://smefinanceforum.org/node/4139
+    title: smefinanceforum.org
+  - rank: 2
+    url: https://enterprise.gov.ie/en/Publications/Government-working-with-finance-providers-to-support-SME-financing.html
+    title: Government working with finance providers to support SME financing
+  - rank: 3
+    url: https://enterprise.gov.ie/en/publications/government-working-with-finance-providers-to-support-sme-financing.html
+    title: Government working with finance providers to support SME financing
+  - rank: 4
+    url: https://smefinanceforum.org/post/uk-sme-access-to-finance-schemes%E2%80%94measures-to-support-sme-growth
+    title: uk sme access to finance schemes—measures to support sme growth
+  - rank: 5
+    url: https://help.sos.iowa.gov/node/52
+    title: help.sos.iowa.gov
+  - rank: 6
+    url: https://bcrpub.com/news/improved-access-finance-small-businesses
+    title: Improved access to finance for small businesses
+  - rank: 7
+    url: https://www.accountingweb.co.uk/node/113602
+    title: Save content
+  - rank: 8
+    url: https://www.accountingweb.co.uk/node/105248
+    title: Save content
+  - rank: 9
+    url: https://aph.gov.au/parliamentary_Business/Committees/Senate/Economics/Completed_inquiries/2008-10/small_business_10/report/d01
+    title: Government Minority Report
+  - rank: 10
+    url: https://www.hvpmag.co.uk/BIS-publishes-finance-schemes-guidance-for-SMEs
+    title: BIS publishes finance schemes guidance for SMEs
+  small business finance best practices:
+  - rank: 1
+    url: https://www.volopay.com/blog/small-business-finance-management-best-practices/
+    title: Best practices for small business finance management
+  - rank: 2
+    url: https://pursuitlending.com/resources/top-5-best-practices-for-small-business-finances/
+    title: Top 5 Best Practices for Small Business Finances
+  - rank: 3
+    url: https://www.crowdfundinsider.com/?p=84221
+    title: Small Business Finance Association Publishes Best Practices for Online Lenders
+  - rank: 4
+    url: https://www.crowdfundinsider.com/2016/04/84221-small-business-finance-association-publishes-best-practices-for-online-lenders/
+    title: Small Business Finance Association Publishes Best Practices for Online Lenders
+  - rank: 5
+    url: https://greensheet.com/emagazine&article_id=4898
+    title: The Green Sheet Online Edition
+  - rank: 6
+    url: https://savearchive.zbw.eu/bitstream/11159/631611/1/1868814793_0.pdf
+    title: savearchive.zbw.eu
+  - rank: 7
+    url: https://sinalite.com/printersuccess/?p=3209
+    title: facebook pixel
+  - rank: 8
+    url: https://designbeep.com/2023/12/21/9-best-practices-to-avoid-small-business-overspending/
+    title: 9 best practices to avoid small business overspending
+  - rank: 9
+    url: https://firstutahbank.com/financial-management-best-practices-for-small-businesses/
+    title: Financial Management Best Practices For Small Businesses
+  small business finance guidelines site:.gov:
+  - rank: 1
+    url: https://www.fdic.gov/consumers/banking/businesslending/index.html
+    title: Small Business Topics | FDIC.gov
+    search_title: www.fdic.gov
+  - rank: 2
+    url: https://help.sos.iowa.gov/node/52
+    title: help.sos.iowa.gov
+  - rank: 3
+    url: https://davis.house.gov/small-business-resource-guide
+    title: small business resource guide
+  - rank: 4
+    url: https://www.accountingweb.co.uk/node/105248
+    title: Save content
+  - rank: 5
+    url: https://fdic.gov/news/financial-institution-letters/2010/fil10090.html
+    title: Underwriting Standards for Small Business Loans Originated Under the Small Business Lending Fund Program | FDIC.gov
+    search_title: fdic.gov
+  - rank: 6
+    url: https://www.memphislibrary.org/?p=2362
+    title: Small Business Resources
+  - rank: 7
+    url: https://cameonetwork.org/resource/small-business-finance-faq/
+    title: Small Business Finance FAQ
+  - rank: 8
+    url: https://webarchive.library.unt.edu/eot2008/20080916024643mp_/http://www.business.gov/guides
+    title: Small Business Guides
+  - rank: 9
+    url: https://amser.org/r3051/united_states_small_business_administration
+    title: united states small business administration
+  - rank: 10
+    url: https://www.sba.gov/about-sba/organization/forms-and-documents
+    title: An official website of the United States government
+  small business finance guide site:.edu:
+  - rank: 1
+    url: https://help.sos.iowa.gov/node/52
+    title: help.sos.iowa.gov
+  - rank: 2
+    url: https://www.icaew.com/bfg
+    title: The Business Finance Guide | ICAEW
+    search_title: www.icaew.com
+  - rank: 3
+    url: https://www.icaew.com/technical/corporate-finance/corporate-finance-faculty/corporate-finance-news/the-business-finance-guide
+    title: the business finance guide
+  - rank: 4
+    url: https://egrove.olemiss.edu/aicpa_guides/530
+    title: Guides, Handbooks and Manuals
+  - rank: 5
+    url: https://findit.library.nd.edu/Record/000039645
+    title: findit.library.nd.edu
+  - rank: 6
+    url: https://books-lib.ndhu.edu.tw/toread/opac/subject/648033?lang=eng
+    title: books-lib.ndhu.edu.tw
+  - rank: 7
+    url: https://extension.msstate.edu/publications/808
+    title: Publications | Mississippi State University Extension Service
+    search_title: extension.msstate.edu
+  - rank: 8
+    url: https://www.devon.gov.uk/fundingnews/?p=660
+    title: Business Finance Guide - Devon Funding News
+    search_title: www.devon.gov.uk
+  - rank: 9
+    url: https://taxagents.blog.gov.uk/2017/02/24/business-finance-guide-make-informed-financial-decisions-for-your-business
+    title: business finance guide make informed financial decisions for your business
+  - rank: 10
+    url: https://www.easternbank.com/node/13906
+    title: www.easternbank.com
+  small business finance standards:
+  - rank: 1
+    url: https://www.punchline-gloucester.com/articles/aanews/small-firms-demand-better-lending-standards
+    title: Small firms demand better lending standards
+  - rank: 2
+    url: https://www.mortgagesolutions.co.uk/news/2024/02/13/lsb-issues-lender-guidance-on-support-for-smes/
+    title: lsb issues lender guidance on support for smes
+  - rank: 3
+    url: https://lendingstandardsboard.org.uk/small-businesses-demand-better-lending-standards-as-fsb-calls-for-all-banks-to-sign-up-to-the-standards-of-lending-practice
+    title: small businesses demand better lending standards as fsb calls for all banks to sign up to the standards of lending practice
+  - rank: 4
+    url: https://www.lendingstandardsboard.org.uk/wp-content/uploads/2023/06/Review-of-the-Standards-of-Lending-Practice-for-business-customers-consultation.pdf
+    title: Review of the Standards of Lending Practice for business customers consultation
+  - rank: 5
+    url: https://www.lendingstandardsboard.org.uk/the-slp/
+    title: Standards & Codes
+  - rank: 6
+    url: https://www.regulationtomorrow.com/2024/12/lsb-publishes-summary-report-on-standards-of-lending-practice-for-business-customers/
+    title: lsb publishes summary report on standards of lending practice for business customers
+  - rank: 7
+    url: https://lendingstandardsboard.org.uk/?p=7453
+    title: The LSB drives fair customer outcomes in financial services
+    search_title: lendingstandardsboard.org.uk
+  - rank: 8
+    url: https://www.regulationtomorrow.com/?p=50275
+    title: www.regulationtomorrow.com
+  - rank: 9
+    url: https://www.crowdfundinsider.com/2016/04/84221-small-business-finance-association-publishes-best-practices-for-online-lenders/
+    title: Small Business Finance Association Publishes Best Practices for Online Lenders
+  write press release public relations guide:
+  - rank: 1
+    url: https://docs.google.com/presentation/d/187809qNcUzO5HD5PO2vHROau-p-vv4a8/htmlpresent
+    title: Writing a Press Release - العروض التقديمية من Google
+    search_title: docs.google.com
+  - rank: 2
+    url: https://www.grammarly.com/blog/company/press-release
+    title: Grammarly Home
+  - rank: 3
+    url: https://www.grammarly.com/blog/business-writing/press-release/
+    title: Grammarly Home
+  - rank: 4
+    url: https://www.newsfilecorp.com/redirect/rYZ8GFD4ak
+    title: KISS PR Releases New Guide on Press Release Writing
+  - rank: 5
+    url: https://docs.google.com/presentation/d/1GfumHOI4Vem2sJ60DQIKDGiM0vkzvywu/htmlpresent
+    title: Press Release - العروض التقديمية من Google
+    search_title: docs.google.com
+  - rank: 6
+    url: https://www.newsfilecorp.com/release/152981/KISS-PR-Releases-New-Guide-on-Press-Release-Writing
+    title: KISS PR Releases New Guide on Press Release Writing
+  - rank: 7
+    url: https://semrush.com/blog/how-to-write-a-press-release
+    title: 'How to Write a Press Release: A Step-By-Step Guide'
+  - rank: 8
+    url: https://docs.google.com/presentation/d/1JtbFZq7ZWff1BV1qXx7k4tmW5k3oHopy/htmlpresent
+    title: Press Release - العروض التقديمية من Google
+    search_title: docs.google.com
+  - rank: 9
+    url: https://smallbiztrends.com/?p=956977
+    title: How to Write a Press Release [+ Template Examples]
+    search_title: smallbiztrends.com
+  public relations writing guide:
+  - rank: 1
+    url: https://libcat.mcphs.edu/Record/in00000150077/Description
+    title: 'Writing for public relations : a practical guide for professionals /'
+  - rank: 2
+    url: https://seal.matrade.gov.my/neuaxis-e/Record/EBC4307177/TOC
+    title: 'Writing for public relations : a practical guide for professionals /'
+  - rank: 3
+    url: https://www.prestomusic.com/books/products/8574113--public-relations-writing
+    title: 8574113  public relations writing
+  - rank: 4
+    url: https://www.taylorfrancis.com/books/9781136593383
+    title: Becoming a Public Relations Writer | A Writing Workbook for Emerging a
+    search_title: www.taylorfrancis.com
+  - rank: 5
+    url: https://nsuworks.nova.edu/shss_facbooks/153
+    title: CAHSS Faculty Books and Book Chapters
+  - rank: 6
+    url: https://www.businessexpertpress.com/?p=10037
+    title: 'Writing For Public Relations: A Practical Guide for Professionals'
+  - rank: 7
+    url: https://search.worldcat.org/zh-cn/title/1130027831
+    title: The public relations writer's handbook
+  - rank: 8
+    url: https://www.businessexpertpress.com/books/writing-for-public-relations-a-practical-guide-for-professionals/
+    title: 'Writing For Public Relations: A Practical Guide for Professionals'
+  - rank: 9
+    url: https://www.routledge.com/products/9780815365280
+    title: The Public Relations Writer’s Handbook - 1st Edition - Whitney Lehma
+    search_title: www.routledge.com
+  - rank: 10
+    url: https://www.lafeltrinelli.it/public-relations-writing-libro-inglese-e-w-brody-dan-lattimore/e/9780275928964
+    title: Public Relations Writing - E W. Brody,Dan Lattimore - cover
+  public relations best practices:
+  - rank: 1
+    url: https://www.demandmetric.com/blog/public-relations-best-practices
+    title: Public Relations Best Practices
+  - rank: 2
+    url: https://sk.sagepub.com/ency/edvol/embed/encyclopedia-of-public-relations-2e/chpt/best-practices
+    title: best practices
+  - rank: 3
+    url: https://myeducationpath.gelembjuk.com/courses/22936/public-relations-best-practices-and-ethics.htm
+    title: public relations best practices and ethics
+  - rank: 4
+    url: https://online.nwmissouri.edu/programs/undergraduate/bachelor-of-science-in-communication-public-relations/practice-for-pr-relations/
+    title: practice for pr relations
+  - rank: 5
+    url: https://info.knowledgeleader.com/best-practices-for-developing-strong-public-relations
+    title: KnowledgeLeader Blog
+  - rank: 6
+    url: https://secure.businesswire.com/resources-education/guides/60-communications-tips
+    title: 60 Communications Tips That Work
+  - rank: 7
+    url: https://online.nwmissouri.edu/?p=7129
+    title: 5 Best Practices for Public Relations - Northwest Missouri
+    search_title: online.nwmissouri.edu
+  - rank: 8
+    url: https://api.baseballprospectus.com/ProductPdf/u4C58A/245753/Principles And Practice Of Public Relations.pdf
+    title: Principles And Practice Of Public Relations
+  - rank: 9
+    url: https://www.slideshare.net/slideshow/best-practices-in-communications-research/1593248
+    title: Public Relations Journal Vol. 1, No. 1, Fall 2007
+  public relations guidelines site:.gov:
+  - rank: 1
+    url: https://4csl.org/media/RMPartVI.pdf
+    title: 4csl.org
+  - rank: 2
+    url: https://salvationarmy.ca/wp-content/uploads/2025/10/0101.-PRD-Standards-and-Review-Procedures.pdf
+    title: 0101. PRD Standards and Review Procedures
+  - rank: 3
+    url: https://thp.ipb.ac.id/public-relations-services-procedures-and-guidelines
+    title: Public Relations Services Procedures and Guidelines
+  - rank: 4
+    url: https://ojp.gov/ncjrs/virtual-library/abstracts/media-relations-and-united-states-attorneys-office
+    title: media relations and united states attorneys office
+  - rank: 5
+    url: https://yolocounty.gov/home/showpublisheddocument/27583/635588145247900000
+    title: Attachment B
+  - rank: 6
+    url: https://www.bu.edu/prsocial/expertise/u-s-congress/
+    title: u s congress
+  - rank: 7
+    url: https://ojp.gov/ncjrs/virtual-library/abstracts/how-do-it-public-relations-corrections
+    title: how do it public relations corrections
+  - rank: 8
+    url: https://prsj.or.jp/association-en/?p=13275
+    title: Title Image
+  - rank: 9
+    url: https://www.bu.edu/prsocial/expertise/fed-policy/
+    title: fed policy
+  - rank: 10
+    url: https://repository.kippra.or.ke/items/88ca28b1-45f0-4d40-b696-3364a95433eb/full
+    title: Public Relations and Communication Management Policy 2019
+  public relations guide site:.edu:
+  - rank: 1
+    url: https://libguides.westminster.ac.uk/pr_resources
+    title: pr resources
+  - rank: 2
+    url: https://laverne.libguides.com/publicrelations
+    title: laverne.libguides.com
+  - rank: 3
+    url: https://lib.murraystate.edu/pr
+    title: lib.murraystate.edu
+  - rank: 4
+    url: https://libguides.baylor.edu/publicrelationsresources
+    title: Home - Public Relations - Guides at Baylor University
+    search_title: libguides.baylor.edu
+  - rank: 5
+    url: https://libraryguides.centennialcollege.ca/pr/websites
+    title: libraryguides.centennialcollege.ca
+  - rank: 6
+    url: https://guides.ou.edu/pr/home
+    title: Getting Started
+  - rank: 7
+    url: https://libraryguides.centennialcollege.ca/pr
+    title: centennialcollege.ca
+  - rank: 8
+    url: https://otterbein.libguides.com/publicrelations/overview
+    title: Overview - Public Relations Research Guide - LibGuides at Otterbein University
+    search_title: otterbein.libguides.com
+  - rank: 9
+    url: https://www.bu.edu/prsocial/expertise/public-relations-2
+    title: public relations 2
+  - rank: 10
+    url: https://pvd.library.jwu.edu/publicrelations
+    title: Home - Public Relations - LibGuides at Johnson & Wales University-Providence Campus
+    search_title: jwu.edu
+  public relations standards:
+  - rank: 1
+    url: https://opus.lib.uts.edu.au/handle/10453/135871
+    title: 'OPUS at UTS: Reviewing the ‘march to standards’ in public relations: a comparative analysis of four seminal measurement and evaluation initiatives - Open Publications of UTS Scholars'
+    search_title: uts.edu.au
+  - rank: 2
+    url: https://kmt.uksw.edu.pl/media/img/standardy-public-relations.pdf
+    title: standardy public relations
+  - rank: 3
+    url: https://biopen.bi.no/bi-xmlui/handle/11250/2723858
+    title: biopen.bi.no
+  - rank: 4
+    url: https://instituteforpr.org/public-relations-research-standards/about
+    title: instituteforpr.org
+  - rank: 5
+    url: https://opus.lib.uts.edu.au/bitstream/10453/135871/3/Binder4.pdf
+    title: opus.lib.uts.edu.au
+  - rank: 6
+    url: https://instituteforpr.org/what-are-standards-for-public-relations-research-and-why-do-we-need-them
+    title: what are standards for public relations research and why do we need them
+  - rank: 7
+    url: https://sk.sagepub.com/ency/edvol/embed/publicrelations/chpt/codes-public-relations-practice
+    title: codes public relations practice
+  - rank: 8
+    url: https://biopen.bi.no/bi-xmlui/handle/11250/2723858?show=full
+    title: biopen.bi.no
+  - rank: 9
+    url: https://digital.car.chula.ac.th/chulaetd/19541
+    title: Chulalongkorn University Theses and Dissertations (Chula ETD)
+  non-disclosure agreement NDA guide:
+  - rank: 1
+    url: https://www.bgateway.com/resources/non-disclosure-agreements
+    title: Non-disclosure agreements
+  - rank: 2
+    url: https://hipeople.io/glossary/nda-non-disclosure-agreement
+    title: NDA (Non-Disclosure Agreement)
+  - rank: 3
+    url: https://thoughtriver.com/resources/unlocking-the-potential-of-non-disclosure-agreements-ndas-an-in-depth-guide
+    title: unlocking the potential of non disclosure agreements ndas an in depth guide
+  - rank: 4
+    url: https://www.nibusinessinfo.co.uk/content/non-disclosure-agreements
+    title: Non-disclosure agreements
+  - rank: 5
+    url: https://hyperstart.com/glossary/non-disclosure-agreement
+    title: 'How to Write an Non Disclosure Agreement: Template & Best Practices'
+  - rank: 6
+    url: https://womenofrubies.com/?p=37324
+    title: 'How to Write an Effective NDA: Essential Elements for Confidentiality Agreements - Women of Rubies'
+    search_title: womenofrubies.com
+  - rank: 7
+    url: https://www.hyperstart.com/blog/non-disclosure-agreement/
+    title: 'How to Write an Non Disclosure Agreement: Template & Best Practices'
+  - rank: 8
+    url: https://www.minclaw.com/?p=10021429
+    title: How to Get a Non-Disclosure Agreement (NDA) Featured Image
+  - rank: 9
+    url: https://www.minclaw.com/how-to-get-a-non-disclosure-agreement
+    title: How to Get a Non-Disclosure Agreement (NDA) Featured Image
+  - rank: 10
+    url: https://nibusinessinfo.co.uk/node/9585
+    title: Non-disclosure agreements
+  confidentiality agreement law site:.gov:
+  - rank: 1
+    url: https://newyork.public.law/laws/n.y._public_authorities_law_section_2853
+    title: N.Y. Public Authorities Law Section 2853
+  - rank: 2
+    url: https://www.legislature.maine.gov/statutes/33/title33sec2214.pdf
+    title: www.legislature.maine.gov
+  - rank: 3
+    url: https://www.nysenate.gov/legislation/laws/PBA/2853
+    title: www.nysenate.gov
+  - rank: 4
+    url: https://codes.findlaw.com/tx/government-code/gov-t-sect-552-008/
+    title: Learn About The Law
+  - rank: 5
+    url: https://autodiscover.legislature.maine.gov/statutes/33/title33sec2214.pdf
+    title: autodiscover.legislature.maine.gov
+  - rank: 6
+    url: https://www.nysenate.gov/legislation/bills/2019/S2037
+    title: Assembly Actions -
+  - rank: 7
+    url: https://capitol.texas.gov/tlodocs/81R/billtext/pdf/SB00671E.pdf
+    title: capitol.texas.gov
+  - rank: 8
+    url: https://legislature.maine.gov/statutes/33/title33sec2214.html
+    title: Maine Legislature Maine Revised Statutes
+  - rank: 9
+    url: https://codes.findlaw.com/tx/government-code/gov-t-sect-552-405/
+    title: Learn About The Law
+  - rank: 10
+    url: https://capitol.texas.gov/tlodocs/81R/billtext/html/SB00671F.htm
+    title: 81(R) SB 671 - Enrolled version - Bill Text
+    search_title: capitol.texas.gov
+  contract law basics site:.edu:
+  - rank: 1
+    url: https://www.credly.com/org/lawshelf-educational-media/badge/basics-of-contract-law.1
+    title: '- Type Certification'
+  - rank: 2
+    url: https://irishplaces.flinders.edu.au/10-contract-law-essentials-for-beginners
+    title: 10 contract law essentials for beginners
+  - rank: 3
+    url: https://www.nationalccrs.org/lawshelf-educational-media/basics-contract-law-con-101
+    title: basics contract law con 101
+  - rank: 4
+    url: https://www.agc-ca.org/training-education/contract-law-basics
+    title: contract law basics
+  - rank: 5
+    url: https://www.law.columbia.edu/academics/courses/32932
+    title: www.law.columbia.edu
+  - rank: 6
+    url: https://sbrc2017.ufpa.br/trip/i-basics-of-contract-law
+    title: i basics of contract law
+  - rank: 7
+    url: https://ccrsstg-acquia.nysed.gov/lawshelf-educational-media/basics-contract-law-con-101
+    title: basics contract law con 101
+  - rank: 8
+    url: https://ayub.is-a.dev/pdf/u4PO59FPZ1LG/i_basics_of_contract_law
+    title: i basics of contract law
+  - rank: 9
+    url: https://www.aauni.edu/course/elements-of-the-law-of-contracts/
+    title: Elements of the Law of Contracts
+  machine learning engineering best practices:
+  - rank: 1
+    url: https://home.mlops.community/public/videos/engineering-best-practices-for-machine-learning
+    title: engineering best practices for machine learning
+  - rank: 2
+    url: https://ar5iv.arxiv.org/html/2007.14130
+    title: Adoption and Effects of Software Engineering Best Practices in Machine Learning
+  - rank: 3
+    url: https://deepai.org/publication/adoption-and-effects-of-software-engineering-best-practices-in-machine-learning
+    title: Adoption and Effects of Software Engineering Best Practices in Machine Learning
+  - rank: 4
+    url: https://paperswithcode.com/paper/adoption-and-effects-of-software-engineering
+    title: Adoption and Effects of Software Engineering Best Practices in Machine Learning
+  - rank: 5
+    url: https://forum.freecodecamp.org/t/rules-of-machine-learning-best-practices-for-ml-engineering/192435
+    title: 'Rules of Machine Learning: Best Practices for ML Engineering'
+  - rank: 6
+    url: https://cs.ru.nl/~aserban/talks/pdf/engineering_ML.pdf
+    title: engineering ML
+  - rank: 7
+    url: https://hackr.io/tutorial/rules-of-machine-learning-best-practices-for-ml-engineering
+    title: rules of machine learning best practices for ml engineering
+  - rank: 8
+    url: https://laszlo.substack.com/p/article-review-rules-of-machine-learning
+    title: 'Article Review: Rules of Machine Learning: Best Practices for ML Engineering by Google'
+  - rank: 9
+    url: https://arxiv.org/abs/2306.13662v1
+    title: '[2306.13662v1] Best Practices for Machine Learning Systems: An Industrial Framework for Analysis and Optimization'
+    search_title: arxiv.org
+  large language model evaluation guide:
+  - rank: 1
+    url: https://gsapra.medium.com/evaluating-large-language-models-a-practical-guide-part-1-f9c0fffdb2d9
+    title: evaluating large language models a practical guide part 1 f9c0fffdb2d9
+  - rank: 2
+    url: https://medium.com/online-inference/evaluating-large-language-models-llms-a-comprehensive-guide-for-practitioners-49e2ad345ac4
+    title: 'Evaluating Large Language Models (LLMs): A comprehensive guide for practitioners'
+  - rank: 3
+    url: https://www.labellerr.com/blog/evaluating-large-language-models/
+    title: 'Evaluating Large Language Models: A Comprehensive Guide'
+  - rank: 4
+    url: https://www.granica.ai/blog/large-language-model-evaluation-grc
+    title: large language model evaluation grc
+  - rank: 5
+    url: https://jimmysong.io/ai/evaluation-guidebook
+    title: evaluation guidebook
+  - rank: 6
+    url: https://www.singlestore.com/blog/complete-guide-to-evaluating-large-language-models/
+    title: 'Evaluating Large Language Models: A Complete Guide'
+  - rank: 7
+    url: https://orq.ai/blog/llm-evaluation
+    title: Large Language Models
+  - rank: 8
+    url: https://www.labellerr.com/blog/evaluating-large-language-models/amp/
+    title: 'Evaluating Large Language Models: A Comprehensive Guide'
+  - rank: 9
+    url: https://www.sourcepulse.org/projects/1827794
+    title: evaluation-guidebook  by huggingface
+  data analysis statistics guide site:.gov:
+  - rank: 1
+    url: https://libguides.walsh.edu/Stats
+    title: Getting Started - Finding Statistics - LibGuides at Brother Edmond Drouin Library
+    search_title: libguides.walsh.edu
+  - rank: 2
+    url: https://epa.gov/tsca-screening-tools/guidelines-statistical-analysis-occupational-exposure-data
+    title: Guidelines for Statistical Analysis of Occupational Exposure Data
+  - rank: 3
+    url: https://guides.lib.berkeley.edu/Public-Policy/data
+    title: Data & Statistics - Public Policy - Library Guides at UC Berkeley
+    search_title: berkeley.edu
+  - rank: 4
+    url: https://guides.library.txstate.edu/statistics
+    title: txstate.edu
+  - rank: 5
+    url: https://gss.civilservice.gov.uk/policy-store/using-administrative-data-good-practice-guidance-for-statisticians-2
+    title: using administrative data good practice guidance for statisticians 2
+  - rank: 6
+    url: https://www.census.gov/topics/research/guidance.html
+    title: Guidance for Research Data Users
+    search_title: www.census.gov
+  - rank: 7
+    url: https://libguides.ucmerced.edu/wri-130/step3/stats
+    title: 'Locating Statistics & Data - Writing 130: Grant and Proposal Writing (Ocena) - LibGuides at University of California Merced'
+    search_title: libguides.ucmerced.edu
+  - rank: 8
+    url: https://guides.library.vcu.edu/c.php?g=47656
+    title: Home - Find Data & Statistics - Research Guides at Virginia Commonwealth University
+    search_title: guides.library.vcu.edu
+  - rank: 9
+    url: https://guides.library.vcu.edu/statistics
+    title: Home - Find Data & Statistics - Research Guides at Virginia Commonwealth University
+    search_title: guides.library.vcu.edu
+  - rank: 10
+    url: https://pgcc.libguides.com/stats/home
+    title: Statistical and Government Information - Statistical and Government Information - LibGuides at Prince George's Community College
+    search_title: pgcc.libguides.com
+  data visualization guidelines:
+  - rank: 1
+    url: https://portal.ct.gov/-/media/ct-data/data-visualization-guidelines.pdf
+    title: data visualization guidelines
+  - rank: 2
+    url: https://r-training.uni.lu/mads6/slides/guidelines.html
+    title: Data visualisation guidelines
+  - rank: 3
+    url: https://towardsdatascience.com/data-visualization/
+    title: data visualization
+  - rank: 4
+    url: https://www.queensu.ca/brand-central/brand-guidelines/data-visualization-guidelines
+    title: Data Visualization Guidelines
+  - rank: 5
+    url: https://jschwabish.substack.com/p/five-guidelines-for-better-data-visualizations
+    title: five guidelines for better data visualizations
+  - rank: 6
+    url: https://www.queensu.ca/brand-central/data-visualization-guidelines
+    title: Data Visualization Guidelines
+  - rank: 7
+    url: https://towardsdatascience.com/data-visualization-101-7-steps-for-effective-visualizations-491a17d974de
+    title: data visualization 101 7 steps for effective visualizations 491a17d974de
+  - rank: 8
+    url: https://www.stlouis-mo.gov/government/departments/information-technology/web-development/style/content/data-visualizations
+    title: Data Visualization Style Guide
+  - rank: 9
+    url: https://docs.one.org/guidelines/data-visualisation-guidelines/
+    title: data visualisation guidelines
+  blameless postmortem guide:
+  - rank: 1
+    url: https://www.smartsheet.com/content/blameless-postmortem-guide
+    title: Essential Blameless PostMortem Guide - How to Run, Setting the Culture, Being Blame Aware
+  - rank: 2
+    url: https://inventivehq.com/blog/blameless-postmortem-template-guide
+    title: blameless postmortem template guide
+  - rank: 3
+    url: https://www.betsol.com/blog/how-to-run-blameless-postmortems/
+    title: How to Run Blameless Postmortems to Foster a Culture of Learning
+  - rank: 4
+    url: https://oneuptime.com/blog/post/2026-01-26-blameless-postmortems-guide/view
+    title: How to Conduct Blameless Postmortems
+    search_title: oneuptime.com
+  - rank: 5
+    url: https://oack.io/blog/blameless-postmortem-guide
+    title: Back to blog
+  - rank: 6
+    url: https://my-test.valpo.edu/blameless-post-mortem-template-82119
+    title: 8 Steps To Perfect Blameless Post Mortem Template
+  - rank: 7
+    url: https://rootly.com/blog/how-to-run-effective-blameless-postmortems
+    title: How to Run Effective Blameless Postmortems
+  - rank: 8
+    url: https://www.pagerduty.com/?p=51736
+    title: 'PagerDuty: The AI-First Operations Platform'
+    search_title: '- PagerDuty /'
+  - rank: 9
+    url: https://raygun.com/blog/blameless-postmortems-part-two/
+    title: How to implement a Blameless Postmortem (part two)
+  site reliability engineering incident management:
+  - rank: 1
+    url: https://www.indiehackers.com/post/a-complete-guide-to-sre-incident-management-best-practices-and-lifecycle-7c9f6d8d1e
+    title: a complete guide to sre incident management best practices and lifecycle 7c9f6d8d1e
+  - rank: 2
+    url: https://www.virtusa.com/digital-themes/site-reliability-engineering
+    title: Site reliability engineering
+  - rank: 3
+    url: https://dotcom-monitor.com/blog/sre-incident-management-overview-techniques-and-tools
+    title: 'SRE Incident Management: Overview, Techniques, and Tools'
+  - rank: 4
+    url: https://gremlin.com/sre-best-practices-for-incident-management
+    title: SRE Best Practices for Incident Management
+  - rank: 5
+    url: https://rootly.com/sre/ultimate-guide-devops-incident-management-sre-tools
+    title: March 10, 2026
+  - rank: 6
+    url: https://rootly.com/sre/ultimate-devops-incident-management-guide-top-sre-tools-4b60c
+    title: March 9, 2026
+  - rank: 7
+    url: https://rootly.com/sre/boost-devops-incident-management-top-sre-tools-fd4df
+    title: March 7, 2026
+  - rank: 8
+    url: https://www.oreilly.com/library/view/site-reliability-engineering/9781491929117/ch14.html
+    title: www.oreilly.com
+  - rank: 9
+    url: https://rootly.com/sre/energize-sre-incident-management-proven-best-practices
+    title: 'Energize SRE Incident Management: Proven Best Practices'
+  - rank: 10
+    url: https://rootly.com/sre/sre-incident-management-best-practices-boost-reliability
+    title: March 11, 2026
+  small business marketing plan site:.gov:
+  - rank: 1
+    url: https://www.sba.gov/document/support-marketing-plan-example
+    title: support marketing plan example
+  - rank: 2
+    url: https://dslbd.dc.gov/service/marketing-plan-assistance
+    title: marketing plan assistance
+  - rank: 3
+    url: https://www.franklincountyohio.gov/Business-Development/Food-Business-Portal/Create-a-Business-Plan/Marketing-Sales
+    title: Marketing & Sales
+  - rank: 4
+    url: https://www.franklincountyohio.gov/Business-Development/Development-Planning/Food-Action-Plan/Food-Business-Portal/Create-a-Business-Plan/Marketing-Sales
+    title: Marketing & Sales
+  - rank: 5
+    url: https://sba.ubc.ca/snippet/sample-marketing-plan-resources
+    title: Sample Marketing Plan Resources
+  - rank: 6
+    url: https://sbdc.illinois.gov/content/dam/soi/en/web/sbdc/documents/il-sbdc-english-marketing-plan-2025-apr.pdf
+    title: il sbdc english marketing plan 2025 apr
+  - rank: 7
+    url: https://www.fdic.gov/about/diversity/sbrp/15.pdf
+    title: www.fdic.gov
+  - rank: 8
+    url: https://monroeuniversity.libguides.com/entrepreneurship
+    title: MONROE UNIVERSITY LIBRARIES
+  - rank: 9
+    url: https://members.fredericksburgchamber.org/events/details/govcon-101-13169
+    title: GovCon 101
+  - rank: 10
+    url: https://web.uri.edu/risbdc/the-right-foot-session-four-marketing-plan/
+    title: the right foot session four marketing plan
+  truth in advertising business guidance:
+  - rank: 1
+    url: https://bbbprograms.org/programs/advertising/all-programs/truth-in-advertising/insights/2021/04/29/truth-in-advertising-rules
+    title: Truth-in-Advertising 101
+  - rank: 2
+    url: https://www.accc.gov.au/node/30098
+    title: www.accc.gov.au
+  - rank: 3
+    url: https://insideretail.com.au/news/accc-updates-advertising-guide-201404
+    title: accc updates advertising guide 201404
+  - rank: 4
+    url: https://www.ftc.gov/node/28076
+    title: Division of Advertising Practices | Federal Trade Commission
+    search_title: www.ftc.gov
+  - rank: 5
+    url: https://djholtlaw.com/the-truth-in-advertising-laws-what-you-should-know/
+    title: 'The Truth in Advertising Laws: What You Should Know'
+  - rank: 6
+    url: https://djholtlaw.com/?p=281717
+    title: 'The Truth in Advertising Laws: What You Should Know'
+  - rank: 7
+    url: https://www.brokernews.com.au/news/breaking-news/how-to-make-sure-you-dont-mislead-consumers-accc-186669.aspx
+    title: how to make sure you dont mislead consumers accc 186669
+  - rank: 8
+    url: https://patch.com/rhode-island/coventry/new-bbb-advertising-standards-reflect-21st-century-advertising-traditional-and-new-media
+    title: new bbb advertising standards reflect 21st century advertising traditional and new media
+  - rank: 9
+    url: https://www.findlaw.com/?p=42325
+    title: Small Business Truth-in-Ads Tips - FindLaw
+    search_title: www.findlaw.com
+  small business budget cash flow site:.gov:
+  - rank: 1
+    url: https://gov.texas.gov/es/business/event/governors-small-business-webinar-series-optimizing-your-cash-flow
+    title: governors small business webinar series optimizing your cash flow
+  - rank: 2
+    url: https://www.fdic.gov/consumer-resource-center/mssb-m10-pg.pdf
+    title: mssb m10 pg
+  - rank: 3
+    url: https://www.cockburn.wa.gov.au/Business-and-Investment/Business-Financial-Support/Financial-Management-and-Tax-Guidance
+    title: Financial Management and Tax Guidance
+  - rank: 4
+    url: https://aofund.org/resource/small-business-cash-flow-calculator/
+    title: Small Business Cash Flow Calculator Small Business Cash Flow Calculator
+  - rank: 5
+    url: https://www.guilfordcountync.gov/news/events/financial-litearcy-workshop-budget-management-and-cashflow
+    title: AddToAny share buttons
+  - rank: 6
+    url: https://live.ncuscr.org/Download_PDFS/G-NiEX/448325/How To Budget A Small Business.pdf
+    title: How To Budget A Small Business
+  - rank: 7
+    url: https://aofund.org/?p=1976
+    title: Small Business Cash Flow Calculator
+  - rank: 8
+    url: https://www.biz2credit.com/business-loan/small-business-budget-revenue-and-expenses
+    title: small business budget revenue and expenses
+  - rank: 9
+    url: https://www.fdic.gov/consumer-resource-center/mssb-m10-ig.pdf
+    title: mssb m10 ig
+  small business financial management guide:
+  - rank: 1
+    url: https://brewminate.com/financial-management-tips-for-small-businesses/
+    title: financial management tips for small businesses
+  - rank: 2
+    url: https://www.interest.co.nz/node/60438
+    title: sign up log in
+  - rank: 3
+    url: https://www.accaglobal.com/gb/en/technical-activities/technical-resources-search/2016/june/financial-management-and-business-success-.html
+    title: financial management and business success
+  - rank: 4
+    url: https://www.accaglobal.com/uk/en/technical-activities/technical-resources-search/2016/june/financial-management-and-business-success-.html
+    title: financial management and business success
+  - rank: 5
+    url: https://www.accaglobal.com/pk/en/technical-activities/technical-resources-search/2016/june/financial-management-and-business-success-.html
+    title: financial management and business success
+  - rank: 6
+    url: https://www.abebooks.com/9780749452735/Practical-Financial-Management-Guide-Budgets-0749452730/plp
+    title: 'Practical Financial Management - Colin Barrow: 9780749452735 - AbeBooks'
+    search_title: www.abebooks.com
+  - rank: 7
+    url: https://www.interest.co.nz/business/60438/we-are-starting-new-13-part-guide-small-business-managers-who-want-achieve-financial-
+    title: sign up log in
+  - rank: 8
+    url: https://gov.wiley.com/WileyCDA/WileyTitle/productCd-0471122955.html
+    title: 'Self-Defense Finance: For Small BusinessesISBN: 978-0-471-12295-1'
+  - rank: 9
+    url: https://www.interest.co.nz/business/60438/we-are-starting-new-13-part-guide-small-business-managers-who-want-achieve-financial
+    title: sign up log in
+  - rank: 10
+    url: https://www.goodreads.com/book/show/325974
+    title: Jump to ratings and reviews
+  how to write a press release site:.edu:
+  - rank: 1
+    url: https://students.washington.edu/san/release.html
+    title: How to write a press release
+  - rank: 2
+    url: https://drexel.edu/~/media/Files/dornsife/CPHRC/Covello Video Resources/Writing a Press Release/How to Write a Press Release.ashx?la=en
+    title: How to Write a Press Release
+  - rank: 3
+    url: https://imagine.jhu.edu/classes/how-to-write-a-press-release/
+    title: how to write a press release
+  - rank: 4
+    url: https://www.exeter.ac.uk/v8media/research/esi/documents/How_to_Write_a_Press_Release.pdf
+    title: How to Write a Press Release
+  - rank: 5
+    url: https://careerservices.upenn.edu/classes/how-to-write-a-press-release/
+    title: how to write a press release
+  - rank: 6
+    url: https://bwsr.state.mn.us/press-releases
+    title: press releases
+  - rank: 7
+    url: https://us.sagepub.com/sites/default/files/j23_2386_press_release_toolkit_update.pdf
+    title: j23 2386 press release toolkit update
+  - rank: 8
+    url: https://health-rights.aspher.org/index.php/cop/item/how-to-write-a-press-release
+    title: how to write a press release
+  - rank: 9
+    url: https://hi.hsc.unm.edu/medicine/departments/pediatrics/divisions/pps/_resources/vivacomm_accordion_modules_pdfs/writing_press_release.pdf
+    title: writing press release
+  news release style guide:
+  - rank: 1
+    url: https://www.prnewsonline.com/Assets/File/2013writingbootcamp/bonuses/HOW TO News Release Guidelines copy.docx
+    title: News Release Guidelines
+  - rank: 2
+    url: https://www.prnewsonline.com//wp-content/uploads/2014/09/Press-Release-Guidelines.pdf
+    title: Press Release Guidelines
+  - rank: 3
+    url: https://www.medialibrary.nd.gov/assetbank-nd/assetfile/120057.pdf
+    title: www.medialibrary.nd.gov
+  - rank: 4
+    url: https://tedmag.com/?p=6258
+    title: By Katrina Olson
+  - rank: 5
+    url: https://www.connexions.org/CxLibrary/Docs/CX5009-NewsReleases.htm
+    title: News Releases
+  - rank: 6
+    url: https://edis.ifas.ufl.edu/publication/WC113/pdf
+    title: edis.ifas.ufl.edu
+  - rank: 7
+    url: https://www.theiia.org/globalassets/documents/about-us/promote-the-profession/actionable-resources/news-release-tips-and-sample-news-release-template.docx
+    title: '[bookmark: _GoBack]News Release Tips and Sample News Release Template'
+  - rank: 8
+    url: https://ruralhealth.und.edu/communication/news-releases
+    title: news releases
+  - rank: 9
+    url: https://highered.mheducation.com/sites/0073511935/student_view0/nrw_plus/chapter10/a_dozen_tips.html
+    title: a dozen tips
+  law.cornell.edu wex contract:
+  - rank: 1
+    url: https://www.law.cornell.edu/wex/ex_contractu
+    title: ex contractu
+  - rank: 2
+    url: https://libguides.utoledo.edu/c.php?g=975620
+    title: Home - Contract Law - LibGuides at University of Toledo Libraries
+    search_title: libguides.utoledo.edu
+  - rank: 3
+    url: https://guides.library.harvard.edu/contracts?hs=a
+    title: Contracts Overview - Contracts Basics - Research Guides at Harvard Library
+    search_title: guides.library.harvard.edu
+  - rank: 4
+    url: https://scholarship.law.cornell.edu/clr/vol79/iss6/10
+    title: '"Status Contract and Covenant " by Margaret F. Brinig'
+    search_title: scholarship.law.cornell.edu
+  - rank: 5
+    url: https://scholarship.law.cornell.edu/clr/vol59/iss6/2
+    title: '"Nature of the Contract Argument" by David Lyons'
+    search_title: scholarship.law.cornell.edu
+  - rank: 6
+    url: https://repository.law.wisc.edu/s/uwlaw/item/23503
+    title: Site icons
+  - rank: 7
+    url: https://scholarship.law.cornell.edu/clr/vol23/iss2/2
+    title: '"Williston on Contracts " by Horace E. Whiteside'
+    search_title: scholarship.law.cornell.edu
+  - rank: 8
+    url: https://scholarship.law.cornell.edu/clr/vol77/iss5/19
+    title: '"Contracts Is Not Dead " by E. Allan Farnsworth'
+    search_title: scholarship.law.cornell.edu
+  - rank: 9
+    url: https://repository.law.wisc.edu/s/uwlaw/item/324552
+    title: Site icons
+  - rank: 10
+    url: https://repository.law.wisc.edu/s/uwlaw/item/23504
+    title: Site icons
+  Cornell LII Wex non-disclosure agreement:
+  - rank: 1
+    url: https://blog.counselstack.com/non-disclosure-agreements-ndas-confidentiality-legal-enforceability-limitations
+    title: 'Non-Disclosure Agreements (NDAs): Confidentiality, Legal Enforceability, Limitations'
+  - rank: 2
+    url: https://daisy.net.ru/recently-added/corporate-non-disclosure-agreement.php
+    title: daisy.net.ru Corporate Non Disclosure Agreement
+  - rank: 3
+    url: https://www.library.cornell.edu/?p=447
+    title: Nondisclosure Clauses
+  - rank: 4
+    url: https://researchservices.cornell.edu/forms/standard-bilateral-non-disclosure-agreement-nda-form
+    title: Standard Bilateral Non-Disclosure Agreement (NDA) Form
+  - rank: 5
+    url: https://researchservices.cornell.edu/resources/exchange-confidential-information
+    title: Exchange Confidential Information
+  - rank: 6
+    url: https://researchservices.cornell.edu/node/8071
+    title: Standard Individual/Unilateral Non-Disclosure Agreement (NDA)
+  - rank: 7
+    url: https://liblicense.crl.edu/ListArchives/1103/msg00100.html
+    title: '[Date Prev][Date Next][Thread Prev][Thread Next][Date Index][Thread Index]'
+  - rank: 8
+    url: https://researchservices.cornell.edu/sites/default/files/2021-03/Standard-BilateralNDA_February2020-Fillable.docx
+    title: 'Collaborator: [_______________________]'
+  - rank: 9
+    url: https://researchservices.cornell.edu/sites/default/files/2019-06/Cornell%20Standard%20Bilateral%20NDA%202019%20-%20fillable%20form_0.pdf
+    title: Cornell%20Standard%20Bilateral%20NDA%202019%20 %20fillable%20form 0
+  non-disclosure agreements site:gov.uk:
+  - rank: 1
+    url: https://disclosures.pembrokeshire.gov.uk/details/1711433?culture=cy
+    title: Non-Disclosure Agreements
+  - rank: 2
+    url: https://assets.publishing.service.gov.uk/media/682ddfef7fb7a7d9cd77517b/non-disclosure_agreements-section-17-guidance.pdf
+    title: non disclosure agreements section 17 guidance
+  - rank: 3
+    url: https://www.gov.uk/government/publications/non-disclosure-agreements/non-disclosure-agreements
+    title: non disclosure agreements
+  - rank: 4
+    url: https://www.contractsfinder.service.gov.uk/Notice/Attachment/7eab5390-98a0-4573-8efd-993b393d33a1
+    title: 7eab5390 98a0 4573 8efd 993b393d33a1
+  - rank: 5
+    url: https://www.contractsfinder.service.gov.uk/Notice/Attachment/c427c708-e500-4353-8e2a-c9accb402d78
+    title: Non-disclosure Agreement
+  - rank: 6
+    url: https://businesswales.gov.wales/news-and-blog/victims-and-prisoners-act-2024-changes-non-disclosure-agreements
+    title: victims and prisoners act 2024 changes non disclosure agreements
+  - rank: 7
+    url: https://gov.wales/atisn18678
+    title: 'FOI release 18678: Non-disclosure agreements | GOV.WALES'
+    search_title: gov.wales
+  - rank: 8
+    url: https://www.gov.wales/node/56520
+    title: 'FOI release 18678: Non-disclosure agreements | GOV.WALES'
+    search_title: www.gov.wales
+  - rank: 9
+    url: https://www.gov.uk/government/publications/non-disclosure-agreements--2
+    title: Transparency data
+  - rank: 10
+    url: https://www.designingbuildings.co.uk/wiki/Non-disclosure agreement
+    title: Non-disclosure agreement for building design and construction
+  nolo.com nondisclosure agreements trade secrets:
+  - rank: 1
+    url: https://store.nolo.com/products/confidentiality-non-disclosure-agreement-noe3-pr111.html
+    title: Nondisclosure Agreement (NDA)
+  - rank: 2
+    url: https://store.nolo.com/products/business-negotiation-nondisclosure-agreement-pr165.html
+    title: Business Negotiation Nondisclosure Agreement
+  - rank: 3
+    url: https://www.nolo.com/dictionary/nondisclosure-agreement-term.html
+    title: Based on Your Previous Answers, We Have a Few Last Questions
+  - rank: 4
+    url: https://www.nolo.com/legal-encyclopedia/trade-secrets
+    title: Trade Secrets
+  - rank: 5
+    url: https://jplr.atu.ac.ir/article_2232_en.html
+    title: A Concise Review of Non-Disclosure Agreement
+  - rank: 6
+    url: https://www.blankrome.com/sites/default/files/2023-07/grossman-ordonez.pdf
+    title: grossman ordonez
+  - rank: 7
+    url: https://www.pandadoc.com/non-disclosure-agreement-template/
+    title: non disclosure agreement template
+  - rank: 8
+    url: https://www.ericgoldman.org/Speeches/ndanov2004.pdf
+    title: ericgoldman.org
+  - rank: 9
+    url: https://www.mondaq.com/trade-secrets/854426/non-disclosure-contracts-and-non-compete-agreements
+    title: non disclosure contracts and non compete agreements
+  American Bar Association contract law guide:
+  - rank: 1
+    url: https://cbca.gov/howto/aba-manual.html
+    title: American Bar Association Manual
+  - rank: 2
+    url: https://www.americanbar.org/news/abanews/aba-news-archives/2023/03/guide-lawyers-working-contracts/
+    title: guide lawyers working contracts
+  - rank: 3
+    url: https://www.legalnews.com/ingham/1521522
+    title: ABA publishes new edition of top guide for lawyers working with contracts
+  - rank: 4
+    url: https://www.americanbar.org/groups/public_education/resources/law_issues_for_consumers/books_consumer_home/
+    title: books consumer home
+  - rank: 5
+    url: https://openlibrary.org/works/OL535999W
+    title: An edition of Alternative Dispute Resolution (1999)
+  - rank: 6
+    url: https://courthouselibrary.ca/catalogue-item?cid=47696
+    title: A manual of style for contract drafting
+  - rank: 7
+    url: https://payhip.com/b/tV7Cf
+    title: payhip.com
+  - rank: 8
+    url: https://catalog.pelhamlibrary.org/Record/3271940
+    title: catalog.pelhamlibrary.org
+  - rank: 9
+    url: https://bookstore.sautech.edu/ebook/1554313562
+    title: Back to results
+  - rank: 10
+    url: https://search.law.villanova.edu/Record/11617/Cite
+    title: APA (7th ed.) Citation
+  eeoc.gov prohibited employment practices hiring:
+  - rank: 1
+    url: https://www.eeoc.gov/node/24185
+    title: Prohibited Employment Policies/Practices | U.S. Equal Employment Opportunity Commission
+    search_title: www.eeoc.gov
+  - rank: 2
+    url: https://www.eeoc.gov/es/node/135393
+    title: BaronHR to Pay $2.2 Million in EEOC Hiring Discrimination Lawsuit | Comisión para la Igualdad de Oportunidades en el Empleo
+    search_title: www.eeoc.gov
+  - rank: 3
+    url: https://www.eeoc.gov/index%2Ephp/es/node/135393
+    title: BaronHR to Pay $2.2 Million in EEOC Hiring Discrimination Lawsuit | Comisión para la Igualdad de Oportunidades en el Empleo
+    search_title: www.eeoc.gov
+  - rank: 4
+    url: https://fingercheck.com/prohibited-practices-during-the-hiring-process/
+    title: prohibited practices during the hiring process
+  - rank: 5
+    url: https://www.eeoc.gov/index%2Ephp/newsroom/baronhr-pay-22-million-eeoc-hiring-discrimination-lawsuit
+    title: baronhr pay 22 million eeoc hiring discrimination lawsuit
+  - rank: 6
+    url: https://www.eeoc.gov/newsroom/baronhr-pay-22-million-eeoc-hiring-discrimination-lawsuit
+    title: baronhr pay 22 million eeoc hiring discrimination lawsuit
+  - rank: 7
+    url: https://www.timberassociation.com/wp-content/uploads/2023/07/FL052015.pdf
+    title: www.timberassociation.com
+  - rank: 8
+    url: https://www.lplegal.com/?p=12906
+    title: EEOC Announces Its OutREACH Initiatives with a Focus on Employers’ Recruitment and Hiring Practices
+  - rank: 9
+    url: https://www.cbia.com/news/hr-safety/eeoc-releases-strategic-enforcement-plan
+    title: 'Employers Take Notice: EEOC Releases Strategic Enforcement Plan'
+  shrm.org structured interview guide:
+  - rank: 1
+    url: https://vendordirectory.shrm.org/company/878694/products/234935/structured-interview-guides-and-processes
+    title: structured interview guides and processes
+  - rank: 2
+    url: https://vendordirectory.shrm.org/company/742343/products/245756/structured-interview-guides
+    title: Assessment and Testing Services
+  - rank: 3
+    url: https://vendordirectory.shrm.org/company/915175/products/243827/interview-guide-builder
+    title: interview guide builder
+  - rank: 4
+    url: https://vendordirectory.shrm.org/company/351981/products/236663/competency-interview-guides
+    title: competency interview guides
+  - rank: 5
+    url: https://vendordirectory.shrm.org/company/915175/reviews
+    title: Reviews for Quintela | Structured Interviews
+  - rank: 6
+    url: https://oneillcareerhub.indiana.edu/?p=31041
+    title: SHRM’s Guide to Behavioral Based Interviews
+  - rank: 7
+    url: https://www.shrm.org/in/topics-tools/news/talent-acquisition/viewpoint-no-holy-grail-interview-questions-good-commandments
+    title: viewpoint no holy grail interview questions good commandments
+  - rank: 8
+    url: https://www.shrm.org/mena/topics-tools/news/talent-acquisition/viewpoint-no-holy-grail-interview-questions-good-commandments
+    title: viewpoint no holy grail interview questions good commandments
+  - rank: 9
+    url: https://www.shrm.org/topics-tools/tools/interview-questions
+    title: interview questions
+  - rank: 10
+    url: https://dataford.io/interview-guides/shrm
+    title: dataford.io
+  dol.gov hiring process employers:
+  - rank: 1
+    url: https://www.dol.gov/node/167451?lang=fr
+    title: www.dol.gov
+  - rank: 2
+    url: https://www.dol.gov/node/167451?lang=hi
+    title: www.dol.gov
+  - rank: 3
+    url: https://www.dol.gov/general/jobs/how-to-apply
+    title: how to apply
+  - rank: 4
+    url: https://www.dol.gov/general/topic/hiring
+    title: Hiring | U.S. Department of Labor
+    search_title: www.dol.gov
+  - rank: 5
+    url: https://www.dol.gov/dol/topic/hiring/
+    title: Hiring | U.S. Department of Labor
+    search_title: www.dol.gov
+  - rank: 6
+    url: https://www.dol.gov/index.php/general/topic/hiring
+    title: Hiring | U.S. Department of Labor
+    search_title: www.dol.gov
+  - rank: 7
+    url: https://www.dol.gov/general/jobs/how-to-apply?lang=ko
+    title: how to apply
+  - rank: 8
+    url: https://www.dcpas.osd.mil/sites/default/files/2021-04/01_Four_Key_Phases_of_the_Hiring_Process.pdf
+    title: 01 Four Key Phases of the Hiring Process
+  - rank: 9
+    url: https://idahobusinessreview.com/?p=73424
+    title: Department of Labor not just for the unemployed
+    search_title: idahobusinessreview.com
+  gov.uk recruiting staff employer guidance job description:
+  - rank: 1
+    url: https://old-leake.parish.lincolnshire.gov.uk/downloads/file/238/being-a-good-employer-a-guide-for-parish-and-town-councillors-june-2010-
+    title: being a good employer a guide for parish and town councillors june 2010
+  - rank: 2
+    url: https://coningsby.parish.lincolnshire.gov.uk/downloads/file/214/being-a-good-employer-a-guide-for-parish-and-town-councillors
+    title: being a good employer a guide for parish and town councillors
+  - rank: 3
+    url: https://www.barrowbc.gov.uk/sites/default/files/attachment/7032.pdf
+    title: www.barrowbc.gov.uk
+  - rank: 4
+    url: https://www.fis.cityoflondon.gov.uk/asset-library/good-practice-guide-to-recruitment-nov-2021.pdf
+    title: good practice guide to recruitment nov 2021
+  - rank: 5
+    url: https://stagingmolly.molevalley.gov.uk/wp-content/uploads/2023/02/page-1-Writing-the-Job-Description-and-Person-Specifications-Guidance.pdf
+    title: molevalley.gov.uk
+  - rank: 6
+    url: https://cyps.northyorks.gov.uk/node/314
+    title: cyps.northyorks.gov.uk
+  - rank: 7
+    url: https://www.merseysidewda.gov.uk/wp-content/uploads/2012/04/Recruitment-Selection-and-Retention-Policy.pdf
+    title: Recruitment Selection and Retention Policy
+  - rank: 8
+    url: https://committees.bolsover.gov.uk/Data/Union-Employee Consultation Committee/20160608/Agenda/report18610.pdf
+    title: committees.bolsover.gov.uk
+  - rank: 9
+    url: https://www.pwss.gov.au/recruiting-staff
+    title: recruiting staff
+  sre.google postmortem culture:
+  - rank: 1
+    url: https://incident.io/blog/sre-incident-postmortem-best-practices
+    title: 'SRE incident post-mortem best practices: Templates, process & learning culture'
+  - rank: 2
+    url: https://www.computing.co.uk/news/3013914/google-describes-its-blameless-post-mortem-culture
+    title: Google describes its 'blameless post-mortem culture'
+  - rank: 3
+    url: https://sre.google/workbook/postmortem-culture/
+    title: 'Chapter 10 - Postmortem Culture: Learning from Failure'
+  - rank: 4
+    url: https://sre.google/sre-book/postmortem-culture/
+    title: 'Chapter 15 - Postmortem Culture: Learning from Failure'
+  - rank: 5
+    url: https://oreil.ly/0jdWX
+    title: 'Postmortem Culture: Learning from Failure'
+  - rank: 6
+    url: https://bitmaybewise.substack.com/p/sre-book-notes-postmortem-culture
+    title: 'SRE book notes: Postmortem Culture'
+  - rank: 7
+    url: https://cloud.google.com/blog/products/devops-sre/loon-sre-use-postmortems-to-launch-and-iterate/
+    title: Jump to Content
+  - rank: 8
+    url: https://www.conf42.com/Site_Reliability_Engineering_2022_Ramon_Medrano_Llamas_postmortem_culture_google
+    title: Conf42 Site Reliability Engineering 2022 - Online
+  - rank: 9
+    url: https://dzone.com/articles/learning-from-failure-with-blameless-postmortem-cu
+    title: Learning From Failure With Blameless Postmortem Culture
+  response.pagerduty.com postmortem:
+  - rank: 1
+    url: https://response.pagerduty.com/after/post_mortem_template/
+    title: Postmortem Template
+  - rank: 2
+    url: https://pagerduty.com/?p=31945
+    title: 'PagerDuty: The AI-First Operations Platform'
+    search_title: pagerduty.com
+  - rank: 3
+    url: https://www.airops.com/mcp-library/engineering-incident-response
+    title: Accelerate incident response and post-mortems
+  - rank: 4
+    url: https://support.PagerDuty.com/docs/postmortems
+    title: Postmortems and Jeli Post Incident Reviews
+  - rank: 5
+    url: https://slab.com/library/pagerduty-postmortem-template
+    title: pagerduty postmortem template
+  - rank: 6
+    url: https://docs.devin.ai/use-cases/gallery/api-pagerduty-postmortem.md
+    title: '> ## Documentation Index'
+  - rank: 7
+    url: https://slab.com/library/templates/pagerduty-postmortem-template/
+    title: pagerduty postmortem template
+  - rank: 8
+    url: https://postmortems.pagerduty.com/next_steps/
+    title: Next Steps
+  - rank: 9
+    url: https://www.plushcap.com/content/pagerduty/blog/pagerduty-better-incident-postmortems
+    title: pagerduty better incident postmortems
+  atlassian incident management handbook postmortem:
+  - rank: 1
+    url: https://pages.eml.atlassian.com/rs/594-ATC-127/images/Atlassian-incident-management-handbook-.pdf
+    title: Atlassian incident management handbook
+  - rank: 2
+    url: https://www.atlassian.com/incident-management/handbook/postmortems
+    title: Incident management for high-velocity teams
+  - rank: 3
+    url: https://www.atlassian.com/software/jira/ops/handbook/incident-postmortems
+    title: incident postmortems
+  - rank: 4
+    url: https://www.atlassian.com/incident-management/handbook
+    title: The Atlassian Incident Management Handbook | Atlassian
+    search_title: www.atlassian.com
+  - rank: 5
+    url: https://www.atlassian.com/software/jira/ops/handbook
+    title: The Atlassian Incident Management Handbook | Atlassian
+    search_title: www.atlassian.com
+  - rank: 6
+    url: https://www.atlassian.com/fr/incident-management/handbook/postmortems
+    title: 'Post-mortems : améliorer les processus de gestion des incidents | Atlassian'
+    search_title: www.atlassian.com
+  - rank: 7
+    url: https://www.atlassian.com/br/incident-management/handbook/postmortems
+    title: 'Post-mortems: aprimore os processos de gerenciamento de incidentes | Atlassian'
+    search_title: www.atlassian.com
+  - rank: 8
+    url: https://www.atlassian.com/de/incident-management/handbook/postmortems
+    title: 'Post-Mortem-Analysen: Vorfallmanagementprozesse optimieren | Atlassian'
+    search_title: www.atlassian.com
+  - rank: 9
+    url: https://www.atlassian.com/nl/incident-management/handbook/postmortems
+    title: 'Postmortems: verbeter de processen voor incidentmanagement | Atlassian'
+    search_title: www.atlassian.com
+  sba.gov manage your finances:
+  - rank: 1
+    url: https://help.sos.iowa.gov/node/52
+    title: help.sos.iowa.gov
+  - rank: 2
+    url: https://www.sba.gov/blog/2021/2021-04/understand-your-finances-grow-your-business/
+    title: Understand Your Finances and Grow Your Business
+  - rank: 3
+    url: https://www.sba.gov/blog/understand-your-finances-grow-your-business
+    title: Understand Your Finances and Grow Your Business
+  - rank: 4
+    url: https://legacy.sba.gov/blog/understand-your-finances-grow-your-business
+    title: Understand Your Finances and Grow Your Business
+  - rank: 5
+    url: https://www.sba.gov/?p=19820
+    title: Understand Your Finances and Grow Your Business
+  - rank: 6
+    url: https://www.sba.gov/blog/2023/2023-03/let-sba-help-you-better-understand-your-finances
+    title: Let the SBA Help You Better Understand Your Finances
+  - rank: 7
+    url: https://legacy.sba.gov/blog/2023/2023-03/let-sba-help-you-better-understand-your-finances
+    title: Let the SBA Help You Better Understand Your Finances
+  - rank: 8
+    url: https://www.sba.gov/blog/reach-your-full-financial-capability-help-sba
+    title: Reach Your Full Financial Capability with Help from the SBA
+  - rank: 9
+    url: https://www.sba.gov/?p=19721
+    title: Let the SBA Help You Better Understand Your Finances
+  irs.gov small business self-employed:
+  - rank: 1
+    url: https://www.irs.gov/node/1081
+    title: IRS Lends a Hand to Small Business
+  - rank: 2
+    url: https://www.irs.gov/pub/irs-news/ir-01-26.pdf
+    title: ir 01 26
+  - rank: 3
+    url: https://www.irs.gov/ht/newsroom/irsgov-offers-help-for-small-businesses
+    title: irsgov offers help for small businesses
+  - rank: 4
+    url: https://www.irs.gov/node/122126
+    title: 'National Small Business Week: IRS.gov offers A-Z resources for small businesses'
+  - rank: 5
+    url: https://www.irs.gov/ru/newsroom/national-small-business-week-irsgov-offers-one-stop-shop-for-small-business-tax-resources
+    title: national small business week irsgov offers one stop shop for small business tax resources
+  - rank: 6
+    url: https://omwbe.wa.gov/node/11560
+    title: Internal Revenue Service (IRS) - Small Business and Self-Employed One-Stop Resource
+  - rank: 7
+    url: https://www.irs.gov/node/25111
+    title: IRS Small Business Self-Employed Tax Center (ASL) - YouTube video
+  - rank: 8
+    url: https://www.irs.gov/ru/newsroom/irsgov-offers-help-for-small-businesses
+    title: irsgov offers help for small businesses
+  - rank: 9
+    url: https://irs.gov/zh-hant/newsroom/national-small-business-week-irsgov-offers-a-z-resources-for-small-businesses
+    title: 'National Small Business Week: IRS.gov offers A-Z resources for small businesses'
+  score.org small business budget cash flow:
+  - rank: 1
+    url: https://www.score.org/?p=29289
+    title: Chat with us, powered by LiveChat
+  - rank: 2
+    url: https://www.score.org/me/maine/articles/12-month-cash-flow-projection/
+    title: 12 month cash flow projection
+  - rank: 3
+    url: https://www.score.org/?p=31863
+    title: www.score.org
+  - rank: 4
+    url: https://www.score.org/tx/houston/templates/24-month-cash-flow-projection-template-score-houston/
+    title: 24 month cash flow projection template score houston
+  - rank: 5
+    url: https://www.score.org/finance-and-money-resources?page=10
+    title: finance and money resources
+  - rank: 6
+    url: https://www.score.org/?p=17235
+    title: Budgeting; Business Plan; Business Structure; Cash Flow; Management & Operations; Supply Chain Management
+  - rank: 7
+    url: https://www.score.org/?p=16448
+    title: www.score.org
+  - rank: 8
+    url: https://www.score.org/sc/greater-aiken/e-guides/working-capital-cash-flow/
+    title: working capital cash flow
+  - rank: 9
+    url: https://www.score.org/resource-library/resources/
+    title: Small Business Resources
+  cdc.gov health literacy plain language:
+  - rank: 1
+    url: https://www.cdc.gov/health-literacy/php/about/guidelines.html
+    title: Guidelines, Laws, & Standards
+  - rank: 2
+    url: https://www.chcs.org/media/Health-Literacy-and-Plain-Language.pdf
+    title: Health Literacy and Plain Language
+  - rank: 3
+    url: https://centerforplainlanguage.org/promoting-plain-language-at-cdc-checklist-and-messaging/
+    title: Promoting Plain Language at CDC – Checklist and messaging
+  - rank: 4
+    url: https://www.cdc.gov/healthliteracy/developmaterials/plainlanguage.html
+    title: Plain Language Materials & Resources
+  - rank: 5
+    url: https://cdc.gov/health-literacy/php/develop-materials/plain-language.html
+    title: Plain Language Materials & Resources
+  - rank: 6
+    url: https://www.cdc.gov/health-literacy/php/develop-materials/plain-Language.html
+    title: Plain Language Materials & Resources
+  - rank: 7
+    url: https://journal.emwa.org/plain-language-and-readability/how-cdc-is-promoting-a-clear-communication-culture/article/1511/2047480614z2e000000000270.pdf
+    title: Plain Language and Readability - EMWA
+    search_title: emwa.org
+  - rank: 8
+    url: https://cdc.gov/health-literacy/pdf/cdc-plain-writing-act-compliance-report.pdf
+    title: cdc plain writing act compliance report
+  - rank: 9
+    url: https://www.cdc.gov/healthliteracy/planact/cdcplan.html?pg=13
+    title: CDC’s Health Literacy Action Plan
+  - rank: 10
+    url: https://www.cdc.gov/other/pdf/CDC-Plain-Writing-Act-Compliance-Report-3-15-2021-OADC_FINAL.pdf
+    title: CDC Plain Writing Act Compliance Report 3 15 2021 OADC FINAL
+  ahrq.gov health literacy universal precautions toolkit teach-back:
+  - rank: 1
+    url: https://www.shepscenter.unc.edu/wp-content/uploads/2013/05/Health-Literacy-Universal-Precautions-Toolkit.pdf
+    title: Health Literacy Universal Precautions Toolkit
+  - rank: 2
+    url: https://www.ahrq.gov/news/newsroom/case-studies/201408.html
+    title: AHRQ’s Health Literacy Universal Precautions Toolkit a Popular Resource Among Medical Professionals in Rural Kentucky
+  - rank: 3
+    url: https://www.medchi.org/Portals/18/Files/Practice Services/AHRQ_healthlittoolkit2.pdf
+    title: AHRQ healthlittoolkit2
+  - rank: 4
+    url: https://nachc.org/wp-content/uploads/2023/09/AHRQ-Health-Literacy-Toolkit.pdf
+    title: AHRQ Health Literacy Toolkit
+  - rank: 5
+    url: https://www.bannerhealth.com/medicare/providers/health-equity/health-literacy
+    title: Health Literacy Universal Precautions Guidelines
+  - rank: 6
+    url: https://www.bannerhealth.com/es/bhpprovider/about/health-equity/health-literacy
+    title: Health Literacy Universal Precautions Guidelines
+  - rank: 7
+    url: https://www.bannerhealth.com/bhpprovider/about/health-equity/health-literacy
+    title: Health Literacy Universal Precautions Guidelines
+  - rank: 8
+    url: https://drum.lib.umd.edu/bitstream/handle/1903/24654/Health_Literacy_and_Universal_Precautions.pdf?sequence=1
+    title: Health Literacy and Universal Precautions
+  - rank: 9
+    url: https://www.ahrq.gov:443/sites/default/files/publications2/files/health-literacy-universal-precautions-toolkit-3rd-edition.pdf
+    title: health literacy universal precautions toolkit 3rd edition
+  medlineplus.gov understanding lab test results:
+  - rank: 1
+    url: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/
+    title: how to understand your lab results
+  - rank: 2
+    url: https://magazine.medlineplus.gov/article/275-plus-medical-tests-explained-from-adhd-to-zika/
+    title: 275 plus medical tests explained from adhd to zika
+  - rank: 3
+    url: https://magazine-local.medlineplus.gov/article/275-plus-medical-tests-explained-from-adhd-to-zika
+    title: 275 plus medical tests explained from adhd to zika
+  - rank: 4
+    url: https://www.medibuddy.in/blog/lab-tests-results-purpose-interpretation/
+    title: lab tests results purpose interpretation
+  - rank: 5
+    url: https://uofmhealth.org/health-library/zp3409
+    title: Understanding Lab Test Results
+  - rank: 6
+    url: https://www.columbiadoctors.org/health-library/special/understanding-lab-test-results/
+    title: Understanding Lab Test Results
+  - rank: 7
+    url: https://www.nlm.nih.gov/pubs/techbull/nd17/nd17_medlineplus_lab_tests.html
+    title: nd17 medlineplus lab tests
+  - rank: 8
+    url: https://sites.wip.nlm.nih.gov/pubs/techbull/nd17/nd17_medlineplus_lab_tests.html
+    title: nd17 medlineplus lab tests
+  - rank: 9
+    url: https://www.healthlinkbc.ca/healthwise/understanding-lab-test-results
+    title: understanding lab test results
+  sba.gov business guide market research competitive analysis:
+  - rank: 1
+    url: https://www.sba.gov/business-guide/plan-your-business/market-research-and-competitive-analysis
+    title: Market research and competitive analysis
+  - rank: 2
+    url: https://www.sba.gov/?p=3423
+    title: Plan your business - Small Business Administration
+    search_title: www.sba.gov
+  - rank: 3
+    url: https://www.startmotionmedia.com/2024/10/04/marketresearchandcompetitiveanalysis-ussm/
+    title: Our review of https://www.sba.gov/business-guide/plan-your-business/market-research-ahead-of-the-crowd-analysis
+  - rank: 4
+    url: https://www.sba.gov/counseling/plan-your-business/
+    title: plan your business
+  - rank: 5
+    url: https://www.startmotionmedia.com/marketresearchandcompetitiveanalysis-ussm/
+    title: Our review of https://www.sba.gov/business-guide/plan-your-business/market-research-ahead-of-the-crowd-analysis
+  - rank: 6
+    url: https://wildvisualizer.com/conversation/wildchat/470700
+    title: Conversation 470700
+  - rank: 7
+    url: https://wildvisualizer.com/conversation/wildchat/470636
+    title: Conversation 470636
+  - rank: 8
+    url: https://www.icsc.com/news-and-views/icsc-exchange/using-market-research-and-competitive-analysis-to-drive-small-business-growth
+    title: Our Mission
+  - rank: 9
+    url: https://www.franklincountyohio.gov/Business-Development/Development-Planning/Food-Action-Plan/Food-Business-Portal/Create-a-Business-Plan/Marketing-Sales
+    title: Marketing & Sales
+  ftc.gov advertising and marketing business guidance:
+  - rank: 1
+    url: https://itlaw.fandom.com/wiki/Advertising_and_Marketing_on_the_Internet:_Rules_of_the_Road
+    title: 'Advertising and Marketing on the Internet: Rules of the Road'
+  - rank: 2
+    url: https://www.ftc.gov/node/54279
+    title: 1,000 posts, but who’s counting? (We are, actually.) | Federal Trade Commission
+    search_title: www.ftc.gov
+  - rank: 3
+    url: https://www.ftc.gov/news-events/news/press-releases?page=36
+    title: Federal Trade Commission Announces Updated Advertising Guides to Combat Deceptive Reviews and Endorsements
+  - rank: 4
+    url: https://djholtlaw.com/?p=287214
+    title: djholtlaw.com
+  - rank: 5
+    url: https://www.ftc.gov/business-guidance/blog/2018/03/1000-posts-whos-counting-we-are-actually
+    title: 1000 posts whos counting we are actually
+  - rank: 6
+    url: https://www.benton.org/headlines/ftc-looks-modernize-its-guidance-preventing-digital-deception
+    title: FTC Looks to Modernize Its Guidance on Preventing Digital Deception
+  - rank: 7
+    url: https://lawstreetmedia.com/?p=20840
+    title: FTC Announces New Business Guidance for Marketing of Health Products
+  - rank: 8
+    url: https://www.ftc.gov/news-events/press-releases/2011/05/ftc-seeks-input-revising-its-guidance-businesses-about
+    title: ftc seeks input revising its guidance businesses about
+  - rank: 9
+    url: https://www.ftc.gov/node/46942
+    title: New Business Center Can Help Boost Compliance with FTC Law | Federal Trade Commission
+    search_title: www.ftc.gov
+  - rank: 10
+    url: https://urlscan.io/result/1c844ffe-afcc-48be-a76d-9364d201f0cc/content
+    title: www.ftc.gov - urlscan.io
+    search_title: urlscan.io
+  PRSA code of ethics public relations:
+  - rank: 1
+    url: https://archive.pagecentertraining.psu.edu/public-relations-ethics/professional-codes-of-ethics/lesson-2-tbd-waiting-on-edits/features-of-the-prsa-code-of-ethics
+    title: Features of the PRSA Code of Ethics
+  - rank: 2
+    url: https://axiapr.com/prsa-code-of-ethics
+    title: prsa code of ethics
+  - rank: 3
+    url: https://prssa.wsu.edu/code-of-ethics/
+    title: code of ethics
+  - rank: 4
+    url: https://prsa.org/ethics
+    title: Ethics for an Evolving Profession
+  - rank: 5
+    url: https://redbanyan.com/blog/prsa-guidelines-ethical-public-relations/
+    title: prsa guidelines ethical public relations
+  - rank: 6
+    url: https://fortworthprsa.org/Code_of_Ethics
+    title: Code of Ethics
+  - rank: 7
+    url: https://archive.pagecentertraining.psu.edu/public-relations-ethics/professional-codes-of-ethics/lesson-2-tbd-waiting-on-edits/history-of-the-prsa-code-of-ethics
+    title: History of the PRSA Code of Ethics
+  - rank: 8
+    url: https://archive.pagecentertraining.psu.edu/public-relations-ethics/professional-codes-of-ethics/lesson-2-tbd-waiting-on-edits/
+    title: 'Lesson 2: The PRSA Code of Ethics'
+  - rank: 9
+    url: https://archive.pagecentertraining.psu.edu/public-relations-ethics/professional-codes-of-ethics/lesson-2-tbd-waiting-on-edits/developing-prsas-2000-current-code-of-ethics
+    title: Developing PRSA’s 2000 (current) Code of Ethics
+  cipr.co.uk public relations guidance:
+  - rank: 1
+    url: https://newsroom.cipr.co.uk/31-days-till-brexit---cipr-issues-new-guidance-for-members/
+    title: 31 days till Brexit - CIPR issues new guidance for members
+  - rank: 2
+    url: https://newsroom.cipr.co.uk/cipr-and-prca-launch-public-relations-careers-guide-for-young-people/
+    title: cipr and prca launch public relations careers guide for young people
+  - rank: 3
+    url: https://newsroom.cipr.co.uk/new-case-study-guide-from-the-cipr-demonstrates-value-of-pr-in-time-of-crisis/
+    title: New case study guide from the CIPR demonstrates value of PR in time of crisis
+  - rank: 4
+    url: https://newsroom.cipr.co.uk/wikimedia-publishes-cipr-guidance-for-pr-profession/
+    title: Wikimedia UK hosts CIPR guidance for PR profession
+  - rank: 5
+    url: https://newsroom.cipr.co.uk/cipr-issues-updated-brexit-guidance-and-announces-member-event-with-cbi/
+    title: CIPR issues updated Brexit guidance and announces member event with CBI
+  - rank: 6
+    url: https://newsroom.cipr.co.uk/wikipedia-guidance-for-pr-will-build-mutual-understanding/
+    title: wikipedia guidance for pr will build mutual understanding
+  - rank: 7
+    url: https://newsroom.cipr.co.uk/how-to-avoid-pr-disasters-on-wikipedia---cipr-publishes-new-skills-guide/
+    title: ‘How to Avoid PR Disasters on Wikipedia’ - CIPR publishes new Skills Guide
+  - rank: 8
+    url: https://newsroom.cipr.co.uk/futureproof-published-guide-to-influencer-marketing-governance-for-pr/
+    title: futureproof published guide to influencer marketing governance for pr
+  - rank: 9
+    url: https://newsroom.cipr.co.uk/cipr-launches-pr2014-as-the-institute-anticipates-and-looks-forward-to-the-biggest-public-relations-trends-of-the-new-year/
+    title: cipr launches pr2014 as the institute anticipates and looks forward to the biggest public relations trends of the new year

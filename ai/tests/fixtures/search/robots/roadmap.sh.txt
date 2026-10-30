@@ -1,0 +1,41 @@
+# fetched 2026-10-26 from https://roadmap.sh/robots.txt (HTTP 200)
+User-agent: *
+
+# Utility/internal endpoints
+Disallow: /og/
+
+# Auth/account pages
+Disallow: /login
+Disallow: /signup
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-account
+Disallow: /verify-email
+Disallow: /verification-pending
+Disallow: /account
+
+# Dashboard/private
+Disallow: /dashboard
+Disallow: /feed
+Disallow: /ask
+
+# Teams (auth-required)
+Disallow: /teams/
+
+# Creator tools (auth-required)
+Disallow: /course-creator
+Disallow: /ai-creator
+
+# Custom roadmap editor
+Disallow: /r/embed
+
+# Invite/utility
+Disallow: /respond-invite
+Disallow: /befriend
+Disallow: /thank-you
+
+# Premium content
+Disallow: /packs/
+
+# Sitemap
+Sitemap: https://roadmap.sh/sitemap_index.xml

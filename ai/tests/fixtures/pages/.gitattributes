@@ -1,0 +1,2 @@
+# Saved pages must stay byte-for-byte as captured.
+*.html -text

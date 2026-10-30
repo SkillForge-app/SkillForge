@@ -1,0 +1,58 @@
+#  First allow all user agenents to crawl site
+
+User-agent: *
+Allow: /
+
+# now block specific directories
+
+User-agent: *
+Disallow: /sitecore/*
+Disallow: /oec-beta/
+Disallow: /oma-beta/
+Disallow: /Training/
+Disallow: /Training/ChooseCT/
+Disallow: /DMHAS-Beta/
+Disallow: /DMHAS-beta/
+Disallow: /dmhas-Beta/
+Disallow: /dmhas-beta/
+Disallow: /JRC-Beta
+Disallow: /JRC-beta 
+Disallow: /jrc-Beta 
+Disallow: /jrc-beta 
+Disallow: /JSC-Beta 
+Disallow: /JSC-beta 
+Disallow: /jsc-Beta 
+Disallow: /jsc-beta 
+Disallow: /OCA-Beta 
+Disallow: /OCA-beta  
+Disallow: /oca-Beta 
+Disallow: /oca-beta 
+Disallow: /SCSB-Beta 
+Disallow: /SCSB-beta 
+Disallow: /scsb-Beta 
+Disallow: /scsb-beta 
+Disallow: /-/media/business/ct-reopen-poster/
+Disallow: /WCC-Beta
+Disallow: /WCC-beta
+Disallow: /wcc-Beta
+Disallow: /wcc-beta
+Disallow: /*-beta
+Disallow: /*/common elements/
+Disallow: /*/search-results/
+Disallow: /sde/search-results/
+Disallow: /search-results/
+Disallow: /*/search?q=
+Disallow: /-/speak/
+Disallow: /*?SearchKeyword=
+Disallow: /keepalive.aspx
+User-agent: AhrefsBot
+Disallow: /
+User-agent: AhrefsSiteAudit
+Disallow: /
+User-agent: *semrush*
+Disallow: /
+User-agent: AwarioBot
+Disallow: /
+
+# help google find the sitemap
+Sitemap: https://portal.ct.gov/sitemap.xml

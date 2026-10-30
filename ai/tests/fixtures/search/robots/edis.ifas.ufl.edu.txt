@@ -1,0 +1,10 @@
+# robots.txt for http://edis.ifas.ufl.edu
+
+User-agent: *
+Disallow: /administration/ # ordering system
+Disallow: /print/       	# ordering system
+Disallow: /print/		   # ordering system
+
+
+User-agent: gsa-crawler    # UF Google appliance
+Disallow: /pdffiles/       # directory containing all pdfs

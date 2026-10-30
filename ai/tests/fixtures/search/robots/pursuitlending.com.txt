@@ -1,0 +1,4 @@
+# fetched 2026-10-26 from https://pursuitlending.com/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php

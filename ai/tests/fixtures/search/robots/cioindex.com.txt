@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /*blackhole
+Disallow: /?blackhole
+
+User-agent: dotbot
+Disallow: /
+
+User-agent: *
+Disallow: *--peepso-url--*
+Disallow: /wp-content/uploads/wp-import-export-lite/
+
+Sitemap: https://cioindex.com/sitemap_index.xml
+
+#WP Import Export Rule
+##User-agent: *
+##Disallow: /wp-content/uploads/wp-import-export-lite/

@@ -1,0 +1,3 @@
+# fetched 2026-10-26 from https://www.in.gov/robots.txt (HTTP 200)
+User-agent: *
+Sitemap: https://www.in.gov/api/vtl/sitemap

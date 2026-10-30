@@ -1,0 +1,80 @@
+name: review-nda
+title: Review an NDA
+kind: task
+domain: legal/contracts
+risk: high
+summary: Reviews a non-disclosure agreement under US law for a non-lawyer, flags unusual or missing clauses and explains them plainly. Not legal advice.
+targets: [claude, codex]
+spec: examples/skillspec/review-nda.yaml
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: Build a skill that reviews NDAs before I sign them and flags risky clauses.
+    labels: {kind: task, domain: legal/contracts, risk: high, targets: [claude]}
+  - id: req-2
+    style: vague
+    text: something that reads contracts for me
+    labels: {kind: task, domain: legal/contracts, risk: high, targets: [claude]}
+  - id: req-3
+    style: detailed
+    text: >-
+      Our startup signs about ten NDAs a month with investors, partners and freelancers, and we
+      cannot afford a lawyer for each one. I want a skill that reviews an NDA under US law, tells
+      us whether it is mutual, flags non-competes or unusual terms hidden in it, checks the
+      required whistleblower carve-outs, and says clearly when we need a real lawyer.
+    labels: {kind: task, domain: legal/contracts, risk: high, targets: [claude, codex]}
+
+test_prompts:
+  - id: tp-1
+    text: Here is the NDA a potential investor sent us. What should I worry about before signing?
+  - id: tp-2
+    text: Is it normal that this NDA lasts forever and bans me from working for competitors?
+  - id: tp-3
+    text: Explain this confidentiality clause to me like I am not a lawyer
+  - id: tp-4
+    text: Compare this one-way NDA from a supplier with our standard mutual NDA.
+  - id: tp-5
+    text: Does this NDA let me report a problem to a regulator if I need to?
+    tags: [short]
+  - id: tp-6
+    text: >-
+      A freelancer's NDA says all ideas I share during our calls become their property. Is that a
+      normal NDA clause and what should I ask them to change?
+    tags: [detailed]
+  - id: tp-7
+    text: This NDA is governed by German law. Can you still review it?
+    tags: [edge-case, short]
+  - id: tp-8
+    text: Make a short checklist of what to look for in any NDA before signing.
+
+should_not_trigger:
+  - id: nt-1
+    text: Draft an employment contract for a new engineer
+    tags: [near-miss]
+  - id: nt-2
+    text: We are being sued for breach of an NDA. What is our defence?
+    tags: [near-miss]
+  - id: nt-3
+    text: Write an NDA template for our company from scratch
+    tags: [near-miss]
+  - id: nt-4
+    text: Check that our influencer posts disclose that they were paid
+    tags: [near-miss]
+    closer_skill: marketing-strategist
+  - id: nt-5
+    text: Summarise the plot of a famous spy novel
+    tags: [unrelated]
+  - id: nt-6
+    text: How do I change a flat bicycle tyre?
+    tags: [unrelated]
+
+rubric:
+  - {id: r-1, text: "States that this is general information and not legal advice", type: guardrail, critical: true}
+  - {id: r-2, text: "Recommends a qualified lawyer for high-stakes or must-change items", type: guardrail, critical: true}
+  - {id: r-3, text: "Identifies the user's side and whether the NDA is mutual or one-way", type: procedure}
+  - {id: r-4, text: "Flags non-compete, non-solicit or IP-assignment terms hidden in the NDA", type: quality}
+  - {id: r-5, text: "Checks for disclosures required by law and protected whistleblower reports", type: quality}
+  - {id: r-6, text: "Quotes the clauses it comments on and rates each issue", type: format}
+  - {id: r-7, text: "Says when the agreement is outside its US-law scope instead of guessing", type: guardrail}

@@ -1,0 +1,41 @@
+# kitemetric.com - crawler rules.
+#
+# THE ONE RULE THAT MATTERS: the collateral surfaces must never be indexed by
+# any search engine. /biz is the sales card collection and /hr is the HR
+# material; both carry an encrypted index, but the CARD IMAGES beside it are
+# plain PNG files on a public CDN, and an image cannot carry a <meta> tag. This
+# file is what keeps them out of Google Images.
+#
+# WHY Disallow AND NOT ONLY noindex. For an HTML page you want REMOVED after it
+# has been indexed, Disallow is the wrong tool - it stops the crawler fetching
+# the page, so the crawler never reads the noindex and the URL can linger. That
+# is not this case. Nothing here has ever been indexed, nothing links to it, and
+# for IMAGES robots.txt is Google's own documented method of keeping them out of
+# image search. So both are used, each where it works:
+#
+#     the index pages   <meta name="robots" content="noindex, nofollow">
+#     the card images   this file
+#
+# DISALLOW IS A PREFIX MATCH. `Disallow: /biz` blocks /biz, /biz/, /biz.html and
+# anything else beginning with those characters - including a future /bizdev
+# that nobody meant to hide. If you add a public page whose path starts with
+# these letters, give it a different name rather than narrowing the rule.
+#
+# check-noindex.py fails the build if a surface declared private is missing from
+# this file, so the two cannot drift apart.
+
+User-agent: *
+Disallow: /biz
+Disallow: /hr
+
+# THE SITEMAP IS GENERATED, NOT COMMITTED, so do not go looking for
+# website/sitemap.xml - there is none. generate-sitemap.py writes it into dist/
+# during `make build`, from the pages that are actually in the artifact at that
+# point. That ordering is the whole point: the blog is stripped from production
+# builds by strip-dev-only.py, and a hand-written sitemap would keep advertising
+# it to Google long after the HTML stopped shipping. A generated one cannot,
+# because it never sees a page the build did not produce.
+#
+# Absolute URL because a sitemap directive must be absolute - unlike Disallow,
+# it is not resolved against this file's host.
+Sitemap: https://kitemetric.com/sitemap.xml

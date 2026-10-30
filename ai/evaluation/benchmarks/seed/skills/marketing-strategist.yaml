@@ -1,0 +1,82 @@
+name: marketing-strategist
+title: Marketing Strategist
+kind: role
+domain: marketing/strategy
+risk: low
+summary: Marketing strategist who turns business goals into positioning, campaign plans and measurable marketing work, with honest claims.
+targets: [claude, codex]
+spec: examples/skillspec/marketing-strategist.yaml
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: I need a marketing strategist skill for B2B SaaS launches.
+    labels: {kind: role, domain: marketing/strategy, risk: low, targets: [claude]}
+  - id: req-2
+    style: vague
+    text: a skill to get more customers
+    labels: {kind: role, domain: marketing/strategy, risk: low, targets: [claude]}
+  - id: req-3
+    style: detailed
+    text: >-
+      We run a small online shop for handmade ceramics and post randomly on Instagram. I want a
+      skill that thinks like a marketing strategist: define who our buyers are, position us
+      against mass-produced brands, plan seasonal campaigns with a small budget, and make sure
+      our product claims and influencer posts are honest and properly disclosed.
+    labels: {kind: role, domain: marketing/strategy, risk: low, targets: [claude, codex]}
+
+test_prompts:
+  - id: tp-1
+    text: Plan the launch of our B2B invoicing app for small accounting firms with a 20,000 dollar budget
+  - id: tp-2
+    text: Write positioning and key messages for a meal-kit service aimed at busy parents
+  - id: tp-3
+    text: Review this landing page copy and the influencer posts we plan to use
+  - id: tp-4
+    text: Which three channels should a local bakery focus on to grow catering orders?
+  - id: tp-5
+    text: How should a language-learning app position itself against free apps?
+    tags: [short]
+  - id: tp-6
+    text: >-
+      Our ad says "the fastest invoicing app in Europe" but we only tested against two
+      competitors. Can we keep it, and how should we change the campaign if not?
+    tags: [detailed, edge-case]
+  - id: tp-7
+    text: Set goals and metrics for a three-month campaign to grow newsletter signups.
+  - id: tp-8
+    text: We have no budget at all. Build a marketing plan for a new yoga studio anyway.
+    tags: [edge-case]
+
+should_not_trigger:
+  - id: nt-1
+    text: Fix the typo in this tweet
+    tags: [unrelated]
+  - id: nt-2
+    text: Review the indemnity clause in our supplier contract
+    tags: [unrelated]
+  - id: nt-3
+    text: Write the press release for our product launch next Tuesday
+    tags: [near-miss]
+    closer_skill: write-press-release
+  - id: nt-4
+    text: Analyse this CSV of ad clicks and tell me which week performed best
+    tags: [near-miss]
+    closer_skill: data-analyst
+  - id: nt-5
+    text: Write a job ad for a marketing manager
+    tags: [near-miss]
+    closer_skill: hr-recruiter
+  - id: nt-6
+    text: How much should I set aside each month for marketing in my cafe budget?
+    tags: [near-miss]
+    closer_skill: small-business-budgeting
+
+rubric:
+  - {id: r-1, text: "Asks about or states the business goal, audience and budget before recommending tactics", type: procedure}
+  - {id: r-2, text: "Gives one clear positioning and a small set of key messages", type: quality}
+  - {id: r-3, text: "Links every recommended channel to the audience and to a measurable goal", type: quality}
+  - {id: r-4, text: "Flags claims that need evidence instead of approving or inventing them", type: guardrail, critical: true}
+  - {id: r-5, text: "Recommends clear disclosure for paid or gifted endorsements", type: guardrail}
+  - {id: r-6, text: "Plans follow the marketing plan template sections", type: format}

@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Request Analyzer evaluation outputs (reports are run artefacts, not source)
+evaluation/analyzer/runs/
+
+# Safety evaluation outputs (run artefacts, not source)
+evaluation/safety/runs/
+
+# Skill Architect evaluation outputs (run artefacts, not source)
+evaluation/architect/runs/
+
+# Local model files and the local knowledge index (AI-11): downloaded / built, not source
+.data/

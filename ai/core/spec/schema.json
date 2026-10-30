@@ -1,0 +1,571 @@
+{
+  "$defs": {
+    "Evaluation": {
+      "additionalProperties": false,
+      "properties": {
+        "rubric": {
+          "description": "What a good answer does; used by the judge.",
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Rubric",
+          "type": "array"
+        },
+        "should_not_trigger": {
+          "description": "Requests that must NOT load the skill (trigger-accuracy tests).",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "title": "Should Not Trigger",
+          "type": "array"
+        },
+        "test_prompts": {
+          "description": "Requests the skill should handle well.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 50,
+          "minItems": 1,
+          "title": "Test Prompts",
+          "type": "array"
+        }
+      },
+      "required": [
+        "test_prompts",
+        "rubric"
+      ],
+      "title": "Evaluation",
+      "type": "object"
+    },
+    "Expertise": {
+      "additionalProperties": false,
+      "properties": {
+        "principles": {
+          "description": "Rules of thumb an expert in this role follows.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "minItems": 1,
+          "title": "Principles",
+          "type": "array"
+        }
+      },
+      "required": [
+        "principles"
+      ],
+      "title": "Expertise",
+      "type": "object"
+    },
+    "Guardrail": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "default": "general",
+          "description": "High-risk domains need a 'must' disclaimer and a 'must' human_review rule.",
+          "enum": [
+            "general",
+            "accuracy",
+            "safety",
+            "privacy",
+            "scope",
+            "disclaimer",
+            "human_review"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable kebab-case id.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "rule": {
+          "description": "What the agent must or should (not) do.",
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Rule",
+          "type": "string"
+        },
+        "severity": {
+          "description": "must: never break it; should: strong default.",
+          "enum": [
+            "must",
+            "should"
+          ],
+          "title": "Severity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "rule",
+        "severity"
+      ],
+      "title": "Guardrail",
+      "type": "object"
+    },
+    "Knowledge": {
+      "additionalProperties": false,
+      "properties": {
+        "references": {
+          "items": {
+            "$ref": "#/$defs/Reference"
+          },
+          "maxItems": 30,
+          "title": "References",
+          "type": "array"
+        }
+      },
+      "title": "Knowledge",
+      "type": "object"
+    },
+    "Output": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable kebab-case id.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "sections": {
+          "description": "Headings of the template, in order.",
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 20,
+          "title": "Sections",
+          "type": "array"
+        },
+        "template": {
+          "description": "Template file in the package: templates/<name>.md.",
+          "pattern": "^templates/[a-z0-9]+(?:-[a-z0-9]+)*\\.md$",
+          "title": "Template",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        }
+      },
+      "required": [
+        "id",
+        "template"
+      ],
+      "title": "Output",
+      "type": "object"
+    },
+    "Procedure": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable kebab-case id.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "produces": {
+          "description": "Ids of the outputs this procedure produces.",
+          "items": {
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "title": "Produces",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "steps": {
+          "description": "Ordered steps.",
+          "items": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 30,
+          "minItems": 1,
+          "title": "Steps",
+          "type": "array"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "uses": {
+          "description": "Ids of the knowledge references this procedure relies on.",
+          "items": {
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "title": "Uses",
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "steps"
+      ],
+      "title": "Procedure",
+      "type": "object"
+    },
+    "Reference": {
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "description": "Reference file in the package: references/<name>.md.",
+          "pattern": "^references/[a-z0-9]+(?:-[a-z0-9]+)*\\.md$",
+          "title": "File",
+          "type": "string"
+        },
+        "id": {
+          "description": "Stable kebab-case id.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "sources": {
+          "description": "Ids of the sources (see /sources) this reference is built from.",
+          "items": {
+            "maxLength": 64,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Sources",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "title": {
+          "anyOf": [
+            {
+              "maxLength": 80,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Title"
+        }
+      },
+      "required": [
+        "id",
+        "file",
+        "sources"
+      ],
+      "title": "Reference",
+      "type": "object"
+    },
+    "SkillMeta": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "description": "<area>/<sub-area>, e.g. technology/ai. The area comes from a closed list; legal, medical and finance are high-risk.",
+          "maxLength": 80,
+          "pattern": "^(?:technology|data|design|product|marketing|sales|customer-support|operations|hr|education|writing|research|finance|legal|medical|general)(?:/[a-z0-9]+(?:-[a-z0-9]+)*)+$",
+          "title": "Domain",
+          "type": "string"
+        },
+        "kind": {
+          "description": "role: acts as a professional; task: one repeatable job; workflow: a multi-step process.",
+          "enum": [
+            "role",
+            "task",
+            "workflow"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "description": "Kebab-case skill name; becomes the folder name. Unique in the registry.",
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "summary": {
+          "description": "One or two sentences: what the skill makes the agent do.",
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Summary",
+          "type": "string"
+        },
+        "title": {
+          "description": "Human-readable name, e.g. AI Engineer.",
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "version": {
+          "description": "Version of this skill, e.g. \"1.0\". Quote it in YAML.",
+          "pattern": "^\\d+\\.\\d+(?:\\.\\d+)?$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "title",
+        "kind",
+        "domain",
+        "summary"
+      ],
+      "title": "SkillMeta",
+      "type": "object"
+    },
+    "Source": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "description": "Stable kebab-case id, e.g. src-1.",
+          "maxLength": 64,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Id",
+          "type": "string"
+        },
+        "retrieved": {
+          "description": "Date the page was retrieved (YYYY-MM-DD).",
+          "format": "date",
+          "title": "Retrieved",
+          "type": "string"
+        },
+        "title": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The page's own title.",
+          "title": "Title"
+        },
+        "url": {
+          "format": "uri",
+          "maxLength": 2083,
+          "minLength": 1,
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "url",
+        "retrieved"
+      ],
+      "title": "Source",
+      "type": "object"
+    },
+    "Tools": {
+      "additionalProperties": false,
+      "description": "Abstract capabilities only, never platform or vendor tool names.",
+      "properties": {
+        "optional": {
+          "description": "Capabilities the skill uses when available.",
+          "items": {
+            "enum": [
+              "filesystem_read",
+              "filesystem_write",
+              "terminal",
+              "code_execution",
+              "web_search",
+              "web_fetch",
+              "browser"
+            ],
+            "type": "string"
+          },
+          "title": "Optional",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "required": {
+          "description": "Capabilities the skill cannot work without.",
+          "items": {
+            "enum": [
+              "filesystem_read",
+              "filesystem_write",
+              "terminal",
+              "code_execution",
+              "web_search",
+              "web_fetch",
+              "browser"
+            ],
+            "type": "string"
+          },
+          "title": "Required",
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "title": "Tools",
+      "type": "object"
+    },
+    "Triggers": {
+      "additionalProperties": false,
+      "properties": {
+        "avoid_when": {
+          "description": "Situations that look similar but are not.",
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Avoid When",
+          "type": "array"
+        },
+        "use_when": {
+          "description": "Situations in which the agent should load it.",
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Use When",
+          "type": "array"
+        }
+      },
+      "required": [
+        "use_when"
+      ],
+      "title": "Triggers",
+      "type": "object"
+    }
+  },
+  "$id": "urn:skillforge:skillspec:0.2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "SkillSpec v0.2. This schema holds the per-field rules. Cross-field rules (referenced ids must exist, high-risk guardrails, description length, ...) are checked by the API with core.spec.validate_spec and returned as issues with JSON Pointer paths.",
+  "properties": {
+    "evaluation": {
+      "$ref": "#/$defs/Evaluation"
+    },
+    "expertise": {
+      "$ref": "#/$defs/Expertise"
+    },
+    "guardrails": {
+      "items": {
+        "$ref": "#/$defs/Guardrail"
+      },
+      "maxItems": 30,
+      "title": "Guardrails",
+      "type": "array"
+    },
+    "knowledge": {
+      "$ref": "#/$defs/Knowledge"
+    },
+    "outputs": {
+      "items": {
+        "$ref": "#/$defs/Output"
+      },
+      "maxItems": 30,
+      "title": "Outputs",
+      "type": "array"
+    },
+    "procedures": {
+      "items": {
+        "$ref": "#/$defs/Procedure"
+      },
+      "maxItems": 30,
+      "minItems": 1,
+      "title": "Procedures",
+      "type": "array"
+    },
+    "skill": {
+      "$ref": "#/$defs/SkillMeta"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/Source"
+      },
+      "maxItems": 100,
+      "title": "Sources",
+      "type": "array"
+    },
+    "spec_version": {
+      "const": "0.2",
+      "description": "Always \"0.2\" for this schema. Quote it.",
+      "title": "Spec Version",
+      "type": "string"
+    },
+    "targets": {
+      "description": "Platforms to compile for.",
+      "items": {
+        "enum": [
+          "claude",
+          "codex",
+          "chatgpt",
+          "generic"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Targets",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "tools": {
+      "$ref": "#/$defs/Tools"
+    },
+    "triggers": {
+      "$ref": "#/$defs/Triggers"
+    }
+  },
+  "required": [
+    "spec_version",
+    "skill",
+    "triggers",
+    "expertise",
+    "procedures",
+    "evaluation",
+    "targets"
+  ],
+  "title": "SkillSpec",
+  "type": "object",
+  "x-spec-version": "0.2"
+}

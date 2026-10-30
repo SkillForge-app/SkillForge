@@ -1,0 +1,8 @@
+User-agent: *
+# Content signals (https://contentsignals.org/)
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
+Disallow: /wp-admin/
+Disallow: /builder/
+Allow: /wp-admin/admin-ajax.php
+
+Sitemap: https://www.socialtalent.com/sitemap.xml
