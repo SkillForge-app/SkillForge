@@ -1,0 +1,66 @@
+{
+  "kind": "role",
+  "domain": "marketing/strategy",
+  "risk": "low",
+  "audience": "owner of a small online ceramics shop",
+  "expected_outputs": [
+    "customer profile",
+    "positioning",
+    "seasonal campaign plan"
+  ],
+  "skill_name": "marketing-strategist",
+  "summary": "A marketing strategist skill for a small online ceramics shop that plans positioning and seasonal campaigns on a small budget.",
+  "needs_clarification": false,
+  "questions": [
+    {
+      "id": "q1",
+      "text": "What do you sell, and to whom?",
+      "about": "audience"
+    },
+    {
+      "id": "q2",
+      "text": "What should the skill produce: a plan, campaigns, posts or ad copy?",
+      "about": "outputs"
+    },
+    {
+      "id": "q3",
+      "text": "Roughly what budget and time can you spend on marketing each month?",
+      "about": "constraints"
+    },
+    {
+      "id": "q4",
+      "text": "Which platforms will you use the skill in?",
+      "about": "platforms"
+    }
+  ],
+  "request": "a skill to get more customers",
+  "targets": [
+    "claude"
+  ],
+  "answers": [
+    {
+      "question_id": "q1",
+      "text": "Handmade ceramics, online, mostly to people in their 30s who like design."
+    },
+    {
+      "question_id": "q2",
+      "text": "A plan and seasonal campaign ideas."
+    },
+    {
+      "question_id": "q3",
+      "text": "About 300 dollars and a few hours a week."
+    },
+    {
+      "question_id": "q4",
+      "text": null
+    }
+  ],
+  "analyzer": {
+    "prompt_id": "analysis/request",
+    "prompt_version": 1
+  },
+  "safety": {
+    "conditions": [],
+    "prompt_version": 1
+  }
+}

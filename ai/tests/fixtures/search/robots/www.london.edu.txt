@@ -1,0 +1,47 @@
+# fetched 2026-10-26 from https://www.london.edu/robots.txt (HTTP 200)
+User-agent: msnbot
+Crawl-delay: 1
+Disallow: /masters-degrees/masters-in-management/welcome
+Disallow: /masters-degrees/masters-in-analytics-and-management/welcome
+Disallow: /masters-degrees/masters-in-financial-analysis/welcome
+Disallow: /masters-degrees/mba/welcome
+Disallow: /masters-degrees/masters-in-finance-full-time/welcome
+Disallow: /masters-degrees/masters-in-finance-part-time/welcome
+Disallow: /alumni/news-and-stories
+Disallow: /login
+Disallow: /create-a-profile
+Disallow: /download-a-brochure
+Disallow: /download-brochure-success-page
+Disallow: /request-a-call
+Disallow: /conversion-event-form
+Disallow: /events/calendar
+Disallow: /event/calendar
+Disallow: /-/media
+Disallow: /faculty-and-research/academic-research
+Disallow: /submit-cv
+Disallow: /submit-cv-success
+Sitemap: http://www.london.edu/sitemap.xml
+
+User-agent: Twitterbot
+Disallow:
+
+User-Agent: *
+Disallow: /masters-degrees/masters-in-management/welcome
+Disallow: /masters-degrees/masters-in-analytics-and-management/welcome
+Disallow: /masters-degrees/masters-in-financial-analysis/welcome
+Disallow: /masters-degrees/mba/welcome
+Disallow: /masters-degrees/masters-in-finance-full-time/welcome
+Disallow: /masters-degrees/masters-in-finance-part-time/welcome
+Disallow: /alumni/news-and-stories
+Disallow: /login
+Disallow: /create-a-profile
+Disallow: /download-a-brochure
+Disallow: /request-a-call
+Disallow: /conversion-event-form
+Disallow: /events/calendar
+Disallow: /event/calendar
+Disallow: /faculty-and-research/academic-research
+Disallow: /-/media
+Disallow: /submit-cv
+Disallow: /submit-cv-success
+Sitemap: http://www.london.edu/sitemap.xml

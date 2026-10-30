@@ -1,0 +1,27 @@
+# Sitemap declarations
+User-agent: *
+Sitemap: https://www.computing.co.uk/sitemap.xml
+
+Disallow: /search
+Disallow: /feeds/rss/search
+Disallow: /4818/
+Disallow: /print-article/
+Disallow: /digital_assets/
+Disallow: /v3_ie8_meta.html
+Disallow: /send-to-friend/
+Disallow: /tag/page/
+Disallow: /pdf/
+Disallow: /blog?month
+Disallow: /home/show_comment_page/
+
+user-agent: ClaudeBot
+Disallow: /
+ 
+user-agent: Bytespider
+Disallow: /
+
+User-agent: sentibot
+Disallow: /
+
+User-agent: Miso/1.0.0 (Linux)
+Allow: /

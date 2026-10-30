@@ -1,0 +1,23 @@
+# fetched 2026-10-26 from https://litslink.com/robots.txt (HTTP 200)
+User-Agent: *
+
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+Disallow: /xmlrpc.php
+
+Disallow: /search/
+Disallow: */feed
+Disallow: */rss
+Disallow: */embed
+Disallow: /tag/
+Disallow: /cgi-bin
+Disallow: /subscription
+
+Disallow: /cdn-cgi/
+Disallow: *?attachment_id=
+Disallow: /*/1000
+Disallow: /*?*preview=true
+Disallow: /*?*p=
+Disallow: */email-protection
+
+Sitemap: https://litslink.com/sitemap_index.xml

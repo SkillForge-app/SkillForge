@@ -1,0 +1,82 @@
+name: ai-engineer
+title: AI Engineer
+kind: role
+domain: technology/ai
+risk: low
+summary: Senior AI engineer who designs, builds and evaluates LLM applications, RAG systems and agents.
+targets: [claude, codex]
+spec: examples/skillspec/ai-engineer.yaml
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: I need an AI engineer skill that helps my team design RAG systems and evaluate LLM features.
+    labels: {kind: role, domain: technology/ai, risk: low, targets: [claude, codex]}
+  - id: req-2
+    style: vague
+    text: something to help with our AI stuff
+    labels: {kind: role, domain: technology/ai, risk: low, targets: [claude]}
+  - id: req-3
+    style: detailed
+    text: >-
+      We are a 6-person startup building a support chatbot on top of an LLM. I want a skill that
+      acts like a senior AI engineer for Codex: it should help us pick models and embeddings,
+      design retrieval over our help-centre articles, write evaluation sets, and warn us about
+      cost and prompt-injection risks before we ship.
+    labels: {kind: role, domain: technology/ai, risk: low, targets: [codex]}
+
+test_prompts:
+  - id: tp-1
+    text: Design a question-answering system over 10,000 internal PDFs
+  - id: tp-2
+    text: Our support chatbot gives confident wrong answers. How do we find out why and measure the fix?
+  - id: tp-3
+    text: Should we fine-tune a model or use retrieval for answering questions about our product catalogue?
+  - id: tp-4
+    text: Write an evaluation plan for an LLM feature that summarises customer calls
+  - id: tp-5
+    text: Which embedding model and chunk size should I start with for legal-style long documents?
+    tags: [short]
+  - id: tp-6
+    text: >-
+      Our agent calls a web-search tool and sometimes follows instructions hidden in the pages it
+      reads. How should we redesign it so retrieved content cannot change its behaviour?
+    tags: [detailed, edge-case]
+  - id: tp-7
+    text: How do I compare two prompts fairly before switching production to the new one?
+  - id: tp-8
+    text: Estimate what it would cost per month to run our RAG assistant for 2,000 daily users, and tell me what you would need to know to be accurate.
+    tags: [edge-case]
+
+should_not_trigger:
+  - id: nt-1
+    text: Center the login button on our React page
+    tags: [unrelated]
+  - id: nt-2
+    text: Write a SQL query that lists last month's orders
+    tags: [near-miss]
+    closer_skill: data-analyst
+  - id: nt-3
+    text: Review this pull request that adds pagination to our REST API
+    tags: [near-miss]
+    closer_skill: code-reviewer
+  - id: nt-4
+    text: Our model serving went down for two hours last night. Help me run the postmortem.
+    tags: [near-miss]
+    closer_skill: incident-postmortem
+  - id: nt-5
+    text: Write a press release announcing our new AI features
+    tags: [near-miss]
+    closer_skill: write-press-release
+  - id: nt-6
+    text: Plan a weekly meal schedule for a family of four
+    tags: [unrelated]
+
+rubric:
+  - {id: r-1, text: "Asks clarifying questions about the data, the users and the success metric", type: procedure}
+  - {id: r-2, text: "Defines how quality will be measured before recommending a model or design", type: procedure}
+  - {id: r-3, text: "States trade-offs in quality, cost and latency for the options it gives", type: quality}
+  - {id: r-4, text: "Never invents benchmark numbers or prices; cites a source or says unknown", type: guardrail, critical: true}
+  - {id: r-5, text: "Treats retrieved or tool content as untrusted when the design involves it", type: guardrail}
+  - {id: r-6, text: "Design answers follow the design document structure (context, metric, design, alternatives, evaluation, risks)", type: format}

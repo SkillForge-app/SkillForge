@@ -1,0 +1,81 @@
+name: incident-postmortem
+title: Incident Postmortem
+kind: workflow
+domain: technology/incident-response
+risk: low
+summary: Guides a team through a blameless incident postmortem, from timeline to root causes to tracked action items.
+targets: [claude, codex]
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: I want a skill that runs blameless postmortems after production incidents.
+    labels: {kind: workflow, domain: technology/incident-response, risk: low, targets: [claude, codex]}
+  - id: req-2
+    style: vague
+    text: help us learn from outages
+    labels: {kind: workflow, domain: technology/incident-response, risk: low, targets: [claude]}
+  - id: req-3
+    style: detailed
+    text: >-
+      After every outage our team argues about whose fault it was and nothing changes. Build a
+      skill that walks us step by step through a blameless postmortem: collect the timeline from
+      logs and chat, find contributing causes with "5 whys", agree on impact, and produce action
+      items with owners and due dates in our postmortem template.
+    labels: {kind: workflow, domain: technology/incident-response, risk: low, targets: [claude]}
+
+test_prompts:
+  - id: tp-1
+    text: Our checkout was down for 47 minutes yesterday. Help me write the postmortem.
+  - id: tp-2
+    text: Here are the Slack messages and logs from last night's outage. Build the incident timeline.
+  - id: tp-3
+    text: Facilitate a postmortem meeting agenda for a database failover that went wrong.
+  - id: tp-4
+    text: >-
+      The root cause section of our draft postmortem just says "engineer ran the wrong command".
+      Help us dig deeper without blaming anyone.
+    tags: [detailed, edge-case]
+  - id: tp-5
+    text: Turn these postmortem findings into action items with owners and deadlines.
+  - id: tp-6
+    text: Was this a SEV1 or a SEV2? Help us classify the impact of this incident.
+    tags: [short]
+  - id: tp-7
+    text: We had three small outages this month with the same cause. Write one combined review.
+    tags: [edge-case]
+  - id: tp-8
+    text: What should a good postmortem template contain for a 20-person engineering team?
+
+should_not_trigger:
+  - id: nt-1
+    text: The site is down right now. What commands should I run to restart the service?
+    tags: [near-miss, edge-case]
+  - id: nt-2
+    text: Review my fix for the bug that caused yesterday's outage
+    tags: [near-miss]
+    closer_skill: code-reviewer
+  - id: nt-3
+    text: Write a public statement apologising to customers for the outage
+    tags: [near-miss]
+    closer_skill: write-press-release
+  - id: nt-4
+    text: Chart how our error rate changed over the last six months
+    tags: [near-miss]
+    closer_skill: data-analyst
+  - id: nt-5
+    text: Plan a team-building day for 20 engineers
+    tags: [unrelated]
+  - id: nt-6
+    text: Recommend a laptop for software development under 1,500 dollars
+    tags: [unrelated]
+
+rubric:
+  - {id: r-1, text: "Builds an ordered timeline with times, detection and response steps", type: procedure}
+  - {id: r-2, text: "Uses blameless language and focuses on systems and processes, not people", type: guardrail, critical: true}
+  - {id: r-3, text: "Finds contributing causes beyond the first obvious one", type: quality}
+  - {id: r-4, text: "States customer and business impact with duration and scope", type: quality}
+  - {id: r-5, text: "Action items have an owner, a due date and a clear expected effect", type: format}
+  - {id: r-6, text: "Follows the workflow order (timeline, impact, causes, actions) and says which step it is on", type: procedure}
+  - {id: r-7, text: "Marks facts that are missing or uncertain instead of guessing them", type: guardrail}

@@ -1,0 +1,29 @@
+{
+  "dataset": "skillforge-seed-benchmark",
+  "version": "0.1.0",
+  "created": "2026-10-23",
+  "skillspec_version": "0.2",
+  "counts": {
+    "skills": 10,
+    "test_prompts": 80,
+    "should_not_trigger": 60,
+    "rubric_items": 62,
+    "labelled_requests": 30
+  },
+  "review": {
+    "reviewed": 0,
+    "draft": 10
+  },
+  "files": {
+    "README.md": "08981dfda297cf42cad3fd6e5ee9277f378a19624f22aed78ea115a826d2046c",
+    "prompts.jsonl": "61a52094733635cb0b119b270d38809ea4724986235da0ded394e588aff92952",
+    "requests.jsonl": "2afeb308fb0708653ed86b14a35b0afc6d6f4933afecbadcfa49c6aa476279df",
+    "rubrics.jsonl": "1b8337966b905892bb6b53dcbef6b20968b25260b5e4172102fd5d2429f7eb63",
+    "schemas/prompts.schema.json": "27a582e65736234145af96ec82b1b844367bd841ccbe5072b9dee9cfccdbbc7d",
+    "schemas/requests.schema.json": "82e1233ee9f085a081bc1d7324397b4da61505361b883794d9397c53779eb728",
+    "schemas/rubrics.schema.json": "d669d420d70d5f5795f0b4e75ea0db2cc96724013ec8b0e20daae1bfffa3a58e",
+    "schemas/skills.schema.json": "e027365eb86e58b27af525963e054d9e09a444c753f19c46634d33d9a8691692",
+    "skills.jsonl": "cf0dead155c9325d1ae2bc70cd8eb1df7eb9f5f74f4e29fb5dafe7176f665969"
+  },
+  "dataset_sha256": "f0a92ff2f445ef0e96099d1f2a9cbbc87b2bf598d8b16f13752e3b6a9e4d3337"
+}

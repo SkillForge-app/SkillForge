@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+User-agent: *
+Disallow: /index.php/* 
+
+Sitemap: https://www.labellerr.com/sitemap.xml 
+
+Sitemap: https://www.labellerr.com/sitemap.xml

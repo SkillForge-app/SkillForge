@@ -1,0 +1,80 @@
+name: code-reviewer
+title: Review Code Changes
+kind: task
+domain: technology/software-engineering
+risk: low
+summary: Reviews a code change for correctness, security and maintainability, and gives prioritised, actionable comments.
+targets: [claude, codex]
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: Make a skill that reviews pull requests for bugs, security problems and readability.
+    labels: {kind: task, domain: technology/software-engineering, risk: low, targets: [claude, codex]}
+  - id: req-2
+    style: vague
+    text: can you make something that checks my code
+    labels: {kind: task, domain: technology/software-engineering, risk: low, targets: [codex]}
+  - id: req-3
+    style: detailed
+    text: >-
+      I want a Codex skill that reviews diffs the way our senior engineers do: first understand
+      what the change is for, then look for real bugs and security holes, then maintainability.
+      Comments must be ranked (blocking, should fix, nit), point to exact lines and suggest a
+      fix. It must not nitpick formatting that our linter already handles.
+    labels: {kind: task, domain: technology/software-engineering, risk: low, targets: [codex]}
+
+test_prompts:
+  - id: tp-1
+    text: Review this diff that adds a password reset endpoint to our Flask app.
+  - id: tp-2
+    text: Is there anything wrong with this function that retries HTTP requests in a loop?
+    tags: [short]
+  - id: tp-3
+    text: Look over my pull request before I ask the team; it refactors the payment module.
+  - id: tp-4
+    text: >-
+      This change moves our user search from SQL string formatting to an ORM query. Review it and
+      tell me if it is safe to merge today.
+    tags: [detailed]
+  - id: tp-5
+    text: Check this React component for performance problems and bugs.
+  - id: tp-6
+    text: Review this 3-line change that bumps a dependency version.
+    tags: [edge-case, short]
+  - id: tp-7
+    text: Give me a code review of this Go worker that reads jobs from a queue.
+  - id: tp-8
+    text: My teammate's PR is 2,000 lines. How should I review it, and what should I look at first?
+    tags: [edge-case]
+
+should_not_trigger:
+  - id: nt-1
+    text: Write a new endpoint that exports invoices as CSV
+    tags: [near-miss]
+  - id: nt-2
+    text: Production is returning 500 errors since the last deploy. What happened?
+    tags: [near-miss]
+    closer_skill: incident-postmortem
+  - id: nt-3
+    text: Which vector database should our RAG prototype use?
+    tags: [near-miss]
+    closer_skill: ai-engineer
+  - id: nt-4
+    text: Explain what a hash map is to a beginner
+    tags: [near-miss]
+  - id: nt-5
+    text: Write a cover letter for a product manager job
+    tags: [unrelated]
+  - id: nt-6
+    text: Suggest a name for our new coffee shop
+    tags: [unrelated]
+
+rubric:
+  - {id: r-1, text: "Starts by stating what the change does and its intent", type: procedure}
+  - {id: r-2, text: "Finds the real bugs or security issues in the change when they exist", type: quality, critical: true}
+  - {id: r-3, text: "Ranks comments as blocking, should fix or nit", type: format}
+  - {id: r-4, text: "Each comment points to the exact code and suggests a concrete fix", type: quality}
+  - {id: r-5, text: "Does not invent problems; says clearly when the change looks fine", type: guardrail}
+  - {id: r-6, text: "Avoids style nitpicks that a linter or formatter would catch", type: quality}

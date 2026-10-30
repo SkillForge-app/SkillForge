@@ -1,0 +1,81 @@
+name: data-analyst
+title: Data Analyst
+kind: role
+domain: data/analytics
+risk: low
+summary: Data analyst who turns business questions into clean queries, sound analyses and clear charts, and says how confident the result is.
+targets: [claude, codex]
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: Create a data analyst skill that writes SQL, analyses spreadsheets and explains results to managers.
+    labels: {kind: role, domain: data/analytics, risk: low, targets: [claude, codex]}
+  - id: req-2
+    style: vague
+    text: I want help with my numbers
+    labels: {kind: role, domain: data/analytics, risk: low, targets: [claude]}
+  - id: req-3
+    style: detailed
+    text: >-
+      Our sales team exports CSVs from the CRM every week and nobody trusts the numbers. I want a
+      skill that behaves like an experienced data analyst: it should check the data for problems
+      first, write the pandas or SQL code, pick the right chart, and explain what the result
+      means and how sure we can be, in plain language for the sales director.
+    labels: {kind: role, domain: data/analytics, risk: low, targets: [claude, codex]}
+
+test_prompts:
+  - id: tp-1
+    text: Here is a CSV of last quarter's orders. Which product categories grew fastest, and is the growth real or noise?
+  - id: tp-2
+    text: Write a SQL query that shows monthly active customers for the last 12 months from an orders table with customer_id and order_date.
+  - id: tp-3
+    text: Our conversion rate dropped from 3.1% to 2.7% this week. How do I check whether that matters?
+  - id: tp-4
+    text: Which chart should I use to show revenue by region over three years to the board?
+    tags: [short]
+  - id: tp-5
+    text: >-
+      I merged two spreadsheets of customer records and now the totals are 18% higher than in the
+      finance report. Help me find out what went wrong before I send anything.
+    tags: [detailed, edge-case]
+  - id: tp-6
+    text: Design an A/B test to see whether a shorter signup form increases signups.
+  - id: tp-7
+    text: Summarise this survey data for my manager in five bullet points with the caveats.
+  - id: tp-8
+    text: The dataset has only 40 rows. Can I still say which marketing channel works best?
+    tags: [edge-case, short]
+
+should_not_trigger:
+  - id: nt-1
+    text: Build a retrieval-augmented chatbot over our analytics documentation
+    tags: [near-miss]
+    closer_skill: ai-engineer
+  - id: nt-2
+    text: Make a monthly budget for my bakery for next year
+    tags: [near-miss]
+    closer_skill: small-business-budgeting
+  - id: nt-3
+    text: Review the Python code in this pull request for bugs
+    tags: [near-miss]
+    closer_skill: code-reviewer
+  - id: nt-4
+    text: Explain what my blood test numbers mean
+    tags: [near-miss]
+    closer_skill: explain-medical-results
+  - id: nt-5
+    text: Write a birthday poem for my sister
+    tags: [unrelated]
+  - id: nt-6
+    text: Translate this paragraph into Spanish
+    tags: [unrelated]
+
+rubric:
+  - {id: r-1, text: "Checks the data for missing values, duplicates and odd units before analysing", type: procedure}
+  - {id: r-2, text: "Code or SQL is correct for the described data and runs without changes", type: quality}
+  - {id: r-3, text: "States how confident the result is and why (sample size, noise, bias)", type: quality}
+  - {id: r-4, text: "Picks a chart that fits the question and explains the choice briefly", type: quality}
+  - {id: r-5, text: "Never presents invented numbers as results; says when data is needed", type: guardrail, critical: true}
+  - {id: r-6, text: "Explains the result in plain language for a non-technical reader", type: format}

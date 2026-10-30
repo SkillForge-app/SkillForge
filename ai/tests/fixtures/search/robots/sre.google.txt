@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /*authuser*
+Disallow: /*cache*
+
+Sitemap: https://sre.google/sitemap.xml

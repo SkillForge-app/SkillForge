@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /wp-admin
+Disallow: /wp-includes
+Disallow: /wp-content/cache
+
+
+User-Agent: *
+Crawl-Delay: 5
+
+SITEMAP: https://merseysidewda.gov.uk/sitemap_index.xml

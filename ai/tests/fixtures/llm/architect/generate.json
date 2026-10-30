@@ -1,0 +1,187 @@
+{
+  "spec_version": "0.2",
+  "skill": {
+    "name": "review-nda",
+    "version": "1.0",
+    "title": "Review an NDA",
+    "kind": "task",
+    "domain": "legal/contracts",
+    "summary": "Reviews a non-disclosure agreement under US law for a non-lawyer: flags unusual, one-sided or missing clauses and explains them in plain language. Not legal advice."
+  },
+  "triggers": {
+    "use_when": [
+      "reviewing an NDA or confidentiality agreement before signing it",
+      "comparing an NDA with a company's usual positions",
+      "explaining what a confidentiality clause means in plain language"
+    ],
+    "avoid_when": [
+      "drafting or reviewing other contract types",
+      "an existing dispute, breach or lawsuit",
+      "agreements governed by non-US law"
+    ]
+  },
+  "expertise": {
+    "principles": [
+      "Read the whole agreement before commenting on any clause",
+      "Find out which party the user is and whether the NDA is mutual or one-way",
+      "Flag and explain issues; do not silently rewrite the agreement",
+      "Separate common market terms from unusual or one-sided ones",
+      "Quote the clause you are commenting on so the user can find it"
+    ]
+  },
+  "procedures": [
+    {
+      "id": "review-nda",
+      "title": "Review an NDA",
+      "steps": [
+        "Identify the parties, the user's side, and whether the NDA is mutual or one-way",
+        "Check how confidential information is defined and what the standard exclusions are",
+        "Check the term, how long obligations survive, and what happens to information at the end",
+        "Check permitted disclosures, including disclosures required by law and protected whistleblower reports",
+        "Look for terms that do not belong in a typical NDA, such as non-compete, non-solicit or broad IP assignment clauses",
+        "Note the governing law, remedies and any unusual penalty clauses",
+        "Rate each issue as acceptable, negotiate, or must change, with a short reason"
+      ],
+      "produces": [
+        "nda-review"
+      ],
+      "uses": [
+        "confidentiality-basics",
+        "whistleblower-carve-outs"
+      ]
+    },
+    {
+      "id": "explain-for-signer",
+      "title": "Explain the NDA to the person signing it",
+      "steps": [
+        "Summarise what the user may and may not do after signing, in plain language",
+        "List the questions to ask the other party or a lawyer before signing"
+      ],
+      "produces": [
+        "signer-summary"
+      ],
+      "uses": [
+        "confidentiality-basics"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "id": "nda-review",
+      "template": "templates/nda-review.md",
+      "title": "NDA review",
+      "sections": [
+        "Agreement overview",
+        "Issues by clause",
+        "Missing clauses",
+        "Recommendation",
+        "Not legal advice"
+      ]
+    },
+    {
+      "id": "signer-summary",
+      "template": "templates/signer-summary.md",
+      "title": "Plain-language summary for the signer",
+      "sections": [
+        "What you agree to",
+        "What you may still do",
+        "Questions to ask before signing"
+      ]
+    }
+  ],
+  "guardrails": [
+    {
+      "id": "not-legal-advice",
+      "rule": "State at the start and the end that this is general information, not legal advice, and that it does not create a lawyer-client relationship.",
+      "severity": "must",
+      "category": "disclaimer"
+    },
+    {
+      "id": "lawyer-review",
+      "rule": "Recommend review by a qualified lawyer in the governing jurisdiction before signing, and always when the user marks an item as must change or the stakes are high.",
+      "severity": "must",
+      "category": "human_review"
+    },
+    {
+      "id": "no-invented-law",
+      "rule": "Never cite a law, case or rule that is not in the provided sources; say when something must be checked by a lawyer.",
+      "severity": "must",
+      "category": "accuracy"
+    },
+    {
+      "id": "keep-agreement-confidential",
+      "rule": "Treat the uploaded agreement as confidential; do not send its text to external services.",
+      "severity": "must",
+      "category": "privacy"
+    }
+  ],
+  "tools": {
+    "required": [],
+    "optional": [
+      "filesystem_read"
+    ]
+  },
+  "knowledge": {
+    "references": [
+      {
+        "id": "confidentiality-basics",
+        "file": "references/confidentiality-basics.md",
+        "title": "Trade secrets and confidentiality basics",
+        "sources": [
+          "src-uspto-trade-secrets"
+        ]
+      },
+      {
+        "id": "whistleblower-carve-outs",
+        "file": "references/whistleblower-carve-outs.md",
+        "title": "Required whistleblower carve-outs in US confidentiality agreements",
+        "sources": [
+          "src-dtsa-immunity",
+          "src-sec-21f-17"
+        ]
+      }
+    ]
+  },
+  "sources": [
+    {
+      "id": "src-uspto-trade-secrets",
+      "url": "https://www.uspto.gov/ip-policy/trade-secret-policy",
+      "retrieved": "2026-10-23",
+      "title": "Trade secret policy | USPTO"
+    },
+    {
+      "id": "src-dtsa-immunity",
+      "url": "https://www.law.cornell.edu/uscode/text/18/1833",
+      "retrieved": "2026-10-23",
+      "title": "18 U.S. Code § 1833 - Exceptions to prohibitions"
+    },
+    {
+      "id": "src-sec-21f-17",
+      "url": "https://www.law.cornell.edu/cfr/text/17/240.21F-17",
+      "retrieved": "2026-10-23",
+      "title": "17 CFR § 240.21F-17 - Staff communications with individuals reporting possible securities law violations."
+    }
+  ],
+  "evaluation": {
+    "test_prompts": [
+      "Here is the NDA a potential investor sent us. What should I worry about before signing?",
+      "Is it normal that this NDA lasts forever and bans me from working for competitors?",
+      "Explain this confidentiality clause to me like I am not a lawyer"
+    ],
+    "rubric": [
+      "says it is not legal advice and recommends a lawyer for high-stakes items",
+      "identifies the user's side and whether the NDA is mutual",
+      "flags non-compete or non-solicit terms hidden in an NDA",
+      "checks for legally required and whistleblower disclosure carve-outs",
+      "quotes the clauses it comments on"
+    ],
+    "should_not_trigger": [
+      "Draft an employment contract for a new engineer",
+      "We are being sued for breach of an NDA. What is our defence?"
+    ]
+  },
+  "targets": [
+    "claude",
+    "codex"
+  ]
+}

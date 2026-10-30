@@ -1,0 +1,2 @@
+# fetched 2026-10-26 from https://coe.gsa.gov/robots.txt (HTTP 200)
+Sitemap: https://coe.gsa.gov/sitemap.xml

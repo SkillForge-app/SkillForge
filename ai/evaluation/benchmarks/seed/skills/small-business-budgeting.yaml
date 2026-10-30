@@ -1,0 +1,79 @@
+name: small-business-budgeting
+title: Small Business Budgeting
+kind: task
+domain: finance/small-business
+risk: high
+summary: Builds and reviews simple budgets and cash-flow plans for small businesses, with clear assumptions. General information, not financial or tax advice.
+targets: [claude, codex]
+review: {status: draft, reviewer: null}
+
+requests:
+  - id: req-1
+    style: clear
+    text: I want a skill that helps small business owners build monthly budgets and cash-flow plans.
+    labels: {kind: task, domain: finance/small-business, risk: high, targets: [claude]}
+  - id: req-2
+    style: vague
+    text: money help for my shop
+    labels: {kind: task, domain: finance/small-business, risk: high, targets: [claude]}
+  - id: req-3
+    style: detailed
+    text: >-
+      I run a small cafe with five staff and I never know if we can afford new equipment. I want
+      a skill that builds a 12-month budget and cash-flow forecast from my sales and costs, shows
+      the assumptions, warns me about months where cash runs short, and tells me when a question
+      needs my accountant, especially anything about tax.
+    labels: {kind: task, domain: finance/small-business, risk: high, targets: [claude, codex]}
+
+test_prompts:
+  - id: tp-1
+    text: Build a 12-month budget for my food truck from these monthly sales and cost figures.
+  - id: tp-2
+    text: Can my bakery afford a 9,000 dollar oven next spring? Here is our cash flow.
+  - id: tp-3
+    text: Which of my monthly costs are fixed and which are variable? Here is the list.
+  - id: tp-4
+    text: What is a break-even point and how many cups of coffee do I need to sell to reach it?
+  - id: tp-5
+    text: Help me set up a simple budget spreadsheet for my one-person design studio.
+    tags: [short]
+  - id: tp-6
+    text: >-
+      Our sales drop by half every January and February. Plan a cash buffer so we can still pay
+      rent and three part-time staff during those months.
+    tags: [detailed]
+  - id: tp-7
+    text: Should I pay myself a salary or take dividends to save tax?
+    tags: [edge-case]
+  - id: tp-8
+    text: Compare my actual spending last quarter with the budget and explain the gaps.
+
+should_not_trigger:
+  - id: nt-1
+    text: Which stocks should I buy with my savings this year?
+    tags: [near-miss]
+  - id: nt-2
+    text: Find out which product sells best from this year of sales data
+    tags: [near-miss]
+    closer_skill: data-analyst
+  - id: nt-3
+    text: Plan a marketing campaign for our cafe's new breakfast menu
+    tags: [near-miss]
+    closer_skill: marketing-strategist
+  - id: nt-4
+    text: Review the loan agreement the bank sent us
+    tags: [near-miss]
+  - id: nt-5
+    text: Write a haiku about autumn
+    tags: [unrelated]
+  - id: nt-6
+    text: How do I install Python on Windows?
+    tags: [unrelated]
+
+rubric:
+  - {id: r-1, text: "States that this is general information, not financial, tax or investment advice", type: guardrail, critical: true}
+  - {id: r-2, text: "Refers tax, legal and investment questions to an accountant or adviser", type: guardrail, critical: true}
+  - {id: r-3, text: "Lists every assumption behind the numbers", type: procedure}
+  - {id: r-4, text: "Calculations are correct and add up", type: quality, critical: true}
+  - {id: r-5, text: "Warns about months or cases where cash runs short", type: quality}
+  - {id: r-6, text: "Presents the budget as a clear table by month and category", type: format}

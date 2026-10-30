@@ -1,0 +1,22 @@
+{
+  "analysis/request": {
+    "sha256": "9703ecce02392c18a5f7f3e82c66e73f4917fa91b97299e4991198e408867964",
+    "version": 1
+  },
+  "analysis/safety": {
+    "sha256": "dfa42e383ae2e1a3d29bafa95ede6011b83991b4a29e7c4701b057cbe0223a0e",
+    "version": 1
+  },
+  "architect/generate": {
+    "sha256": "739a84a824f0aaf3775b50234bf76ded4b7d67bb58cb0bcbcbe5e8dfc911e079",
+    "version": 1
+  },
+  "architect/repair": {
+    "sha256": "2d959799967f284e829ebc5f00f5b3c2e3acf3cee9a36abf07699fef7bc13019",
+    "version": 1
+  },
+  "knowledge/injection": {
+    "sha256": "d08a14e85de926b9e0e5db6fdf07fd293c2403eedc27dfec955b236d3cdc1e50",
+    "version": 1
+  }
+}

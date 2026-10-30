@@ -1,0 +1,113 @@
+# AI-21: the metrics OPS-10 derives from the AI services' metadata-only logs.
+#
+# Input: JSON lines from core/ops/logs.py, one per log record:
+#   {"ts": "...", "level": "INFO", "logger": "skillforge.llm", "record": {...}}
+# Each metric below says which logger's records it reads (`logger`), which records count
+# (`where`: field equals value; `null` means the field is empty), which field gives the value
+# (`value`; a counter without one counts records), and which record fields become labels
+# (`labels`: metric label -> record field). `explode` turns a list field into one increment per
+# item (label value `empty_as` when the list is empty). Histograms list their `buckets`.
+# `record` names the payload model, so tests can check every field exists.
+# A reference implementation of exactly these rules: python -m core.ops.metrics <log.jsonl>
+version: 1
+metrics:
+  # ---------------------------------------------------------------- model calls (CallRecord)
+  - name: skillforge_llm_attempts_total
+    type: counter
+    help: Model call attempts by role, model, status and fallback position (0 = primary).
+    logger: skillforge.llm
+    record: CallRecord
+    labels: {role: model_role, model: model, status: status, error_type: error_type, fallback: fallback}
+
+  - name: skillforge_llm_latency_ms
+    type: histogram
+    help: Latency of one model call attempt, in milliseconds.
+    logger: skillforge.llm
+    record: CallRecord
+    value: latency_ms
+    labels: {role: model_role, status: status}
+    buckets: [500, 1000, 2500, 5000, 10000, 30000, 60000, 120000, 180000, 300000]
+
+  - name: skillforge_llm_cost_usd_total
+    type: counter
+    help: Model spend in USD (the provider's reported cost, else our price table).
+    logger: skillforge.llm
+    record: CallRecord
+    value: cost_usd
+    labels: {role: model_role, model: model}
+
+  - name: skillforge_llm_unpriced_total
+    type: counter
+    help: Successful paid calls whose cost could not be computed (cost_usd is null).
+    logger: skillforge.llm
+    record: CallRecord
+    where: {status: ok, cost_usd: null}
+    labels: {model: model}
+
+  # ---------------------------------------------------------------- pipeline steps (StepEvent)
+  - name: skillforge_step_total
+    type: counter
+    help: Pipeline steps by step, status and error code (budget_exceeded, provider_unavailable, ...).
+    logger: skillforge.pipeline
+    record: StepEvent
+    labels: {step: step, status: status, error_code: error_code}
+
+  - name: skillforge_step_cost_usd
+    type: histogram
+    help: Model spend of one pipeline step, in USD.
+    logger: skillforge.pipeline
+    record: StepEvent
+    value: cost_usd
+    labels: {step: step}
+    buckets: [0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 1.5, 2.0, 3.0, 5.0]
+
+  - name: skillforge_skill_cost_usd
+    type: histogram
+    help: Model spend of one whole skill (all steps), from the design step of a skill_run.
+    logger: skillforge.pipeline
+    record: StepEvent
+    where: {step: design}
+    value: skill_cost_usd
+    buckets: [0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.2, 1.5, 2.0, 3.0, 5.0]
+
+  # ---------------------------------------------------------------- safety (AI-06)
+  - name: skillforge_safety_decisions_total
+    type: counter
+    help: Safety screening decisions by verdict (allow, block) and category.
+    logger: skillforge.safety
+    record: safety_decision
+    labels: {verdict: verdict, category: category}
+
+  # ---------------------------------------------------------------- knowledge (AI-10, AI-19)
+  - name: skillforge_ingest_pages_total
+    type: counter
+    help: Ingested pages by verdict reason (ok when indexed; injection, paywall_or_login, ...).
+    logger: skillforge.knowledge
+    record: IngestPageEvent
+    where: {event: ingest_page}
+    explode: reasons
+    empty_as: ok
+    labels: {reason: reasons}
+
+  - name: skillforge_llm_screen_passages_total
+    type: counter
+    help: Passages sent to the optional LLM injection screen.
+    logger: skillforge.knowledge
+    record: LLMScreenEvent
+    where: {event: llm_screen}
+    value: screened
+
+  - name: skillforge_llm_screen_flagged_total
+    type: counter
+    help: Passages the LLM injection screen flagged and dropped.
+    logger: skillforge.knowledge
+    record: LLMScreenEvent
+    where: {event: llm_screen}
+    value: flagged
+
+  # ---------------------------------------------------------------- quality sampling
+  - name: skillforge_quality_samples_total
+    type: counter
+    help: Published specs picked for the AI-16 judge (quality sampling).
+    logger: skillforge.quality
+    record: QualitySampleEvent
