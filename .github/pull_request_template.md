@@ -35,4 +35,4 @@ Closes #<!-- issue number -->
 
 ## Owner bypass (DevOps only)
 
-- [ ] I merged with the owner bypass. This PR only touches `devops/` or `.github/`, and nobody answered the review request within 24 hours: <!-- link to the review request -->
+- [ ] I merged with the owner bypass: my own PR, only DevOps-owned files (`devops/`, `.github/`, root repo files), no contract files, and `ci-ok` is green
