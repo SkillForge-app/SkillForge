@@ -1,0 +1,128 @@
+# CI entry point (OPS-02). Always runs, so the one required check `ci-ok` always reports.
+# Department workflows (ai.yml, backend.yml, frontend.yml, data.yml) run only when their folder
+# changed. `ci-ok` passes when every job passed or was skipped.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      ai: ${{ steps.diff.outputs.ai }}
+      backend: ${{ steps.diff.outputs.backend }}
+      frontend: ${{ steps.diff.outputs.frontend }}
+      data: ${{ steps.diff.outputs.data }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Find changed folders
+        id: diff
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: bash devops/ci/changed-folders.sh "$BASE" "$HEAD_SHA" | tee -a "$GITHUB_OUTPUT"
+
+  repo-checks:
+    name: repo-checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install actionlint
+        env:
+          VERSION: 1.7.12
+          SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          curl -sSfL -o /tmp/actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${VERSION}/actionlint_${VERSION}_linux_amd64.tar.gz"
+          echo "${SHA256}  /tmp/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp actionlint
+      - name: Lint workflows
+        run: /tmp/actionlint -color
+      - name: Lint shell scripts
+        run: find devops -name '*.sh' -print0 | xargs -0 -r shellcheck
+      - name: JSON files parse
+        run: for f in devops/github/*.json; do python3 -m json.tool "$f" > /dev/null; done
+      - name: CODEOWNERS has no errors
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          errors="$(gh api "repos/$GITHUB_REPOSITORY/codeowners/errors?ref=$REF" --jq '.errors')"
+          echo "$errors"
+          [ "$errors" = "[]" ]
+
+  secret-scan:
+    name: secret-scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks
+        env:
+          VERSION: 8.30.1
+          SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          echo "${SHA256}  /tmp/gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+      - name: Scan the full history for secrets
+        run: /tmp/gitleaks git --config devops/ci/gitleaks.toml --redact --no-banner .
+
+  ai:
+    needs: changes
+    if: needs.changes.outputs.ai == 'true'
+    uses: ./.github/workflows/ai.yml
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    uses: ./.github/workflows/backend.yml
+
+  frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/frontend.yml
+
+  data:
+    needs: changes
+    if: needs.changes.outputs.data == 'true'
+    uses: ./.github/workflows/data.yml
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [changes, repo-checks, secret-scan, ai, backend, frontend, data]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Every job passed or was skipped
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+          FAILED: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: |
+          echo "job results: $RESULTS"
+          [ "$FAILED" = "false" ]

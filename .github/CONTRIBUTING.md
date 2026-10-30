@@ -81,6 +81,7 @@ The file `.github/CODEOWNERS` decides who must approve a pull request into `main
 - Repo-wide files (`.gitignore`, `.gitattributes`, `LICENSE`) need DevOps approval.
 - When you push new commits, earlier approvals are cleared, so ask for a new review.
 - All review comments must be resolved before merging.
+- CI must pass: the `ci-ok` check. It only runs your department's checks when your folder changed.
 - The lead (zaid2658a-debug) is a member of every department team, so the lead's approval counts as that
   department's approval when a department reviewer isn't available.
 
