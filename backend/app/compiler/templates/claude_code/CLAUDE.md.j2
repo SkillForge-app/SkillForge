@@ -1,0 +1,34 @@
+
+# {{ name }}
+
+## Description
+{{ description }}
+
+## Runtime
+{{ runtime }}
+
+## Entrypoint
+{{ entrypoint }}
+
+## Tools
+{% for tool in tools %}
+- {{ tool }}
+{% endfor %}
+
+## Constraints
+{% for rule in constraints.rules %}
+- {{ rule }}
+{% endfor %}
+
+## Workflow
+{% for step in workflow.steps %}
+- {{ step }}
+{% endfor %}
+
+## Quality Criteria
+{% for criterion in quality.criteria %}
+- {{ criterion }}
+{% endfor %}
+
+## Autonomy
+{{ autonomy.level }}

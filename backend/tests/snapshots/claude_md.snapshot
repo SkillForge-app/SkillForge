@@ -1,0 +1,26 @@
+git diff --cached --stat
+# AgentForge
+
+## Description
+AI Assistant
+
+## Runtime
+python
+
+## Entrypoint
+main.py
+
+## Tools
+
+
+## Constraints
+
+
+## Workflow
+
+
+## Quality Criteria
+
+
+## Autonomy
+medium
