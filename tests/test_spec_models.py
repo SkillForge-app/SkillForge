@@ -82,3 +82,22 @@ def test_agent_definition_defaults():
     assert definition.agent.constraints.rules == []
     assert definition.agent.workflow.steps == []
     assert definition.agent.quality.criteria == []
+
+
+def test_invalid_spec_has_readable_errors():
+    with pytest.raises(ValidationError) as exc_info:
+        AgentSpec(
+            name="",
+            runtime="unknown",
+            entrypoint="run",
+        )
+
+    errors = exc_info.value.errors()
+    error_fields = {error["loc"][0] for error in errors}
+
+    assert "name" in error_fields
+    assert "runtime" in error_fields
+
+    message = str(exc_info.value)
+    assert "at least 1 character" in message
+    assert "'python', 'node' or 'container'" in message
