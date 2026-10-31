@@ -28,4 +28,8 @@ def test_claude_md_snapshot():
 
     expected = snapshot_path.read_text(encoding="utf-8")
 
-    assert result["CLAUDE.md"] == expected
+    # Normalize line endings across Windows and Linux
+    actual = result["CLAUDE.md"].replace("\r\n", "\n").replace("\r", "\n")
+    expected = expected.replace("\r\n", "\n").replace("\r", "\n")
+
+    assert actual == expected
