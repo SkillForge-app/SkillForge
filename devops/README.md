@@ -15,6 +15,13 @@ places (listed below).
 | `ci/changed-folders.sh` | CI: which department folders a PR changed |
 | `ci/run-project.sh` | CI skeleton for backend/, frontend/, data/: install, lint, test if they exist |
 | `ci/gitleaks.toml` | CI secret scan config: default rules plus allowlisted test sentinels |
+| `security.md` | Security scanning (OPS-11): what runs, where results show up, who handles alerts |
+
+## Security (OPS-11)
+
+See [security.md](security.md). In short: `.github/workflows/codeql.yml` (CodeQL) and `trivy.yml` (Trivy) report to
+the Security tab and are **not** required checks; `.github/dependabot.yml` opens grouped weekly update PRs for
+GitHub Actions and `ai/`; Dependabot alerts, security updates, secret scanning and push protection are on.
 
 ## CI (OPS-02)
 
@@ -58,6 +65,6 @@ devops/github/setup-org.sh
 | `.github/ISSUE_TEMPLATE/` | Issue forms only load from this folder |
 | `.github/CONTRIBUTING.md` | GitHub links to it on the new issue and PR pages only from the root, `docs/` or `.github/` |
 | `.github/workflows/` | GitHub Actions only runs workflows (and reusable workflows) from here |
-| `.github/dependabot.yml` (OPS-11) | Fixed location |
+| `.github/dependabot.yml` | Fixed location: Dependabot only reads it from there |
 | `/.gitignore`, `/.gitattributes` | Git applies them per folder; only the root copy covers the whole repo |
 | `/compose.yaml` (OPS-03) | `docker compose up` looks in the current folder; it will only `include:` files from `devops/compose/` |

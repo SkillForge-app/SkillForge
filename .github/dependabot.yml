@@ -1,0 +1,78 @@
+# Dependabot (OPS-11). Version updates every Monday; security updates whenever an alert opens.
+# PRs go to main like any other PR: ci-ok must pass and the owning department approves (CODEOWNERS).
+# cooldown: only releases at least 14 days old, our supply-chain rule.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Cairo
+    cooldown:
+      default-days: 14
+    open-pull-requests-limit: 3
+    groups:
+      actions:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      actions-major:
+        patterns: ["*"]
+        update-types: [major]
+    labels: [dependencies, devops]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # ai/ (uv). Note: ai/pyproject.toml has [tool.uv] exclude-newer; an update newer than that date
+  # cannot be locked until AI moves the date on purpose (see devops/security.md).
+  - package-ecosystem: uv
+    directory: /ai
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Cairo
+    cooldown:
+      default-days: 14
+    open-pull-requests-limit: 3
+    groups:
+      python:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      python-major:
+        patterns: ["*"]
+        update-types: [major]
+    labels: [dependencies, ai]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # Enable these once the folder is on main and its package manager is known.
+  # - package-ecosystem: uv          # or pip
+  #   directory: /backend
+  #   schedule: {interval: weekly, day: monday, time: "06:00", timezone: Africa/Cairo}
+  #   cooldown: {default-days: 14}
+  #   open-pull-requests-limit: 3
+  #   groups: {backend: {patterns: ["*"], update-types: [minor, patch]}}
+  #   labels: [dependencies, backend]
+  #   commit-message: {prefix: chore, include: scope}
+  #
+  # - package-ecosystem: npm
+  #   directory: /frontend
+  #   schedule: {interval: weekly, day: monday, time: "06:00", timezone: Africa/Cairo}
+  #   cooldown: {default-days: 14}
+  #   open-pull-requests-limit: 3
+  #   groups: {frontend: {patterns: ["*"], update-types: [minor, patch]}}
+  #   labels: [dependencies, frontend]
+  #   commit-message: {prefix: chore, include: scope}
+  #
+  # - package-ecosystem: uv          # or pip
+  #   directory: /data
+  #   schedule: {interval: weekly, day: monday, time: "06:00", timezone: Africa/Cairo}
+  #   cooldown: {default-days: 14}
+  #   open-pull-requests-limit: 3
+  #   groups: {data: {patterns: ["*"], update-types: [minor, patch]}}
+  #   labels: [dependencies, data-engineering]
+  #   commit-message: {prefix: chore, include: scope}
