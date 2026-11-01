@@ -108,6 +108,30 @@ def test_description_too_long() -> None:
     assert "situation number" not in issues[0].message  # messages never repeat the content
 
 
+def test_targets_without_v1_compilers_are_valid_with_warnings() -> None:
+    result = validate_spec(changed(lambda d: d.update(targets=["claude", "chatgpt", "generic"])))
+
+    assert result.ok
+    assert result.spec is not None
+    assert [(issue.path, issue.code, issue.severity) for issue in result.issues] == [
+        ("/targets/1", "target_not_available_in_v1", "warning"),
+        ("/targets/2", "target_not_available_in_v1", "warning"),
+    ]
+
+
+def test_source_licence_is_optional_free_text() -> None:
+    valid = validate_spec(changed(lambda d: d["sources"][0].update(licence="CC BY 4.0")))
+    assert valid.ok
+    assert valid.spec is not None
+    assert valid.spec.sources[0].licence == "CC BY 4.0"
+
+    invalid = validate_spec(changed(lambda d: d["sources"][0].update(licence="")))
+    assert invalid.spec is None
+    assert [(issue.path, issue.code) for issue in invalid.errors] == [
+        ("/sources/0/licence", "schema.string_too_short")
+    ]
+
+
 def test_name_taken_uses_the_registry_names() -> None:
     assert codes(example()) == []
     issues = validate_spec(example(), existing_names={"ai-engineer"}).issues
