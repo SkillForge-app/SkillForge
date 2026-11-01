@@ -18,6 +18,7 @@ from core.knowledge.real import RealRetriever
 from core.knowledge.retrieval import rank_by_overlap
 from core.knowledge.store import LocalStore
 from core.knowledge.types import Passage
+from core.knowledge.urls import normalise_url
 from core.llm import set_gateway
 from core.llm.litellm_gateway import LiteLLMGateway
 from core.llm.local_embed import model_dir
@@ -39,10 +40,12 @@ def _norm(text: str) -> str:
 
 
 def hit_rank(passages: list[Passage], page_url: str, evidence: str) -> int | None:
-    """1-based rank of the first passage from the page that contains the evidence."""
+    """1-based rank of the first passage from the page that contains the evidence. Pages are
+    compared by canonical URL: passages carry it, pages.yaml may spell the URL differently."""
     wanted = _norm(evidence)
+    page = normalise_url(page_url)
     for rank, passage in enumerate(passages, 1):
-        if str(passage.source_url) == page_url and wanted in _norm(passage.text):
+        if normalise_url(str(passage.source_url)) == page and wanted in _norm(passage.text):
             return rank
     return None
 

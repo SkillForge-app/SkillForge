@@ -20,6 +20,7 @@ from core.knowledge import (
     Passage,
     extract_page,
     find_site_boilerplate,
+    normalise_url,
 )
 from core.knowledge.extract import _Block, _drop_chrome, _norm, _xml_text
 from evaluation.extraction.data import PageLabel, load_pages
@@ -100,7 +101,8 @@ def test_chunks_are_valid_passages_with_provenance(
         assert len(chunk.text) <= settings.max_chars
         assert chunk.word_count <= settings.max_words
         assert chunk.content_hash == hashlib.sha256(chunk.text.encode()).hexdigest()
-        assert chunk.source_url == label.url and chunk.retrieved == label.retrieved
+        assert str(chunk.source_url) == normalise_url(str(label.url))  # canonical, not as labelled
+        assert chunk.retrieved == label.retrieved
         assert chunk.title == page.title
         assert len(chunk.concepts) <= 5
         passage = chunk.to_passage()
@@ -482,4 +484,4 @@ async def test_extracted_chunks_feed_the_a4_retriever(
     found = await retriever.retrieve(
         "indirect prompt injection from external websites", "technology"
     )
-    assert found and found[0].source_url == BY_FILE["owasp-llm01.html"].url
+    assert found and str(found[0].source_url) == normalise_url(str(BY_FILE["owasp-llm01.html"].url))

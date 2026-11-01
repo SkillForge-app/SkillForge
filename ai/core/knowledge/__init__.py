@@ -2,7 +2,8 @@
 retrieval (contract A4, AI-11) and prompt-injection defence (AI-19).
 
 Track B (AI-12 Architect v1, AI-13 reference writer) imports `retrieve`, `wrap_passages`,
-`UNTRUSTED_DATA_RULE` and `check_spec` from here; DE-05 imports `extract_page`. See
+`UNTRUSTED_DATA_RULE` and `check_spec` from here; DE-05 imports `extract_page`, `ExtractConfig`
+(its `fingerprint()` goes in chunk_config) and `normalise_url` (the stored source URL). See
 docs/ai/retrieval.md, docs/ai/extraction.md and docs/ai/injection-defence.md.
 """
 
@@ -44,6 +45,7 @@ from core.knowledge.search import (
     discover_sources_sync,
 )
 from core.knowledge.types import Passage, to_source
+from core.knowledge.urls import normalise_url
 
 __all__ = [
     "DEFAULT_K",
@@ -73,6 +75,7 @@ __all__ = [
     "extract_page",
     "find_site_boilerplate",
     "get_retriever",
+    "normalise_url",
     "retrieve",
     "retrieve_sync",
     "set_retriever",

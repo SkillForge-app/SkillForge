@@ -40,6 +40,7 @@ from core.knowledge.chunking import (
 from core.knowledge.chunking import content_hash as hash_text
 from core.knowledge.injection_guard import ScreeningReport, page_rejected, screen_block
 from core.knowledge.types import ChunkId, Passage, PassageText
+from core.knowledge.urls import normalise_url
 from core.spec.models import Line, SpecModel
 
 Reason = Literal[
@@ -87,6 +88,14 @@ class ExtractionInputError(ValueError):
     """The caller passed a bad URL."""
 
 
+# ExtractConfig.fingerprint() (for DE's chunk_config). Bump EXTRACTION_VERSION when this module's
+# code changes the chunks a config produces; bump FINGERPRINT_VERSION if the hashed form changes.
+EXTRACTION_VERSION = 1
+FINGERPRINT_VERSION = 1
+# Per-site hashes, not a setting of the pipeline: hashing them would give every site its own config.
+FINGERPRINT_EXCLUDED = frozenset({"site_boilerplate"})
+
+
 class ExtractConfig(SpecModel):
     """Every threshold DE-05 may tune. Defaults are the ones docs/ai/extraction.md explains."""
 
@@ -122,6 +131,41 @@ class ExtractConfig(SpecModel):
         if not value or unsupported:
             raise ValueError(f"languages must be from {sorted(SUPPORTED_LANGUAGES)}")
         return value
+
+    def fingerprint(self) -> str:
+        """sha256 (hex) of every setting except `site_boilerplate`, plus EXTRACTION_VERSION.
+
+        Hashed as canonical JSON (sorted keys, no spaces, floats as Python's shortest repr):
+        {"fingerprint_version": 1, "extraction_version": 1, "config": {<field>: <value>, ...}}.
+        Two configs that extract the same way get the same value; DE stores it in chunk_config.
+        """
+        payload = {
+            "fingerprint_version": FINGERPRINT_VERSION,
+            "extraction_version": EXTRACTION_VERSION,
+            "config": _canonical(self, FINGERPRINT_EXCLUDED),
+        }
+        text = json.dumps(
+            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False
+        )
+        return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _canonical(model: SpecModel, exclude: frozenset[str] = frozenset()) -> dict[str, Any]:
+    """A model's fields as plain JSON values: float fields always as floats (1 and 1.0 are one
+    setting), tuples as lists, nested models (ChunkSettings) the same way."""
+    out: dict[str, Any] = {}
+    for name, info in type(model).model_fields.items():
+        if name in exclude:
+            continue
+        value = getattr(model, name)
+        if isinstance(value, SpecModel):
+            value = _canonical(value)
+        elif info.annotation is float:
+            value = float(value)
+        elif isinstance(value, tuple):
+            value = list(value)
+        out[name] = value
+    return out
 
 
 class QualityReport(SpecModel):
@@ -185,12 +229,17 @@ def extract_page(
     retrieved: date,
     config: ExtractConfig | None = None,
 ) -> ExtractedPage:
-    """Extract one page. Never fetches; bad pages come back with `quality.reasons` set."""
+    """Extract one page. Never fetches; bad pages come back with `quality.reasons` set.
+
+    `url` may be any spelling of the page's address: it is normalised (core.knowledge.urls) before
+    anything uses it, so `page.url` and every `chunk_id` are the same for all spellings.
+    """
     config = config or ExtractConfig()
     try:
-        page_url = HttpUrl(url)
-    except ValidationError as exc:
+        page_url = HttpUrl(normalise_url(url))
+    except (ValueError, ValidationError) as exc:
         raise ExtractionInputError(f"not an http(s) URL: {url!r}") from exc
+    url = str(page_url)
 
     tree = _parse(_decode(html))
     signals = _page_signals(tree)

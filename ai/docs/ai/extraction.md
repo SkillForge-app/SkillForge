@@ -29,7 +29,10 @@ from core.llm import embed, load_config        # embed_sync(...) is the blocking
 
 boilerplate = find_site_boilerplate(((html, url) for html, url in batch_of_one_host))
 config = ExtractConfig().model_copy(update={"site_boilerplate": boilerplate.get(host, ())})
-page = extract_page(raw_html, url=fetched_url, retrieved=fetched_on, config=config)
+# chunk_config["extract_fingerprint"] = config.fingerprint()   (the same for every host)
+# sources.url = normalise_url(fetch_url): fetch with fetch_url, store the canonical one
+page = extract_page(raw_html, url=fetch_url, retrieved=fetched_on, config=config)
+# page.url == normalise_url(fetch_url); every chunk_id is built from it
 if page.quality.ok:
     vectors = await embed([c.text for c in page.chunks], model_role="embedding")
     model = load_config().role("embedding").model        # "local/BAAI/bge-small-en-v1.5"
@@ -46,10 +49,59 @@ else:
 - **The model** runs on CPU with no API key. Fetch it once with `python -m core.llm.local_embed download`; the files are checked against the sha256 pinned in `core/llm/models.yaml` (listed in retrieval.md for `embedding_version`).
 - **`domains`:** every chunk of a page serves all the page's domains (DE's `source_domains`). One row per chunk in the view, with the domains as a `text[]`.
 
+## For Data Engineering: the URL and the config fingerprint (from 1 Nov 2026)
+
+### The URL: fetch the original, store the canonical one
+`core.knowledge.normalise_url(url)` gives the **canonical URL**: the one identifier of a page. Extraction and source discovery use the same function.
+
+- **Fetch with the original URL**, redirects allowed: the URL as found, as pinned, or the first value of `crawl_list()`. **Don't fetch the canonical URL.** Some servers answer 404 (or a different page) when the trailing slash is missing.
+- **Store only `normalise_url(original)` as the source's identifier** (`sources.url`). Use the URL you asked for, not where a redirect ended, so the identifier stays the same when a site changes its redirects.
+- **`extract_page()` normalises the URL itself.** `page.url` is the canonical URL, and every `chunk_id` is built from it, so the original and the canonical spelling give the same ids.
+- **The rules,** in order:
+  1. The scheme and host become lowercase. A non-default port is kept; `:443` and `:80` are dropped. `user:password@` is dropped, so credentials are never stored.
+  2. The `#fragment` is dropped.
+  3. Query parameters named `utm_*`, `gclid` or `fbclid` (any case) are dropped. **All other parameters are kept exactly as written and in their order**, so `?id=1` and `?id=2` stay two pages. Source discovery ignores a few more (`ref`, `amp`, `mc_cid`, …) only when spotting duplicate search results; that key is never stored.
+  4. Trailing slashes are removed from the path, **except the root**: `https://example.org/`.
+  5. Anything that isn't http(s) raises `ValueError`, or `ExtractionInputError` from `extract_page()`.
+- **Examples:** `https://WWW.Example.org/Guide/?utm_source=x&id=2#top` becomes `https://www.example.org/Guide?id=2`, and `https://example.org` becomes `https://example.org/`. The path keeps its case.
+- **Citations shown to users use the canonical URL:** `Chunk.source_url`, A4 `Passage.source_url`, and so the SkillSpec `sources[].url`.
+- **⚠️ Risk: a canonical link can 404.** On a site that serves `/page/` but answers 404 for `/page`, the crawl works (it fetched the original) but the citation link a user clicks fails. Nothing handles this yet. If it shows up, DE can keep the fetch URL next to the identifier (for example `sources.fetch_url`), and AI can link to that instead.
+- **IDs changed on 1 Nov 2026.** Before then, `chunk_id`s were built from the URL as given. They differ for URLs that had a trailing slash, tracking parameters, a fragment or upper case. In the fixtures, only the OWASP page is affected (`genai.owasp.org/llmrisk/llm01-prompt-injection/`), and its ids appear only in the AI-10 report of 25 Oct, which is kept as it was.
+  - **Rows stored before the change aren't replaced automatically.** A page re-extracted now is stored under its canonical URL, so its rows under the old spelling stay behind as stale duplicates. Delete rows whose `sources.url` isn't `normalise_url(sources.url)`, or rebuild. AI's own local dev index showed exactly this: 7 old OWASP rows next to the 214 new ones.
+
+### The config fingerprint: the 5th key of `chunk_config`
+`ExtractConfig.fingerprint()` returns 64 hex characters: the sha256 of every extraction setting except `site_boilerplate`, plus AI's `EXTRACTION_VERSION`.
+
+- **Store it** in `chunk_config` (suggested key: `extract_fingerprint`). A new value means a new chunk set.
+- **The default config** gives `f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483`. A test pins this value, so it changes only on purpose, and AI tells DE when it does.
+- **It changes when:**
+  - any hashed setting changes;
+  - AI bumps `EXTRACTION_VERSION` (when AI's extraction code changes the chunks a config gives);
+  - AI bumps `FINGERPRINT_VERSION` (when the hashed form below changes).
+- **It doesn't change** with `site_boilerplate`: those are per-site sentence hashes, not a pipeline setting. Every host's config gives the same fingerprint, so DE's one-row `active_config` keeps working.
+- **What's hashed:** `{"fingerprint_version": 1, "extraction_version": 1, "config": {…}}` as canonical JSON: sorted keys, no spaces, UTF-8, float settings always as floats (so `1` and `1.0` are one value) in Python's shortest round-trip form, tuples as lists.
+- **The hashed settings:**
+
+| Setting | Default | Setting | Default |
+|---|---|---|---|
+| `min_words` | 150 | `paywall_phrase_max_words` | 400 |
+| `extraction_mode` | `"precision"` | `page_concepts` | 10 |
+| `languages` | `["en"]` | `chunk_concepts` | 5 |
+| `min_language_confidence` | 0.8 | `injection_screen` | `true` |
+| `max_link_density` | 0.5 | `injection_max_low` | 3 |
+| `max_short_line_ratio` | 0.6 | `chunking.target_words` | 180 |
+| `short_line_words` | 5 | `chunking.max_words` | 250 |
+| `consent_max_words` | 300 | `chunking.max_chars` | 1800 |
+| `password_max_words` | 300 | `chunking.min_words` | 50 |
+| | | `chunking.overlap_sentences` | 2 |
+| | | `chunking.overlap_words` | 40 |
+
+- **Overlap with DE's own keys:** the `chunking.*` settings are already inside the fingerprint, so DE's `size`, `overlap` and `splitter` keys repeat part of it. Keeping them is harmless; dropping them is DE's call.
+
 ## What you get
 | Object | Fields |
 |---|---|
-| `ExtractedPage` | `url`, `title`, `retrieved`, `extractor` (`trafilatura`, `bs4` or `none`), `text` (the clean main text, one block per line), `quality`, `concepts` (the top 10), `chunks` (empty unless `quality.ok`), `screening` (AI-19: `findings`, `removed`, `invisible_chars`, `rejected`) |
+| `ExtractedPage` | `url` (the canonical URL, see above), `title`, `retrieved`, `extractor` (`trafilatura`, `bs4` or `none`), `text` (the clean main text, one block per line), `quality`, `concepts` (the top 10), `chunks` (empty unless `quality.ok`), `screening` (AI-19: `findings`, `removed`, `invisible_chars`, `rejected`) |
 | `QualityReport` | `reasons`, `ok`, `word_count`, `link_density`, `short_line_ratio`, `language`, `language_confidence` |
 | `Chunk` | `chunk_id`, `source_url`, `title`, `retrieved`, `text`, `section` (the H1–H3 heading path), `position`, `word_count`, `concepts` (the top 5), `content_hash`; `to_passage()` |
 

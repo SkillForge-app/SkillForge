@@ -696,12 +696,16 @@ async def test_sources_not_crawled_are_listed_apart_and_take_no_top_place() -> N
 
 async def test_technology_ai_has_three_pins() -> None:
     found = await run([], "technology/ai", registry=load_registry())
-    assert [s.url for s in found.sources] == [
+    assert [s.url for s in found.sources] == [  # canonical: the identifier and the citation
         "https://www.nist.gov/itl/ai-risk-management-framework",
         "https://developers.google.com/machine-learning/guides/rules-of-ml",
-        "https://genai.owasp.org/llm-top-10/",
+        "https://genai.owasp.org/llm-top-10",
     ]
     assert all(s.pinned and s.crawl for s in found.sources)
+    # DE-04 fetches the pinned spelling, which keeps its trailing slash
+    assert found.crawl_list()[2][0] == "https://genai.owasp.org/llm-top-10/"
+    assert found.sources[2].fetch_url == "https://genai.owasp.org/llm-top-10/"
+    assert found.sources[0].fetch_url == ""  # already canonical
 
 
 def test_the_sheet_shows_listed_sources_apart(tmp_path: Path) -> None:

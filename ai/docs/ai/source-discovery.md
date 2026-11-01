@@ -11,7 +11,8 @@ found = await discover_sources("legal/contracts", request=analyzed_request, limi
 found.queries        # the searches that were run
 found.sources        # RankedSource list, best first: crawlable sources only (at most `limit`)
 found.listed         # ranked but crawl=False (e.g. the high-risk rule): shown, never crawled
-found.crawl_list()   # [(url, licence)]: the hand-off to DE-04, only what we may crawl
+found.crawl_list()   # [(fetch url, licence)]: the hand-off to DE-04, only what we may crawl
+                     # (fetch it as given; store normalise_url(fetch url) as the identifier)
 found.rejected       # [(url, reason)]: blocked, duplicate, robots-disallowed, unknown site, no topic word, other areas only, site cap
 ```
 
@@ -20,7 +21,8 @@ found.rejected       # [(url, reason)]: blocked, duplicate, robots-disallowed, u
 ## RankedSource
 | Field | Meaning |
 |---|---|
-| `url`, `host`, `title`, `snippet` | The page, cleaned: lowercase host, no fragment, no tracking parameters |
+| `url`, `host`, `title`, `snippet` | The page. `url` is the canonical URL from `normalise_url`, the same rule extraction uses (see [extraction.md](extraction.md#the-url-fetch-the-original-store-the-canonical-one)): the identifier and the citation |
+| `fetch_url` | The URL as found or pinned, when it differs from `url` (e.g. it had a trailing slash). Fetch this; `robots.txt` is checked for it. Empty means `url` |
 | `tier` | `official`, `academic`, `reference` or `unknown` (see below) |
 | `score`, `reasons` | Why the page is ranked where it is, e.g. "US standards body (NIST); matched 2 of 2 topic words; search rank 1; found by 2 queries; an authority for technology" |
 | `licence` | The note DE-04 stores with the page (see below) |

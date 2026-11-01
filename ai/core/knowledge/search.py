@@ -2,7 +2,7 @@
 
     found = await discover_sources("legal/contracts")          # or request=AnalyzedRequest
     found.sources        # RankedSource list: tier, score, reasons, licence, robots, crawl
-    found.crawl_list()   # [(url, licence)] for DE-04: only what we may crawl
+    found.crawl_list()   # [(fetch url, licence)] for DE-04: only what we may crawl
     found.rejected       # what was dropped, and why (blocked, robots, licence, duplicate)
 
 Queries come from the domain (and the request, when there is one). A pluggable search provider
@@ -22,13 +22,14 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Literal, Protocol
-from urllib.parse import parse_qsl, unquote, urlencode, urlsplit, urlunsplit
+from urllib.parse import parse_qsl, unquote, urlencode, urlsplit
 from urllib.robotparser import RobotFileParser
 
 import yaml
 from pydantic import Field, ValidationError, model_validator
 
 from core.knowledge.retrieval import check_domain
+from core.knowledge.urls import normalise_url
 from core.llm.errors import ConfigError
 from core.spec.models import HIGH_RISK_AREAS, SpecModel
 
@@ -439,7 +440,10 @@ def fetch_robots(origin: str, timeout_s: float = 10.0) -> str:
 
 
 class RankedSource(SpecModel):
-    url: str
+    url: str  # the canonical URL (core.knowledge.urls): the page's identifier, and its citation
+    # The URL as found or pinned, for fetching: some servers answer 404 for the canonical spelling
+    # (e.g. without a trailing slash). Empty means the same as `url`.
+    fetch_url: str = ""
     host: str
     title: str
     snippet: str = ""
@@ -468,12 +472,15 @@ class SourceList(SpecModel):
     listed: list[RankedSource] = Field(default_factory=list)  # ranked, crawl=False: never crawled
 
     def crawl_list(self) -> list[tuple[str, str]]:
-        """(url, licence) for DE-04: only sources we may crawl, best first."""
-        return [(s.url, s.licence) for s in self.sources if s.crawl]
+        """(fetch url, licence) for DE-04: only sources we may crawl, best first. Fetch this URL
+        as given; store normalise_url() of it as the source's identifier."""
+        return [(s.fetch_url or s.url, s.licence) for s in self.sources if s.crawl]
 
 
 # ------------------------------------------------------------------ discovery
 
+# Ignored only when spotting copies of one page (the duplicate key below). The stored URL follows
+# core.knowledge.urls.normalise_url, which drops just utm_*, gclid and fbclid.
 TRACKING_PARAMS = frozenset({"ref", "fl", "x", "pd", "amp", "gclid", "fbclid", "mc_cid", "mc_eid"})
 _LOCALE = re.compile(r"^[a-z]{2}(-[a-z]{2})?$")
 
@@ -493,10 +500,13 @@ def site_of(host: str) -> str:
 
 
 def normalise(url: str) -> tuple[str, str, str]:
-    """(clean url, duplicate key, host). Clean: lowercase host, no fragment or tracking
-    parameters. The key is the site and path, so copies of one page on two hosts of one site
-    (www2., a dev copy) meet, as do AMP and Markdown copies, a trailing slash, a leading
-    locale folder ("/fr-fr/") and an "/index.php/" (or "/index%2Ephp/") prefix."""
+    """(clean url, duplicate key, host). Raises ValueError for a URL that is not http(s).
+
+    Clean is the canonical URL, the same rule extraction uses (core.knowledge.urls). The key is
+    looser and only spots copies: the site and path, so copies of one page on two hosts of one
+    site (www2., a dev copy) meet, as do AMP and Markdown copies, a trailing slash, a leading
+    locale folder ("/fr-fr/"), an "/index.php/" (or "/index%2Ephp/") prefix and TRACKING_PARAMS."""
+    clean = normalise_url(url)
     parts = urlsplit(url.strip())
     host = (parts.hostname or "").lower()
     query = [
@@ -504,8 +514,6 @@ def normalise(url: str) -> tuple[str, str, str]:
         for k, v in parse_qsl(parts.query, keep_blank_values=True)
         if k.lower() not in TRACKING_PARAMS and not k.lower().startswith("utm_")
     ]
-    netloc = host + (f":{parts.port}" if parts.port else "")
-    clean = urlunsplit((parts.scheme.lower(), netloc, parts.path or "/", urlencode(query), ""))
     path = unquote(parts.path).rstrip("/")
     path = re.sub(r"(/amp|\.md)$", "", path)
     segments = [s for s in path.split("/") if s and s.lower() != "index.php"]
@@ -524,6 +532,7 @@ class _Candidate:
     best_rank: int  # 0: pinned, and no search found it
     queries: set[int]
     pin: Pinned | None = None
+    fetch_url: str = ""  # as found (or pinned): what DE-04 fetches and robots.txt is checked for
 
 
 def _blocked(url: str, host: str, registry: Registry, title: str = "") -> str | None:
@@ -596,11 +605,21 @@ async def discover_sources(
     duplicates: set[str] = set()
     for qi, query in enumerate(queries):
         for result in await provider.search(query, per_query):
-            url, key, host = normalise(result.url)
+            try:
+                url, key, host = normalise(result.url)
+            except ValueError:
+                rejected.append(Rejected(url=result.url, reason="not a valid http(s) URL"))
+                continue
             seen = candidates.get(key)
             if seen is None:
                 candidates[key] = _Candidate(
-                    url, host, result.title, result.snippet, result.rank, {qi}
+                    url,
+                    host,
+                    result.title,
+                    result.snippet,
+                    result.rank,
+                    {qi},
+                    fetch_url=result.url.strip(),
                 )
                 continue
             if seen.url != url and url not in duplicates:
@@ -614,6 +633,7 @@ async def discover_sources(
             candidates[key] = _Candidate(url, host, pin.title, "", 0, set())
         candidates[key].pin = pin
         candidates[key].title = pin.title
+        candidates[key].fetch_url = pin.url.strip()  # the spelling a person opened
 
     # Order: pinned sources (in registry order), then the rest; within each, sources outside
     # the domain's jurisdiction, then pages with no title, come last; then by score.
@@ -692,7 +712,8 @@ async def discover_sources(
         scored.append((
             (*order, int(outside), int(untitled)),
             RankedSource(
-                url=c.url, host=c.host, title=c.title, snippet=c.snippet, tier=tier, score=score,
+                url=c.url, fetch_url=c.fetch_url if c.fetch_url != c.url else "",
+                host=c.host, title=c.title, snippet=c.snippet, tier=tier, score=score,
                 reasons=reasons, licence=licence, robots="unknown", crawl=crawl,
                 best_rank=c.best_rank, queries=len(c.queries), pinned=c.pin is not None,
             ),
@@ -719,7 +740,7 @@ async def discover_sources(
             rejected.append(Rejected(url=source.url, reason=f"same title as {titles[site, title]}"))
             continue
         if not source.crawl:  # listed for review; takes no place in the top list or site cap
-            status = robots.status(source.url)
+            status = robots.status(source.fetch_url or source.url)
             if status == "disallowed":
                 reason = f"robots.txt disallows {USER_AGENT}"
                 rejected.append(Rejected(url=source.url, reason=reason))
@@ -731,7 +752,7 @@ async def discover_sources(
                 Rejected(url=source.url, reason=f"already {PER_SITE} pages from this site")
             )
             continue
-        status = robots.status(source.url)
+        status = robots.status(source.fetch_url or source.url)
         if status == "disallowed":
             rejected.append(Rejected(url=source.url, reason=f"robots.txt disallows {USER_AGENT}"))
             continue
