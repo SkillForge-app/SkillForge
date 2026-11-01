@@ -93,8 +93,13 @@ jobs:
             "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
           echo "${SHA256}  /tmp/gitleaks.tar.gz" | sha256sum -c -
           tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
-      - name: Scan the full history for secrets
-        run: /tmp/gitleaks git --config devops/ci/gitleaks.toml --redact --no-banner .
+      - name: Scan the history being merged for secrets
+        # --log-opts=HEAD: on a PR, HEAD is the merge commit, so this is main plus the PR; on a push,
+        # the pushed branch. Without it gitleaks scans every fetched branch, and a finding on any
+        # branch would fail every PR. Checked, non-secret findings: devops/ci/gitleaksignore.
+        run: >-
+          /tmp/gitleaks git --log-opts=HEAD --config devops/ci/gitleaks.toml
+          --gitleaks-ignore-path devops/ci/gitleaksignore --redact --no-banner .
 
   ai:
     needs: changes

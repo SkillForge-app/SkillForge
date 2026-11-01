@@ -58,6 +58,7 @@ LABELS=(
   "P3|ededed|Phase P3: Hardening and beta"
   "P4|ededed|Phase P4: Production launch"
   "P5|ededed|Phase P5: After launch"
+  "dependencies|0366d6|Dependency updates (Dependabot)"
 )
 
 # Prints a command, then runs it unless --dry-run.
@@ -78,9 +79,16 @@ run gh api -X PATCH "repos/$ORG/$REPO" --silent \
   -F delete_branch_on_merge=false \
   -f merge_commit_title=PR_TITLE -f merge_commit_message=BLANK \
   -f 'security_and_analysis[secret_scanning][status]=enabled' \
-  -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled'
+  -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
+  -f 'security_and_analysis[dependabot_security_updates][status]=enabled'
 run gh api -X PUT "repos/$ORG/$REPO/actions/permissions/workflow" --silent \
   -f default_workflow_permissions=read -F can_approve_pull_request_reviews=false
+
+# Security (OPS-11, devops/security.md): Dependabot alerts and security updates. Code scanning
+# runs from .github/workflows/codeql.yml and trivy.yml; CodeQL "default setup" stays off.
+echo "== Security"
+run gh api -X PUT "repos/$ORG/$REPO/vulnerability-alerts" --silent
+run gh api -X PUT "repos/$ORG/$REPO/automated-security-fixes" --silent
 
 echo "== Teams"
 for entry in "${TEAMS[@]}"; do
