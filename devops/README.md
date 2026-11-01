@@ -18,7 +18,9 @@ places (listed below).
 
 ## CI (OPS-02)
 
-`.github/workflows/ci.yml` runs on every PR into `main` and every push to `main`:
+`.github/workflows/ci.yml` runs on every PR into `main` or a department branch, and every push to `main`
+(`ci-ok` is required only on `main`). `data.yml` tests against a throwaway pgvector database and fails
+if any test is skipped:
 
 | Job | What it does |
 |---|---|
