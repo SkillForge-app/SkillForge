@@ -374,7 +374,7 @@
             }
           ],
           "default": null,
-          "description": "The source licence, when known, e.g. CC BY 4.0. Omit it if unknown.",
+          "description": "The source licence, when known; free text, an SPDX id preferred, e.g. CC-BY-4.0. Omit it if unknown.",
           "title": "Licence"
         },
         "retrieved": {

@@ -217,7 +217,8 @@ class Source(SpecModel):
     title: Line | None = Field(default=None, description="The page's own title.")
     licence: Line | None = Field(
         default=None,
-        description="The source licence, when known, e.g. CC BY 4.0. Omit it if unknown.",
+        description="The source licence, when known; free text, an SPDX id preferred, e.g. "
+        "CC-BY-4.0. Omit it if unknown.",
     )
 
 

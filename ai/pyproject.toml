@@ -51,7 +51,9 @@ dev = [
 # Supply-chain rule: `uv lock` may only pick releases published before this date, for every
 # package including transitive ones. Keep it at least two weeks behind the day you re-lock;
 # move it forward on purpose when upgrading (then run the full test suite and the live tests).
-exclude-newer = "2026-10-10T00:00:00Z"
+# Moved 2026-11-02 from 2026-10-10 to 2026-10-19 (14 days back) to take the certifi security fix
+# (2026.10.18; Trivy/OPS-11). Only certifi was upgraded; every other locked version is unchanged.
+exclude-newer = "2026-10-19T00:00:00Z"
 
 [build-system]
 requires = ["hatchling"]
