@@ -307,6 +307,14 @@ def _tools(spec: SkillSpec) -> Iterator[Issue]:
 
 
 def _platform_rules(spec: SkillSpec) -> Iterator[Issue]:
+    for i, target in enumerate(spec.targets):
+        if target in {"chatgpt", "generic"}:
+            yield Issue(
+                f"/targets/{i}",
+                "target_not_available_in_v1",
+                f"{target} is supported by the SkillSpec but is not available in V1.",
+                "warning",
+            )
     for target in spec.targets:
         for word in RESERVED_NAME_WORDS.get(target, ()):
             if word in spec.skill.name:
