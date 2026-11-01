@@ -6,7 +6,7 @@ What checks the repository for security problems, where the results show up, and
 
 | Check | What it looks for | When | Blocks a merge? |
 |---|---|---|---|
-| gitleaks (`ci.yml`, `secret-scan` job) | Secrets in the full Git history (config: `devops/ci/gitleaks.toml`) | Every PR and push to `main` | **Yes**, through `ci-ok` |
+| gitleaks (`ci.yml`, `secret-scan` job) | Secrets in the history being merged (`main` + the PR); config `devops/ci/gitleaks.toml`; checked non-secrets in `devops/ci/gitleaksignore` | Every PR and push to `main` | **Yes**, through `ci-ok` |
 | GitHub secret scanning + push protection | Known secret formats; push protection rejects a push that contains one | Every push | Push protection blocks the push |
 | CodeQL (`.github/workflows/codeql.yml`) | Code weaknesses in Python, JavaScript/TypeScript and the workflows themselves | PRs to `main`, pushes to `main`, Mondays | No |
 | Trivy (`.github/workflows/trivy.yml`) | Known HIGH/CRITICAL vulnerabilities in lock files (`ai/uv.lock`, …) and misconfigurations (Dockerfiles, compose, Terraform) | PRs to `main`, pushes to `main`, Mondays | No |

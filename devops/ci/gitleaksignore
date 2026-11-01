@@ -1,0 +1,18 @@
+# gitleaks ignore list for CI (OPS-11): findings checked by a person and confirmed NOT to be real
+# secrets. One fingerprint per entry (commit:file:rule:line). Only add a finding after checking it;
+# a real secret is rotated first, never ignored. Used by ci.yml via --gitleaks-ignore-path.
+
+# jwt.io sample token in a vendored "spring-boot-security-jwt" skill (Frontend branch, commit 5820c08).
+# File: apps/web/.agents/skills/spring-boot-security-jwt/scripts/test-jwt-setup.sh, line 133.
+# Checked 2026-11-01: HS256, sub "1234567890", expired 2021-03-20; the public jwt.io example, not a real secret.
+5820c08ac0c3dfd030bc578b7c37dcdf012d15f8:apps/web/.agents/skills/spring-boot-security-jwt/scripts/test-jwt-setup.sh:jwt:133
+
+# JUnit test secret set in a @BeforeEach setUp() in the same vendored skill.
+# File: apps/web/.agents/skills/spring-boot-security-jwt/references/jwt-testing-guide.md, line 34.
+# Checked 2026-11-01: an example value in test documentation, not a real secret.
+5820c08ac0c3dfd030bc578b7c37dcdf012d15f8:apps/web/.agents/skills/spring-boot-security-jwt/references/jwt-testing-guide.md:generic-api-key:34
+
+# Deliberately invalid bearer token in a curl troubleshooting example, same vendored skill.
+# File: apps/web/.agents/skills/spring-boot-security-jwt/references/troubleshooting.md, line 571.
+# Checked 2026-11-01: an "invalid token" placeholder in documentation, not a real secret.
+5820c08ac0c3dfd030bc578b7c37dcdf012d15f8:apps/web/.agents/skills/spring-boot-security-jwt/references/troubleshooting.md:curl-auth-header:571

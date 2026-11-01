@@ -15,6 +15,7 @@ places (listed below).
 | `ci/changed-folders.sh` | CI: which department folders a PR changed |
 | `ci/run-project.sh` | CI skeleton for backend/, frontend/, data/: install, lint, test if they exist |
 | `ci/gitleaks.toml` | CI secret scan config: default rules plus allowlisted test sentinels |
+| `ci/gitleaksignore` | Individual gitleaks findings a person checked and confirmed are not secrets (by fingerprint, with the reason) |
 | `security.md` | Security scanning (OPS-11): what runs, where results show up, who handles alerts |
 
 ## Security (OPS-11)
