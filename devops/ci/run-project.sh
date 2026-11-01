@@ -3,7 +3,7 @@
 # lint, type check and tests when they exist. An empty folder passes with a notice.
 # Departments replace this with their own steps in .github/workflows/<department>.yml when they need more.
 #
-# Usage: run-project.sh <folder>
+# Usage: run-project.sh <folder>      (env PYTEST_JUNIT=<path>: also write pytest's JUnit XML)
 set -euo pipefail
 
 dir="${1:?usage: run-project.sh <folder>}"
@@ -40,7 +40,8 @@ if [ -f pyproject.toml ]; then
   fi
   if [ -x "$bin/pytest" ]; then
     set +e
-    "$bin/pytest" -q
+    # PYTEST_JUNIT (optional): also write a JUnit XML report there, e.g. to check for skips.
+    "$bin/pytest" -q ${PYTEST_JUNIT:+"--junitxml=$PYTEST_JUNIT"}
     code=$?
     set -e
     if [ "$code" = 5 ]; then

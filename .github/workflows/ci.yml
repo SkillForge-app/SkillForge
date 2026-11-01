@@ -5,7 +5,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    # Department branches too, so PRs between branches get CI. ci-ok is required only on main
+    # (the main-ci ruleset); on department branches it is feedback.
+    branches: [main, AI, Backend, Frontend, Data-Engineering, DevOps]
   push:
     branches: [main]
   workflow_dispatch:
@@ -65,7 +67,9 @@ jobs:
       - name: CODEOWNERS has no errors
         env:
           GH_TOKEN: ${{ github.token }}
-          REF: ${{ github.event.pull_request.head.sha || github.sha }}
+          # On a PR this is the merge commit (base + PR), so a branch made before CODEOWNERS
+          # existed is still checked against the file it will merge into.
+          REF: ${{ github.sha }}
         run: |
           errors="$(gh api "repos/$GITHUB_REPOSITORY/codeowners/errors?ref=$REF" --jq '.errors')"
           echo "$errors"
