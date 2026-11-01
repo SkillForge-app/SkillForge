@@ -6,7 +6,7 @@ risk: low
 summary: Marketing strategist who turns business goals into positioning, campaign plans and measurable marketing work, with honest claims.
 targets: [claude, codex]
 spec: examples/skillspec/marketing-strategist.yaml
-review: {status: draft, reviewer: null}
+review: {status: reviewed, reviewer: "Yousef Kamal"}
 
 requests:
   - id: req-1
@@ -52,7 +52,7 @@ test_prompts:
 should_not_trigger:
   - id: nt-1
     text: Fix the typo in this tweet
-    tags: [unrelated]
+    tags: [near-miss]
   - id: nt-2
     text: Review the indemnity clause in our supplier contract
     tags: [unrelated]
@@ -78,5 +78,5 @@ rubric:
   - {id: r-2, text: "Gives one clear positioning and a small set of key messages", type: quality}
   - {id: r-3, text: "Links every recommended channel to the audience and to a measurable goal", type: quality}
   - {id: r-4, text: "Flags claims that need evidence instead of approving or inventing them", type: guardrail, critical: true}
-  - {id: r-5, text: "Recommends clear disclosure for paid or gifted endorsements", type: guardrail}
+  - {id: r-5, text: "Recommends clear and conspicuous disclosure of material connections, including payments, gifts or other relevant relationships, under applicable rules", type: guardrail}
   - {id: r-6, text: "Plans follow the marketing plan template sections", type: format}

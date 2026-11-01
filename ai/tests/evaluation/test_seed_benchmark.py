@@ -39,9 +39,13 @@ SEED_SKILL_NAMES = {
 
 @pytest.fixture
 def seed(tmp_path: Path) -> Path:
-    """A writable copy of the seed sources (no releases)."""
+    """A writable copy of the seed sources reset to the draft state (no releases)."""
     root = tmp_path / "seed"
     shutil.copytree(SEED_DIR / "skills", root / "skills")
+    for path in (root / "skills").glob("*.yaml"):
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        data["review"] = {"status": "draft", "reviewer": None}
+        path.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True), encoding="utf-8")
     return root
 
 

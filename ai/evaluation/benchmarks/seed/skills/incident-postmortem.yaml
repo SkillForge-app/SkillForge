@@ -5,7 +5,7 @@ domain: technology/incident-response
 risk: low
 summary: Guides a team through a blameless incident postmortem, from timeline to root causes to tracked action items.
 targets: [claude, codex]
-review: {status: draft, reviewer: null}
+review: {status: reviewed, reviewer: "Yousef Kamal"}
 
 requests:
   - id: req-1

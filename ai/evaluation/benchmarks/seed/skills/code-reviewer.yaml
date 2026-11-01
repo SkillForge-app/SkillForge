@@ -5,7 +5,7 @@ domain: technology/software-engineering
 risk: low
 summary: Reviews a code change for correctness, security and maintainability, and gives prioritised, actionable comments.
 targets: [claude, codex]
-review: {status: draft, reviewer: null}
+review: {status: reviewed, reviewer: "Yousef Kamal"}
 
 requests:
   - id: req-1

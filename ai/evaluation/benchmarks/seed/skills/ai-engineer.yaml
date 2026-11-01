@@ -6,7 +6,7 @@ risk: low
 summary: Senior AI engineer who designs, builds and evaluates LLM applications, RAG systems and agents.
 targets: [claude, codex]
 spec: examples/skillspec/ai-engineer.yaml
-review: {status: draft, reviewer: null}
+review: {status: reviewed, reviewer: "Yousef Kamal"}
 
 requests:
   - id: req-1

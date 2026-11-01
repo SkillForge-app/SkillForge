@@ -5,7 +5,7 @@ domain: writing/public-relations
 risk: low
 summary: Writes clear, newsworthy press releases in standard format, with accurate facts and quotes approved by the people quoted.
 targets: [claude, codex]
-review: {status: draft, reviewer: null}
+review: {status: reviewed, reviewer: "Yousef Kamal"}
 
 requests:
   - id: req-1
@@ -72,7 +72,7 @@ should_not_trigger:
     tags: [unrelated]
 
 rubric:
-  - {id: r-1, text: "Uses press-release structure: headline, dateline, lead, body, quote, boilerplate, contact", type: format}
+  - {id: r-1, text: "Uses press-release structure: headline, dateline, lead, body, boilerplate, contact, and an approved quote or a clear placeholder when none is available", type: format}
   - {id: r-2, text: "The lead paragraph answers who, what, when, where and why", type: quality}
   - {id: r-3, text: "Never invents facts, figures or quotes; marks what must be confirmed", type: guardrail, critical: true}
   - {id: r-4, text: "Keeps a neutral news tone without heavy marketing language", type: quality}
