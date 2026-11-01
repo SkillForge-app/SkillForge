@@ -9,12 +9,11 @@ import argparse
 import asyncio
 import sys
 from collections.abc import Sequence
-from datetime import UTC, datetime
 from pathlib import Path
 
 from core.analysis.safety import PROMPT_ID
 from core.llm import load_config
-from evaluation.common import live_guard, model_for
+from evaluation.common import live_guard, model_for, output_dirs
 from evaluation.safety.data import (
     FILES,
     SAFETY_DIR,
@@ -26,7 +25,8 @@ from evaluation.safety.data import (
 )
 from evaluation.safety.evaluate import render_markdown, run_eval, write_report
 
-RUNS_DIR = SAFETY_DIR / "runs"
+REPORTS_DIR = SAFETY_DIR / "reports"  # tracked: one .md + .json per live run
+RUNS_DIR = SAFETY_DIR / "runs"  # ignored by Git: predictions.jsonl per run
 TOKENS_PER_CALL = (2000, 150)
 
 
@@ -67,10 +67,12 @@ def run_command(args: argparse.Namespace) -> int:
         cost = estimate_cost(calls)
         print(f"about to make ~{calls} live calls" + (f", estimated ${cost}" if cost else ""))
     report, outcomes = asyncio.run(run_eval(sets, live=args.live, concurrency=args.concurrency))
-    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    out = write_report(report, outcomes, args.out or RUNS_DIR / stamp)
+    reports_dir, run_dir = output_dirs(
+        args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
+    )
+    files = write_report(report, outcomes, label=args.set, reports_dir=reports_dir, run_dir=run_dir)
     print(render_markdown(report))
-    print(f"report written to {out}")
+    print(f"report written to {files.md} and {files.json.name}; predictions in {files.run}")
     return 0 if report.passed in (None, True) else 1
 
 
@@ -83,7 +85,10 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--limit", type=int, default=0, help="only the first N of each set")
     run.add_argument("--concurrency", type=int, default=4)
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
-    run.add_argument("--out", type=Path, default=None)
+    run.add_argument(
+        "--out", type=Path, default=None, help="report folder (default: reports/ for --live runs)"
+    )
+    run.add_argument("--runs", type=Path, default=None, help="raw outputs folder (default: runs/)")
     args = parser.parse_args(argv)
     if args.command == "check-data":
         return check_data_command()

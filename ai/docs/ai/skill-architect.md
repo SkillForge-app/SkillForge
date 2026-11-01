@@ -65,7 +65,9 @@ cd ai
 ```
 - **The test requests:** the 3 example AnalyzedRequests, plus the 100 analyzer gate requests built **from their labels**. So the score measures the Architect alone. Vague requests count as "questions skipped".
 - **End to end:** `--end-to-end` runs the real safety screen and analyzer first.
-- **What a run writes:** `ai/evaluation/architect/runs/<UTC>/` (ignored by Git). It holds `report.md`, `report.json`, `predictions.jsonl` and **every generated spec** in `specs/`, for review by hand.
+- **What a run writes:**
+  - **The report**, tracked in Git: `ai/evaluation/architect/reports/architect-<set>[-e2e]-<date>.md` and `.json`. A second run on the same day gets `-2`, `-3`, …, so a reviewed report is never overwritten. Only `--live` runs go here.
+  - **The raw outputs**, ignored by Git: `ai/evaluation/architect/runs/<UTC>/` holds `predictions.jsonl` and **every generated spec** in `specs/`, for review by hand. The report's `run` field names this folder. A fake smoke run keeps its report here too.
 - **The report:** valid rate, first-try rate, the attempts histogram, the most common failure codes, safety-guardrail compliance and identity fidelity.
 - **The gate:** exactly 103 requests, at least 90% valid. A fake run prints "does NOT count for AI-07", because the fake gives every request the same canned spec.
 

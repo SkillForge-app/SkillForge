@@ -14,6 +14,7 @@ from evaluation.analyzer import data
 from evaluation.analyzer.__main__ import main
 from evaluation.analyzer.data import EvalItem
 from evaluation.analyzer.evaluate import compute_metrics, gate_verdict, run_eval, write_report
+from evaluation.common import output_dirs
 
 T = TypeVar("T", bound=BaseModel)
 QUESTIONS = [
@@ -138,14 +139,39 @@ async def test_report_files_record_versions_and_hashes(tmp_path: Path) -> None:
     items = gate_items()[:5]
     with use_fake(OracleGateway(items)):  # type: ignore[arg-type]
         report, predictions = await run_eval({"gate": items, "arabic": []}, live=False)
-    out = write_report(report, predictions, tmp_path / "run")
-    saved = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    files = write_report(
+        report,
+        predictions,
+        label="gate",
+        reports_dir=tmp_path / "reports",
+        run_dir=tmp_path / "run",
+    )
+    assert files.md.name == f"analyzer-gate-{report.created[:10]}.md"
+    assert files.md.parent == files.json.parent == tmp_path / "reports"
+    saved = json.loads(files.json.read_text(encoding="utf-8"))
     assert saved["prompt"] == {"id": "analysis/request", "version": 1}
     assert [s["name"] for s in saved["data_sources"]][0] == "skillforge-seed-benchmark"
     assert all(len(s["sha256"]) == 64 for s in saved["data_sources"])
-    rows = (out / "predictions.jsonl").read_text(encoding="utf-8").splitlines()
+    assert saved["run"] == "run"  # the report names the folder with its raw outputs
+    rows = (tmp_path / "run" / "predictions.jsonl").read_text(encoding="utf-8").splitlines()
     assert len(rows) == 5
-    assert "Gate" in (out / "report.md").read_text(encoding="utf-8")
+    assert "Gate" in files.md.read_text(encoding="utf-8")
+
+
+async def test_a_report_never_overwrites_an_earlier_one(tmp_path: Path) -> None:
+    items = gate_items()[:2]
+    with use_fake(OracleGateway(items)):  # type: ignore[arg-type]
+        report, predictions = await run_eval({"gate": items}, live=False)
+    first = write_report(
+        report, predictions, label="gate", reports_dir=tmp_path, run_dir=tmp_path / "r1"
+    )
+    first.md.write_text("reviewed by a person", encoding="utf-8")
+    second = write_report(
+        report, predictions, label="gate", reports_dir=tmp_path, run_dir=tmp_path / "r2"
+    )
+    assert first.md.read_text(encoding="utf-8") == "reviewed by a person"
+    assert second.md.name == f"analyzer-gate-{report.created[:10]}-2.md"
+    assert second.json.name == f"analyzer-gate-{report.created[:10]}-2.json"
 
 
 def test_cli_refuses_real_calls_without_live(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -163,6 +189,26 @@ def test_cli_live_needs_a_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_cli_fake_smoke_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv(BACKEND_ENV, "fake")
-    code = main(["run", "--set", "gate", "--limit", "3", "--out", str(tmp_path / "run")])
+    args = ["run", "--set", "gate", "--limit", "3", "--runs", str(tmp_path / "runs")]
+    code = main([*args, "--out", str(tmp_path / "reports")])
     assert code == 1  # the fake gives every request the same answer, so the gate fails
-    assert (tmp_path / "run" / "report.json").exists()
+    assert len(list((tmp_path / "reports").glob("analyzer-gate-*.json"))) == 1
+    assert len(list((tmp_path / "runs").glob("*/predictions.jsonl"))) == 1
+
+
+def test_a_fake_run_never_writes_to_the_tracked_reports(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    monkeypatch.setattr("evaluation.analyzer.__main__.REPORTS_DIR", tmp_path / "tracked")
+    main(["run", "--set", "gate", "--limit", "1", "--runs", str(tmp_path / "runs")])
+    assert not (tmp_path / "tracked").exists()
+    (run,) = (tmp_path / "runs").iterdir()  # the report stays next to its raw outputs
+    assert {p.suffix for p in run.iterdir()} == {".md", ".json", ".jsonl"}
+
+
+def test_live_runs_report_to_the_tracked_folder(tmp_path: Path) -> None:
+    reports, run = output_dirs(True, None, None, reports_dir=tmp_path / "r", runs_dir=tmp_path)
+    assert reports == tmp_path / "r" and run.parent == tmp_path
+    reports, run = output_dirs(False, None, None, reports_dir=tmp_path / "r", runs_dir=tmp_path)
+    assert reports == run

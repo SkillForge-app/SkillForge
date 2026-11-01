@@ -9,13 +9,10 @@ __pycache__/
 dist/
 build/
 
-# Request Analyzer evaluation outputs (reports are run artefacts, not source)
+# Raw per-call outputs of the AI-05/06/07 evaluations (predictions, generated specs) stay local.
+# Their reports are tracked: evaluation/<task>/reports/, written only by --live runs.
 evaluation/analyzer/runs/
-
-# Safety evaluation outputs (run artefacts, not source)
 evaluation/safety/runs/
-
-# Skill Architect evaluation outputs (run artefacts, not source)
 evaluation/architect/runs/
 
 # Local model files and the local knowledge index (AI-11): downloaded / built, not source

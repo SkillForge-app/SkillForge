@@ -80,7 +80,9 @@ cd ai
 ```
 
 - **The `--live` guard:** without `--live` the tool refuses to call a real model. For a quick end-to-end check without a key, use `SKILLFORGE_LLM_BACKEND=fake ... run --limit 5`. Its numbers are meaningless, because the fake gives every request the same answer.
-- **What a run writes:** `ai/evaluation/analyzer/runs/<UTC time>/` (ignored by Git), containing `report.md`, `report.json` (accuracy per field with confusion tables, joint accuracy, clarification precision and recall, targets match, errors, tokens and cost, prompt version, data versions) and `predictions.jsonl`.
+- **What a run writes:**
+  - **The report**, tracked in Git: `ai/evaluation/analyzer/reports/analyzer-<set>-<date>.md` and `.json`, with accuracy per field with confusion tables, joint accuracy, clarification precision and recall, targets match, errors, tokens and cost, prompt version and data versions. A second run on the same day gets `-2`, `-3`, …, so a reviewed report is never overwritten. Only `--live` runs go here.
+  - **The raw outputs**, ignored by Git: `ai/evaluation/analyzer/runs/<UTC time>/predictions.jsonl`, one line per request. The report's `run` field names this folder. A fake smoke run keeps its report here too.
 - **The gate:** exactly 100 gate requests, with kind, domain area and risk each at or above 0.90. An analysis that fails with an error counts as wrong. The exit code is 0 when it passes, 1 when it fails.
 - **Before the first measured run:** tune the prompt on the dev set only (`run --set dev --live`). Then run the gate once, and keep the report.
 

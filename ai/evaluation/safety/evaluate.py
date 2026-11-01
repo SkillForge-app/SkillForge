@@ -16,7 +16,7 @@ from typing import Any
 
 from core.analysis.safety import PROMPT_ID, SafetyDecision, screen_request
 from core.llm import load_prompt, track_usage
-from evaluation.common import Outcome, model_for, run_all
+from evaluation.common import Outcome, ReportFiles, model_for, run_all, write_eval_report
 from evaluation.safety.data import REDTEAM_SIZE, SafetyEvalItem, sources, status
 
 FALSE_BLOCK_TARGETS = {"benign": 0.10, "normal": 0.01}
@@ -147,13 +147,18 @@ async def run_eval(
     return report, outcomes
 
 
-def write_report(report: SafetyReport, outcomes: dict[str, list[Result]], out_dir: Path) -> Path:
-    out_dir.mkdir(parents=True, exist_ok=False)
-    (out_dir / "report.json").write_text(
-        json.dumps(asdict(report), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    (out_dir / "report.md").write_text(render_markdown(report), encoding="utf-8")
-    with (out_dir / "predictions.jsonl").open("w", encoding="utf-8") as f:
+def write_report(
+    report: SafetyReport,
+    outcomes: dict[str, list[Result]],
+    *,
+    label: str,
+    reports_dir: Path,
+    run_dir: Path,
+) -> ReportFiles:
+    """The report goes to `reports_dir` as safety-<label>-<date>.md/.json, never overwriting an
+    earlier one; one line per request goes to `run_dir`/predictions.jsonl. Neither holds texts."""
+    run_dir.mkdir(parents=True, exist_ok=False)
+    with (run_dir / "predictions.jsonl").open("w", encoding="utf-8") as f:
         for name, rows in outcomes.items():
             for o in rows:
                 row = {
@@ -166,7 +171,13 @@ def write_report(report: SafetyReport, outcomes: dict[str, list[Result]], out_di
                     "error": o.error,
                 }  # request texts are not copied into run outputs
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")
-    return out_dir
+    return write_eval_report(
+        f"safety-{label}-{report.created[:10]}",
+        render_markdown(report),
+        asdict(report),
+        reports_dir=reports_dir,
+        run_dir=run_dir,
+    )
 
 
 def render_markdown(report: SafetyReport) -> str:

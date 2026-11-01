@@ -1,13 +1,15 @@
 """Helpers shared by the evaluation tools (analyzer, safety, ...)."""
 
 import asyncio
+import json
 import os
 import sys
 import time
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from dotenv import load_dotenv
 
@@ -109,3 +111,40 @@ def write_new_files(out_dir: Path, stem: str, contents: dict[str, str]) -> tuple
             except FileExistsError:
                 pass  # another run took this name between the check and the write
         n += 1
+
+
+@dataclass(frozen=True)
+class ReportFiles:
+    """Where one evaluation run went."""
+
+    md: Path
+    json: Path
+    run: Path  # the raw per-call outputs: runs/<UTC time>/, ignored by Git
+
+
+def output_dirs(
+    live: bool, out: Path | None, runs: Path | None, *, reports_dir: Path, runs_dir: Path
+) -> tuple[Path, Path]:
+    """(folder for the report, folder for this run's raw outputs).
+
+    Only live runs are results, so only they go to the tracked reports/ folder. A fake smoke run
+    keeps its report next to its raw outputs, where Git never sees it. `out` overrides both.
+    """
+    run_dir = (runs or runs_dir) / datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    return out or (reports_dir if live else run_dir), run_dir
+
+
+def write_eval_report(
+    stem: str, markdown: str, data: dict[str, Any], *, reports_dir: Path, run_dir: Path
+) -> ReportFiles:
+    """Write `<stem>.md` and `<stem>.json` without overwriting an earlier report (see
+    write_new_files). The JSON names the run folder that holds the raw outputs."""
+    md, js = write_new_files(
+        reports_dir,
+        stem,
+        {
+            ".md": markdown,
+            ".json": json.dumps({**data, "run": run_dir.name}, indent=2, ensure_ascii=False) + "\n",
+        },
+    )
+    return ReportFiles(md, js, run_dir)

@@ -64,9 +64,17 @@ async def test_report_writes_specs(tmp_path: Path) -> None:
 
     sets: dict[str, Sequence[ArchitectItem]] = {"examples": load_items("examples")}
     report, results = await run_eval(sets, live=False, build=build)
-    out = write_report(report, results, tmp_path / "run")
-    assert len(list((out / "specs").glob("*.json"))) == 3
-    assert "does NOT count" not in (out / "report.md").read_text(encoding="utf-8")  # no gate here
+    files = write_report(
+        report,
+        results,
+        label="examples",
+        reports_dir=tmp_path / "reports",
+        run_dir=tmp_path / "run",
+    )
+    assert files.md.name == f"architect-examples-{report.created[:10]}.md"
+    assert len(list((tmp_path / "run" / "specs").glob("*.json"))) == 3  # specs stay out of Git
+    assert not list((tmp_path / "reports").glob("**/specs"))
+    assert "does NOT count" not in files.md.read_text(encoding="utf-8")  # no gate here
     assert report.sets["examples"]["valid_rate"] == 1.0
 
 
@@ -78,5 +86,8 @@ def test_cli_check_data_and_guard(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_cli_fake_smoke(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     monkeypatch.setenv(BACKEND_ENV, "fake")
-    assert main(["run", "--set", "examples", "--out", str(tmp_path / "run")]) == 0
-    assert len(list((tmp_path / "run" / "specs").glob("*.json"))) == 3
+    monkeypatch.setattr("evaluation.architect.__main__.REPORTS_DIR", tmp_path / "tracked")
+    assert main(["run", "--set", "examples", "--runs", str(tmp_path / "runs")]) == 0
+    assert not (tmp_path / "tracked").exists()  # a fake run is never a tracked result
+    assert len(list((tmp_path / "runs").glob("*/specs/*.json"))) == 3
+    assert len(list((tmp_path / "runs").glob("*/architect-examples-*.json"))) == 1

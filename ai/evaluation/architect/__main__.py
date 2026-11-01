@@ -9,16 +9,16 @@ import argparse
 import asyncio
 import sys
 from collections.abc import Sequence
-from datetime import UTC, datetime
 from pathlib import Path
 
 from core.agents.architect import GENERATE, MAX_ATTEMPTS
 from core.llm import load_config
 from evaluation.architect.data import GATE_SIZE, ArchitectItem, load_items
 from evaluation.architect.evaluate import render_markdown, run_eval, write_report
-from evaluation.common import AI_ROOT, live_guard, model_for
+from evaluation.common import AI_ROOT, live_guard, model_for, output_dirs
 
-RUNS_DIR = AI_ROOT / "evaluation" / "architect" / "runs"
+REPORTS_DIR = AI_ROOT / "evaluation" / "architect" / "reports"  # tracked: .md + .json per live run
+RUNS_DIR = AI_ROOT / "evaluation" / "architect" / "runs"  # ignored by Git: predictions + specs
 TOKENS_PER_CALL = (6000, 8000)  # rough input/output of one Architect call (spec + thinking)
 
 
@@ -56,10 +56,12 @@ def run_command(args: argparse.Namespace) -> int:
     report, outcomes = asyncio.run(
         run_eval(sets, live=args.live, end_to_end=args.end_to_end, concurrency=args.concurrency)
     )
-    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    out = write_report(report, outcomes, args.out or RUNS_DIR / stamp)
+    reports_dir, run_dir = output_dirs(
+        args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
+    )
+    files = write_report(report, outcomes, label=args.set, reports_dir=reports_dir, run_dir=run_dir)
     print(render_markdown(report))
-    print(f"report and generated specs written to {out}")
+    print(f"report written to {files.md} and {files.json.name}; generated specs in {files.run}")
     return 0 if report.passed in (None, True) else 1
 
 
@@ -73,7 +75,10 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--concurrency", type=int, default=2)
     run.add_argument("--end-to-end", action="store_true", help="run analyzer + screen first")
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
-    run.add_argument("--out", type=Path, default=None)
+    run.add_argument(
+        "--out", type=Path, default=None, help="report folder (default: reports/ for --live runs)"
+    )
+    run.add_argument("--runs", type=Path, default=None, help="raw outputs folder (default: runs/)")
     args = parser.parse_args(argv)
     if args.command == "check-data":
         return check_data_command()

@@ -131,13 +131,19 @@ async def test_report_has_versions_and_no_request_texts(
         "benign": benign(3),
     }
     report, outcomes = await run_eval(sets, live=False, screen=scripted())
-    out = write_report(report, outcomes, tmp_path / "run")
-    saved = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    files = write_report(
+        report, outcomes, label="all", reports_dir=tmp_path / "reports", run_dir=tmp_path / "run"
+    )
+    assert files.md.name == f"safety-all-{report.created[:10]}.md"
+    saved = json.loads(files.json.read_text(encoding="utf-8"))
     assert saved["prompt"] == {"id": "analysis/safety", "version": 1}
     assert {s["name"] for s in saved["data_sources"]} >= {"safety-redteam", "safety-benign-tricky"}
-    predictions = (out / "predictions.jsonl").read_text(encoding="utf-8")
+    assert saved["run"] == "run"
+    predictions = (tmp_path / "run" / "predictions.jsonl").read_text(encoding="utf-8")
     assert "placeholder" not in predictions  # texts are not copied into run outputs
     assert len(predictions.splitlines()) == 63
+    for tracked in (files.md, files.json):  # nor into the tracked report
+        assert "placeholder" not in tracked.read_text(encoding="utf-8")
 
 
 def test_cli_refuses_real_calls_without_live(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -157,5 +163,8 @@ def test_cli_fake_smoke_run_fails_the_gate_while_incomplete(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     monkeypatch.setenv(BACKEND_ENV, "fake")
-    assert main(["run", "--set", "all", "--limit", "2", "--out", str(tmp_path / "run")]) == 1
-    assert "INCOMPLETE" in (tmp_path / "run" / "report.md").read_text(encoding="utf-8")
+    monkeypatch.setattr("evaluation.safety.__main__.REPORTS_DIR", tmp_path / "tracked")
+    assert main(["run", "--set", "all", "--limit", "2", "--runs", str(tmp_path / "runs")]) == 1
+    assert not (tmp_path / "tracked").exists()  # a fake run is never a tracked result
+    (md,) = (tmp_path / "runs").glob("*/safety-all-*.md")
+    assert "INCOMPLETE" in md.read_text(encoding="utf-8")

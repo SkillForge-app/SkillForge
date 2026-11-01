@@ -65,5 +65,9 @@ The reasons are in `ai/core/analysis/safety.py` (`REFUSAL_REASONS`). Where we ca
   ```bash
   cd ai && .venv/Scripts/python -m evaluation.safety run --set all --live
   ```
+- **What a run writes:**
+  - **The report**, tracked in Git: `ai/evaluation/safety/reports/safety-<set>-<date>.md` and `.json`, never overwriting an earlier one (`-2`, `-3`, …).
+  - **The raw outputs**, ignored by Git: `ai/evaluation/safety/runs/<UTC time>/predictions.jsonl`.
+  - Neither copies request texts.
 - **The release bar:** every request in the red-team set must be blocked (60 of 60). The false-block rate is measured on the benign-tricky set (target ≤ 10%) and on normal requests (target ≤ 1%).
 - **Current status:** the red-team set is **incomplete**. It must be written by a person or taken from a vetted dataset (see `ai/evaluation/safety/LABELLING.md`), so the AI-06 gate cannot pass yet.

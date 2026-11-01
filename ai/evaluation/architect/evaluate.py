@@ -18,7 +18,7 @@ from core.agents.architect import GENERATE
 from core.analysis import screen_and_analyze
 from core.llm import load_prompt, track_usage
 from evaluation.architect.data import GATE_SIZE, ArchitectItem, sources
-from evaluation.common import Outcome, model_for, run_all
+from evaluation.common import Outcome, ReportFiles, model_for, run_all, write_eval_report
 
 THRESHOLD = 0.90
 
@@ -141,13 +141,19 @@ async def run_eval(
     return report, outcomes
 
 
-def write_report(report: ArchitectReport, outcomes: dict[str, list[Result]], out_dir: Path) -> Path:
-    (out_dir / "specs").mkdir(parents=True, exist_ok=False)
-    (out_dir / "report.json").write_text(
-        json.dumps(asdict(report), indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-    )
-    (out_dir / "report.md").write_text(render_markdown(report), encoding="utf-8")
-    with (out_dir / "predictions.jsonl").open("w", encoding="utf-8") as f:
+def write_report(
+    report: ArchitectReport,
+    outcomes: dict[str, list[Result]],
+    *,
+    label: str,
+    reports_dir: Path,
+    run_dir: Path,
+) -> ReportFiles:
+    """The report goes to `reports_dir` as architect-<label>[-e2e]-<date>.md/.json, never
+    overwriting an earlier one. One line per request (predictions.jsonl) and every generated spec
+    (specs/, the bulk of a run) go to `run_dir`."""
+    (run_dir / "specs").mkdir(parents=True, exist_ok=False)
+    with (run_dir / "predictions.jsonl").open("w", encoding="utf-8") as f:
         for name, rows in outcomes.items():
             for o in rows:
                 r = o.result
@@ -167,10 +173,17 @@ def write_report(report: ArchitectReport, outcomes: dict[str, list[Result]], out
                 )
                 if r is not None and r.spec is not None:
                     safe = o.item.id.replace(":", "_").replace("/", "_")
-                    (out_dir / "specs" / f"{safe}.json").write_text(
+                    (run_dir / "specs" / f"{safe}.json").write_text(
                         r.spec.model_dump_json(indent=2), encoding="utf-8"
                     )
-    return out_dir
+    e2e = "-e2e" if report.end_to_end else ""
+    return write_eval_report(
+        f"architect-{label}{e2e}-{report.created[:10]}",
+        render_markdown(report),
+        asdict(report),
+        reports_dir=reports_dir,
+        run_dir=run_dir,
+    )
 
 
 def render_markdown(report: ArchitectReport) -> str:
