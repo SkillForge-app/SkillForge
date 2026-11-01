@@ -1,0 +1,19 @@
+# gitleaks config for CI (OPS-02): gitleaks' default rules plus a small allowlist.
+# Only add fake values that are obviously not secrets, and say where they are.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test sentinels and saved public web pages"
+regexTarget = "line"
+regexes = [
+  # ai/tests/ops/test_ops.py: checks that real-looking keys never reach logs
+  '''SENTINEL-not-a-real-key''',
+]
+paths = [
+  # Saved copies of public pages and robots.txt files for the extraction tests. They contain the
+  # sites' own public browser keys and analytics tokens (e.g. developers.google.com), not ours.
+  '''^ai/tests/fixtures/pages/[^/]+\.html$''',
+  '''^ai/tests/fixtures/search/robots/[^/]+\.txt$''',
+]

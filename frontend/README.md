@@ -18,7 +18,7 @@ npm run typecheck
 npm run build
 ```
 
-There is no automated test script in the current package configuration. CI currently runs formatting, lint, type checking, and a production build. CI uses Node.js 22.
+There is no automated test script in the current package configuration. CI currently runs formatting, generated API type checks, lint, type checking, and a production build. CI uses Node.js 24.21.0.
 
 ## Frontend planning
 

@@ -1,0 +1,87 @@
+# Data Engineering CI (OPS-02), called by ci.yml when data/ changed.
+# Skeleton: devops/ci/run-project.sh finds the project type and runs install, lint and tests if they
+# exist. Data Engineering replaces or extends these steps when it needs more.
+# Tests run against a real PostgreSQL + pgvector, and the job fails if any test is skipped.
+name: data
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        # pgvector 0.8.7 (the moving pg18 tag, 31 Oct) is too new for the two-week rule.
+        image: pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a
+        # Throwaway CI-only credentials: this database lives only inside this job, is reachable
+        # only from the runner, and holds no data. Never reuse them anywhere else.
+        env:
+          POSTGRES_USER: skillforge
+          POSTGRES_PASSWORD: skillforge_dev
+          POSTGRES_DB: skillforge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U skillforge -d skillforge"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      UV_PYTHON: "3.11"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        if: hashFiles('data/pyproject.toml') != ''
+        with:
+          version: "0.13.0"
+          enable-cache: true
+          cache-dependency-glob: |
+            data/pyproject.toml
+            data/uv.lock
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: hashFiles('data/package.json') != '' && hashFiles('data/.nvmrc') != ''
+        with:
+          node-version-file: data/.nvmrc
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: hashFiles('data/package.json') != '' && hashFiles('data/.nvmrc') == ''
+        with:
+          node-version: "24"
+      - name: Install, lint and test
+        env:
+          # Same throwaway CI-only credentials as the service above.
+          DATABASE_URL: postgresql://skillforge:skillforge_dev@localhost:5432/skillforge
+          PYTEST_JUNIT: ${{ runner.temp }}/data-junit.xml
+        run: bash devops/ci/run-project.sh data
+      - name: Fail if any test was skipped
+        env:
+          JUNIT: ${{ runner.temp }}/data-junit.xml
+        # A skipped test here usually means the database was not reachable: that must not pass.
+        run: |
+          if [ ! -f "$JUNIT" ]; then
+            echo "::notice::no pytest report (no tests ran); nothing to check"
+            exit 0
+          fi
+          python3 - "$JUNIT" <<'EOF'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse(sys.argv[1]).getroot()
+          skipped = [
+              f"{case.get('classname')}::{case.get('name')}: {skip.get('message', '')}"
+              for case in root.iter("testcase")
+              for skip in case.findall("skipped")
+          ]
+          total = sum(1 for _ in root.iter("testcase"))
+          print(f"{total} test(s), {len(skipped)} skipped")
+          for line in skipped:
+              print(f"::error::skipped: {line}")
+          sys.exit(1 if skipped else 0)
+          EOF

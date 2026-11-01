@@ -1,0 +1,56 @@
+# Trivy filesystem scan (OPS-11): known vulnerabilities in lock files and misconfigurations
+# (Dockerfiles, compose, Terraform once they exist), HIGH and CRITICAL only. Results go to
+# Security -> Code scanning (tool "trivy"). Reports, never fails: not a required check.
+# Secrets are left to gitleaks in ci.yml.
+name: Trivy
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "37 4 * * 1" # Mondays 04:37 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: trivy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: scan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Trivy
+        env:
+          VERSION: 0.76.0
+          SHA256: e24b1c51293c1b15e4ba8d45bbc7891ba053f90278ec2698f3562c993e145fe7
+        run: |
+          curl -sSfL -o /tmp/trivy.tar.gz \
+            "https://github.com/aquasecurity/trivy/releases/download/v${VERSION}/trivy_${VERSION}_Linux-64bit.tar.gz"
+          echo "${SHA256}  /tmp/trivy.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/trivy.tar.gz -C /tmp trivy
+      - name: Scan the repository
+        run: |
+          /tmp/trivy fs \
+            --scanners vuln,misconfig \
+            --severity HIGH,CRITICAL \
+            --skip-dirs ai/tests/fixtures \
+            --format sarif --output trivy.sarif \
+            --exit-code 0 \
+            .
+      - uses: github/codeql-action/upload-sarif@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          sarif_file: trivy.sarif
+          category: trivy
