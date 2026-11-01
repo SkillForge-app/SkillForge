@@ -1,3 +1,5 @@
+from backend.app.api.routes.repositories import router as repositories_router
+from backend.app.api.routes.projects import router as projects_router
 
 from fastapi import FastAPI
 
@@ -17,6 +19,7 @@ app = FastAPI(
 @app.get("/")
 def home():
     logger.info("Home endpoint accessed")
+    
 
     return {
         "message": f"Welcome to {settings.APP_NAME}"
@@ -31,3 +34,7 @@ def health_check():
         "status": "healthy",
         "version": settings.APP_VERSION
     }
+
+app.include_router(projects_router)
+
+app.include_router(repositories_router)
