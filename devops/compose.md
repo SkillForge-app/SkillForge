@@ -1,0 +1,118 @@
+# Local stack (OPS-03)
+
+One command starts the shared services every department develops against. It's defined in the root
+`compose.yaml`:
+
+| Service | What | On your machine | From another container |
+|---|---|---|---|
+| `postgres` | PostgreSQL 18 + pgvector 0.8.6 | `127.0.0.1:5433` | `postgres:5432` |
+| `redis` | Redis 8.8 | `127.0.0.1:6379` | `redis:6379` |
+
+`api`, `worker` and `web` are commented-out placeholders in `compose.yaml`. Each one has a TODO saying what
+Backend or Frontend still needs to decide.
+
+The ports listen on `127.0.0.1` only, so nothing is reachable from your network. All values in `.env.example`
+are for local development only; staging and production get theirs from the secret store.
+
+## Prerequisites
+Docker Desktop (Windows, macOS) or Docker Engine (Linux), with Compose v2: `docker compose version`.
+
+## Start
+From the repo root:
+
+```
+cp .env.example .env      # once; .env is gitignored
+docker compose up -d      # starts postgres and redis, in the background
+docker compose ps         # both should say "healthy" after a few seconds
+```
+
+Without `.env`, compose stops with `POSTGRES_PASSWORD ... copy .env.example to .env`. Change the ports in `.env`
+if 5433 or 6379 are taken.
+
+**On the first start** (an empty data volume), postgres runs `devops/compose/postgres-initdb/10-skillforge.sh`:
+1. It enables `vector` (pgvector). This always happens.
+2. If `data/db/` is checked out, it applies Data Engineering's SQL in their order: `data/db/init/*.sql`,
+   `schema-draft.sql`, `knowledge_views.sql`, `roles-local.sql`.
+   - That gives the `knowledge` schema, the `knowledge.knowledge_chunks` view and the read-only role
+     `skillforge_ai_reader`.
+   - On a branch without `data/`, Docker creates an empty `data/db/` folder (Git ignores it), and only step 1
+     runs.
+
+It doesn't run again on later starts. To pick up new SQL, reset the data (below).
+
+## Stop
+
+```
+docker compose stop       # stop; keep containers and data
+docker compose down       # remove the containers; keep the data volumes
+```
+
+## Reset the data
+Needed after Data Engineering changes anything in `data/db/`, or after a failed first start:
+
+```
+docker compose down -v    # removes the containers AND the volumes (skillforge_pgdata, skillforge_redisdata)
+docker compose up -d      # fresh database, init runs again
+```
+
+This deletes everything in the local database and Redis. Nothing outside your machine is affected.
+
+## Connect
+`<POSTGRES_PASSWORD>` is the value in your `.env` (`skillforge_dev` unless you changed it).
+
+| Who | Setting |
+|---|---|
+| Data Engineering (owner of the `knowledge` schema) | `DATABASE_URL=postgresql+psycopg://skillforge:<POSTGRES_PASSWORD>@localhost:5433/skillforge`. The same as `data/.env.example` |
+| AI, reading the knowledge store (read-only, like production) | `SKILLFORGE_VECTOR_STORE=pgvector`<br>`SKILLFORGE_PGVECTOR_DSN=postgresql://skillforge_ai_reader:<password>@localhost:5433/skillforge` (the local password is in `data/db/roles-local.sql`)<br>`SKILLFORGE_PGVECTOR_TABLE=knowledge.knowledge_chunks` |
+| AI tests (`pytest -m pgvector`, which create `public.skillforge_test_*` tables) | `SKILLFORGE_PGVECTOR_DSN=postgresql://skillforge:<POSTGRES_PASSWORD>@localhost:5433/skillforge` |
+| Backend (later, the `api` service) | `DATABASE_URL=postgresql+<driver>://skillforge:<POSTGRES_PASSWORD>@localhost:5433/skillforge` |
+| Anyone, Redis | `REDIS_URL=redis://localhost:6379/0` |
+
+From another compose service, use the hosts `postgres:5432` and `redis:6379` instead of `localhost`.
+
+A psql shell, without installing anything:
+
+```
+docker compose exec postgres psql -U skillforge -d skillforge
+docker compose exec redis redis-cli
+```
+
+## Troubleshooting
+- **`container name "/skillforge-postgres" is already in use`** or **port 5433 is already allocated:** the old
+  Data Engineering stack is running. Stop it with `docker compose -f data/docker-compose.yml down`, then run
+  `docker compose up -d` again. Only one of the two can run at a time, on purpose.
+- **postgres keeps restarting or never becomes healthy:** read `docker compose logs postgres`. A `skillforge:`
+  line shows which `data/db/` file failed. Fix it (or ask Data Engineering), then reset the data.
+- **`POSTGRES_PASSWORD` required:** you have no `.env`. Run `cp .env.example .env`.
+
+## Images
+Both images are pinned by digest (the multi-arch index, amd64 + arm64), each to a release at least two weeks
+old. To update one:
+1. Pick a tag at least 14 days old.
+2. Take its digest from Docker Hub (`docker buildx imagetools inspect <image>:<tag>`).
+3. Change `compose.yaml`; for pgvector, change `.github/workflows/data.yml` too.
+4. Open a PR. The `compose` workflow (`.github/workflows/compose.yml`) starts the stack and checks it. It isn't
+   a required check.
+
+To test another branch's `data/db/`, e.g. before Data Engineering merges a SQL change: Actions → compose →
+Run workflow, with `data-ref` set to the branch.
+
+## For Data Engineering: one local database, not two
+`data/docker-compose.yml` and this stack would give two different local databases. This stack is built as
+a drop-in replacement:
+- **The same as yours:** user, database and password, host port 5433, and container name
+  `skillforge-postgres`. Your `DATABASE_URL` and the `docker exec skillforge-postgres ...` commands in
+  `data/CLAUDE.md` keep working.
+- **Different:**
+  - the image is pinned by digest (0.8.6), not the moving `pg18` tag;
+  - `schema-draft.sql`, `knowledge_views.sql` and `roles-local.sql` are applied on the first start, so you
+    don't apply them by hand;
+  - it uses its own volume, so old local data isn't carried over. It's rebuilt from your SQL.
+
+What we suggest (your PR, your decision):
+1. Remove `data/docker-compose.yml` (or reduce it to a pointer to this page). Remove `data/db/init/` too: the
+   init script enables pgvector itself.
+2. In `data/CLAUDE.md`, replace the compose commands with `docker compose up -d` from the repo root.
+3. Tell DevOps when the names or the order of the `data/db/` files change: the init script lists them.
+4. Once you have migrations, give us one entry point (e.g. `data/db/local-init.sql`), and the script will run
+   that instead of the list.
