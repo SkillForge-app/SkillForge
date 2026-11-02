@@ -1,6 +1,8 @@
 # Local stack check (OPS-03): compose.yaml is valid, every image is pinned by digest, and
 # postgres + redis become healthy with the first-start init applied. Not a required check.
-# Run it by hand with `data-ref` to test another branch's data/db/ SQL, e.g. Data-Engineering.
+# The `web` job builds the web image from frontend/ and checks the app answers (skipped without
+# frontend/). Run it by hand with `data-ref` / `frontend-ref` to test another branch's data/db/ SQL
+# or frontend/, e.g. Data-Engineering or Frontend.
 name: compose
 
 on:
@@ -11,6 +13,8 @@ on:
       - .env.example
       - devops/compose/**
       - data/db/**
+      - frontend/**
+      - devops/docker/**
       - .github/workflows/compose.yml
   push:
     branches: [main]
@@ -19,6 +23,8 @@ on:
       - .env.example
       - devops/compose/**
       - data/db/**
+      - frontend/**
+      - devops/docker/**
       - .github/workflows/compose.yml
   workflow_dispatch:
     inputs:
@@ -26,12 +32,17 @@ on:
         description: "Branch whose data/db/ to use (empty: the checked-out one)"
         required: false
         default: ""
+      frontend-ref:
+        description: "Branch whose frontend/ to use (empty: the checked-out one)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
 concurrency:
-  group: compose-${{ github.ref }}
+  # Per event and inputs, so a manual run doesn't cancel the push run on the same branch.
+  group: compose-${{ github.ref }}-${{ github.event_name }}-${{ inputs.data-ref }}-${{ inputs.frontend-ref }}
   cancel-in-progress: true
 
 jobs:
@@ -83,3 +94,67 @@ jobs:
       - name: Clean up
         if: always()
         run: docker compose down --volumes
+
+  web:
+    name: web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # An unusual value, so the check below proves the build arg reaches the browser code.
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:18000
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use frontend/ from another branch
+        if: inputs.frontend-ref != ''
+        env:
+          FRONTEND_REF: ${{ inputs.frontend-ref }}
+        run: |
+          git fetch --depth=1 origin "refs/heads/${FRONTEND_REF}"
+          git checkout FETCH_HEAD -- frontend
+      - name: Is there a frontend?
+        id: project
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::no frontend/package.json here; the web image is not built"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: The base image is pinned by digest
+        run: |
+          grep -nE '^(ARG NODE_IMAGE=|FROM )' devops/docker/web.Dockerfile
+          if grep -E '^ARG NODE_IMAGE=' devops/docker/web.Dockerfile | grep -v '@sha256:'; then
+            echo "::error::NODE_IMAGE is not pinned by digest"
+            exit 1
+          fi
+          if grep -E '^FROM ' devops/docker/web.Dockerfile | grep -vE 'FROM (\$\{NODE_IMAGE\}|deps) '; then
+            echo "::error::every FROM must use NODE_IMAGE (or an earlier stage)"
+            exit 1
+          fi
+      - name: Use the example settings
+        if: steps.project.outputs.present == 'true'
+        run: cp .env.example .env
+      - name: Build the web image
+        if: steps.project.outputs.present == 'true'
+        run: docker compose --profile web build web
+      - name: Start web
+        if: steps.project.outputs.present == 'true'
+        run: docker compose --profile web up --detach --wait --wait-timeout 180 web
+      - name: The app answers, as a non-root user, with the API URL baked in
+        if: steps.project.outputs.present == 'true'
+        run: |
+          curl -fsS -o /tmp/index.html -w 'HTTP %{http_code}\n' http://127.0.0.1:3000/
+          grep -qi '<html' /tmp/index.html
+          uid="$(docker compose --profile web exec -T web id -u)"
+          echo "uid ${uid}"
+          [ "${uid}" != 0 ]
+          docker compose --profile web exec -T web grep -rqF "${NEXT_PUBLIC_API_BASE_URL}" apps/web/.next/static
+          echo "${NEXT_PUBLIC_API_BASE_URL} is in the browser code"
+      - name: Logs
+        if: failure() && steps.project.outputs.present == 'true'
+        run: docker compose --profile web logs --no-color web
+      - name: Clean up
+        if: always() && steps.project.outputs.present == 'true'
+        run: docker compose --profile web down --volumes

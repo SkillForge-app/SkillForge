@@ -49,6 +49,7 @@ services:
 
   # ---------------------------------------------------------------- placeholders
   # Not started yet. Each one waits for answers from the department named in its TODO.
+  # The web app is a real service below.
 
   # TODO(Backend): the API.
   # - A backend/Dockerfile (base image pinned by digest, at least two weeks old).
@@ -99,20 +100,36 @@ services:
   #     redis:
   #       condition: service_healthy
 
-  # TODO(Frontend): the web app (Next.js, frontend/apps/web).
-  # - A frontend/Dockerfile (`npm ci`, `npm run build`, `npm run start`), Node version pinned.
-  # - The port (3000?) and every env var.
-  # - NEXT_PUBLIC_API_BASE_URL is read by the browser and baked in at build time, so it is the host
-  #   URL (http://localhost:8000), not the service name.
-  # web:
-  #   build:
-  #     context: frontend
-  #     args:
-  #       NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
-  #   ports:
-  #     - "127.0.0.1:3000:3000"
-  #   depends_on:
-  #     - api
+  # ---------------------------------------------------------------- web app
+
+  # The web app (Next.js, frontend/). Only with the `web` profile, so a plain `docker compose up`
+  # works without frontend/ and doesn't build it:
+  #   docker compose --profile web up -d --build
+  web:
+    profiles: [web]
+    build:
+      context: ./frontend
+      dockerfile: ../devops/docker/web.Dockerfile
+      args:
+        # Baked into the browser code at build time: the URL the BROWSER calls, so a host URL,
+        # not a service name. Changing it needs a rebuild (--build).
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    image: skillforge-web:local
+    init: true
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+    healthcheck:
+      # The slim image has no curl; Node's fetch does the same.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    # TODO(Backend): add `depends_on: api` once the api service exists.
 
 volumes:
   pgdata:

@@ -1,10 +1,25 @@
-# Frontend CI (OPS-02), called by ci.yml when frontend/ changed.
-# Skeleton: devops/ci/run-project.sh finds the project type and runs install, lint and tests if they
-# exist. Frontend replaces or extends these steps when it needs more.
+# Frontend CI (OPS-02, OPS-03), called by ci.yml when frontend/ changed.
+# Node comes from frontend/.nvmrc. `npm ci` and `npm run build` always run; format:check, api:check,
+# lint, typecheck and test run only when frontend/package.json defines them. With no frontend/
+# (as on main before Frontend merges) every step after the check is skipped.
+# Run it by hand with `frontend-ref` to test another branch's frontend/, e.g. Frontend.
 name: frontend
 
 on:
   workflow_call:
+    inputs:
+      frontend-ref:
+        description: "Branch whose frontend/ to use (empty: the checked-out one)"
+        type: string
+        required: false
+        default: ""
+  workflow_dispatch:
+    inputs:
+      frontend-ref:
+        description: "Branch whose frontend/ to use (empty: the checked-out one)"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -13,28 +28,74 @@ jobs:
   build:
     name: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
-      UV_PYTHON: "3.11"
+      NEXT_TELEMETRY_DISABLED: "1"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-        if: hashFiles('frontend/pyproject.toml') != ''
-        with:
-          version: "0.13.0"
-          enable-cache: true
-          cache-dependency-glob: |
-            frontend/pyproject.toml
-            frontend/uv.lock
+      - name: Use frontend/ from another branch
+        if: inputs.frontend-ref != ''
+        env:
+          FRONTEND_REF: ${{ inputs.frontend-ref }}
+        run: |
+          git fetch --depth=1 origin "refs/heads/${FRONTEND_REF}"
+          git checkout FETCH_HEAD -- frontend
+      - name: Find the project and its scripts
+        id: project
+        run: |
+          if [ ! -f frontend/package.json ]; then
+            echo "::notice::no frontend/package.json here; nothing to check"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          for f in .nvmrc package-lock.json; do
+            if [ ! -f "frontend/$f" ]; then
+              echo "::error::frontend/$f is missing (Node comes from .nvmrc; npm ci needs the lock file)"
+              exit 1
+            fi
+          done
+          has() { jq -r --arg s "$1" '(.scripts // {}) | has($s)' frontend/package.json; }
+          {
+            echo "present=true"
+            echo "format_check=$(has format:check)"
+            echo "api_check=$(has api:check)"
+            echo "lint=$(has lint)"
+            echo "typecheck=$(has typecheck)"
+            echo "test=$(has test)"
+          } | tee -a "$GITHUB_OUTPUT"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        if: hashFiles('frontend/package.json') != '' && hashFiles('frontend/.nvmrc') != ''
+        if: steps.project.outputs.present == 'true'
         with:
           node-version-file: frontend/.nvmrc
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        if: hashFiles('frontend/package.json') != '' && hashFiles('frontend/.nvmrc') == ''
-        with:
-          node-version: "24"
-      - name: Install, lint and test
-        run: bash devops/ci/run-project.sh frontend
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        if: steps.project.outputs.present == 'true'
+        working-directory: frontend
+        run: npm ci
+      - name: Check formatting
+        if: steps.project.outputs.format_check == 'true'
+        working-directory: frontend
+        run: npm run format:check
+      - name: Check generated API types
+        if: steps.project.outputs.api_check == 'true'
+        working-directory: frontend
+        run: npm run api:check
+      - name: Lint
+        if: steps.project.outputs.lint == 'true'
+        working-directory: frontend
+        run: npm run lint
+      - name: Type check
+        if: steps.project.outputs.typecheck == 'true'
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Test
+        if: steps.project.outputs.test == 'true'
+        working-directory: frontend
+        run: npm test
+      - name: Build
+        if: steps.project.outputs.present == 'true'
+        working-directory: frontend
+        run: npm run build
