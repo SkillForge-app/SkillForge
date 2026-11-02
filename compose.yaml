@@ -9,8 +9,7 @@ services:
   postgres:
     # The same image as .github/workflows/data.yml.
     image: pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a
-    # Same name as data/docker-compose.yml, on purpose: the documented `docker exec skillforge-postgres`
-    # commands keep working, and the two stacks cannot run side by side by accident.
+    # A fixed name, so `docker exec skillforge-postgres ...` (as in data/CLAUDE.md) works from anywhere.
     container_name: skillforge-postgres
     environment:
       POSTGRES_USER: skillforge
