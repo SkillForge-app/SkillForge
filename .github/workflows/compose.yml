@@ -1,0 +1,85 @@
+# Local stack check (OPS-03): compose.yaml is valid, every image is pinned by digest, and
+# postgres + redis become healthy with the first-start init applied. Not a required check.
+# Run it by hand with `data-ref` to test another branch's data/db/ SQL, e.g. Data-Engineering.
+name: compose
+
+on:
+  pull_request:
+    branches: [main, AI, Backend, Frontend, Data-Engineering, DevOps]
+    paths:
+      - compose.yaml
+      - .env.example
+      - devops/compose/**
+      - data/db/**
+      - .github/workflows/compose.yml
+  push:
+    branches: [main]
+    paths:
+      - compose.yaml
+      - .env.example
+      - devops/compose/**
+      - data/db/**
+      - .github/workflows/compose.yml
+  workflow_dispatch:
+    inputs:
+      data-ref:
+        description: "Branch whose data/db/ to use (empty: the checked-out one)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group: compose-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  stack:
+    name: stack
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use data/db/ from another branch
+        if: inputs.data-ref != ''
+        env:
+          DATA_REF: ${{ inputs.data-ref }}
+        run: |
+          git fetch --depth=1 origin "refs/heads/${DATA_REF}"
+          git checkout FETCH_HEAD -- data/db
+          ls data/db
+      - name: Use the example settings
+        run: cp .env.example .env
+      - name: compose.yaml is valid
+        run: docker compose config --quiet
+      - name: Every image is pinned by digest
+        run: |
+          docker compose config --images | tee /tmp/images.txt
+          if grep -v '@sha256:' /tmp/images.txt; then
+            echo "::error::the images above are not pinned by digest"
+            exit 1
+          fi
+      - name: Start postgres and redis
+        run: docker compose up --detach --wait --wait-timeout 180 postgres redis
+      - name: The database is initialised
+        run: |
+          sql() { docker compose exec -T postgres psql -v ON_ERROR_STOP=1 -U skillforge -d skillforge -Atc "$1"; }
+          [ "$(sql "SELECT count(*) FROM pg_extension WHERE extname = 'vector'")" = 1 ]
+          if [ -f data/db/schema-draft.sql ]; then
+            [ "$(sql "SELECT to_regclass('knowledge.knowledge_chunks') IS NOT NULL")" = t ]
+            [ "$(sql "SELECT count(*) FROM pg_roles WHERE rolname = 'skillforge_ai_reader'")" = 1 ]
+            echo "data/db/ applied: knowledge.knowledge_chunks and skillforge_ai_reader exist"
+          else
+            echo "::notice::no data/db/ here; checked pgvector only"
+          fi
+      - name: Redis answers
+        run: '[ "$(docker compose exec -T redis redis-cli ping)" = PONG ]'
+      - name: Logs
+        if: failure()
+        run: docker compose logs --no-color
+      - name: Clean up
+        if: always()
+        run: docker compose down --volumes

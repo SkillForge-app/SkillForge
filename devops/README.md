@@ -17,6 +17,14 @@ places (listed below).
 | `ci/gitleaks.toml` | CI secret scan config: default rules plus allowlisted test sentinels |
 | `ci/gitleaksignore` | Individual gitleaks findings a person checked and confirmed are not secrets (by fingerprint, with the reason) |
 | `security.md` | Security scanning (OPS-11): what runs, where results show up, who handles alerts |
+| `compose.md` | The local stack (OPS-03): start, stop, reset the data, connect |
+| `compose/postgres-initdb/` | First-start init for the local postgres: pgvector, then Data Engineering's `data/db/` SQL |
+
+## Local stack (OPS-03)
+
+See [compose.md](compose.md). In short: `cp .env.example .env`, then `docker compose up -d` from the repo root
+starts postgres + pgvector (`127.0.0.1:5433`) and redis (`127.0.0.1:6379`). `.github/workflows/compose.yml`
+checks that both become healthy; it isn't a required check.
 
 ## Security (OPS-11)
 
@@ -68,4 +76,5 @@ devops/github/setup-org.sh
 | `.github/workflows/` | GitHub Actions only runs workflows (and reusable workflows) from here |
 | `.github/dependabot.yml` | Fixed location: Dependabot only reads it from there |
 | `/.gitignore`, `/.gitattributes` | Git applies them per folder; only the root copy covers the whole repo |
-| `/compose.yaml` (OPS-03) | `docker compose up` looks in the current folder; it will only `include:` files from `devops/compose/` |
+| `/compose.yaml` (OPS-03) | `docker compose up` looks for it in the current folder. Its init script lives in `devops/compose/` |
+| `/.env.example` (OPS-03) | Compose reads `.env` from the same folder as `compose.yaml`. Local-dev placeholders only |
