@@ -7,9 +7,10 @@ One command starts the shared services every department develops against. It's d
 |---|---|---|---|
 | `postgres` | PostgreSQL 18 + pgvector 0.8.6 | `127.0.0.1:5433` | `postgres:5432` |
 | `redis` | Redis 8.8 | `127.0.0.1:6379` | `redis:6379` |
+| `web` (only with `--profile web`) | The Next.js app from `frontend/` | `http://127.0.0.1:3000` | `web:3000` |
 
-`api`, `worker` and `web` are commented-out placeholders in `compose.yaml`. Each one has a TODO saying what
-Backend or Frontend still needs to decide.
+`api` and `worker` are commented-out placeholders in `compose.yaml`. Each one has a TODO saying what Backend
+still needs to decide. `web` is described in [Web app](#web-app).
 
 The ports listen on `127.0.0.1` only, so nothing is reachable from your network. All values in `.env.example`
 are for local development only; staging and production get theirs from the secret store.
@@ -85,17 +86,47 @@ docker compose exec redis redis-cli
   line shows which `data/db/` file failed. Fix it (or ask Data Engineering), then reset the data.
 - **`POSTGRES_PASSWORD` required:** you have no `.env`. Run `cp .env.example .env`.
 
+## Web app
+The `web` service builds Frontend's Next.js app (`frontend/`) with `devops/docker/web.Dockerfile`. It's in the
+`web` profile, so a plain `docker compose up` doesn't build it and still works on branches without
+`frontend/`.
+
+```
+docker compose --profile web up -d --build    # build the image and start it (plus postgres and redis)
+docker compose --profile web logs -f web
+docker compose --profile web down             # stop it
+```
+
+- **Open** `http://127.0.0.1:3000` (change the port with `WEB_PORT` in `.env`).
+- **Rebuild after a frontend change** (`--build`): the image holds a production build, not the dev server. For
+  fast edit-and-reload work, Frontend's `npm run dev` in `frontend/` is still the tool.
+- **`NEXT_PUBLIC_API_BASE_URL`** (in `.env`, default `http://localhost:8000`):
+  - It's the API URL the **browser** calls, so it's a URL on your machine, not a service name.
+  - Next.js bakes it into the browser code at build time, so changing it needs a rebuild.
+- **The image** (`skillforge-web:local`):
+  - three stages: dependencies, build, runtime;
+  - it runs Frontend's standalone Next.js server (`output: "standalone"`, the server that `npm run start`
+    launches) as the non-root `node` user, on port 3000;
+  - the standalone server doesn't serve `.next/static` or `public/` on its own, so the image copies them next
+    to it;
+  - local `.env*` files are never copied in (`devops/docker/web.Dockerfile.dockerignore`).
+
 ## Images
-Both images are pinned by digest (the multi-arch index, amd64 + arm64), each to a release at least two weeks
-old. To update one:
+The postgres and redis images and the web image's Node base are pinned by digest (the multi-arch index,
+amd64 + arm64), each to a release at least two weeks old. To update one:
 1. Pick a tag at least 14 days old.
 2. Take its digest from Docker Hub (`docker buildx imagetools inspect <image>:<tag>`).
-3. Change `compose.yaml`; for pgvector, change `.github/workflows/data.yml` too.
+3. Change `compose.yaml`; for pgvector, change `.github/workflows/data.yml` too. For Node, change
+   `NODE_IMAGE` in `devops/docker/web.Dockerfile`, in step with `frontend/.nvmrc`.
 4. Open a PR. The `compose` workflow (`.github/workflows/compose.yml`) starts the stack and checks it. It isn't
    a required check.
 
-To test another branch's `data/db/`, e.g. before Data Engineering merges a SQL change: Actions → compose →
-Run workflow, with `data-ref` set to the branch.
+To test another branch's `data/db/` or `frontend/` (e.g. before Data Engineering or Frontend merges):
+Actions → compose → Run workflow, with `data-ref` or `frontend-ref` set to the branch. The `web` job builds
+the image, starts it, and checks three things:
+- the app answers;
+- it doesn't run as root;
+- the API URL is in the browser code.
 
 ## For Data Engineering: one local database, not two
 `data/docker-compose.yml` and this stack would give two different local databases. This stack is built as
