@@ -33,14 +33,16 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0
 WORKDIR /app
-# Dev dependencies are kept: this is exactly what `npm run start` runs in Frontend's setup, and
-# `next start` loads next.config.ts. A smaller image needs `output: "standalone"` from Frontend.
-COPY --from=build /app/package.json /app/package-lock.json ./
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/web/package.json /app/apps/web/next.config.ts apps/web/
+# Frontend builds with `output: "standalone"` (apps/web/next.config.ts): .next/standalone holds the
+# server and only the node_modules it needs, laid out like frontend/. The standalone server does
+# not serve .next/static or public/ unless they are copied next to it, so they are copied here.
+COPY --from=build /app/apps/web/.next/standalone ./
+COPY --from=build /app/apps/web/.next/static apps/web/.next/static
 COPY --from=build /app/apps/web/public apps/web/public
-# Next writes its runtime cache under .next, so the app user owns it; everything else is read-only.
-COPY --from=build --chown=node:node /app/apps/web/.next apps/web/.next
+# Next writes its runtime cache under .next/cache: only that is writable by the app user.
+RUN mkdir -p apps/web/.next/cache && chown node:node apps/web/.next/cache
 USER node
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+# The same server Frontend's `npm run start` launches (node .next/standalone/apps/web/server.js),
+# run directly: the standalone output has no npm scripts. It reads PORT and HOSTNAME.
+CMD ["node", "apps/web/server.js"]

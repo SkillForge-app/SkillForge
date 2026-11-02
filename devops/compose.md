@@ -105,7 +105,10 @@ docker compose --profile web down             # stop it
   - Next.js bakes it into the browser code at build time, so changing it needs a rebuild.
 - **The image** (`skillforge-web:local`):
   - three stages: dependencies, build, runtime;
-  - it runs as the non-root `node` user, with `npm run start` on port 3000;
+  - it runs Frontend's standalone Next.js server (`output: "standalone"`, the server that `npm run start`
+    launches) as the non-root `node` user, on port 3000;
+  - the standalone server doesn't serve `.next/static` or `public/` on its own, so the image copies them next
+    to it;
   - local `.env*` files are never copied in (`devops/docker/web.Dockerfile.dockerignore`).
 
 ## Images
