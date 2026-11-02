@@ -9,6 +9,15 @@ npm ci
 npm run dev
 ```
 
+## Production
+
+```bash
+npm run build
+npm run start
+```
+
+The production build uses Next.js standalone output, and `npm run start` launches its generated server.
+
 ## Checks
 
 ```bash
