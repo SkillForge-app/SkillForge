@@ -1,7 +1,8 @@
 -- Read-only role for AI's code (LOCAL development only).
--- Apply after db/schema-draft.sql and db/knowledge_views.sql (it grants SELECT on a view):
---   docker exec -i skillforge-postgres psql -U skillforge -d skillforge < db/roles-local.sql
--- The password below is a local-dev value, like the one in docker-compose.yml.
+-- The root compose.yaml applies this file on the first start, after db/schema-draft.sql and
+-- db/knowledge_views.sql (it grants SELECT on a view). By hand, from the repo root:
+--   docker compose exec -T postgres psql -U skillforge -d skillforge < data/db/roles-local.sql
+-- The password below is a local-dev value, like the one in .env.example at the repo root.
 -- Staging and production create the same role from a migration or ops script, with a
 -- password from the secret store (never from this file).
 

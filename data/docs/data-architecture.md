@@ -1,9 +1,14 @@
 # Data Architecture: knowledge store (DE-01, DRAFT)
 
 Status: draft for review by Backend and AI. No migrations exist yet.
+
+> **Warning: chunks stored before 4 November 2026 are not final.** Two pending changes alter the `chunk_id` of
+> existing pages: the config `extract_fingerprint` (a new chunk set, see `active_config`) and `normalize_url` (the canonical
+> `sources.url`, which `chunk_id` is built from). Anything chunked before then will be deleted and rebuilt, so
+> nothing should depend on those ids yet.
 The SQL is in two files, loaded in this order: [db/schema-draft.sql](../db/schema-draft.sql) (tables and
 functions) and then [db/knowledge_views.sql](../db/knowledge_views.sql) (the three views). It was run against the local
-pgvector container (PostgreSQL 18, pgvector 0.8.7) inside rolled-back transactions, so it
+pgvector container (PostgreSQL 18, pgvector 0.8.6, the root compose.yaml image) inside rolled-back transactions, so it
 parses and its constraints and queries behave as described below. The A to B to A tests are in
 [tests/test_document_versions.py](../tests/test_document_versions.py).
 
@@ -20,10 +25,9 @@ Inputs from AI (Ziad Abdullah):
   applies it: stored `chunk_id`, non-empty `title`, `domains` on `embeddings` with a simple view, the pinned
   `embedding_version`.
 
-Three more files came with it and are now in `docs/ai/`: [knowledge-chunks.sql](ai/knowledge-chunks.sql) (AI's
-view DDL and search query), [retrieval.md](ai/retrieval.md) (the view contract) and
-[extraction.md](ai/extraction.md) (how a page becomes chunks, with a "For DE-05" section). This version is matched
-against them by reading; see "Matching AI's files".
+Three more files came with it. AI's view DDL is in their [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/retrieval.md) (the view contract) and [extraction.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/extraction.md) (how a page becomes
+chunks, with a "For DE-05" section) are now kept by AI on the `AI` branch (`ai/docs/ai/`); our old copies were out of
+date and were removed. This version is matched against them by reading; see "Matching AI's files".
 
 All tables live in the Postgres schema `knowledge`, separate from Backend's application tables.
 
@@ -96,17 +100,17 @@ tables and `CREATE TABLE` in `knowledge`; and denied `EXECUTE` on `record_docume
 `PUBLIC`; by default every role can call a function, and the call then failed on table permissions). A write to the
 view itself fails with "cannot insert into view" (a join is not writable at all), before any permission check. To
 create the role locally run
-`docker exec -i skillforge-postgres psql -U skillforge -d skillforge < db/roles-local.sql` after `db/schema-draft.sql`
-and `db/knowledge_views.sql`.
+the root `compose.yaml` does it on the first start, after `db/schema-draft.sql` and `db/knowledge_views.sql`. By hand,
+from the repo root: `docker compose exec -T postgres psql -U skillforge -d skillforge < data/db/roles-local.sql`.
 
 If AI wants the pipeline to use `ingest_pages()`, note that it writes its own `knowledge_chunks` table. Our
 pipeline must call it in a way that returns the data for us to insert (or call `extract_page` and `embed`
-separately), because the view cannot be written. To confirm when `retrieval.md` is in the repo.
+separately), because the view cannot be written. To confirm against AI's current [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/retrieval.md).
 
 ## Matching AI's files
 
-Read against [knowledge-chunks.sql](ai/knowledge-chunks.sql), [retrieval.md](ai/retrieval.md) and
-[extraction.md](ai/extraction.md) (28 October).
+Read against [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/retrieval.md) and
+[extraction.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/extraction.md) (28 October versions; AI has updated both since, so this section needs a re-read).
 
 **Matches by reading** (to be confirmed by a run, below):
 
@@ -131,7 +135,7 @@ Read against [knowledge-chunks.sql](ai/knowledge-chunks.sql), [retrieval.md](ai/
 | Check | Why |
 |---|---|
 | The schema file loads | it changed after the last run |
-| View columns equal `knowledge-chunks.sql` (compare against that file's DDL, not our copy) | the claim above is by reading |
+| View columns equal the DDL in AI's [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/retrieval.md) | compared on 3 Nov 2026: `knowledge_chunks` matches (11 columns, names, order, types) |
 | AI's search query, as written, on the view, with `EXPLAIN` (literal vector, and a generic plan with `plan_cache_mode = force_generic_plan`) | AI's query orders by `embedding <=> $v, chunk_id`; the extra key may stop the planner using the HNSW index |
 | Two chunks with the same `chunk_id` (see `chunk_id` section) | the unique key and the view |
 | A rejected page leaves the view | `quality_ok` |
@@ -142,7 +146,7 @@ Read against [knowledge-chunks.sql](ai/knowledge-chunks.sql), [retrieval.md](ai/
 | Item | Value |
 |---|---|
 | `embedding_model` | exactly `local/BAAI/bge-small-en-v1.5`, enforced by a CHECK. Another value is rejected. |
-| `embedding_version` | `aa8f8b060edb00e03bfdd08813a2949946c8ba55`: the pinned revision of `Qdrant/bge-small-en-v1.5-onnx-Q` (file `model_optimized.onnx`, sha256 `51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431`). Not fixed by a CHECK: a new revision must be able to coexist with the old during a rebuild. The live one is in `active_config`. |
+| `embedding_version` | `aa8f8b060edb00e03bfdd08813a2949946c8ba55`: the pinned revision of `Qdrant/bge-small-en-v1.5-onnx-Q` (file `model_optimized.onnx`, sha256 `51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431`). Not fixed by a CHECK: a new revision must be able to coexist with the old during a rebuild. The live one is in `active_config`. We store the revision only (AI agreed). The full pin (repo, revision, file, sha256) is in `ai/core/llm/models.yaml`, lines 94-98, on the `AI` branch. |
 | Dimension | 384, `vector(384)` |
 | Unit length | enforced by a CHECK: `abs(vector_norm(embedding) - 1) < 0.001`. A vector that is not L2-normalized is rejected. The margin only absorbs float32 rounding. (pgvector 0.8.7 names this function `vector_norm`; `l2_norm` exists only for halfvec and sparsevec.) |
 | Metric and index | cosine, HNSW with `vector_cosine_ops`. Final. Order by `embedding <=> query`; score is `1 - (embedding <=> query)`. |
@@ -163,6 +167,29 @@ QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 Any retrieval code of ours (including `knowledge.search()` below, which receives an already embedded query) adds
 this prefix before the query text is embedded. The model and dimension are a contract: changing either, or the
 `chunk_id` rule, or the view columns, needs approval from AI and DE and a rebuild of the index.
+
+## `sources.url`: the canonical URL (`normalize_url`)
+
+`sources.url` stores the **canonical** URL, never the spelling the crawler found, because `chunk_id` is built from it.
+The rules (AI's `normalise_url`, see [extraction.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/extraction.md), "For Data Engineering"), applied in this order:
+
+1. The scheme and host are lower case. A non-default port is kept; `:80` and `:443` are dropped. `user:password@` is
+   dropped, so credentials are never stored.
+2. The `#fragment` is dropped.
+3. Query parameters `utm_*`, `gclid` and `fbclid` (any case) are dropped. All other parameters stay exactly as written
+   and in their order, so `?id=1` and `?id=2` are two pages.
+4. The trailing `/` of the path is removed, **except for the home page**: `https://example.org/`.
+5. Anything that is not http(s) is an error. The path keeps its case.
+
+Example: `https://WWW.Example.org/Guide/?utm_source=x&id=2#top` becomes `https://www.example.org/Guide?id=2`.
+
+**Fetch with the original URL, store the canonical one** (some servers answer 404 without the trailing slash). Use the
+URL asked for, not where a redirect ended.
+
+**TODO (DE-04 crawler, DE-05 pipeline):** call AI's `normalise_url()` before every write to `sources.url`; do not write a
+second implementation. Rows whose `sources.url` is not `normalise_url(sources.url)` are stale and must be deleted or
+rebuilt. The schema does not enforce this (a CHECK cannot call Python); a test in DE-05 should. If a canonical link
+turns out to 404 for users, keep the fetch URL in a separate column (for example `sources.fetch_url`).
 
 ## `chunk_id`: stable ids for citations
 
@@ -219,7 +246,7 @@ it in `COALESCE`. The title comes from
 `extract_page()`. A page without a usable title is a pipeline failure (`status = 'failed'`), not something to hide
 with an empty string.
 
-## DE-05 and AI's extraction code (from `extraction.md`, "For DE-05")
+## DE-05 and AI's extraction code (from [`extraction.md`](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/extraction.md), "For DE-05")
 
 DE-05 runs AI's code and writes the result into our tables. The order of the steps for one host:
 
@@ -258,7 +285,10 @@ In both cases the document row and its reasons stay, so DE-11 can report how man
 **Rejected for `injection`** is handled like any other `quality_ok = false`: no chunks are made, and the page's old
 chunks leave the view (the two cases above). The page is not special-cased in the schema. AI's `extract_page` also
 returns a `screening` field; the pipeline stores it **as returned** (`model_dump`) in `documents.screening` (jsonb,
-NULL for pages that were not screened). The database does not look inside it; its fields belong to AI.
+NULL for pages that were not screened). The database does not look inside it; its fields belong to AI. Today AI's `ScreeningReport` has the fields `findings`
+(codes, positions and hashes, never text), `removed`, `invisible_chars` and `rejected`. That fits both columns: it is
+plain JSON for `documents.screening`, and a rejection for this reason is stored as `quality_ok = false` with
+`quality_reasons = {injection}` (`injection` is one of AI's reasons; the column accepts any non-blank name).
 
 **DE-11 counts injection rejections per crawl run.** Starting query (documents are attributed to the run that first
 stored them, see decision 6):
@@ -355,7 +385,7 @@ A row matches query domain `D` if one of its domains equals `D`, or one is a pat
 
 ### AI's search query
 
-From the end of `knowledge-chunks.sql` (`$domain_and_parents` is the query domain and each of its parents):
+The query as AI gave it to us in `knowledge-chunks.sql` (since removed; [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/retrieval.md) now has the domain rule and the score formula, not this SQL) (`$domain_and_parents` is the query domain and each of its parents):
 
 ```sql
 SELECT chunk_id, source_url, title, retrieved, text, section, concepts, content_hash,
@@ -401,8 +431,12 @@ have compared; the new shape is the one AI asked for.
 
 ## `active_config`: one chunk config, one embedding version
 
-`chunk_config` has fixed keys: `size`, `overlap`, `splitter` (AI-owned values) and `pipeline_version` (ours), enforced
-by a CHECK. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
+`chunk_config` has fixed keys: `size`, `overlap`, `splitter` (AI-owned values) and `pipeline_version` (ours), plus an
+optional fifth key, `extract_fingerprint`, enforced by a CHECK. `extract_fingerprint` is `ExtractConfig.fingerprint()` from AI: 64 hex
+characters, the sha256 of every extraction setting except the per-site `site_boilerplate`, so every host gives the
+same value and the single `active_config` row keeps working. **TODO:** the key is optional until AI finishes and
+pins the function (the default config gives `f33bf1b5...5483`); then it becomes required, and the pipeline (DE-05)
+fills it from `ExtractConfig.fingerprint()`. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
 version, or any new chunk setting, is a new config and a new chunk set. Rows of the old and new config can exist
 side by side while a rebuild runs, so the same text would appear twice.
 
@@ -645,8 +679,10 @@ only in V1** (`extract_page` rejects other languages with `wrong_language`).
    differ only in, say, `max_words` would get the same hash, and the unique key would treat their chunks as the same
    set. We suggest the config identity be a hash of the whole `ExtractConfig` (including the boilerplate hash set),
    stored in `chunk_config` as one more key. Is that acceptable?
+   **Answer (AI):** yes, `ExtractConfig.fingerprint()`, stored as the fifth key `extract_fingerprint` (see `active_config`).
 2. The URL given to `extract_page()` goes into `chunk_id`. We will pass `sources.url` exactly. Which normalization
    do you expect (lowercase host, no fragment, tracking parameters removed)? We will do it once, before `extract_page`.
+   **Answer (AI):** see "`sources.url`: the canonical URL" below.
 3. `embedding_version`: we store the bare revision `aa8f8b06...`. Your suggested long form also names the file and
    its sha256. Do you want the long form, even though you do not read the column?
 4. How often does your store call `info()` (a count over the view)? At large size it is a scan.

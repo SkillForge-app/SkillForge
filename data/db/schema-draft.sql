@@ -1,9 +1,10 @@
--- DRAFT for review (DE-01). Not a migration, not applied by docker-compose.
+-- DRAFT for review (DE-01). Not a migration. The root compose.yaml applies it on a fresh local database
+-- (devops/compose/postgres-initdb/10-skillforge.sh).
 -- Everything lives in its own schema so it cannot clash with Backend's app tables.
 -- Values marked PROPOSED are open for review by BE and AI.
 -- The views (chunk_provenance, retrievable_chunks, knowledge_chunks) are NOT in this file: they are in
 -- db/knowledge_views.sql, the contract with AI. Apply this file first, then that one.
--- Compared with AI's docs/ai/knowledge-chunks.sql: knowledge.knowledge_chunks has the same
+-- Compared with the DDL in AI's retrieval.md (branch AI, ai/docs/ai/retrieval.md): knowledge.knowledge_chunks has the same
 -- columns and types, in the same order, as a plain projection (no GROUP BY or DISTINCT).
 
 CREATE EXTENSION IF NOT EXISTS vector;
@@ -31,17 +32,22 @@ LANGUAGE sql IMMUTABLE AS $$
        AND NOT EXISTS (SELECT 1 FROM unnest(v) AS x WHERE x IS NULL OR btrim(x) = '')
 $$;
 
--- chunk_config: exactly these four keys. size, overlap and splitter are AI-owned values;
--- pipeline_version is ours. All four are part of the config hash.
+-- chunk_config: these four keys, plus an optional fifth, `extract_fingerprint`. size, overlap and splitter are
+-- AI-owned values; pipeline_version is ours. Every key present is part of the config hash.
+-- extract_fingerprint = ExtractConfig.fingerprint() from AI: 64 hex characters, the sha256 of the extraction
+-- settings without site_boilerplate. TODO: AI (Ziad) is still finishing that function; the key is optional
+-- until it is final, then it should become required (see docs/data-architecture.md, `active_config`).
 CREATE FUNCTION knowledge.is_valid_chunk_config(c jsonb) RETURNS boolean
 LANGUAGE sql IMMUTABLE AS $$
     SELECT jsonb_typeof(c) = 'object'
        AND c ?& ARRAY['size', 'overlap', 'splitter', 'pipeline_version']
-       AND (SELECT count(*) FROM jsonb_object_keys(c)) = 4
+       AND (SELECT count(*) FROM jsonb_object_keys(c)) = 4 + (c ? 'extract_fingerprint')::int
        AND jsonb_typeof(c -> 'size') = 'number'
        AND jsonb_typeof(c -> 'overlap') = 'number'
        AND jsonb_typeof(c -> 'splitter') = 'string'
        AND jsonb_typeof(c -> 'pipeline_version') = 'string'
+       AND (NOT c ? 'extract_fingerprint'
+            OR (jsonb_typeof(c -> 'extract_fingerprint') = 'string' AND c ->> 'extract_fingerprint' ~ '^[0-9a-f]{64}$'))
 $$;
 
 -- ---------------------------------------------------------------------------

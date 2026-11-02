@@ -87,9 +87,14 @@ Same as the repo's `.github/CONTRIBUTING.md`.
 - Activate venv (PowerShell): `.venv\Scripts\Activate.ps1`
 - Install / refresh deps: `.venv\Scripts\python -m pip install -e ".[dev]"`
 - Playwright browser: `.venv\Scripts\python -m playwright install chromium`
-- Start Postgres + pgvector: `docker compose up -d` (project `skillforge-data`, container `skillforge-postgres`, port 5433)
+- Start Postgres + pgvector + Redis: from the **repo root**, `cp .env.example .env` once, then `docker compose up -d`
+  (the shared `compose.yaml` from DevOps, project `skillforge`, container `skillforge-postgres`, `127.0.0.1:5433`,
+  image `pgvector/pgvector:0.8.6-pg18`). Details: `devops/compose.md`.
+- On the first start (empty volume) it creates pgvector and applies, in this order: `data/db/init/*.sql`,
+  `data/db/schema-draft.sql`, `data/db/knowledge_views.sql`, `data/db/roles-local.sql`. Tell DevOps when these names or
+  this order change. To pick up SQL changes: `docker compose down -v` then `docker compose up -d` (wipes local data).
 - Stop it: `docker compose down` (add `-v` to wipe the data volume)
-- Connection string: see `.env.example` (copy to `.env`, never commit it)
+- Connection string: `data/.env.example` (copy to `data/.env`, never commit it); the password is the root `.env`'s `POSTGRES_PASSWORD`
 - Check pgvector: `docker exec skillforge-postgres psql -U skillforge -d skillforge -c "SELECT extname FROM pg_extension"`
 - Tests: `.venv\Scripts\python -m pytest`
 - Lint: `.venv\Scripts\python -m ruff check .`

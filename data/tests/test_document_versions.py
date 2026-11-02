@@ -1,15 +1,19 @@
 """A -> B -> A: a page returns to old content and the old document row must come back.
 
-These tests load db/schema-draft.sql and then db/knowledge_views.sql into the local Postgres (docker compose, port 5433)
-inside one transaction and roll it back at the end, so nothing is left in the database.
-They are skipped when the database is not reachable or the schema is already installed.
+These tests load db/schema-draft.sql and then db/knowledge_views.sql into the local Postgres (root compose.yaml, port 5433)
+inside one transaction and roll it back at the end. They run in a throwaway database that is created
+and dropped by the tests, so the real database (where the root compose.yaml installs the schema) is never touched.
+They are skipped only when the server is not reachable.
 """
 import os
+import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import psycopg
+import psycopg.sql
 import pytest
+from psycopg.conninfo import make_conninfo
 from psycopg.types.json import Jsonb
 
 DB_DIR = Path(__file__).resolve().parents[1] / "db"
@@ -28,18 +32,30 @@ T3 = T1 + timedelta(days=2)
 CHUNK_CONFIG = '{"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "p1"}'
 
 
-@pytest.fixture
-def db():
+@pytest.fixture(scope="module")
+def scratch_db_url():
+    """A throwaway database on the same server, so the tests never touch the real 'knowledge' schema.
+
+    The root compose.yaml installs the schema in the real database on its first start, so the tests
+    cannot load it there. This database is created here and dropped when the module's tests are done.
+    """
     try:
-        conn = psycopg.connect(DATABASE_URL, autocommit=False, connect_timeout=3)
+        admin = psycopg.connect(DATABASE_URL, autocommit=True, connect_timeout=3)
     except psycopg.OperationalError as exc:
         pytest.skip(f"database not reachable: {exc}")
+    name = f"skillforge_test_{uuid.uuid4().hex[:8]}"
+    admin.execute(psycopg.sql.SQL("CREATE DATABASE {}").format(psycopg.sql.Identifier(name)))
     try:
-        exists = conn.execute(
-            "SELECT 1 FROM pg_namespace WHERE nspname = 'knowledge'"
-        ).fetchone()
-        if exists:
-            pytest.skip("schema 'knowledge' is already installed; refusing to touch it")
+        yield make_conninfo(DATABASE_URL, dbname=name)
+    finally:
+        admin.execute(psycopg.sql.SQL("DROP DATABASE {} WITH (FORCE)").format(psycopg.sql.Identifier(name)))
+        admin.close()
+
+
+@pytest.fixture
+def db(scratch_db_url):
+    conn = psycopg.connect(scratch_db_url, autocommit=False, connect_timeout=3)
+    try:
         for sql_file in SCHEMA_FILES:
             conn.execute(sql_file.read_text(encoding="utf-8"))
         yield conn
@@ -214,7 +230,13 @@ def test_a_page_rejected_for_injection_is_stored_with_its_screening_and_leaves_t
     assert view_chunk_ids(db) == ["host-aaaaaaaa-bbbbbbbb"]
 
     hostile = record(db, source_id, HASH_B, T2, title="Hostile page")
-    screening = {"flagged": True, "matches": ["ignore previous instructions"]}
+    # The shape of AI's ScreeningReport (findings, removed, invisible_chars, rejected). The database does not look inside it.
+    screening = {
+        "findings": [{"code": "ignore_instructions", "severity": "high", "position": 12}],
+        "removed": 1,
+        "invisible_chars": 0,
+        "rejected": True,
+    }
     db.execute(
         "UPDATE knowledge.documents SET quality_ok = false, quality_reasons = %s, screening = %s WHERE id = %s",
         (["injection"], Jsonb(screening), hostile),
@@ -240,3 +262,29 @@ def test_quality_reasons_are_not_a_closed_list_but_may_not_be_blank(db, source_i
     # rejected, but no reason given
     with pytest.raises(psycopg.errors.CheckViolation), db.transaction():
         db.execute("UPDATE knowledge.documents SET quality_reasons = '{}' WHERE id = %s", (a,))
+
+
+FINGERPRINT = "f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483"  # AI's default ExtractConfig
+
+
+def test_chunk_config_accepts_the_optional_fifth_key_extract_fingerprint(db, source_id):
+    a = record(db, source_id, HASH_A, T1)
+    five_keys = Jsonb(
+        {"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "p1", "extract_fingerprint": FINGERPRINT}
+    )
+    sql = (
+        "INSERT INTO knowledge.chunks (chunk_id, document_id, chunk_index, text, content_hash, chunk_config, "
+        "chunk_config_hash) VALUES ('host-aaaaaaaa-bbbbbbbb', %s, 0, 'text', %s, %s, 'cfg')"
+    )
+    db.execute(sql, (a, "c" * 64, five_keys))
+    # the four-key form still works, and anything else is still refused
+    add_chunk(db, a, "host-aaaaaaaa-cccccccc", "other text", index=1)
+    base = {"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "p1"}
+    for bad in (
+        {**base, "extract_fingerprint": "not-a-hash"},
+        {**base, "extract_fingerprint": 123},
+        {**base, "fingerprint": FINGERPRINT},  # any other name is a sixth key
+        {**base, "extract_fingerprint": FINGERPRINT, "extra": 1},
+    ):
+        with pytest.raises(psycopg.errors.CheckViolation), db.transaction():
+            db.execute(sql.replace("'host-aaaaaaaa-bbbbbbbb'", "'host-aaaaaaaa-dddddddd'"), (a, "c" * 64, Jsonb(bad)))
