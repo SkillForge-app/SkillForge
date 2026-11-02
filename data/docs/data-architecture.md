@@ -12,6 +12,8 @@ pgvector container (PostgreSQL 18, pgvector 0.8.6, the root compose.yaml image) 
 parses and its constraints and queries behave as described below. The A to B to A tests are in
 [tests/test_document_versions.py](../tests/test_document_versions.py).
 
+Object storage (raw pages, clean text, packages) is designed in [object-storage.md](object-storage.md) (DE-03, draft).
+
 **Not yet run:** the changes made after reading AI's three files (28 October: `quality_ok`, `word_count`, the length
 and URL checks, the chunk_id analysis) were written while Docker was off, so they are **not tested yet**. Everything
 marked "checked" below was checked on the earlier version of the SQL. "Matching AI's files" lists what is still to
@@ -550,7 +552,7 @@ The query vector must already be embedded with the query prefix.
 | DE-07 dedup and language | `documents.language`, `documents.minhash` (datasketch signature), `documents.duplicate_of`. Exact duplicates are found by `content_hash`; near duplicates by MinHash. `crawl_runs.pages_duplicate` gives the duplicate rate per crawl. See the DE-07 note above. |
 | DE-09 domain cache | See below. |
 | DE-04 crawler | `sources.robots_allowed`, `robots_checked_at`, and `crawl_runs.user_agent`, `config`, `pages_blocked`. |
-| DE-03 storage | `raw_object_key` and `clean_object_key` point to object storage; raw expires after 30 days (`raw_deleted_at`) and clean text is removed when a newer version of the page replaces it (`clean_deleted_at`), without losing the document row. |
+| DE-03 storage ([object-storage.md](object-storage.md)) | `raw_object_key` and `clean_object_key` point to object storage; raw expires after 30 days (`raw_deleted_at`) and clean text is removed when a newer version of the page replaces it (`clean_deleted_at`), without losing the document row. |
 | DE-11 monitoring | `crawl_runs.status` and counters make "failed or empty run" a simple query; the `domains` consistency check above; `active_config` missing is an alert. |
 
 ### DE-09 cache lookup
@@ -628,7 +630,7 @@ store sets every transaction READ ONLY; `SET LOCAL` is allowed there.
 
 | Data | Where | Keep | Then |
 |---|---|---|---|
-| Raw HTML | object storage | 30 days after `fetched_at` | Delete object, set `raw_deleted_at`; keep the document row |
+| Raw HTML | object storage | 30 days after the first upload (a re-fetch of unchanged content does not extend it; see [object-storage.md](object-storage.md)) | Daily DE-05 job: set `raw_deleted_at`, clear `raw_object_key`, then delete the object; keep the document row |
 | Clean text | object storage | Until the page is crawled again and a newer version is stored (not a fixed number of days). AI asked for it to outlive the raw HTML so they can re-chunk or re-embed without a re-crawl; this satisfies it | Delete the old version's object, set `clean_deleted_at` |
 | Chunks and embeddings of a superseded version | `chunks`, `embeddings` | Until newer clean text replaces it (agreed in review) | Delete as soon as the newer clean text is stored; see the DE-05 TODO below |
 | Superseded documents (`is_current = false`) | `documents` | 90 days (AI agreed) | Delete row (its chunks and embeddings are already gone) |
