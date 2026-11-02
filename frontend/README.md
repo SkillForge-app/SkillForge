@@ -33,5 +33,6 @@ There is no automated test script in the current package configuration. CI curre
 - [FE-11 SkillSpec review](docs/frontend/FE-11-skillspec-review.md)
 - [FE-12 package preview](docs/frontend/FE-12-package-preview.md)
 - [FE-13 install help](docs/frontend/FE-13-install-help.md)
+- [FE-14 skill library](docs/frontend/FE-14-skill-library.md)
 - [FE-02 user flows and API touchpoints](docs/frontend/FE-02-user-flows.md)
 - [FE-02 low-fidelity wireframes](docs/frontend/FE-02-wireframes.md)
