@@ -1,0 +1,90 @@
+name: Task
+description: One task from the department plans (e.g. AI-10, BE-05, OPS-01)
+title: "<TASK-ID>: "
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Put the task ID at the start of the title, e.g. `AI-10: Extraction and NLP rules`.
+        Copy "What" and "Done when" from your department plan.
+  - type: input
+    id: task-id
+    attributes:
+      label: Task ID
+      placeholder: AI-10
+    validations:
+      required: true
+  - type: dropdown
+    id: department
+    attributes:
+      label: Department
+      options:
+        - AI
+        - Backend
+        - Data Engineering
+        - DevOps
+        - Frontend
+    validations:
+      required: true
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Phase
+      options:
+        - "P0: Foundations"
+        - "P1: Walking skeleton"
+        - "P2: MVP features"
+        - "P3: Hardening and beta"
+        - "P4: Production launch"
+        - "P5: After launch"
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: What the task delivers.
+    validations:
+      required: true
+  - type: textarea
+    id: done-when
+    attributes:
+      label: Done when
+      description: The check that proves the task is finished.
+    validations:
+      required: true
+  - type: input
+    id: needs
+    attributes:
+      label: Needs
+      description: Tasks that must be ready first, or "—".
+      placeholder: "OPS-01, BE-03"
+  - type: dropdown
+    id: contract
+    attributes:
+      label: Contract change
+      description: Does this task change a shared contract? If yes, its consumers must review the PR.
+      options:
+        - "No"
+        - SkillSpec schema (AI → Backend, Frontend)
+        - OpenAPI contract (Backend → Frontend)
+        - Database schemas and migrations (Backend, Data Engineering → all)
+        - Environment variables, Docker images, local setup (DevOps → all)
+        - AI pipeline interface (AI → Backend)
+        - Knowledge retrieval (Data Engineering + AI → AI)
+        - Analytics event schema (Data Engineering → Frontend, Backend)
+    validations:
+      required: true
+  - type: checkboxes
+    id: dod
+    attributes:
+      label: Definition of Done
+      description: Tick these on the issue as the work progresses.
+      options:
+        - label: Code is in a PR linked to this issue and approved by the owning department
+        - label: Tests added or updated; CI is green
+        - label: No secrets, keys or personal data in the code or logs
+        - label: New endpoints, jobs and pipelines emit logs, metrics and traces
+        - label: Documentation updated
+        - label: Deployed to staging and checked there

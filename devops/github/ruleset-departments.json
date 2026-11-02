@@ -1,0 +1,22 @@
+{
+  "name": "protect-department-branches",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": [
+        "refs/heads/AI",
+        "refs/heads/Backend",
+        "refs/heads/Data-Engineering",
+        "refs/heads/DevOps",
+        "refs/heads/Frontend"
+      ],
+      "exclude": []
+    }
+  },
+  "bypass_actors": [],
+  "rules": [
+    { "type": "deletion" },
+    { "type": "non_fast_forward" }
+  ]
+}

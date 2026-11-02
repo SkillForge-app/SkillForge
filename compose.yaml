@@ -1,0 +1,120 @@
+# Shared local stack (OPS-03). From the repo root:
+#   cp .env.example .env     # once
+#   docker compose up -d
+# How to stop, reset and connect: devops/compose.md
+# Every image is pinned by digest to a release at least two weeks old.
+name: skillforge
+
+services:
+  postgres:
+    # The same image as .github/workflows/data.yml.
+    image: pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a
+    # Same name as data/docker-compose.yml, on purpose: the documented `docker exec skillforge-postgres`
+    # commands keep working, and the two stacks cannot run side by side by accident.
+    container_name: skillforge-postgres
+    environment:
+      POSTGRES_USER: skillforge
+      POSTGRES_DB: skillforge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?copy .env.example to .env}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      # Runs on the first start only (empty volume): pgvector, then Data Engineering's SQL.
+      - ./devops/compose/postgres-initdb:/docker-entrypoint-initdb.d:ro
+      # Data Engineering's files, read in place. If data/ is not checked out, Docker creates an
+      # empty data/db/ folder and the init script only enables pgvector.
+      - ./data/db:/skillforge/data-db:ro
+    healthcheck:
+      # Over TCP: during the first-start init the server listens only on its socket, so this
+      # passes only once the init scripts have finished.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U skillforge -d skillforge"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  redis:
+    image: redis:8.8.2-alpine@sha256:f4ded511357f7c60551133fbceb0d07874a2240bfe3d1baaa49769a70ff83465
+    # No password: local only, and the port is bound to 127.0.0.1.
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  # ---------------------------------------------------------------- placeholders
+  # Not started yet. Each one waits for answers from the department named in its TODO.
+
+  # TODO(Backend): the API.
+  # - A backend/Dockerfile (base image pinned by digest, at least two weeks old).
+  # - Start command: is it `uvicorn backend.app.main:app --host 0.0.0.0 --port 8000`?
+  # - How migrations run: a one-shot `migrate` service (`alembic upgrade head`) before api starts?
+  # - Which driver goes in DATABASE_URL (postgresql+psycopg? +psycopg2?), and every other env var.
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: backend/Dockerfile
+  #   command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
+  #   ports:
+  #     - "127.0.0.1:8000:8000"
+  #   environment:
+  #     DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
+  #     REDIS_URL: redis://redis:6379/0
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # TODO(Backend + AI): the worker that runs the AI pipeline (ai/core/pipeline/interface.py).
+  # - Which queue library (Celery, RQ, arq, ...) and its start command; same image as api?
+  # - It installs ai/ (`uv sync --locked`); LLM provider keys come only from ai/.env, never
+  #   from this file.
+  # - Retrieval from the knowledge store: the read-only role, not the owner.
+  # - A volume for the pinned embedding model files, so they are downloaded once.
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: backend/Dockerfile
+  #   command: <queue worker command>
+  #   env_file:
+  #     - ai/.env
+  #   environment:
+  #     DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
+  #     REDIS_URL: redis://redis:6379/0
+  #     SKILLFORGE_VECTOR_STORE: pgvector
+  #     SKILLFORGE_PGVECTOR_DSN: postgresql://skillforge_ai_reader:<password>@postgres:5432/skillforge
+  #     SKILLFORGE_PGVECTOR_TABLE: knowledge.knowledge_chunks
+  #     SKILLFORGE_MODEL_CACHE: /models
+  #   volumes:
+  #     - models:/models
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+
+  # TODO(Frontend): the web app (Next.js, frontend/apps/web).
+  # - A frontend/Dockerfile (`npm ci`, `npm run build`, `npm run start`), Node version pinned.
+  # - The port (3000?) and every env var.
+  # - NEXT_PUBLIC_API_BASE_URL is read by the browser and baked in at build time, so it is the host
+  #   URL (http://localhost:8000), not the service name.
+  # web:
+  #   build:
+  #     context: frontend
+  #     args:
+  #       NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
+  #   ports:
+  #     - "127.0.0.1:3000:3000"
+  #   depends_on:
+  #     - api
+
+volumes:
+  pgdata:
+  redisdata:
+  # models:   # for the worker, once it exists

@@ -1,0 +1,74 @@
+# CodeQL static analysis (OPS-11). Results go to Security -> Code scanning.
+# Not a required check: ci-ok (ci.yml) stays the only one. Scans only the languages present,
+# because CodeQL fails a language that has no code.
+name: CodeQL
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: "17 4 * * 1" # Mondays 04:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codeql-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  languages:
+    name: languages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.find.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Find the languages in this commit
+        id: find
+        run: |
+          langs=()
+          if git ls-files -- '.github/workflows/*.yml' '.github/workflows/*.yaml' | grep -q .; then
+            langs+=(actions)
+          fi
+          if git ls-files -- '*.py' | grep -q .; then
+            langs+=(python)
+          fi
+          if git ls-files -- '*.js' '*.jsx' '*.mjs' '*.cjs' '*.ts' '*.tsx' | grep -q .; then
+            langs+=(javascript-typescript)
+          fi
+          matrix="$(printf '%s\n' "${langs[@]}" | jq -R . | jq -cs .)"
+          echo "languages: $matrix"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  analyze:
+    name: analyze (${{ matrix.language }})
+    needs: languages
+    if: needs.languages.outputs.matrix != '[]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ${{ fromJSON(needs.languages.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+      - uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v4.39.0
+        with:
+          category: /language:${{ matrix.language }}
