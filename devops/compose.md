@@ -79,9 +79,11 @@ docker compose exec redis redis-cli
 ```
 
 ## Troubleshooting
-- **`container name "/skillforge-postgres" is already in use`** or **port 5433 is already allocated:** the old
-  Data Engineering stack is running. Stop it with `docker compose -f data/docker-compose.yml down`, then run
-  `docker compose up -d` again. Only one of the two can run at a time, on purpose.
+- **`container name "/skillforge-postgres" is already in use`:** another container has that name. Find it with
+  `docker ps -a --filter name=skillforge-postgres`, remove it with `docker rm -f skillforge-postgres` (this
+  deletes the container, not the `skillforge_pgdata` volume), then run `docker compose up -d` again.
+- **Port 5433, 6379 or 3000 is already allocated:** something else on your machine uses it, e.g. a local
+  PostgreSQL. Stop it, or pick another port in `.env` (`POSTGRES_PORT`, `REDIS_PORT`, `WEB_PORT`).
 - **postgres keeps restarting or never becomes healthy:** read `docker compose logs postgres`. A `skillforge:`
   line shows which `data/db/` file failed. Fix it (or ask Data Engineering), then reset the data.
 - **`POSTGRES_PASSWORD` required:** you have no `.env`. Run `cp .env.example .env`.
@@ -128,22 +130,17 @@ the image, starts it, and checks three things:
 - it doesn't run as root;
 - the API URL is in the browser code.
 
-## For Data Engineering: one local database, not two
-`data/docker-compose.yml` and this stack would give two different local databases. This stack is built as
-a drop-in replacement:
-- **The same as yours:** user, database and password, host port 5433, and container name
-  `skillforge-postgres`. Your `DATABASE_URL` and the `docker exec skillforge-postgres ...` commands in
-  `data/CLAUDE.md` keep working.
-- **Different:**
-  - the image is pinned by digest (0.8.6), not the moving `pg18` tag;
-  - `schema-draft.sql`, `knowledge_views.sql` and `roles-local.sql` are applied on the first start, so you
-    don't apply them by hand;
-  - it uses its own volume, so old local data isn't carried over. It's rebuilt from your SQL.
-
-What we suggest (your PR, your decision):
-1. Remove `data/docker-compose.yml` (or reduce it to a pointer to this page). Remove `data/db/init/` too: the
-   init script enables pgvector itself.
-2. In `data/CLAUDE.md`, replace the compose commands with `docker compose up -d` from the repo root.
-3. Tell DevOps when the names or the order of the `data/db/` files change: the init script lists them.
-4. Once you have migrations, give us one entry point (e.g. `data/db/local-init.sql`), and the script will run
-   that instead of the list.
+## For Data Engineering
+This stack is the one local database for every department. Your `DATABASE_URL` (`data/.env.example`) points
+at it.
+- **First start:**
+  - Your `data/db/` SQL is applied in place: `init/*.sql`, `schema-draft.sql`, `knowledge_views.sql`,
+    `roles-local.sql`.
+  - You don't apply anything by hand.
+- **After changing that SQL:** reset the data (`docker compose down -v`, then `up -d`), because the init runs
+  only on an empty volume.
+- **Test a SQL change before it merges:** run the `compose` workflow with `data-ref` set to your branch (see
+  Images).
+- **Tell DevOps when the names or the order of the `data/db/` files change:** the init script lists them.
+- **Once you have migrations:** give us one entry point (e.g. `data/db/local-init.sql`), and the script will
+  run that instead of the list.
