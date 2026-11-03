@@ -169,6 +169,8 @@ CREATE TABLE knowledge.chunks (
     chunk_id          text        NOT NULL CHECK (btrim(chunk_id) <> ''),
                                   -- AI-10 chunk.chunk_id from extract_page():
                                   --   <host>-<sha256(url)[:8]>-<sha256(text)[:8]>
+                                  -- where url is the link AFTER normalise_url() (AI's canonical URL),
+                                  -- not the spelling the crawler found.
                                   -- Same text on the same page gives the same id on every crawl.
                                   -- Citations use this, never `id`. The pipeline keeps only the first
                                   -- of two chunks with the same chunk_id on a page (see docs).

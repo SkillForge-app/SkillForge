@@ -22,9 +22,11 @@ run in the container.
 Inputs from AI (Ziad Abdullah):
 
 - [ai-de-embeddings-handoff.pdf](ai-de-embeddings-handoff.pdf), 26 October 2026: the embeddings contract.
-- [ai/SkillForge_AI_to_DE_Knowledge_Store_v2.pdf](ai/SkillForge_AI_to_DE_Knowledge_Store_v2.pdf), 26 October 2026:
-  answers to our questions and the review of PR #6. It replaces the first handoff where they differ. This version
-  applies it: stored `chunk_id`, non-empty `title`, `domains` on `embeddings` with a simple view, the pinned
+- AI's answers to our questions and the review of PR #6 (26 October 2026) replaced the first handoff where they
+  differ. Their PDF was outdated and was removed; the current versions are AI's
+  [extraction.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/extraction.md) and
+  [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/retrieval.md). This version applies
+  them: stored `chunk_id`, non-empty `title`, `domains` on `embeddings` with a simple view, the pinned
   `embedding_version`.
 
 Three more files came with it. AI's view DDL is in their [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/retrieval.md) (the view contract) and [extraction.md](https://github.com/SkillForge-app/SkillForge/blob/AI/ai/docs/ai/extraction.md) (how a page becomes
@@ -438,7 +440,8 @@ optional fifth key, `extract_fingerprint`, enforced by a CHECK. `extract_fingerp
 characters, the sha256 of every extraction setting except the per-site `site_boilerplate`, so every host gives the
 same value and the single `active_config` row keeps working. **TODO:** the key is optional until AI finishes and
 pins the function (the default config gives `f33bf1b5...5483`); then it becomes required, and the pipeline (DE-05)
-fills it from `ExtractConfig.fingerprint()`. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
+fills it from `ExtractConfig.fingerprint()`. **TODO (DE-05): make `extract_fingerprint` mandatory in the CHECK (a schema
+change) as soon as the pipeline starts writing it;** until then rows without it are accepted. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
 version, or any new chunk setting, is a new config and a new chunk set. Rows of the old and new config can exist
 side by side while a rebuild runs, so the same text would appear twice.
 
