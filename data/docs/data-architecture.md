@@ -629,13 +629,13 @@ COMMIT;
 order matters, or use `strict_order`. `hnsw.max_scan_tuples` (default 20,000) caps how far the scan continues. AI's
 store sets every transaction READ ONLY; `SET LOCAL` is allowed there.
 
-## Retention (raw 30 days and the clean-text rule are agreed with AI; the rest is PROPOSED and needs BE and DevOps)
+## Retention (raw 30 days and the clean-text rule are agreed with AI; deleting old chunks is agreed with Backend, on a condition; the rest is PROPOSED and needs BE and DevOps)
 
 | Data | Where | Keep | Then |
 |---|---|---|---|
 | Raw HTML | object storage | 30 days after the first upload (a re-fetch of unchanged content does not extend it; see [object-storage.md](object-storage.md)) | Daily DE-05 job: set `raw_deleted_at`, clear `raw_object_key`, then delete the object; keep the document row |
 | Clean text | object storage | Until the page is crawled again and a newer version is stored (not a fixed number of days). AI asked for it to outlive the raw HTML so they can re-chunk or re-embed without a re-crawl; this satisfies it | Delete the old version's object, set `clean_deleted_at` |
-| Chunks and embeddings of a superseded version | `chunks`, `embeddings` | Until newer clean text replaces it (agreed in review) | Delete as soon as the newer clean text is stored; see the DE-05 TODO below |
+| Chunks and embeddings of a superseded version | `chunks`, `embeddings` | Until newer clean text replaces it (agreed in review). **Backend's condition:** never before the new version has been processed and stored successfully, in the same transaction | Delete as soon as the new version's chunks and embeddings are stored; see the DE-05 TODO below |
 | Superseded documents (`is_current = false`) | `documents` | 90 days (AI agreed) | Delete row (its chunks and embeddings are already gone) |
 | Chunks and embeddings of a current document, active config | `chunks`, `embeddings` | While the document exists | Cascade with the document |
 | Chunks of an inactive chunk config, embeddings of an inactive version | `chunks`, `embeddings` | 30 days after `active_config` switched away from them | Delete |
@@ -668,6 +668,15 @@ old document:
   delete; otherwise A would stay `embedded` with no chunks and never be reprocessed. DE-05 needs a test for this.
 - The retention table above already says this: chunks and embeddings of a superseded version are deleted when the newer
   clean text is stored (agreed in review), not after 90 days. Only the `documents` row stays for 90 days.
+- **Condition from Backend (5 November 2026): old chunks and embeddings are never deleted before the new version has been
+  processed and stored successfully, and the delete happens in the same transaction as that store.** So one transaction
+  does all of it: insert the new version's chunks and embeddings, set `clean_deleted_at` on the old document, and delete
+  the old chunks. If cleaning, chunking or embedding fails, nothing is deleted and the old chunks stay. DE-05 needs a test for
+  the failure case: the old chunks and embeddings are still there after a failed run.
+- **Open point for DE-05.** `record_document_version()` makes the new document current (and hides the old one's chunks from
+  the views) as soon as the page is fetched, which is before it is processed. If processing then fails, the page has no
+  chunks in the views, even though the old chunks still exist. To keep the old content visible until the new one is ready,
+  the pipeline would have to call the function in the same final transaction instead. Decide this when DE-05 is designed.
 
 ## Open questions
 

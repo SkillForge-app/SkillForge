@@ -83,7 +83,7 @@ row gets the new key and `raw_deleted_at` is cleared.
 | Clean text | Until a newer clean text replaces it | DE-05, in the transaction that deletes the old chunks and sets `clean_deleted_at` |
 | Old chunks and embeddings | Deleted when newer clean text replaces it | DE-05 (`ON DELETE CASCADE` from chunks to embeddings) |
 | Old `documents` rows | 90 days | DE-05 retention job |
-| Packages | Every published version kept | Open question for Backend |
+| Packages | The last 5 successful versions of a skill are kept. The version currently in use is never deleted (agreed with Backend) | DevOps (the bucket's retention and deletion). Backend never deletes |
 | Orphans | 24 hours | Daily sweep |
 
 Clean text is deleted by the pipeline, not by a bucket rule, because it depends on database
@@ -97,10 +97,13 @@ state. A bucket rule would delete clean text that is still current.
 | Role | raw | clean | packages |
 | --- | --- | --- | --- |
 | DE pipeline | read and write | read and write | none |
-| Backend | none | none | read and write |
+| Backend | none | none | upload and presigned URLs only (see below) |
 | AI | none | none | none |
 
 - Users download packages through short-lived presigned URLs (for example 15 minutes) issued by Backend.
+- **Who runs the `packages` bucket (Backend review, 5 November 2026).** DevOps manages it: access permissions, retention and
+  deletion. Backend is responsible only for the integration: uploading a package and issuing presigned URLs. Data
+  Engineering does not read or write this bucket.
 - Encryption at rest (server-side) and TLS in transit.
 - Credentials come from environment variables, never from the repo.
 - Raw pages are untrusted data. They are stored and parsed, never executed or rendered.
@@ -127,7 +130,11 @@ Environment variables the pipeline reads:
 
 ## 7. Open questions
 
-- Backend: do you own the `packages` bucket, and how many package versions do we keep?
+- ~~Backend: do you own the `packages` bucket, and how many package versions do we keep?~~ **Answered by Backend, 5 November 2026:**
+  DevOps manages the bucket (permissions, retention, deletion); Backend does the integration (upload, presigned URLs). Keep the
+  last 5 successful versions, and never delete the version currently in use.
+- DevOps: confirm you take the `packages` bucket, and what "successful" and "currently in use" mean for the retention job
+  (it needs to know which version is in use, which is Backend's data).
 - DevOps: approve MinIO in `compose.yaml`, and which provider is used for staging (OPS-06)?
 - DevOps: the 20 MB size limit and the 15-minute presigned URL time are proposals.
 - DevOps: the 35-day safety-net rule on the raw bucket, and that `LastModified` of an object is kept when the upload is skipped.
