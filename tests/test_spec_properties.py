@@ -3,7 +3,7 @@ import json
 
 from hypothesis import given, settings, strategies as st
 
-from core.spec.models import AgentDefinition
+from backend.app.spec.models import AgentDefinition
 
 
 safe_text = st.text(min_size=1, max_size=40)

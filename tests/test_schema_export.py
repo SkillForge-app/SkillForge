@@ -2,12 +2,11 @@
 import json
 from pathlib import Path
 
-from core.spec.models import AgentDefinition
-
-
+from backend.app.spec.models import AgentDefinition
 SCHEMA_PATH = (
     Path(__file__).resolve().parents[1]
-    / "core"
+    / "backend"
+    / "app"
     / "spec"
     / "schema.json"
 )

@@ -1,7 +1,7 @@
 
 from dataclasses import dataclass
 
-from core.spec.models import AgentDefinition
+from backend.app.spec.models import AgentDefinition
 
 
 @dataclass(frozen=True)

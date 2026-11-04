@@ -1,12 +1,12 @@
 
-from core.spec.models import (
+from backend.app.spec.models import (
     AgentDefinition,
     AgentSpec,
     ConstraintsSpec,
     ProjectSpec,
     ToolSpec,
 )
-from core.spec.validator import validate_agent_definition
+from backend.app.spec.validator import validate_agent_definition
 
 
 def make_definition(
@@ -87,7 +87,7 @@ def test_plain_text_constraints_are_allowed():
 import pytest
 from pydantic import ValidationError
 
-from core.spec.models import AutonomySpec
+from backend.app.spec.models import AutonomySpec
 
 
 @pytest.mark.parametrize(

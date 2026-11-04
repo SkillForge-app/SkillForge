@@ -8,8 +8,8 @@ from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from backend.app.compiler.base_compiler import BaseCompiler
 from backend.app.compiler.platform_schema import CLAUDE_CODE_SCHEMA
-from core.spec.models import AgentDefinition
-from core.spec.validator import validate_agent_definition
+from backend.app.spec.models import AgentDefinition
+from backend.app.spec.validator import validate_agent_definition
 
 
 def build_permissions(

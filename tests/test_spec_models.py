@@ -2,7 +2,7 @@
 import pytest
 from pydantic import ValidationError
 
-from core.spec.models import (
+from backend.app.spec.models import (
     AgentDefinition,
     AgentSpec,
     ProjectSpec,
