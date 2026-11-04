@@ -1,0 +1,20 @@
+# What of backend/ is NOT sent to the API image build (api.Dockerfile). BuildKit uses this file
+# instead of any .dockerignore in backend/, so DevOps owns it.
+
+# Environments and caches: dependencies are installed inside the image
+**/.venv
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+
+# Local env files: never baked into an image (settings come from compose / the environment)
+**/.env*
+
+# Tests are not part of the runtime image
+**/tests
+
+# OS files
+**/.DS_Store
+**/Thumbs.db

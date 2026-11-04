@@ -46,42 +46,69 @@ services:
       timeout: 5s
       retries: 12
 
-  # ---------------------------------------------------------------- placeholders
-  # Not started yet. Each one waits for answers from the department named in its TODO.
-  # The web app is a real service below.
+  # ---------------------------------------------------------------- api
+  # The API (FastAPI, backend/) and its one-shot migration. Only with the `api` profile:
+  #   docker compose --profile api up -d --build
+  # `migrate` builds the image and runs `alembic upgrade head`; `api` starts only after it exited 0.
+  migrate:
+    profiles: [api]
+    build:
+      context: ./backend
+      dockerfile: ../devops/docker/api.Dockerfile
+    image: skillforge-api:local
+    command: ["alembic", "-c", "backend/alembic.ini", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
 
-  # TODO(Backend): the API.
-  # - A backend/Dockerfile (base image pinned by digest, at least two weeks old).
-  # - Start command: is it `uvicorn backend.app.main:app --host 0.0.0.0 --port 8000`?
-  # - How migrations run: a one-shot `migrate` service (`alembic upgrade head`) before api starts?
-  # - Which driver goes in DATABASE_URL (postgresql+psycopg? +psycopg2?), and every other env var.
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: backend/Dockerfile
-  #   command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
-  #   ports:
-  #     - "127.0.0.1:8000:8000"
-  #   environment:
-  #     DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
-  #     REDIS_URL: redis://redis:6379/0
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  api:
+    profiles: [api]
+    image: skillforge-api:local  # built by `migrate`
+    pull_policy: never
+    environment:
+      DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    healthcheck:
+      # The slim image has no curl; Python's urllib does the same.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=4).status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  # TODO(Backend + AI): the worker that runs the AI pipeline (ai/core/pipeline/interface.py).
-  # - Which queue library (Celery, RQ, arq, ...) and its start command; same image as api?
-  # - It installs ai/ (`uv sync --locked`); LLM provider keys come only from ai/.env, never
-  #   from this file.
-  # - Retrieval from the knowledge store: the read-only role, not the owner.
-  # - A volume for the pinned embedding model files, so they are downloaded once.
+  # ---------------------------------------------------------------- worker (placeholder)
+  # TODO(queue decision): the worker that runs the AI pipeline (ai/core/pipeline/interface.py).
+  # Waits for the queue library choice (recommended: RQ 2.12, see the OPS-03 PR) and for Backend to
+  # move its root core/ package under backend/: ai/ also installs a top-level `core`, and the
+  # worker imports both.
+  # - Image: Backend's and AI's code together, e.g. devops/docker/worker.Dockerfile with
+  #   context ./backend and `additional_contexts: {ai: ./ai}`.
+  # - LLM provider keys only from ai/.env, never from this file.
+  # - AI's rate limits are per process: total provider rate = worker processes x the limits.
   # worker:
+  #   profiles: [api]
   #   build:
-  #     context: .
-  #     dockerfile: backend/Dockerfile
-  #   command: <queue worker command>
+  #     context: ./backend
+  #     dockerfile: ../devops/docker/worker.Dockerfile
+  #     additional_contexts:
+  #       ai: ./ai
+  #   command: ["rq", "worker", "--with-scheduler", "--url", "redis://redis:6379/0", "skills"]
   #   env_file:
   #     - ai/.env
   #   environment:
@@ -94,8 +121,8 @@ services:
   #   volumes:
   #     - models:/models
   #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
+  #     migrate:
+  #       condition: service_completed_successfully
   #     redis:
   #       condition: service_healthy
 
@@ -128,7 +155,7 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
-    # TODO(Backend): add `depends_on: api` once the api service exists.
+    # No depends_on: api, so `--profile web` works alone. Both: --profile api --profile web.
 
 volumes:
   pgdata:

@@ -8,9 +8,10 @@ One command starts the shared services every department develops against. It's d
 | `postgres` | PostgreSQL 18 + pgvector 0.8.6 | `127.0.0.1:5433` | `postgres:5432` |
 | `redis` | Redis 8.8 | `127.0.0.1:6379` | `redis:6379` |
 | `web` (only with `--profile web`) | The Next.js app from `frontend/` | `http://127.0.0.1:3000` | `web:3000` |
+| `api` (only with `--profile api`) | The FastAPI app from `backend/`, after `migrate` | `http://127.0.0.1:8000` | `api:8000` |
 
-`api` and `worker` are commented-out placeholders in `compose.yaml`. Each one has a TODO saying what Backend
-still needs to decide. `web` is described in [Web app](#web-app).
+`web` is described in [Web app](#web-app), and `api` and `migrate` in [API](#api). `worker` is still a
+commented-out placeholder in `compose.yaml`, waiting for the queue library decision.
 
 The ports listen on `127.0.0.1` only, so nothing is reachable from your network. All values in `.env.example`
 are for local development only; staging and production get theirs from the secret store.
@@ -113,18 +114,51 @@ docker compose --profile web down             # stop it
     to it;
   - local `.env*` files are never copied in (`devops/docker/web.Dockerfile.dockerignore`).
 
+## API
+The `api` service runs Backend's FastAPI app (`backend/`), built with `devops/docker/api.Dockerfile`. It's in
+the `api` profile, so a plain `docker compose up` doesn't build it.
+
+```
+docker compose --profile api up -d --build                  # migrate, then the API (plus postgres and redis)
+docker compose --profile api --profile web up -d --build    # the API and the web app together
+docker compose --profile api logs migrate api
+```
+
+- **Migrations:** `migrate` is a one-shot service. It runs `alembic -c backend/alembic.ini upgrade head` and
+  exits. `api` starts only after it exits with 0, and it runs again on every `up`, so the database is always
+  at the latest migration. A failed migration leaves `api` stopped: read `docker compose --profile api logs
+  migrate`.
+- **Open** `http://127.0.0.1:8000/docs` (change the port with `API_PORT` in `.env`).
+- **Rebuild after a backend change** (`--build`): the image holds the code, not a live mount.
+- **Settings in the containers:**
+  - `DATABASE_URL=postgresql+psycopg://skillforge:<POSTGRES_PASSWORD>@postgres:5432/skillforge` (SQLAlchemy
+    with psycopg 3);
+  - `REDIS_URL=redis://redis:6379/0`.
+  - Backend's tables live in `public`, next to Data Engineering's `knowledge` schema.
+- **What the image needs from `backend/`:**
+  - `pyproject.toml` + `uv.lock` (installed with uv, Python 3.11);
+  - `alembic.ini` (inside `backend/`);
+  - `app/main.py`.
+  - The code is copied to `/app/backend` and imported as `backend.app…`. It runs as the non-root user `app`
+    (uid 10001), and local `.env*` files and `tests/` are never copied in.
+- **The worker:** not started yet. It waits for the queue library decision, and for Backend's root `core/`
+  package to move under `backend/` (AI's `ai/` also installs a top-level `core`).
+
 ## Images
-The postgres and redis images and the web image's Node base are pinned by digest (the multi-arch index,
+The postgres and redis images, the web image's Node base and the api image's Python base are pinned by digest (the multi-arch index,
 amd64 + arm64), each to a release at least two weeks old. To update one:
 1. Pick a tag at least 14 days old.
 2. Take its digest from Docker Hub (`docker buildx imagetools inspect <image>:<tag>`).
 3. Change `compose.yaml`; for pgvector, change `.github/workflows/data.yml` too. For Node, change
-   `NODE_IMAGE` in `devops/docker/web.Dockerfile`, in step with `frontend/.nvmrc`.
+   `NODE_IMAGE` in `devops/docker/web.Dockerfile`, in step with `frontend/.nvmrc`. For Python, change
+   `PYTHON_IMAGE` in `devops/docker/api.Dockerfile` (uv's version and sha256s are there too).
 4. Open a PR. The `compose` workflow (`.github/workflows/compose.yml`) starts the stack and checks it. It isn't
    a required check.
 
-To test another branch's `data/db/` or `frontend/` (e.g. before Data Engineering or Frontend merges):
-Actions → compose → Run workflow, with `data-ref` or `frontend-ref` set to the branch. The `web` job builds
+To test another branch's `data/db/`, `frontend/` or `backend/` (e.g. before Data Engineering, Frontend or
+Backend merges): Actions → compose → Run workflow, with `data-ref`, `frontend-ref` or `backend-ref` set to
+the branch. The `api` job builds the image, runs the migration, and checks that `alembic_version` is set,
+`/openapi.json` answers and it doesn't run as root. The `web` job builds
 the image, starts it, and checks three things:
 - the app answers;
 - it doesn't run as root;
