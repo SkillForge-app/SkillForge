@@ -34,13 +34,13 @@ none is a required check. `frontend.yml` runs Frontend's `npm ci`, checks and bu
 
 See [security.md](security.md). In short: `.github/workflows/codeql.yml` (CodeQL) and `trivy.yml` (Trivy) report to
 the Security tab and are **not** required checks; `.github/dependabot.yml` opens grouped weekly update PRs for
-GitHub Actions and `ai/`; Dependabot alerts, security updates, secret scanning and push protection are on.
+GitHub Actions, `ai/`, `backend/` and `data/`; Dependabot alerts, security updates, secret scanning and push protection are on.
 
 ## CI (OPS-02)
 
 `.github/workflows/ci.yml` runs on every PR into `main` or a department branch, and every push to `main`
-(`ci-ok` is required only on `main`). `data.yml` tests against a throwaway pgvector database and fails
-if any test is skipped:
+(`ci-ok` is required only on `main`). `data.yml` and `backend.yml` test against a throwaway pgvector database
+(`backend.yml` runs Backend's Alembic migrations first) and fail if any test is skipped:
 
 | Job | What it does |
 |---|---|

@@ -45,5 +45,6 @@ The DevOps lead (`zaid2658a-debug`) watches the Security tab and triages:
 - **`ai/` updates and `exclude-newer`:** `ai/pyproject.toml` only allows releases older than its `[tool.uv]
   exclude-newer` date. A Dependabot update (or security fix) newer than that date cannot be locked, so its PR fails
   until AI moves the date on purpose. AI owns that file.
-- **backend/, frontend/, data/:** Dependabot entries are written but commented out in `.github/dependabot.yml`
-  until each folder is on `main` and its package manager is known.
+- **backend/, data/, frontend/:** `backend/` uses `uv` (`backend/uv.lock`). `data/` uses `pip` on
+  `data/pyproject.toml`, because it has no lock file yet; it switches to `uv` once it has a `uv.lock`.
+  The `frontend/` entry stays commented out until `frontend/` is on `main`.
