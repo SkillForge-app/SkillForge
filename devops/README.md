@@ -20,13 +20,15 @@ places (listed below).
 | `compose.md` | The local stack (OPS-03): start, stop, reset the data, connect |
 | `compose/postgres-initdb/` | First-start init for the local postgres: pgvector, then Data Engineering's `data/db/` SQL |
 | `docker/web.Dockerfile` (+ `.dockerignore`) | The web app image, built from `frontend/` (Frontend's code). DevOps-owned |
+| `docker/api.Dockerfile` (+ `.dockerignore`) | The API image (also used by `migrate`), built from `backend/` (Backend's code). DevOps-owned |
 
 ## Local stack (OPS-03)
 
 See [compose.md](compose.md). In short: `cp .env.example .env`, then `docker compose up -d` from the repo root
 starts postgres + pgvector (`127.0.0.1:5433`) and redis (`127.0.0.1:6379`); add `--profile web --build` for the
-web app (`127.0.0.1:3000`). `.github/workflows/compose.yml` checks the stack (`stack`) and the web image (`web`);
-neither is a required check. `frontend.yml` runs Frontend's `npm ci`, checks and build.
+web app (`127.0.0.1:3000`), or `--profile api --build` for the API (`127.0.0.1:8000`, after `migrate`).
+`.github/workflows/compose.yml` checks the stack (`stack`), the web image (`web`) and the API image (`api`);
+none is a required check. `frontend.yml` runs Frontend's `npm ci`, checks and build.
 
 ## Security (OPS-11)
 
