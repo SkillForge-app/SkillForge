@@ -1,40 +1,134 @@
-# Backend CI (OPS-02), called by ci.yml when backend/ changed.
-# Skeleton: devops/ci/run-project.sh finds the project type and runs install, lint and tests if they
-# exist. Backend replaces or extends these steps when it needs more.
+# Backend CI (OPS-02, OPS-03), called by ci.yml when backend/ changed.
+# Locked, hash-checked install from backend/uv.lock; Alembic migrations against a throwaway
+# PostgreSQL + pgvector database; then the tests. The job fails if any test is skipped, so the
+# PostgreSQL tests really run. With no backend/ (as on main before Backend merges) it does nothing.
+# Run it by hand with `backend-ref` to test another branch's backend/, e.g. Backend.
 name: backend
 
 on:
   workflow_call:
+    inputs:
+      backend-ref:
+        description: "Branch whose backend/ to use (empty: the checked-out one)"
+        type: string
+        required: false
+        default: ""
+  workflow_dispatch:
+    inputs:
+      backend-ref:
+        description: "Branch whose backend/ to use (empty: the checked-out one)"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
 jobs:
-  build:
-    name: build
+  test:
+    name: test
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
+    services:
+      postgres:
+        # The same image as compose.yaml and data.yml.
+        image: pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a
+        # Throwaway CI-only credentials: this database lives only inside this job, is reachable
+        # only from the runner, and holds no data. Never reuse them anywhere else.
+        # The name matters: Backend's database tests run only against a database called
+        # skillforge_test.
+        env:
+          POSTGRES_USER: skillforge
+          POSTGRES_PASSWORD: skillforge_dev
+          POSTGRES_DB: skillforge_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U skillforge -d skillforge_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
     env:
       UV_PYTHON: "3.11"
+      # Same throwaway CI-only credentials as the service above (SQLAlchemy + psycopg 3).
+      DATABASE_URL: postgresql+psycopg://skillforge:skillforge_dev@localhost:5432/skillforge_test
+      # Backend's code imports backend.app..., so the repo root is the import root.
+      PYTHONPATH: ${{ github.workspace }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Use backend/ from another branch
+        if: inputs.backend-ref != ''
+        env:
+          BACKEND_REF: ${{ inputs.backend-ref }}
+        run: |
+          git fetch --depth=1 origin "refs/heads/${BACKEND_REF}"
+          git checkout FETCH_HEAD -- backend
+          # Backend's spec tests are still at the root on their branch; take them too if present.
+          if git cat-file -e FETCH_HEAD:tests 2>/dev/null; then
+            git checkout FETCH_HEAD -- tests
+          fi
+      - name: Check backend/ is here, with its lock file
+        id: project
+        run: |
+          if [ ! -f backend/pyproject.toml ]; then
+            echo "::notice::no backend/pyproject.toml here; nothing to check"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ ! -f backend/uv.lock ]; then
+            echo "::error::backend/uv.lock is missing (uv sync --locked needs it)"
+            exit 1
+          fi
+          paths="backend/tests"
+          if [ -d tests ] && grep -rqs "backend\.app" tests; then
+            echo "::warning::Backend tests found at the repo root (tests/). They run here, but please move them into backend/tests: CI only notices changes under backend/."
+            paths="${paths} tests"
+          fi
+          echo "present=true" >> "$GITHUB_OUTPUT"
+          echo "paths=${paths}" >> "$GITHUB_OUTPUT"
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
-        if: hashFiles('backend/pyproject.toml') != ''
+        if: steps.project.outputs.present == 'true'
         with:
           version: "0.13.0"
           enable-cache: true
-          cache-dependency-glob: |
-            backend/pyproject.toml
-            backend/uv.lock
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        if: hashFiles('backend/package.json') != '' && hashFiles('backend/.nvmrc') != ''
-        with:
-          node-version-file: backend/.nvmrc
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        if: hashFiles('backend/package.json') != '' && hashFiles('backend/.nvmrc') == ''
-        with:
-          node-version: "24"
-      - name: Install, lint and test
-        run: bash devops/ci/run-project.sh backend
+          cache-dependency-glob: backend/uv.lock
+          cache-python: true
+      - name: Install from uv.lock (hash-checked)
+        if: steps.project.outputs.present == 'true'
+        run: uv sync --locked --project backend
+      - name: Migrate the test database
+        if: steps.project.outputs.present == 'true'
+        run: uv run --no-sync --project backend alembic -c backend/alembic.ini upgrade head
+      - name: pytest
+        if: steps.project.outputs.present == 'true'
+        env:
+          TEST_PATHS: ${{ steps.project.outputs.paths }}
+          JUNIT: ${{ runner.temp }}/backend-junit.xml
+        run: |
+          # TEST_PATHS is a space-separated list of folders, split on purpose.
+          # shellcheck disable=SC2086
+          uv run --no-sync --project backend python -m pytest -v -rs --junitxml="${JUNIT}" ${TEST_PATHS}
+      - name: Fail if any test was skipped
+        if: steps.project.outputs.present == 'true'
+        env:
+          JUNIT: ${{ runner.temp }}/backend-junit.xml
+        # A skipped test here usually means the database was not reachable: that must not pass.
+        run: |
+          python3 - "$JUNIT" <<'EOF'
+          import sys
+          import xml.etree.ElementTree as ET
+
+          root = ET.parse(sys.argv[1]).getroot()
+          skipped = [
+              f"{case.get('classname')}::{case.get('name')}: {skip.get('message', '')}"
+              for case in root.iter("testcase")
+              for skip in case.findall("skipped")
+          ]
+          total = sum(1 for _ in root.iter("testcase"))
+          print(f"{total} test(s), {len(skipped)} skipped")
+          for line in skipped:
+              print(f"::error::skipped: {line}")
+          sys.exit(1 if skipped else 0)
+          EOF

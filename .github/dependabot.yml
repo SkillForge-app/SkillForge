@@ -49,16 +49,53 @@ updates:
       prefix: chore
       include: scope
 
-  # Enable these once the folder is on main and its package manager is known.
-  # - package-ecosystem: uv          # or pip
-  #   directory: /backend
-  #   schedule: {interval: weekly, day: monday, time: "06:00", timezone: Africa/Cairo}
-  #   cooldown: {default-days: 14}
-  #   open-pull-requests-limit: 3
-  #   groups: {backend: {patterns: ["*"], update-types: [minor, patch]}}
-  #   labels: [dependencies, backend]
-  #   commit-message: {prefix: chore, include: scope}
-  #
+  # backend/ (uv, backend/uv.lock).
+  - package-ecosystem: uv
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Cairo
+    cooldown:
+      default-days: 14
+    open-pull-requests-limit: 3
+    groups:
+      python:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      python-major:
+        patterns: ["*"]
+        update-types: [major]
+    labels: [dependencies, backend]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # data/ (pip: data/pyproject.toml, no lock file yet). Switch to `uv` once data/ has a uv.lock.
+  - package-ecosystem: pip
+    directory: /data
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Africa/Cairo
+    cooldown:
+      default-days: 14
+    open-pull-requests-limit: 3
+    groups:
+      python:
+        patterns: ["*"]
+        update-types: [minor, patch]
+      python-major:
+        patterns: ["*"]
+        update-types: [major]
+    labels: [dependencies, data-engineering]
+    commit-message:
+      prefix: chore
+      include: scope
+
+  # Enable this once frontend/ is on main.
   # - package-ecosystem: npm
   #   directory: /frontend
   #   schedule: {interval: weekly, day: monday, time: "06:00", timezone: Africa/Cairo}
@@ -66,13 +103,4 @@ updates:
   #   open-pull-requests-limit: 3
   #   groups: {frontend: {patterns: ["*"], update-types: [minor, patch]}}
   #   labels: [dependencies, frontend]
-  #   commit-message: {prefix: chore, include: scope}
-  #
-  # - package-ecosystem: uv          # or pip
-  #   directory: /data
-  #   schedule: {interval: weekly, day: monday, time: "06:00", timezone: Africa/Cairo}
-  #   cooldown: {default-days: 14}
-  #   open-pull-requests-limit: 3
-  #   groups: {data: {patterns: ["*"], update-types: [minor, patch]}}
-  #   labels: [dependencies, data-engineering]
   #   commit-message: {prefix: chore, include: scope}
