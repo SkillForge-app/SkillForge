@@ -1,6 +1,9 @@
 # Local stack check (OPS-03): compose.yaml is valid, every image is pinned by digest, and
 # postgres + redis become healthy with the first-start init applied. Not a required check.
-# Run it by hand with `data-ref` to test another branch's data/db/ SQL, e.g. Data-Engineering.
+# The `web` job builds the web image from frontend/ and checks the app answers; the `api` job builds
+# the API image from backend/, runs the migration and checks the API answers (each skipped without
+# its folder). Run it by hand with `data-ref`, `frontend-ref` or `backend-ref` to test another
+# branch's data/db/ SQL, frontend/ or backend/, e.g. Data-Engineering, Frontend or Backend.
 name: compose
 
 on:
@@ -11,6 +14,9 @@ on:
       - .env.example
       - devops/compose/**
       - data/db/**
+      - frontend/**
+      - backend/**
+      - devops/docker/**
       - .github/workflows/compose.yml
   push:
     branches: [main]
@@ -19,6 +25,9 @@ on:
       - .env.example
       - devops/compose/**
       - data/db/**
+      - frontend/**
+      - backend/**
+      - devops/docker/**
       - .github/workflows/compose.yml
   workflow_dispatch:
     inputs:
@@ -26,12 +35,21 @@ on:
         description: "Branch whose data/db/ to use (empty: the checked-out one)"
         required: false
         default: ""
+      frontend-ref:
+        description: "Branch whose frontend/ to use (empty: the checked-out one)"
+        required: false
+        default: ""
+      backend-ref:
+        description: "Branch whose backend/ to use (empty: the checked-out one)"
+        required: false
+        default: ""
 
 permissions:
   contents: read
 
 concurrency:
-  group: compose-${{ github.ref }}
+  # Per event and inputs, so a manual run doesn't cancel the push run on the same branch.
+  group: compose-${{ github.ref }}-${{ github.event_name }}-${{ inputs.data-ref }}-${{ inputs.frontend-ref }}-${{ inputs.backend-ref }}
   cancel-in-progress: true
 
 jobs:
@@ -83,3 +101,179 @@ jobs:
       - name: Clean up
         if: always()
         run: docker compose down --volumes
+
+  web:
+    name: web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      # An unusual value, so the check below proves the build arg reaches the browser code.
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:18000
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use frontend/ from another branch
+        if: inputs.frontend-ref != ''
+        env:
+          FRONTEND_REF: ${{ inputs.frontend-ref }}
+        run: |
+          git fetch --depth=1 origin "refs/heads/${FRONTEND_REF}"
+          git checkout FETCH_HEAD -- frontend
+      - name: Is there a frontend?
+        id: project
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::no frontend/package.json here; the web image is not built"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: The base image is pinned by digest
+        run: |
+          grep -nE '^(ARG NODE_IMAGE=|FROM )' devops/docker/web.Dockerfile
+          if grep -E '^ARG NODE_IMAGE=' devops/docker/web.Dockerfile | grep -v '@sha256:'; then
+            echo "::error::NODE_IMAGE is not pinned by digest"
+            exit 1
+          fi
+          if grep -E '^FROM ' devops/docker/web.Dockerfile | grep -vE 'FROM (\$\{NODE_IMAGE\}|deps) '; then
+            echo "::error::every FROM must use NODE_IMAGE (or an earlier stage)"
+            exit 1
+          fi
+      - name: Use the example settings
+        if: steps.project.outputs.present == 'true'
+        run: cp .env.example .env
+      - name: Build the web image
+        if: steps.project.outputs.present == 'true'
+        run: docker compose --profile web build web
+      - name: Start web
+        if: steps.project.outputs.present == 'true'
+        run: docker compose --profile web up --detach --wait --wait-timeout 180 web
+      - name: The app answers, with its static assets, as a non-root user
+        if: steps.project.outputs.present == 'true'
+        run: |
+          curl -fsS -o /tmp/index.html -w 'HTTP %{http_code}\n' http://127.0.0.1:3000/
+          grep -qi '<html' /tmp/index.html
+          # The page's own JS/CSS must load too (a standalone server without .next/static gives 404s).
+          asset="$(grep -oE '/_next/static/[^"]+\.(js|css)' /tmp/index.html | head -n 1)"
+          if [ -z "${asset}" ]; then
+            echo "::error::the page references no /_next/static asset"
+            exit 1
+          fi
+          curl -fsS -o /dev/null -w "HTTP %{http_code} ${asset}\n" "http://127.0.0.1:3000${asset}"
+          uid="$(docker compose --profile web exec -T web id -u)"
+          echo "uid ${uid}"
+          [ "${uid}" != 0 ]
+      - name: The API URL is baked into the browser code
+        if: steps.project.outputs.present == 'true'
+        run: |
+          if docker compose --profile web exec -T web grep -rqF "${NEXT_PUBLIC_API_BASE_URL}" apps/web/.next/static; then
+            echo "${NEXT_PUBLIC_API_BASE_URL} is in the browser code"
+          elif grep -rqE 'lib/api/client|createApiClient\(' frontend/apps/web/app frontend/apps/web/components 2>/dev/null; then
+            echo "::error::the app uses the API client, but ${NEXT_PUBLIC_API_BASE_URL} is not in the browser code"
+            exit 1
+          else
+            echo "::notice::no page uses the API client yet, so the URL is not in the bundle; check skipped"
+          fi
+      - name: Logs
+        if: failure() && steps.project.outputs.present == 'true'
+        run: docker compose --profile web logs --no-color web
+      - name: Clean up
+        if: always() && steps.project.outputs.present == 'true'
+        run: docker compose --profile web down --volumes
+
+  api:
+    name: api
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Use backend/ from another branch
+        if: inputs.backend-ref != ''
+        env:
+          BACKEND_REF: ${{ inputs.backend-ref }}
+        run: |
+          git fetch --depth=1 origin "refs/heads/${BACKEND_REF}"
+          git checkout FETCH_HEAD -- backend
+      - name: Is there a backend, with what the image needs?
+        id: project
+        run: |
+          if [ ! -f backend/app/main.py ]; then
+            echo "::notice::no backend/app/main.py here; the API image is not built"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          missing=""
+          for f in pyproject.toml uv.lock alembic.ini; do
+            [ -f "backend/$f" ] || missing="${missing} backend/$f"
+          done
+          if [ -n "${missing}" ]; then
+            echo "::error::the API image needs${missing} (devops/compose.md, API)"
+            exit 1
+          fi
+          echo "present=true" >> "$GITHUB_OUTPUT"
+      - name: The base image and uv are pinned
+        run: |
+          f=devops/docker/api.Dockerfile
+          grep -nE '^(ARG (PYTHON_IMAGE|UV_VERSION|UV_SHA256_[A-Z0-9_]+)=|FROM )' "$f"
+          if ! grep -E '^ARG PYTHON_IMAGE=' "$f" | grep -q '@sha256:'; then
+            echo "::error::PYTHON_IMAGE is not pinned by digest"
+            exit 1
+          fi
+          if grep -E '^FROM ' "$f" | grep -vE 'FROM \$\{PYTHON_IMAGE\} '; then
+            echo "::error::every FROM must use PYTHON_IMAGE"
+            exit 1
+          fi
+          if [ "$(grep -cE '^ARG UV_SHA256_[A-Z0-9_]+=[0-9a-f]{64}$' "$f")" != 2 ]; then
+            echo "::error::uv needs a sha256 for x86_64 and aarch64"
+            exit 1
+          fi
+      - name: Use the example settings
+        if: steps.project.outputs.present == 'true'
+        run: cp .env.example .env
+      - name: Build the API image
+        if: steps.project.outputs.present == 'true'
+        run: docker compose --profile api build migrate
+      - name: Migrate, then start the API
+        if: steps.project.outputs.present == 'true'
+        run: |
+          docker compose --profile api up --detach api
+          for _ in $(seq 1 60); do
+            code="$(docker compose --profile api ps --all migrate --format '{{.ExitCode}}')"
+            state="$(docker compose --profile api ps --all migrate --format '{{.State}}')"
+            if [ "${state}" = exited ] && [ "${code}" != 0 ]; then
+              echo "::error::migrate exited with code ${code}"
+              exit 1
+            fi
+            health="$(docker compose --profile api ps api --format '{{.Health}}')"
+            if [ "${health}" = healthy ]; then
+              echo "migrate: exit ${code}; api: healthy"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::api did not become healthy within 180 s"
+          exit 1
+      - name: Migrated, answering, not root, next to DE's schema
+        if: steps.project.outputs.present == 'true'
+        run: |
+          sql() { docker compose exec -T postgres psql -U skillforge -d skillforge -Atc "$1"; }
+          version="$(sql 'SELECT version_num FROM alembic_version')"
+          echo "alembic version ${version}"
+          [ -n "${version}" ]
+          curl -fsS -o /dev/null -w 'HTTP %{http_code} /openapi.json\n' http://127.0.0.1:8000/openapi.json
+          uid="$(docker compose --profile api exec -T api id -u)"
+          echo "uid ${uid}"
+          [ "${uid}" != 0 ]
+          if [ -f data/db/schema-draft.sql ]; then
+            [ "$(sql "SELECT to_regclass('knowledge.knowledge_chunks') IS NOT NULL")" = t ]
+            echo "DE's knowledge schema is intact"
+          fi
+      - name: Logs
+        if: failure() && steps.project.outputs.present == 'true'
+        run: docker compose --profile api logs --no-color migrate api
+      - name: Clean up
+        if: always() && steps.project.outputs.present == 'true'
+        run: docker compose --profile api down --volumes

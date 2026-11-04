@@ -1,0 +1,16 @@
+# What of frontend/ is NOT sent to the web image build (web.Dockerfile). BuildKit uses this file
+# instead of any .dockerignore in frontend/, so DevOps owns it.
+
+# Installed and built inside the image, never copied from the host
+**/node_modules
+**/.next
+**/*.tsbuildinfo
+**/coverage
+
+# Local env files: never baked into an image (the API URL comes in as a build arg)
+**/.env*
+
+# Logs and OS files
+**/npm-debug.log*
+**/.DS_Store
+**/Thumbs.db

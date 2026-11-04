@@ -19,24 +19,28 @@ places (listed below).
 | `security.md` | Security scanning (OPS-11): what runs, where results show up, who handles alerts |
 | `compose.md` | The local stack (OPS-03): start, stop, reset the data, connect |
 | `compose/postgres-initdb/` | First-start init for the local postgres: pgvector, then Data Engineering's `data/db/` SQL |
+| `docker/web.Dockerfile` (+ `.dockerignore`) | The web app image, built from `frontend/` (Frontend's code). DevOps-owned |
+| `docker/api.Dockerfile` (+ `.dockerignore`) | The API image (also used by `migrate`), built from `backend/` (Backend's code). DevOps-owned |
 
 ## Local stack (OPS-03)
 
 See [compose.md](compose.md). In short: `cp .env.example .env`, then `docker compose up -d` from the repo root
-starts postgres + pgvector (`127.0.0.1:5433`) and redis (`127.0.0.1:6379`). `.github/workflows/compose.yml`
-checks that both become healthy; it isn't a required check.
+starts postgres + pgvector (`127.0.0.1:5433`) and redis (`127.0.0.1:6379`); add `--profile web --build` for the
+web app (`127.0.0.1:3000`), or `--profile api --build` for the API (`127.0.0.1:8000`, after `migrate`).
+`.github/workflows/compose.yml` checks the stack (`stack`), the web image (`web`) and the API image (`api`);
+none is a required check. `frontend.yml` runs Frontend's `npm ci`, checks and build.
 
 ## Security (OPS-11)
 
 See [security.md](security.md). In short: `.github/workflows/codeql.yml` (CodeQL) and `trivy.yml` (Trivy) report to
 the Security tab and are **not** required checks; `.github/dependabot.yml` opens grouped weekly update PRs for
-GitHub Actions and `ai/`; Dependabot alerts, security updates, secret scanning and push protection are on.
+GitHub Actions, `ai/`, `backend/` and `data/`; Dependabot alerts, security updates, secret scanning and push protection are on.
 
 ## CI (OPS-02)
 
 `.github/workflows/ci.yml` runs on every PR into `main` or a department branch, and every push to `main`
-(`ci-ok` is required only on `main`). `data.yml` tests against a throwaway pgvector database and fails
-if any test is skipped:
+(`ci-ok` is required only on `main`). `data.yml` and `backend.yml` test against a throwaway pgvector database
+(`backend.yml` runs Backend's Alembic migrations first) and fail if any test is skipped:
 
 | Job | What it does |
 |---|---|

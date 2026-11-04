@@ -250,9 +250,7 @@ export default function LibraryPage() {
                 </div>
                 <div className="skill-library-card-footer">
                   <span>{skill.sources} مصادر</span>
-                  <span className="skill-library-detail-pending" aria-disabled="true">
-                    التفاصيل في FE-15
-                  </span>
+                  <Link href={`/library/${skill.id}`}>التفاصيل</Link>
                 </div>
               </article>
             ))}

@@ -9,8 +9,7 @@ services:
   postgres:
     # The same image as .github/workflows/data.yml.
     image: pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a
-    # Same name as data/docker-compose.yml, on purpose: the documented `docker exec skillforge-postgres`
-    # commands keep working, and the two stacks cannot run side by side by accident.
+    # A fixed name, so `docker exec skillforge-postgres ...` (as in data/CLAUDE.md) works from anywhere.
     container_name: skillforge-postgres
     environment:
       POSTGRES_USER: skillforge
@@ -47,41 +46,69 @@ services:
       timeout: 5s
       retries: 12
 
-  # ---------------------------------------------------------------- placeholders
-  # Not started yet. Each one waits for answers from the department named in its TODO.
+  # ---------------------------------------------------------------- api
+  # The API (FastAPI, backend/) and its one-shot migration. Only with the `api` profile:
+  #   docker compose --profile api up -d --build
+  # `migrate` builds the image and runs `alembic upgrade head`; `api` starts only after it exited 0.
+  migrate:
+    profiles: [api]
+    build:
+      context: ./backend
+      dockerfile: ../devops/docker/api.Dockerfile
+    image: skillforge-api:local
+    command: ["alembic", "-c", "backend/alembic.ini", "upgrade", "head"]
+    environment:
+      DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
 
-  # TODO(Backend): the API.
-  # - A backend/Dockerfile (base image pinned by digest, at least two weeks old).
-  # - Start command: is it `uvicorn backend.app.main:app --host 0.0.0.0 --port 8000`?
-  # - How migrations run: a one-shot `migrate` service (`alembic upgrade head`) before api starts?
-  # - Which driver goes in DATABASE_URL (postgresql+psycopg? +psycopg2?), and every other env var.
-  # api:
-  #   build:
-  #     context: .
-  #     dockerfile: backend/Dockerfile
-  #   command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
-  #   ports:
-  #     - "127.0.0.1:8000:8000"
-  #   environment:
-  #     DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
-  #     REDIS_URL: redis://redis:6379/0
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     redis:
-  #       condition: service_healthy
+  api:
+    profiles: [api]
+    image: skillforge-api:local  # built by `migrate`
+    pull_policy: never
+    environment:
+      DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    healthcheck:
+      # The slim image has no curl; Python's urllib does the same.
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/openapi.json', timeout=4).status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
-  # TODO(Backend + AI): the worker that runs the AI pipeline (ai/core/pipeline/interface.py).
-  # - Which queue library (Celery, RQ, arq, ...) and its start command; same image as api?
-  # - It installs ai/ (`uv sync --locked`); LLM provider keys come only from ai/.env, never
-  #   from this file.
-  # - Retrieval from the knowledge store: the read-only role, not the owner.
-  # - A volume for the pinned embedding model files, so they are downloaded once.
+  # ---------------------------------------------------------------- worker (placeholder)
+  # TODO(queue decision): the worker that runs the AI pipeline (ai/core/pipeline/interface.py).
+  # Waits for the queue library choice (recommended: RQ 2.12, see the OPS-03 PR) and for Backend to
+  # move its root core/ package under backend/: ai/ also installs a top-level `core`, and the
+  # worker imports both.
+  # - Image: Backend's and AI's code together, e.g. devops/docker/worker.Dockerfile with
+  #   context ./backend and `additional_contexts: {ai: ./ai}`.
+  # - LLM provider keys only from ai/.env, never from this file.
+  # - AI's rate limits are per process: total provider rate = worker processes x the limits.
   # worker:
+  #   profiles: [api]
   #   build:
-  #     context: .
-  #     dockerfile: backend/Dockerfile
-  #   command: <queue worker command>
+  #     context: ./backend
+  #     dockerfile: ../devops/docker/worker.Dockerfile
+  #     additional_contexts:
+  #       ai: ./ai
+  #   command: ["rq", "worker", "--with-scheduler", "--url", "redis://redis:6379/0", "skills"]
   #   env_file:
   #     - ai/.env
   #   environment:
@@ -94,25 +121,41 @@ services:
   #   volumes:
   #     - models:/models
   #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
+  #     migrate:
+  #       condition: service_completed_successfully
   #     redis:
   #       condition: service_healthy
 
-  # TODO(Frontend): the web app (Next.js, frontend/apps/web).
-  # - A frontend/Dockerfile (`npm ci`, `npm run build`, `npm run start`), Node version pinned.
-  # - The port (3000?) and every env var.
-  # - NEXT_PUBLIC_API_BASE_URL is read by the browser and baked in at build time, so it is the host
-  #   URL (http://localhost:8000), not the service name.
-  # web:
-  #   build:
-  #     context: frontend
-  #     args:
-  #       NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
-  #   ports:
-  #     - "127.0.0.1:3000:3000"
-  #   depends_on:
-  #     - api
+  # ---------------------------------------------------------------- web app
+
+  # The web app (Next.js, frontend/). Only with the `web` profile, so a plain `docker compose up`
+  # works without frontend/ and doesn't build it:
+  #   docker compose --profile web up -d --build
+  web:
+    profiles: [web]
+    build:
+      context: ./frontend
+      dockerfile: ../devops/docker/web.Dockerfile
+      args:
+        # Baked into the browser code at build time: the URL the BROWSER calls, so a host URL,
+        # not a service name. Changing it needs a rebuild (--build).
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    image: skillforge-web:local
+    init: true
+    ports:
+      - "127.0.0.1:${WEB_PORT:-3000}:3000"
+    healthcheck:
+      # The slim image has no curl; Node's fetch does the same.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    # No depends_on: api, so `--profile web` works alone. Both: --profile api --profile web.
 
 volumes:
   pgdata:
