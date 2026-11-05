@@ -676,7 +676,8 @@ old document:
 - **Open point for DE-05.** `record_document_version()` makes the new document current (and hides the old one's chunks from
   the views) as soon as the page is fetched, which is before it is processed. If processing then fails, the page has no
   chunks in the views, even though the old chunks still exist. To keep the old content visible until the new one is ready,
-  the pipeline would have to call the function in the same final transaction instead. Decide this when DE-05 is designed.
+  the pipeline would have to call the function in the same final transaction instead. **Decided (5 November 2026):** the
+  pipeline does exactly that, with no schema change; see [proposals/de-05-record-version.md](proposals/de-05-record-version.md).
 
 ## Open questions
 

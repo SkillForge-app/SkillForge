@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
-# DE-02 benchmark in one go, on the separate bench container (port 5434):
+# DE-02 benchmark in one go, on the BENCH container (port 5434, bound to 127.0.0.1):
 #   bash data/bench/run.sh <n_chunks> <label> [out_dir]
 # Loads the data, builds the HNSW index, runs the queries. Logs go to <out_dir>/<label>-*.log.
+# Needs the database from create_db.sh. Refuses to run on any container whose name does not contain "bench".
+BENCH_CONTAINER="${BENCH_CONTAINER:-skillforge-bench-pg}"
 set -euo pipefail
 export MSYS_NO_PATHCONV=1
+case "$BENCH_CONTAINER" in
+  *bench*) ;;
+  *) echo "refusing to use container '$BENCH_CONTAINER': its name must contain 'bench' (never skillforge-postgres)" >&2; exit 1 ;;
+esac
 n="${1:?n_chunks}"; label="${2:?label}"; out="${3:-.}"
 here="$(cd "$(dirname "$0")" && pwd)"
-C="${BENCH_CONTAINER:-skillforge-bench-pg}"
-psql_c() { docker exec -i "$C" psql -U skillforge -d skillforge_bench "$@"; }
+psql_c() { docker exec -i "$BENCH_CONTAINER" psql -U skillforge -d skillforge_bench "$@"; }
 
 t0=$(date +%s)
 psql_c -v n_chunks="$n" < "$here/generate.sql" > "$out/$label-generate.log" 2>&1
