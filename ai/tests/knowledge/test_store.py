@@ -3,17 +3,24 @@
 import hashlib
 import json
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
+from typing import Any
 
+import numpy as np
 import pytest
 from pydantic import HttpUrl
 
 from core.knowledge.ingest import Page, ingest_pages
 from core.knowledge.retrieval import RetrievalInputError
 from core.knowledge.store import (
+    DEFAULT_EF_SEARCH,
     INDEX_PATH_ENV,
+    PG_COLUMNS,
     PGVECTOR_DSN_ENV,
+    PGVECTOR_EF_SEARCH_ENV,
     PGVECTOR_TABLE_ENV,
     PGVECTOR_WRITABLE_ENV,
     STORE_ENV,
@@ -23,6 +30,7 @@ from core.knowledge.store import (
     pg_name,
     pg_schema,
     pg_search_params,
+    pg_search_settings,
     pg_search_sql,
     pg_view_sql,
     store_from_env,
@@ -204,9 +212,11 @@ def test_store_from_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     monkeypatch.setenv(PGVECTOR_DSN_ENV, "postgresql://u@h/db")
     monkeypatch.delenv(PGVECTOR_TABLE_ENV, raising=False)
     monkeypatch.delenv(PGVECTOR_WRITABLE_ENV, raising=False)
+    monkeypatch.delenv(PGVECTOR_EF_SEARCH_ENV, raising=False)
     pg = store_from_env()
     assert isinstance(pg, PgVectorStore)
     assert (pg.table, pg.writable) == ("knowledge_chunks", False)  # read-only by default
+    assert pg.ef_search == DEFAULT_EF_SEARCH == 100
     monkeypatch.setenv(PGVECTOR_TABLE_ENV, "knowledge.knowledge_chunks")
     monkeypatch.setenv(PGVECTOR_WRITABLE_ENV, "1")
     pg = store_from_env()
@@ -306,6 +316,93 @@ def test_pgvector_store_is_read_only_unless_asked() -> None:
         store.create_schema(384)
 
 
+# ------------------------------------------------------------------ pgvector search (no database)
+
+
+class FakeConnection:
+    """Records each statement PgVectorStore.search sends, with the transaction it ran in."""
+
+    def __init__(self, rows: list[tuple[Any, ...]]) -> None:
+        self.rows = rows
+        self.sent: list[tuple[str, int | None]] = []  # (sql, transaction number or None)
+        self.transactions = 0
+        self._open: int | None = None
+
+    def __enter__(self) -> "FakeConnection":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        pass
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        self.transactions += 1
+        self._open = self.transactions
+        try:
+            yield
+        finally:
+            self._open = None
+
+    def execute(self, sql: str, params: object = None) -> "FakeConnection":
+        self.sent.append((sql, self._open))
+        return self
+
+    def fetchall(self) -> list[tuple[Any, ...]]:
+        return self.rows
+
+
+def pg_row(r: ChunkRecord, score: float) -> tuple[Any, ...]:
+    data = r.model_dump(mode="json")
+    return (*(data[c] for c in PG_COLUMNS), score)
+
+
+def fake_store(monkeypatch: pytest.MonkeyPatch, rows: list[tuple[Any, ...]]) -> FakeConnection:
+    conn = FakeConnection(rows)
+    monkeypatch.setattr(PgVectorStore, "_connect", lambda self: conn)
+    return conn
+
+
+def test_pgvector_search_sets_iterative_scan_in_its_own_transaction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    conn = fake_store(monkeypatch, [])
+    assert PgVectorStore("postgresql://u@h/db").search([1.0, 0.0], "legal/contracts", 5) == []
+    assert conn.transactions == 1
+    assert conn.sent == [  # both SETs first, then the query, all in transaction 1
+        ("SET LOCAL hnsw.iterative_scan = relaxed_order", 1),
+        ("SET LOCAL hnsw.ef_search = 100", 1),
+        (pg_search_sql("knowledge_chunks"), 1),
+    ]
+
+
+def test_pgvector_search_re_sorts_rows_best_first_ties_by_chunk_id(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    a1, a2, a3 = record(A, 1), record(A, 2), record(A, 3)
+    # relaxed_order: the database returns rows only roughly in distance order
+    fake_store(monkeypatch, [pg_row(a3, 0.8000001), pg_row(a2, 0.9), pg_row(a1, 0.8)])
+    results = PgVectorStore("postgresql://u@h/db").search([1.0, 0.0], "marketing", 3)
+    # 0.8000001 and 0.8 tie (rounded like LocalStore), so a1 comes before a3 by chunk_id
+    assert [r.chunk_id for r, _ in results] == [a2.chunk_id, a1.chunk_id, a3.chunk_id]
+    assert [s for _, s in results] == [0.9, 0.8, 0.8000001]
+
+
+def test_pgvector_ef_search_is_configurable(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(STORE_ENV, "pgvector")
+    monkeypatch.setenv(PGVECTOR_DSN_ENV, "postgresql://u@h/db")
+    monkeypatch.setenv(PGVECTOR_EF_SEARCH_ENV, "200")
+    store = store_from_env()
+    assert isinstance(store, PgVectorStore) and store.ef_search == 200
+    conn = fake_store(monkeypatch, [])
+    store.search([1.0, 0.0], "marketing", 5)
+    assert conn.sent[1] == ("SET LOCAL hnsw.ef_search = 200", 1)
+    assert pg_search_settings(40)[1] == "SET LOCAL hnsw.ef_search = 40"
+    for bad in ("0", "1001", "-5", "ten", "1.5"):
+        monkeypatch.setenv(PGVECTOR_EF_SEARCH_ENV, bad)
+        with pytest.raises(ConfigError, match=PGVECTOR_EF_SEARCH_ENV):
+            store_from_env()
+
+
 @pytest.mark.pgvector
 def test_pgvector_round_trip() -> None:
     """Opt-in: `pytest -m pgvector` with SKILLFORGE_PGVECTOR_DSN pointing at a test database
@@ -333,3 +430,58 @@ def test_pgvector_round_trip() -> None:
         with store._connect() as conn:
             conn.execute("DROP VIEW IF EXISTS skillforge_test_view")
             conn.execute("DROP TABLE IF EXISTS skillforge_test_chunks")
+
+
+@pytest.mark.pgvector
+def test_pgvector_rare_domain_still_returns_k_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Opt-in, like the round trip. A rare domain (15 of 2,015 chunks, about DE-02's 0.8%) whose
+    chunks lie far from the query: every HNSW candidate near the query is of the common domain,
+    so without iterative scan the domain filter leaves no row (DE-02: 0.4 of 10)."""
+    dsn = os.environ.get(PGVECTOR_DSN_ENV)
+    if not dsn:
+        pytest.skip(f"{PGVECTOR_DSN_ENV} not set")
+    table, k, dims = "skillforge_test_rare", 10, 8
+    rng = np.random.default_rng(7)
+
+    def around(direction: float, n: int) -> list[list[float]]:
+        vectors = rng.normal(0, 0.05, (n, dims))
+        vectors[:, 0] += direction
+        return vectors.tolist()  # type: ignore[no-any-return]
+
+    writer = PgVectorStore(dsn, table=table, writable=True)
+    writer.create_schema(dims)
+    try:
+        common = [record(A, n, "marketing") for n in range(2000)]
+        rare = [record(B, n, "legal/contracts") for n in range(15)]
+        writer.replace_source(A, common, around(1.0, len(common)), model=MODEL)
+        writer.replace_source(B, rare, around(-1.0, len(rare)), model=MODEL)
+        with writer._connect() as conn:
+            conn.execute(f"ANALYZE {table}")
+
+        reader = PgVectorStore(dsn, table=table)  # read-only, like production
+        connect = reader._connect
+
+        def connect_without_seq_scan() -> Any:
+            # 2,015 rows is small enough for a sequential scan, which always finds k rows.
+            # Production tables are large and take the HNSW index: make this one take it too.
+            conn = connect()
+            conn.execute("SET enable_seqscan = off")
+            conn.commit()
+            return conn
+
+        monkeypatch.setattr(reader, "_connect", connect_without_seq_scan)
+        query = [1.0] + [0.0] * (dims - 1)
+        params = pg_search_params(query, "legal/contracts", k)
+        with reader._connect() as conn, conn.transaction():
+            conn.execute(f"SET LOCAL hnsw.ef_search = {DEFAULT_EF_SEARCH}")  # iterative scan off
+            plain = conn.execute(pg_search_sql(table), params).fetchall()
+        assert len(plain) < k  # the setup really goes through the filtered HNSW scan
+
+        results = reader.search(query, "legal/contracts", k)
+        assert len(results) == k
+        assert all(r.domains == ["legal/contracts"] for r, _ in results)
+        scores = [s for _, s in results]
+        assert scores == sorted(scores, reverse=True)
+    finally:
+        with writer._connect() as conn:
+            conn.execute(f"DROP TABLE IF EXISTS {table}")
