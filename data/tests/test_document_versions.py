@@ -1,28 +1,14 @@
 """A -> B -> A: a page returns to old content and the old document row must come back.
 
-These tests load db/schema-draft.sql and then db/knowledge_views.sql into the local Postgres (root compose.yaml, port 5433)
-inside one transaction and roll it back at the end. They run in a throwaway database that is created
-and dropped by the tests, so the real database (where the root compose.yaml installs the schema) is never touched.
-They are skipped only when the server is not reachable.
+The `db` fixture (tests/conftest.py) gives a connection to a throwaway database that has db/schema-draft.sql and
+db/knowledge_views.sql loaded; every test runs in a transaction that is rolled back at the end. The real database is never touched.
 """
-import os
-import uuid
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
 import psycopg
 import psycopg.sql
 import pytest
-from psycopg.conninfo import make_conninfo
 from psycopg.types.json import Jsonb
-
-DB_DIR = Path(__file__).resolve().parents[1] / "db"
-# Order matters: the views read the tables, so knowledge_views.sql goes second.
-SCHEMA_FILES = [DB_DIR / "schema-draft.sql", DB_DIR / "knowledge_views.sql"]
-DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql://skillforge:skillforge_dev@localhost:5433/skillforge",
-).replace("postgresql+psycopg://", "postgresql://")
 
 HASH_A = "a" * 64
 HASH_B = "b" * 64
@@ -30,38 +16,6 @@ T1 = datetime(2026, 11, 1, tzinfo=UTC)
 T2 = T1 + timedelta(days=1)
 T3 = T1 + timedelta(days=2)
 CHUNK_CONFIG = '{"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "p1"}'
-
-
-@pytest.fixture(scope="module")
-def scratch_db_url():
-    """A throwaway database on the same server, so the tests never touch the real 'knowledge' schema.
-
-    The root compose.yaml installs the schema in the real database on its first start, so the tests
-    cannot load it there. This database is created here and dropped when the module's tests are done.
-    """
-    try:
-        admin = psycopg.connect(DATABASE_URL, autocommit=True, connect_timeout=3)
-    except psycopg.OperationalError as exc:
-        pytest.skip(f"database not reachable: {exc}")
-    name = f"skillforge_test_{uuid.uuid4().hex[:8]}"
-    admin.execute(psycopg.sql.SQL("CREATE DATABASE {}").format(psycopg.sql.Identifier(name)))
-    try:
-        yield make_conninfo(DATABASE_URL, dbname=name)
-    finally:
-        admin.execute(psycopg.sql.SQL("DROP DATABASE {} WITH (FORCE)").format(psycopg.sql.Identifier(name)))
-        admin.close()
-
-
-@pytest.fixture
-def db(scratch_db_url):
-    conn = psycopg.connect(scratch_db_url, autocommit=False, connect_timeout=3)
-    try:
-        for sql_file in SCHEMA_FILES:
-            conn.execute(sql_file.read_text(encoding="utf-8"))
-        yield conn
-    finally:
-        conn.rollback()
-        conn.close()
 
 
 @pytest.fixture
