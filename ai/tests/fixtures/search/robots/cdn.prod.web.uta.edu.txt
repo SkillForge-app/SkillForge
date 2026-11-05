@@ -1,0 +1,3 @@
+# fetched 2026-10-26 from https://cdn.prod.web.uta.edu/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /sitecore

@@ -1,0 +1,7 @@
+# fetched 2026-10-26 from https://softwareoutlook.ac.uk/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+
+Sitemap: https://www.cosec.ac.uk/sitemap.xml
+Sitemap: https://www.cosec.ac.uk/sitemap.html

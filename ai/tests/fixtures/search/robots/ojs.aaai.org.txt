@@ -1,0 +1,3 @@
+# fetched 2026-10-26 from https://ojs.aaai.org/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /cache/

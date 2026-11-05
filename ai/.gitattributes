@@ -1,0 +1,3 @@
+# Released benchmark datasets are verified byte-for-byte against the sha256 hashes in their
+# manifest.json. Never convert their line endings (core.autocrlf would break every hash).
+evaluation/benchmarks/*/releases/** -text

@@ -1,0 +1,8 @@
+# fetched 2026-10-26 from https://orientsoftware.com/robots.txt (HTTP 200)
+User-Agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+
+Sitemap: https://www.orientsoftware.com/sitemap.xml

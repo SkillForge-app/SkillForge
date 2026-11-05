@@ -1,0 +1,39 @@
+# Embedding models compared for AI-11. Each is a fastembed-supported ONNX export, pinned to a
+# Hugging Face commit, with the model file's sha256 (from the repo's LFS metadata, checked
+# 2026-10-25). The winner's entry is copied into the `embedding` role of core/llm/models.yaml.
+version: 1.0.0
+candidates:
+  minilm-l6:
+    model: local/sentence-transformers/all-MiniLM-L6-v2
+    dimensions: 384
+    max_tokens: 256
+    licence: Apache-2.0
+    query_prefix: ""
+    local:
+      repo: Qdrant/all-MiniLM-L6-v2-onnx
+      revision: d13954661f83248295ba75c1ed411eef3b7b936e
+      file: model.onnx
+      sha256: bbd7b466f6d58e646fdc2bd5fd67b2f5e93c0b687011bd4548c420f7bd46f0c5
+  bge-small:
+    model: local/BAAI/bge-small-en-v1.5
+    dimensions: 384
+    max_tokens: 512
+    licence: MIT
+    # BGE v1.5's instruction for short queries that look for passages.
+    query_prefix: "Represent this sentence for searching relevant passages: "
+    local:
+      repo: Qdrant/bge-small-en-v1.5-onnx-Q
+      revision: aa8f8b060edb00e03bfdd08813a2949946c8ba55
+      file: model_optimized.onnx
+      sha256: 51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431
+  bge-base:
+    model: local/BAAI/bge-base-en-v1.5
+    dimensions: 768
+    max_tokens: 512
+    licence: MIT
+    query_prefix: "Represent this sentence for searching relevant passages: "
+    local:
+      repo: Qdrant/bge-base-en-v1.5-onnx-Q
+      revision: 199291fdd1aa89faf9c20b722dc72ad5e17aa0d0
+      file: model_optimized.onnx
+      sha256: 4e556722bc4f65716c544c8a931f1e90fb3f866e5741fd93a96f051d673339c7

@@ -1,0 +1,99 @@
+# See https://www.robotstxt.org/robotstxt.html for documentation
+
+# --- Sitemap ---
+Sitemap: https://rootly.com/sitemap.xml
+
+# --- AI crawlers are explicitly welcome (goal #19) ---
+# Never blocked or challenged. Listed explicitly as a safeguard even though
+# the general rule below already allows them.
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# --- General rules ---
+User-agent: *
+Allow: /
+
+# Block sensitive or private app pages
+Disallow: /account
+Disallow: /admin
+Disallow: /teams
+# ...except customers' public status pages, /teams/<team>/status-pages/<page>/public
+# and what sits under it (history, incident pages), which live has always let
+# every crawler index. The longer Allow wins; the rest of the status-page tree
+# (subscription dialogs, settings) stays blocked.
+Allow: /teams/*/status-pages/*/public
+
+# Block internal search parameters (prevents duplicate content).
+# Legacy Webflow pagination (?b9e754a1_page=2) is deliberately NOT blocked: the
+# Worker 301s it to the clean URL, and a crawler can only follow that redirect
+# if it is allowed to fetch the old URL.
+# This unblocks every `*_page=` query, not only the eight-hex Webflow family the
+# Worker redirects, and that is intended: robots.txt wildcards cannot express
+# "eight hex characters", so any rule that still blocked `?per_page=` would also
+# block `?b9e754a1_page=`. The wider surface is harmless. The rebuilt site emits
+# no `_page` parameter of its own, and any other variant serves the page with a
+# canonical to the clean URL (Base.astro derives it from the path alone).
+Disallow: /*?search=
+Disallow: /*?q=
+
+# Block system / non-content pages. Each error route is served under its own
+# status code at the edge, but also builds as a reachable 200 page.
+Disallow: /400
+Disallow: /403
+Disallow: /404
+Disallow: /406
+Disallow: /422
+Disallow: /500
+Disallow: /503
+Disallow: /search
+Disallow: /search/
+
+# Legacy taxonomy routes (retained from the prior site; harmless if unused)
+Disallow: /tag/
+Disallow: /category/
+
+# Block non-HTML document downloads that aren't useful to index.
+# Comments kept on their own lines so all parsers read the directives cleanly.
+Disallow: /*.doc
+Disallow: /*.docx
+Disallow: /*.xls
+Disallow: /*.xlsx
+Disallow: /*.ppt
+Disallow: /*.pptx
+Disallow: /*.zip
+Disallow: /*.rar
+Disallow: /*.csv
+
+# PDFs: block by default, but allow gated resources under /resources/
+Disallow: /*.pdf
+Allow: /resources/*.pdf
+
+# Note: unlike the prior site, SVG and JSON are NOT disallowed — brand logos
+# ship as SVG and should stay crawlable/renderable, and blocking /*.json can
+# hurt rendering of pages that fetch JSON. (Prior robots blocked both.)
+
+# --- Crawl-delay (only if the origin needs it) ---
+# Crawl-delay: 2
+
+# --- End of robots.txt ---

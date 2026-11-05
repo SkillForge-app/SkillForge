@@ -1,0 +1,4 @@
+# fetched 2026-10-26 from https://www.figpii.com/robots.txt (HTTP 200)
+User-agent: *
+Allow: /
+Sitemap: https://www.figpii.com/sitemap.xml

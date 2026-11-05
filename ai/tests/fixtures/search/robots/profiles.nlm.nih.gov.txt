@@ -1,0 +1,1 @@
+# fetched 2026-10-26: HTTP 405, no robots.txt (RFC 9309: no rules)

@@ -1,0 +1,22 @@
+# fetched 2026-10-26 from https://stockton.edu/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /_test/
+Disallow: /_demo/
+Disallow: /_showcase/
+Disallow: /_training/
+Disallow: /*-dev/
+Disallow: /*/internal/
+Disallow: /dynamic-content/
+Disallow: /campus-center/operations/lost-and-found.html
+Disallow: /graduate/learn-more-earn-more.html
+Disallow: /fifty/flight/
+Disallow: /academic-bulletin/documents/archived/
+Disallow: /stockton-news/documents/archive/
+Disallow: /hughes-center/documents/archive/
+Disallow: /commencement/documents/yearbook-23-24.pdf
+Disallow: /commencement/documents/yearbook-23-24-large.pdf
+Disallow: /admissions/niche.html
+Disallow: /admissions/experience.html
+Disallow: /faculty-senate/documents/
+Disallow: /_portraits/
+Allow: /fifty/flight/index.html

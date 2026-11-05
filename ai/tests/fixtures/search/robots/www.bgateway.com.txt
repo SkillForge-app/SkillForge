@@ -1,0 +1,21 @@
+User-agent: *
+Disallow: /cpresources/
+Disallow: /umbraco/
+Disallow: /events?
+Disallow: /events/*?
+Disallow: /online-tutorials?
+Disallow: /online-tutorials/*?
+Disallow: /event-basket
+Disallow: /personalised-support/
+Disallow: /planning-to-start/review/
+Disallow: /your-results
+Disallow: /market-insights-form
+Disallow: /research-form
+Disallow: /invite
+Disallow: /add-to-calendar
+Disallow: /form-test$
+Disallow: /test$
+Disallow: /test-1$
+Disallow: /sitemapxml
+ 
+Sitemap: https://www.bgateway.com/sitemap.xml

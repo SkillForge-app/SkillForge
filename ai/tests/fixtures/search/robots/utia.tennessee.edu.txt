@@ -1,0 +1,15 @@
+# fetched 2026-10-26 from https://utia.tennessee.edu/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /?s=*
+Disallow: /search/*
+Disallow: /wp-admin/*
+Disallow: /wp-login*
+Allow: /wp-admin/admin-ajax.php
+Crawl-delay: 30
+
+Sitemap: https://utia.tennessee.edu/sitemap.xml
+
+# WP Defender - Begin
+User-agent: *
+Disallow: /51881dd8279ea33a
+# WP Defender - End

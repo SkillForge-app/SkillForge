@@ -1,0 +1,231 @@
+# Test questions for AI-11 recall, over the AI-10 fixture pages (tests/fixtures/pages).
+#
+# Each question is phrased the way a user would ask, not copied from the page. `evidence` is a
+# short phrase copied exactly from the page's extracted text that answers it: a retrieved
+# passage from `page` that contains it (case and spacing ignored) is a hit. That does not
+# depend on how the page is chunked, so different chunk sizes compare fairly.
+# `domain` is the query's domain: every other page in it is a distractor.
+# Written by the AI lead's assistant on 2026-10-25; review before relying on small differences.
+version: 1.0.0
+pages:  # the domain each ok page is indexed under
+  ftc-endorsement-faq.html: marketing
+  ftc-can-spam.html: marketing
+  ftc-advertising-hub.html: marketing
+  google-seo-starter.html: marketing
+  google-helpful-content.html: marketing
+  synthetic-subscriber-footer.html: marketing
+  nist-ai-rmf.html: technology/ai
+  owasp-llm01.html: technology/ai
+  wikipedia-rag.html: technology/ai
+  synthetic-short-faq.html: customer-support
+  synthetic-div-soup.html: technology/software
+questions:
+  # ---------------------------------------------------------------- FTC endorsement FAQ
+  - id: q01
+    question: Does a unique influencer discount code count as enough of a disclosure that a post is sponsored?
+    domain: marketing
+    page: ftc-endorsement-faq.html
+    evidence: personalized and unique discount code
+  - id: q02
+    question: I make sponsored YouTube videos from the UK. Do American disclosure rules apply to me?
+    domain: marketing
+    page: ftc-endorsement-faq.html
+    evidence: U.S. law would apply
+  - id: q03
+    question: What must a brand do to supervise the influencers in its marketing network?
+    domain: marketing
+    page: ftc-endorsement-faq.html
+    evidence: reasonable programs in place to train and monitor
+  - id: q04
+    question: Is one statement on my homepage saying that products were given to me for free sufficient?
+    domain: marketing
+    page: ftc-endorsement-faq.html
+    evidence: A single disclosure on your home page won’t be sufficient
+  - id: q05
+    question: What wording can an affiliate marketer use to tell readers they earn money from links?
+    domain: marketing
+    page: ftc-endorsement-faq.html
+    evidence: I get commissions for purchases made through links in this post
+  - id: q06
+    question: Is tagging a contest entry with a sweepstakes hashtag alone a clear enough disclosure?
+    domain: marketing
+    page: ftc-endorsement-faq.html
+    evidence: might not understand that the post was incentivized
+  - id: q07
+    question: If I criticise a rival product while another brand pays me, do I need to mention the deal?
+    domain: marketing
+    page: ftc-endorsement-faq.html
+    evidence: If you criticize a competitor of a brand that you are paid to endorse
+  # ---------------------------------------------------------------- CAN-SPAM guide
+  - id: q08
+    question: How quickly does a company have to act on an email unsubscribe request?
+    domain: marketing
+    page: ftc-can-spam.html
+    evidence: within 10 business days
+  - id: q09
+    question: Do marketing emails have to show where the sender is located?
+    domain: marketing
+    page: ftc-can-spam.html
+    evidence: valid physical postal address
+  - id: q10
+    question: What is the maximum fine for each email that breaks the spam law?
+    domain: marketing
+    page: ftc-can-spam.html
+    evidence: penalties of up to $53,088
+  - id: q11
+    question: If I hire an agency to send my email campaigns, am I still responsible for following the rules?
+    domain: marketing
+    page: ftc-can-spam.html
+    evidence: even if you hire another company to handle your email marketing
+  - id: q12
+    question: Can the subject of a promotional email promise something the message is not about?
+    domain: marketing
+    page: ftc-can-spam.html
+    evidence: The subject line must accurately reflect the content of the message
+  # ---------------------------------------------------------------- FTC advertising hub
+  - id: q13
+    question: What does US law require of the claims made in advertisements?
+    domain: marketing
+    page: ftc-advertising-hub.html
+    evidence: must be evidence-based
+  - id: q14
+    question: What kind of proof do companies need before making eco-friendly product claims?
+    domain: marketing
+    page: ftc-advertising-hub.html
+    evidence: competent and reliable
+  - id: q15
+    question: Which law makes online marketplaces verify the identity of high-volume third-party sellers?
+    domain: marketing
+    page: ftc-advertising-hub.html
+    evidence: INFORM Consumers Act
+  # ---------------------------------------------------------------- Google SEO starter guide
+  - id: q16
+    question: How can I give Google a list of all the important pages on my website?
+    domain: marketing
+    page: google-seo-starter.html
+    evidence: submit a sitemap
+  - id: q17
+    question: When the same content can be reached at several addresses, which one does a search engine show?
+    domain: marketing
+    page: google-seo-starter.html
+    evidence: the canonical URL
+  - id: q18
+    question: How long does it take before changes to my site show up in search results?
+    domain: marketing
+    page: google-seo-starter.html
+    evidence: Some changes might take effect in a few hours
+  - id: q19
+    question: What should I add to my images so search engines understand what they show?
+    domain: marketing
+    page: google-seo-starter.html
+    evidence: Add descriptive alt text to the image
+  - id: q20
+    question: Which parts of a search result listing are the most visually important?
+    domain: marketing
+    page: google-seo-starter.html
+    evidence: the title link and the snippet
+  # ---------------------------------------------------------------- Google helpful content
+  - id: q21
+    question: Which of the experience, expertise, authority and trust factors matters most to Google?
+    domain: marketing
+    page: google-helpful-content.html
+    evidence: trust is most important
+  - id: q22
+    question: What kind of topics does Google hold to a higher standard because they affect health or money?
+    domain: marketing
+    page: google-helpful-content.html
+    evidence: Your Money or Your Life
+  - id: q23
+    question: Is it against search engine rules to mass-produce AI articles to climb the rankings?
+    domain: marketing
+    page: google-helpful-content.html
+    evidence: that's a violation of our spam policies
+  - id: q24
+    question: What three questions does Google suggest asking about how and why content was made?
+    domain: marketing
+    page: google-helpful-content.html
+    evidence: Who, How, and Why
+  - id: q25
+    question: Should my articles offer something new rather than repeat what other websites say?
+    domain: marketing
+    page: google-helpful-content.html
+    evidence: unique, original information or perspectives
+  # ---------------------------------------------------------------- NIST AI RMF
+  - id: q26
+    question: Are companies legally required to adopt the NIST AI risk framework?
+    domain: technology/ai
+    page: nist-ai-rmf.html
+    evidence: intended for voluntary use
+  - id: q27
+    question: When was the first version of NIST's AI risk management framework published?
+    domain: technology/ai
+    page: nist-ai-rmf.html
+    evidence: Released on January 26, 2023
+  - id: q28
+    question: Does NIST have guidance aimed specifically at the risks of generative AI?
+    domain: technology/ai
+    page: nist-ai-rmf.html
+    evidence: Generative Artificial Intelligence Profile
+  - id: q29
+    question: Is there a companion resource that helps organisations put the AI risk framework into practice?
+    domain: technology/ai
+    page: nist-ai-rmf.html
+    evidence: AI RMF Playbook
+  # ---------------------------------------------------------------- OWASP LLM01
+  - id: q30
+    question: How can instructions hidden in a web page or document end up controlling a language model?
+    domain: technology/ai
+    page: owasp-llm01.html
+    evidence: accepts input from external sources, such as websites or files
+  - id: q31
+    question: Should a person sign off before an LLM agent takes a risky action?
+    domain: technology/ai
+    page: owasp-llm01.html
+    evidence: Require human approval for high-risk actions
+  - id: q32
+    question: How is jailbreaking related to prompt injection?
+    domain: technology/ai
+    page: owasp-llm01.html
+    evidence: Jailbreaking is a form of prompt injection
+  - id: q33
+    question: Why do models that handle images as well as text open up new attack routes?
+    domain: technology/ai
+    page: owasp-llm01.html
+    evidence: The rise of multimodal AI
+  - id: q34
+    question: How much access to tools and APIs should an LLM application be given?
+    domain: technology/ai
+    page: owasp-llm01.html
+    evidence: least privilege
+  # ---------------------------------------------------------------- Wikipedia RAG
+  - id: q35
+    question: What is it called when extra context is inserted into a model's prompt to steer its answer?
+    domain: technology/ai
+    page: wikipedia-rag.html
+    evidence: additional relevant context is added to this input
+  - id: q36
+    question: How does looking up documents help chatbots avoid making things up?
+    domain: technology/ai
+    page: wikipedia-rag.html
+    evidence: helps reduce AI hallucinations
+  - id: q37
+    question: Where are document embeddings kept so they can be searched later?
+    domain: technology/ai
+    page: wikipedia-rag.html
+    evidence: stored in a vector database
+  - id: q38
+    question: In what year was retrieval-augmented generation first proposed?
+    domain: technology/ai
+    page: wikipedia-rag.html
+    evidence: first proposed in 2020
+  # ---------------------------------------------------------------- synthetic opt-in guide
+  - id: q39
+    question: Should the consent checkbox on a newsletter signup form be ticked in advance?
+    domain: marketing
+    page: synthetic-subscriber-footer.html
+    evidence: Avoid pre-ticked boxes
+  - id: q40
+    question: What does it mean when subscribers must confirm their email address after signing up?
+    domain: marketing
+    page: synthetic-subscriber-footer.html
+    evidence: where the subscriber clicks a link to confirm

@@ -1,0 +1,6 @@
+{
+  "verdict": "allow",
+  "category": null,
+  "conditions": [],
+  "rationale": "Fake screen: allows every request."
+}

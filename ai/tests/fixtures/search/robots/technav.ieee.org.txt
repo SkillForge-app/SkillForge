@@ -1,0 +1,43 @@
+# fetched 2026-10-26 from https://technav.ieee.org/robots.txt (HTTP 200)
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: AmazonBot
+Allow: /
+
+User-agent: YouBot
+Allow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /accounts/
+
+Sitemap: https://technav.ieee.org/sitemap.xml

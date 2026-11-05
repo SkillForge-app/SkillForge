@@ -1,0 +1,278 @@
+{
+  "$defs": {
+    "AnalyzerInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "prompt_id": {
+          "title": "Prompt Id",
+          "type": "string"
+        },
+        "prompt_version": {
+          "minimum": 1,
+          "title": "Prompt Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "prompt_id",
+        "prompt_version"
+      ],
+      "title": "AnalyzerInfo",
+      "type": "object"
+    },
+    "Answer": {
+      "additionalProperties": false,
+      "properties": {
+        "question_id": {
+          "pattern": "^q[1-5]$",
+          "title": "Question Id",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "maxLength": 500,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "null when the user skipped it.",
+          "title": "Text"
+        }
+      },
+      "required": [
+        "question_id"
+      ],
+      "title": "Answer",
+      "type": "object"
+    },
+    "ClarifyingQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "about": {
+          "description": "Which part of the analysis the answer fills in.",
+          "enum": [
+            "audience",
+            "outputs",
+            "platforms",
+            "scope",
+            "tone",
+            "constraints",
+            "domain"
+          ],
+          "title": "About",
+          "type": "string"
+        },
+        "id": {
+          "description": "q1 to q5.",
+          "pattern": "^q[1-5]$",
+          "title": "Id",
+          "type": "string"
+        },
+        "text": {
+          "description": "Short question, in the language of the request.",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "about"
+      ],
+      "title": "ClarifyingQuestion",
+      "type": "object"
+    },
+    "SafetyClearance": {
+      "additionalProperties": false,
+      "description": "Proof that the request passed safety screening, and the guardrails it requires.",
+      "properties": {
+        "conditions": {
+          "description": "Each one must become a `must` guardrail in the SkillSpec.",
+          "items": {
+            "enum": [
+              "authorized_use_only",
+              "no_operational_harm",
+              "professional_disclaimer",
+              "crisis_resources",
+              "privacy_protection",
+              "age_appropriate"
+            ],
+            "type": "string"
+          },
+          "title": "Conditions",
+          "type": "array",
+          "uniqueItems": true
+        },
+        "prompt_version": {
+          "description": "Version of the analysis/safety prompt.",
+          "minimum": 1,
+          "title": "Prompt Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "prompt_version"
+      ],
+      "title": "SafetyClearance",
+      "type": "object"
+    }
+  },
+  "$id": "urn:skillforge:analyzed-request:0.1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "AnalyzedRequest (contract A3, draft). Per-field rules only; the question/answer rules are enforced by core.analysis.AnalyzedRequest. Only requests that passed safety screening (safety is not null) may be used to generate a skill.",
+  "properties": {
+    "analyzer": {
+      "$ref": "#/$defs/AnalyzerInfo"
+    },
+    "answers": {
+      "items": {
+        "$ref": "#/$defs/Answer"
+      },
+      "maxItems": 5,
+      "title": "Answers",
+      "type": "array"
+    },
+    "audience": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Who the skill's work is for.",
+      "title": "Audience"
+    },
+    "domain": {
+      "description": "<area>/<sub-area>, area from the closed list.",
+      "maxLength": 80,
+      "pattern": "^(?:technology|data|design|product|marketing|sales|customer-support|operations|hr|education|writing|research|finance|legal|medical|general)(?:/[a-z0-9]+(?:-[a-z0-9]+)*)+$",
+      "title": "Domain",
+      "type": "string"
+    },
+    "expected_outputs": {
+      "description": "Artefacts the skill should produce.",
+      "items": {
+        "maxLength": 200,
+        "minLength": 1,
+        "type": "string"
+      },
+      "maxItems": 10,
+      "title": "Expected Outputs",
+      "type": "array"
+    },
+    "kind": {
+      "description": "role, task or workflow.",
+      "enum": [
+        "role",
+        "task",
+        "workflow"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "needs_clarification": {
+      "description": "True when the request is too vague to design a skill from.",
+      "title": "Needs Clarification",
+      "type": "boolean"
+    },
+    "questions": {
+      "items": {
+        "$ref": "#/$defs/ClarifyingQuestion"
+      },
+      "maxItems": 5,
+      "title": "Questions",
+      "type": "array"
+    },
+    "request": {
+      "description": "The user's request, as typed.",
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Request",
+      "type": "string"
+    },
+    "risk": {
+      "description": "high only for legal, medical and finance areas.",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "title": "Risk",
+      "type": "string"
+    },
+    "safety": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SafetyClearance"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Set by screen_and_analyze (AI-06). null: not screened, so it must not be used to generate a skill."
+    },
+    "skill_name": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Suggested kebab-case name.",
+      "title": "Skill Name"
+    },
+    "summary": {
+      "description": "One-sentence restatement of the request, in English.",
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    },
+    "targets": {
+      "description": "Platforms picked in the UI plus platforms named in the request. Empty: not chosen yet.",
+      "items": {
+        "enum": [
+          "claude",
+          "codex",
+          "chatgpt",
+          "generic"
+        ],
+        "type": "string"
+      },
+      "title": "Targets",
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "kind",
+    "domain",
+    "risk",
+    "summary",
+    "needs_clarification",
+    "request",
+    "analyzer"
+  ],
+  "title": "AnalyzedRequest",
+  "type": "object"
+}

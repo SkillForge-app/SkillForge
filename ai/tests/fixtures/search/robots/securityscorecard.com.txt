@@ -1,0 +1,13 @@
+# START YOAST BLOCK
+# ---------------------------
+User-agent: *
+Disallow: /wp-content/uploads/private/
+Disallow: /internal/
+Disallow: /restricted/
+Disallow: /confidential/
+Disallow: /wp-content/uploads/2025/11/STRIKE_Asus_WrtHug-Report_V4.pdf
+Disallow: /wp-content/uploads/2025/11/STRIKE_Asus_WrtHug-Report_V6.pdf
+
+Sitemap: https://securityscorecard.com/sitemap_index.xml
+# ---------------------------
+# END YOAST BLOCK
