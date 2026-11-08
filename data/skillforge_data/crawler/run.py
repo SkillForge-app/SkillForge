@@ -51,6 +51,7 @@ class CrawlSummary:
     unchanged: int = 0
     blocked: int = 0
     failed: int = 0
+    duplicates: int = 0          # DE-07: pages the pipeline marked as copies of another source's document
     errors: list[str] = field(default_factory=list)
 
 
@@ -148,6 +149,9 @@ class Crawler:
                     # process_document already counted it in crawl_runs (it has the run id); count it here only
                     summary.failed += 1
                     summary.errors.append(f"{url}: {getattr(handled, 'error', 'processing failed')}")
+                if getattr(handled, "duplicate_of", None) is not None:      # DE-07: a copy of another source's page
+                    summary.duplicates += 1
+                    bump_crawl_run(self._conn, summary.run_id, "pages_duplicate")
         else:
             self._failed(summary, url, result.error or f"outcome {result.outcome}")
 

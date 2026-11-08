@@ -31,6 +31,7 @@ from urllib.parse import urlsplit
 import psycopg
 from psycopg.types.json import Jsonb
 
+from ..dedup import DuplicateFinder, promote_duplicates
 from ..interfaces import (
     Embed,
     ExtractedChunk,
@@ -75,6 +76,7 @@ class ProcessResult:
     duplicate_chunks_dropped: int = 0
     superseded_chunks_deleted: int = 0
     active: bool = False                  # True when the stored chunk set is the one in active_config
+    duplicate_of: uuid.UUID | None = None   # DE-07: the canonical document this page is a copy of (needs `dedup`)
     error: str | None = None
     warnings: list[str] = field(default_factory=list)
 
@@ -88,10 +90,15 @@ def process_document(
     embed: Embed,
     normalise_url: NormaliseUrl,
     storage: ObjectStorage | None = None,
+    dedup: DuplicateFinder | None = None,
 ) -> ProcessResult:
-    """Process one page. Running it again on the same content changes nothing."""
+    """Process one page. Running it again on the same content changes nothing.
+
+    With `dedup` (DE-07) the page's MinHash signature is stored and a page that is a copy of another source's current
+    document is marked `duplicate_of` (it keeps its chunks; the views hide it). Without it nothing about duplicates changes.
+    """
     try:
-        return _process(conn, page, config, extract, embed, normalise_url, storage)
+        return _process(conn, page, config, extract, embed, normalise_url, storage, dedup)
     except Exception as exc:                      # a failed page must never stop a crawl; the old content stays
         logger.exception("processing failed for %s", page.url)
         _record_failure(conn, page, exc)
@@ -99,7 +106,7 @@ def process_document(
 
 
 # ---------------------------------------------------------------------------------------------------------------
-def _process(conn, page, config, extract, embed, normalise_url, storage) -> ProcessResult:
+def _process(conn, page, config, extract, embed, normalise_url, storage, dedup=None) -> ProcessResult:
     canonical = _canonical_url(page.url, normalise_url)
     host = (urlsplit(canonical).hostname or "").lower()
     if not host:
@@ -140,6 +147,7 @@ def _process(conn, page, config, extract, embed, normalise_url, storage) -> Proc
     vectors: list[list[float]] = []
     if extracted.quality_ok and chunks:
         vectors = _embed_chunks(embed, chunks, config)
+    signature = dedup.hasher.signature(extracted.text) if (dedup is not None and extracted.quality_ok) else None
 
     with conn.transaction():
         document_id = _record_version(conn, source_id, content_hash, page, extracted.title, config, raw_object_key)
@@ -160,13 +168,29 @@ def _process(conn, page, config, extract, embed, normalise_url, storage) -> Proc
                      (document_id, chunk_config_hash))
         if extracted.quality_ok:
             _insert_chunks(conn, document_id, chunks, vectors, domains, config, chunk_config_hash)
-        superseded_deleted, stale_clean_keys = _remove_superseded(conn, source_id, document_id)
+        superseded_deleted, stale_clean_keys, old_ids = _remove_superseded(conn, source_id, document_id)
+        # DE-07, in the same transaction: first keep the content of the old versions visible (promote a current
+        # duplicate if the old version was the canonical copy), then decide whether THIS page is a copy.
+        promoted = promote_duplicates(conn, old_ids)
+        if dedup is not None:       # the index may be ahead of a transaction that rolls back; find() re-checks the database
+            for promoted_id, promoted_signature in promoted:
+                if promoted_signature is not None:
+                    dedup.add(promoted_id, promoted_signature)
+        duplicate_of = None
+        if dedup is not None and signature is not None:
+            duplicate_of = dedup.find(conn, signature, source_id=source_id)
+            conn.execute("UPDATE knowledge.documents SET minhash = %s, duplicate_of = %s WHERE id = %s",
+                         (signature, duplicate_of, document_id))
         active = _is_active(conn, config)
+
+    if dedup is not None and signature is not None and duplicate_of is None:   # after the commit: a new canonical page
+        dedup.add(document_id, signature)
 
     result = ProcessResult(
         status="processed" if extracted.quality_ok else "rejected",
         source_id=source_id, document_id=document_id, chunks_stored=len(chunks) if extracted.quality_ok else 0,
         duplicate_chunks_dropped=dropped, superseded_chunks_deleted=superseded_deleted, active=active,
+        duplicate_of=duplicate_of,
     )
     _after_commit(conn, storage, config, extracted, result, stale_clean_keys)
     return result
@@ -269,7 +293,7 @@ def _insert_chunks(conn, document_id, chunks, vectors, domains, config, chunk_co
         )
 
 
-def _remove_superseded(conn, source_id, current_document_id) -> tuple[int, list[str]]:
+def _remove_superseded(conn, source_id, current_document_id) -> tuple[int, list[str], list[uuid.UUID]]:
     """Delete the chunks (and, by cascade, the embeddings) of the source's older documents.
 
     Part of the same transaction as the new version, so it only happens when the new version is stored.
@@ -280,7 +304,7 @@ def _remove_superseded(conn, source_id, current_document_id) -> tuple[int, list[
         (source_id, current_document_id),
     ).fetchall()
     if not old:
-        return 0, []
+        return 0, [], []
     old_ids = [row[0] for row in old]
     deleted = conn.execute("DELETE FROM knowledge.chunks WHERE document_id = ANY(%s)", (old_ids,)).rowcount
     conn.execute(
@@ -288,7 +312,7 @@ def _remove_superseded(conn, source_id, current_document_id) -> tuple[int, list[
         "WHERE id = ANY(%s) AND clean_object_key IS NOT NULL AND clean_deleted_at IS NULL",
         (old_ids,),
     )
-    return deleted, [row[1] for row in old if row[1]]
+    return deleted, [row[1] for row in old if row[1]], old_ids
 
 
 def _is_active(conn, config: PipelineConfig) -> bool:
