@@ -223,7 +223,7 @@ def test_the_source_licence_is_kept_when_a_later_fetch_does_not_know_it(env):
 def test_the_raw_page_is_stored_under_its_hash_and_the_document_points_to_it(env):
     result = env.run(A, crawl_run_id=None)
     key = env.one("SELECT raw_object_key FROM knowledge.documents WHERE id = %s", result.document_id)
-    assert key.startswith("docs.example.org/") and key.endswith(".html")
+    assert key.split("/")[0] == "docs.example.org" and key.endswith(".html")   # key = <host>/<hash[:2]>/<hash>.html
     assert env.storage.get(BUCKET_RAW, key) == A
     assert env.storage.metadata(BUCKET_RAW, key)["source-url"] == CANONICAL
 
