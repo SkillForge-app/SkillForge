@@ -28,7 +28,7 @@ dependencies = [
     # Local embedding model for retrieval (AI-11): ONNX runtime, no torch. Exact pin, like
     # LiteLLM: it decides where model files come from (the files are also pinned by revision
     # and sha256 in core/llm/models.yaml).
-    "fastembed==0.9.0",
+    "fastembed==0.9.1",
 ]
 
 [project.optional-dependencies]
@@ -53,7 +53,10 @@ dev = [
 # move it forward on purpose when upgrading (then run the full test suite and the live tests).
 # Moved 2026-11-02 from 2026-10-10 to 2026-10-19 (14 days back) to take the certifi security fix
 # (2026.10.18; Trivy/OPS-11). Only certifi was upgraded; every other locked version is unchanged.
-exclude-newer = "2026-10-19T00:00:00Z"
+# Moved 2026-11-10 to 2026-10-25 (16 days back) for fastembed 0.9.1 (uploaded 2026-10-24 18:23 UTC)
+# and pillow 13.0.0 (2026-10-16). Only those two were upgraded. filelock stays 3.x: litellm 1.104.2
+# requires filelock<4, and the first litellm that allows 4 (1.108.x) is from November.
+exclude-newer = "2026-10-25T00:00:00Z"
 
 [build-system]
 requires = ["hatchling"]
