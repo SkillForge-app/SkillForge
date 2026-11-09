@@ -26,7 +26,7 @@ import psycopg
 
 DSN = os.environ.get(
     "BENCH_DATABASE_URL",
-    "postgresql://skillforge:skillforge_dev@localhost:5434/skillforge_bench",
+    "postgresql://skillforge:skillforge_dev@127.0.0.1:5434/skillforge_bench",
 )
 DIM = 384
 COLUMNS = (

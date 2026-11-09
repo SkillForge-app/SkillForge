@@ -56,6 +56,52 @@ LIMIT 10;
 because pgvector keeps the graph in shared memory. Building without workers worked (74.5 s for 100k). With `--shm-size=1g`
 the parallel build works (40.3 s for 100k). Staging and production containers need the same `shm_size`.
 
+### 2.1 The benchmark container: start, use, remove
+
+The scripts in [data/bench/](../bench/) use one container, named by the variable `BENCH_CONTAINER` (default `skillforge-bench-pg`,
+set on the first line of `create_db.sh`, `drop_db.sh` and `run.sh`). Each script refuses to run if the name does not contain `bench`,
+so none of them can touch `skillforge-postgres` (the local stack) by mistake.
+
+Start it (same image and digest as `compose.yaml`; run from any shell with Docker, one flag per line is for readability):
+
+```bash
+docker run -d --name skillforge-bench-pg \
+  -p 127.0.0.1:5434:5432 \
+  --shm-size=1g \
+  --memory=2800m --memory-swap=2800m \
+  -v skillforge_bench_pgdata:/var/lib/postgresql \
+  -e POSTGRES_USER=skillforge -e POSTGRES_PASSWORD=skillforge_dev \
+  pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a \
+  -c shared_buffers=512MB \
+  -c maintenance_work_mem=1GB \
+  -c max_parallel_maintenance_workers=2 \
+  -c effective_cache_size=2GB \
+  -c max_wal_size=2GB
+```
+
+**Why `127.0.0.1:5434:5432` and not `5434:5432`.** Without the address, Docker publishes the port on all interfaces (`0.0.0.0`), so anyone on
+the same network could connect to the database with the password above, which is in this repository. With `127.0.0.1` only this computer
+can reach it, the same as the ports in the root `compose.yaml`. The benchmark script `queries.py` connects to `127.0.0.1:5434` for the
+same reason (and because `localhost` tries IPv6 first and waits for it to time out).
+
+Use it (from the repository root; the order is: container, database, run):
+
+```bash
+bash data/bench/create_db.sh              # database skillforge_bench with the schema and views, big tables UNLOGGED
+bash data/bench/run.sh 100000 100k .      # load, HNSW build, queries; logs and a JSON result in the current folder
+bash data/bench/drop_db.sh                # remove only the database
+```
+
+Remove it when you are done (`drop_db.sh` removes the database, not the container or the volume):
+
+```bash
+docker rm -f skillforge-bench-pg
+docker volume rm skillforge_bench_pgdata
+```
+
+To use another container, set the variable, for example `BENCH_CONTAINER=my-bench-pg bash data/bench/create_db.sh`; the name must still
+contain `bench`.
+
 ## 3. Sizes and build times
 
 | | 100k | 500k | 1M |
