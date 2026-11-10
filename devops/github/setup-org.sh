@@ -24,23 +24,35 @@ TEAMS=(
   "devops|DevOps department: repo rules, CI/CD, infrastructure"
 )
 
+# Org owners (GitHub role "admin"). Owners may bypass ruleset-main.json on pull requests.
+# mmtrabya, the original repo owner (mmtrabya/AgentForge), reviews all departments' work.
+OWNERS=(
+  "zaid2658a-debug"
+  "mmtrabya"
+)
+
 # Members: "team user role". Anyone not listed here is removed from the team.
-# The lead (zaid2658a-debug) is in every team so they can approve any department's PRs. As org owner,
-# GitHub always shows them as maintainer, whatever role is set here.
+# The lead (zaid2658a-debug) and the reviewer (mmtrabya) are in every team so they can approve any
+# department's PRs. As org owners, GitHub always shows them as maintainer, whatever role is set here.
 MEMBERS=(
   "ai zaid2658a-debug maintainer"
   "ai engyousefk04-dot member"
+  "ai mmtrabya member"
   "backend AbdelrahmanMohamedahmed22 member"
   "backend abdonader061-wq member"
   "backend zaid2658a-debug member"
+  "backend mmtrabya member"
   "data-engineering Mo-mgay1 member"
   "data-engineering mohamed-shahba-dev member"
   "data-engineering zaid2658a-debug member"
+  "data-engineering mmtrabya member"
   "frontend omark243 member"
   "frontend mohammedhamdy33 member"
   "frontend zaid2658a-debug member"
+  "frontend mmtrabya member"
   "devops zaid2658a-debug maintainer"
   "devops engyousefk04-dot member"
+  "devops mmtrabya member"
 )
 
 # Labels: "name|color|description"
@@ -89,6 +101,19 @@ run gh api -X PUT "repos/$ORG/$REPO/actions/permissions/workflow" --silent \
 echo "== Security"
 run gh api -X PUT "repos/$ORG/$REPO/vulnerability-alerts" --silent
 run gh api -X PUT "repos/$ORG/$REPO/automated-security-fixes" --silent
+
+# A non-member gets an org invite with the owner role; a pending invite is left as it is.
+echo "== Org owners"
+for user in "${OWNERS[@]}"; do
+  role="$(gh api "orgs/$ORG/memberships/$user" --jq .role 2>/dev/null)" || role=""
+  if [ "$role" = "admin" ]; then
+    echo "   $user is an owner"
+  elif [ -z "$role" ] && gh api "orgs/$ORG/invitations" --jq '.[].login' | grep -qx "$user"; then
+    echo "   $user has a pending invite"
+  else
+    run gh api -X PUT "orgs/$ORG/memberships/$user" --silent -f role=admin
+  fi
+done
 
 echo "== Teams"
 for entry in "${TEAMS[@]}"; do
