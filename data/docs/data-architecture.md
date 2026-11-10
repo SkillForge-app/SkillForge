@@ -131,9 +131,9 @@ Read against [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI
   2,000 characters (the A4 `Passage.text` limit); `content_hash` is 64 hex characters; `domains` has at least one
   value, no repeats; `embedding_model` is the exact string; vectors are unit length; `source_url` is an absolute
   http(s) URL.
-- AI's `embedding_version` suggestion is a long form
-  (`Qdrant/bge-small-en-v1.5-onnx-Q@aa8f8b06...#model_optimized.onnx:sha256=...`). AI only reads `embedding_model`,
-  so the column is ours; we store the bare revision. Either is accepted by our CHECK (it only requires non-empty).
+- `embedding_version` is stored in the long form AI gave in `retrieval.md` (changed on 10 November 2026 at AI's request; before, we stored
+  only the bare revision): `repo@revision#file:sha256=...`. AI only reads `embedding_model`, so the column is ours. The CHECK only requires
+  non-empty, so old rows with the bare revision stay valid; a switch of the value is a new embedding version (a rebuild, see `active_config`).
 
 **Not yet run in the container** (Docker was off; each is a rolled-back transaction):
 
@@ -151,7 +151,7 @@ Read against [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI
 | Item | Value |
 |---|---|
 | `embedding_model` | exactly `local/BAAI/bge-small-en-v1.5`, enforced by a CHECK. Another value is rejected. |
-| `embedding_version` | `aa8f8b060edb00e03bfdd08813a2949946c8ba55`: the pinned revision of `Qdrant/bge-small-en-v1.5-onnx-Q` (file `model_optimized.onnx`, sha256 `51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431`). Not fixed by a CHECK: a new revision must be able to coexist with the old during a rebuild. The live one is in `active_config`. We store the revision only (AI agreed). The full pin (repo, revision, file, sha256) is in `ai/core/llm/models.yaml`, lines 94-98, on the `AI` branch. |
+| `embedding_version` | `Qdrant/bge-small-en-v1.5-onnx-Q@aa8f8b060edb00e03bfdd08813a2949946c8ba55#model_optimized.onnx:sha256=51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431`: repo `Qdrant/bge-small-en-v1.5-onnx-Q`, pinned revision, file and sha256 in one string (the form in AI's `retrieval.md`, "The pinned embedding model"; it comes from `ai/core/llm/models.yaml`, role `embedding`, on the `AI` branch). Not fixed by a CHECK: a new revision must be able to coexist with the old during a rebuild. The live one is in `active_config`. |
 | Dimension | 384, `vector(384)` |
 | Unit length | enforced by a CHECK: `abs(vector_norm(embedding) - 1) < 0.001`. A vector that is not L2-normalized is rejected. The margin only absorbs float32 rounding. (pgvector 0.8.7 names this function `vector_norm`; `l2_norm` exists only for halfvec and sparsevec.) |
 | Metric and index | cosine, HNSW with `vector_cosine_ops`. Final. Order by `embedding <=> query`; score is `1 - (embedding <=> query)`. |
@@ -727,6 +727,7 @@ only in V1** (`extract_page` rejects other languages with `wrong_language`).
    **Answer (AI):** see "`sources.url`: the canonical URL" below.
 3. `embedding_version`: we store the bare revision `aa8f8b06...`. Your suggested long form also names the file and
    its sha256. Do you want the long form, even though you do not read the column?
+   **Answer (AI, PR #18 review):** use the long form of `retrieval.md`. Done on 10 November 2026 (see the `embeddings` table notes).
 4. How often does your store call `info()` (a count over the view)? At large size it is a scan.
 
 **For BE**

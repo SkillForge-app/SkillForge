@@ -16,7 +16,7 @@ _FINGERPRINT = re.compile(r"^[0-9a-f]{64}$")
 @dataclass(frozen=True)
 class PipelineConfig:
     pipeline_version: str                      # fetch/clean/chunk code version; inside chunk_config
-    embedding_version: str                     # pinned model revision (the long hash)
+    embedding_version: str                     # long form: repo@revision#file:sha256=... (AI's retrieval.md)
     extract_config: ExtractConfigLike          # AI's ExtractConfig: chunking settings and fingerprint()
     splitter: str = "sentence"                 # AI's chunker splits on sentences; ChunkSettings has no name for it
     embedding_model: str = EMBEDDING_MODEL
