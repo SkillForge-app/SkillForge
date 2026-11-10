@@ -55,6 +55,32 @@ class CrawlSummary:
     errors: list[str] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class CrawlTarget:
+    """One URL to crawl and the licence its list (AI's `crawl_list()`) gave it, if any.
+
+    `license` is the value to store in `sources.license` when the page itself declares nothing (a SPDX id, a LicenseRef or 'unknown');
+    `license_source` is how we know it ('manual': a person or list decided it). A licence the page declares wins over this one.
+    """
+
+    url: str
+    license: str | None = None
+    license_source: str = "manual"
+
+
+# What `Crawler.run` accepts for each URL: a plain URL (old call), a (url, licence) pair, or a CrawlTarget.
+CrawlItem = str | tuple[str, str | None] | CrawlTarget
+
+
+def as_target(item: CrawlItem) -> CrawlTarget:
+    if isinstance(item, CrawlTarget):
+        return item
+    if isinstance(item, str):
+        return CrawlTarget(item)
+    url, license_ = item
+    return CrawlTarget(url, license_)
+
+
 # A handler gets each fetched page and may return a status string; "unchanged" is counted in pages_unchanged.
 PageHandler = Callable[[RawPage], object]
 
@@ -79,7 +105,7 @@ class Crawler:
 
     def run(
         self,
-        urls: Sequence[str],
+        urls: Sequence[CrawlItem],
         *,
         domains: Sequence[str],
         on_page: PageHandler | None = None,
@@ -91,18 +117,20 @@ class Crawler:
             config=self._config.as_dict(), skill_domain=skill_domain,
         )
         summary = CrawlSummary(run_id=run_id)
-        for url in urls:
+        for item in urls:
+            target = as_target(item)
             try:
-                self._crawl_one(url, domains, on_page, summary)
+                self._crawl_one(target, domains, on_page, summary)
             except Exception as exc:
-                logger.exception("crawl of %s failed", url)
-                self._failed(summary, url, f"{type(exc).__name__}: {exc}")
+                logger.exception("crawl of %s failed", target.url)
+                self._failed(summary, target.url, f"{type(exc).__name__}: {exc}")
         summary.status = _status(summary)
         finish_crawl_run(conn, run_id, summary.status, "; ".join(summary.errors[-3:]) or None)
         return summary
 
     # ------------------------------------------------------------------------------------------------------
-    def _crawl_one(self, url: str, domains: Sequence[str], on_page: PageHandler | None, summary: CrawlSummary) -> None:
+    def _crawl_one(self, target: CrawlTarget, domains: Sequence[str], on_page: PageHandler | None, summary: CrawlSummary) -> None:
+        url = target.url
         try:
             canonical = self._normalise(url)
         except ValueError as exc:
@@ -116,10 +144,13 @@ class Crawler:
         if result.robots_allowed is not None:
             source_fields = {"robots_allowed": result.robots_allowed, "robots_checked_at": result.robots_checked_at}
         if result.outcome == "ok":
+            # The licence of the page: what the page declares wins; else what the list said; else unknown.
             info = detect_license(result.content) if _is_html(result.content_type) else None
             if info is not None and info.spdx != "unknown":
                 source_fields.update(license=info.spdx, license_source=info.source)
-        upsert_source(self._conn, url=canonical, host=host, **source_fields)
+            elif target.license and target.license != "unknown":
+                source_fields.update(license=target.license, license_source=target.license_source)
+        source_id = upsert_source(self._conn, url=canonical, host=host, **source_fields)
 
         if result.outcome == "blocked":
             summary.blocked += 1
@@ -132,11 +163,13 @@ class Crawler:
             summary.fetched += 1
             bump_crawl_run(self._conn, summary.run_id, "pages_fetched")
             self._validators.set(canonical, result.validators)
+            # What the source row says now (a known licence is never replaced by 'unknown'): the document gets the same.
+            stored_license, stored_source = self._conn.execute(
+                "SELECT license, license_source FROM knowledge.sources WHERE id = %s", (source_id,)).fetchone()
             page = RawPage(
                 url=url, content=result.content, fetched_at=datetime.now(UTC), domains=domains,
                 http_status=result.http_status, content_type=result.content_type,
-                license=source_fields.get("license", "unknown"),            # type: ignore[arg-type]
-                license_source=source_fields.get("license_source", "unknown"),   # type: ignore[arg-type]
+                license=stored_license, license_source=stored_source,
                 crawl_run_id=summary.run_id,
             )
             if on_page is not None:

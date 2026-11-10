@@ -14,6 +14,7 @@ from fakes import FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
 
 from skillforge_data.crawler import (
     Crawler,
+    CrawlTarget,
     FetchConfig,
     HttpFetcher,
     Validators,
@@ -566,3 +567,51 @@ def test_a_crawl_feeds_the_pipeline_and_a_second_crawl_changes_nothing(db, crawl
     assert db.execute("SELECT count(*) FROM knowledge.chunks").fetchone()[0] == 3
     assert embed.calls == 2, "nothing was embedded twice"
     assert db.execute("SELECT pages_unchanged FROM knowledge.crawl_runs WHERE id = %s", (second.run_id,)).fetchone()[0] == 2
+
+
+# ------------------------------------------------------------------ the licence given by the list is kept (DE-04)
+def _source(db, suffix):
+    return db.execute("SELECT license, license_source FROM knowledge.sources WHERE url LIKE %s", (f"%{suffix.rstrip('/')}",)).fetchone()
+
+
+def test_the_licence_from_crawl_list_is_stored_on_the_source_and_the_document(db, crawl):
+    make, site = crawl
+    pages = []
+    make().run([(f"{site.base}/trailing/", "CC-BY-4.0")], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/trailing/") == ("CC-BY-4.0", "manual")
+    assert (pages[0].license, pages[0].license_source) == ("CC-BY-4.0", "manual")
+
+
+def test_a_licence_the_page_declares_wins_over_the_list(db, crawl):
+    make, site = crawl
+    pages = []
+    make().run([CrawlTarget(f"{site.base}/ok", "MIT")], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/ok") == ("CC-BY-4.0", "page")                 # /ok declares CC-BY-4.0
+    assert (pages[0].license, pages[0].license_source) == ("CC-BY-4.0", "page")
+
+
+def test_plain_urls_still_work_and_give_an_unknown_licence(db, crawl):
+    make, site = crawl
+    pages = []
+    make().run([f"{site.base}/trailing/"], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/trailing/") == ("unknown", "unknown") and pages[0].license == "unknown"
+
+
+def test_a_mixed_list_and_an_explicit_licence_source(db, crawl):
+    make, site = crawl
+    make().run([f"{site.base}/trailing/", CrawlTarget(f"{site.base}/doc-a", "LicenseRef-x", "repo")], domains=["technology/ai"])
+    assert _source(db, "/trailing/")[0] == "unknown" and _source(db, "/doc-a") == ("LicenseRef-x", "repo")
+
+
+def test_an_unknown_in_the_list_does_not_erase_a_known_licence(db, crawl):
+    make, site = crawl
+    make().run([(f"{site.base}/trailing/", "CC-BY-4.0")], domains=["technology/ai"])
+    pages = []
+    make().run([(f"{site.base}/trailing/", "unknown")], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/trailing/") == ("CC-BY-4.0", "manual") and pages[0].license == "CC-BY-4.0"
+
+
+def test_a_page_that_was_not_fetched_gets_no_licence_from_the_list(db, crawl):
+    make, site = crawl
+    make().run([(f"{site.base}/private", "CC-BY-4.0")], domains=["technology/ai"])          # robots.txt forbids it
+    assert _source(db, "/private") == ("unknown", "unknown")
