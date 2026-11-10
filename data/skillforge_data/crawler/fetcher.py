@@ -10,7 +10,8 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Literal, Protocol
 from urllib.parse import urljoin, urlsplit
 
@@ -38,7 +39,7 @@ class FetchConfig:
     max_redirects: int = 5
     retries: int = 3                      # retries after the first try, for 429/5xx and network errors
     backoff_base: float = 1.0             # seconds; doubled on every retry
-    max_wait: float = 60.0                # longest pause we accept (also caps Retry-After)
+    max_wait: float = 60.0                # longest pause we accept; a Retry-After above it fails the page
     min_interval: float = 1.0             # seconds between two requests to one host
     denylist: frozenset[str] = frozenset()   # hosts we must not fetch (terms of service review: manual decision)
 
@@ -197,8 +198,16 @@ class HttpFetcher:
                 self._sleep(self._backoff(attempt, None))
                 continue
             if response.status_code in RETRY_STATUSES and attempt < self.config.retries:
-                retry_after = _retry_after_seconds(response.headers.get("retry-after"))
+                retry_after = _retry_after_seconds(response.headers.get("retry-after"), self._now())
                 response.close()
+                if retry_after is not None and retry_after > self.config.max_wait:
+                    # The server wants a longer pause than we accept: do not hammer it and do not wait for minutes. The page fails in
+                    # this run (counted in pages_failed with this reason); the re-crawl schedule (DE-09) picks it up again later.
+                    result.http_status = response.status_code
+                    result.error = (f"HTTP {response.status_code} for {url}: the server asked to wait {retry_after:.0f}s "
+                                    f"(more than max_wait {self.config.max_wait:.0f}s), not retried")
+                    logger.warning("%s", result.error)
+                    return None
                 self._sleep(self._backoff(attempt, retry_after))
                 continue
             return response
@@ -244,7 +253,17 @@ def _host_key(url: str) -> str:
     return parts.netloc.lower()
 
 
-def _retry_after_seconds(value: str | None) -> float | None:
-    if value and value.strip().isdigit():
-        return float(value.strip())
-    return None
+def _retry_after_seconds(value: str | None, now: datetime) -> float | None:
+    """Retry-After (RFC 9110, 10.2.3): a number of seconds or an HTTP-date. A date in the past means 0; garbage means None."""
+    if not value:
+        return None
+    value = value.strip()
+    if value.isdigit():
+        return float(value)
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:                     # "-0000" or a date without a zone: HTTP-dates are GMT
+        when = when.replace(tzinfo=UTC)
+    return max(0.0, (when - now).total_seconds())

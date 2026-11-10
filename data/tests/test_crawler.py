@@ -2,8 +2,10 @@
 
 All requests go to a small HTTP server started inside the test on 127.0.0.1: no network.
 """
+import email.utils
 import threading
 import time
+from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import httpx
@@ -368,10 +370,69 @@ def test_retry_after_is_honoured_but_capped(site):
     fetcher, sleeps = make_fetcher(retries=2)
     assert fetcher.fetch(f"{site.base}/retry-after").outcome == "ok"
     assert sleeps.values == [7.0]
-    site.counters.clear()
-    capped, sleeps2 = make_fetcher(retries=2, max_wait=3.0)
-    capped.fetch(f"{site.base}/retry-after")
-    assert sleeps2.values == [3.0]
+
+
+def test_a_retry_after_longer_than_max_wait_fails_the_page_without_waiting_or_retrying(site):
+    fetcher, sleeps = make_fetcher(retries=2, max_wait=3.0)
+    result = fetcher.fetch(f"{site.base}/retry-after")           # asks for 7 seconds
+    assert result.outcome == "failed" and result.http_status == 429
+    assert "asked to wait 7s" in result.error and "max_wait 3s" in result.error
+    assert sleeps.values == [] and site.hits.count("/retry-after") == 1
+
+
+def _date_header(delta_seconds):
+    return email.utils.format_datetime(datetime.now(UTC) + timedelta(seconds=delta_seconds), usegmt=True)
+
+
+def _server_fetcher(first_status, retry_after, **config):
+    """A fetcher over a mock server that answers `first_status` + Retry-After once, then 200."""
+    calls = []
+
+    def handler(request):
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404)
+        calls.append(request.url.path)
+        if len(calls) == 1:
+            return httpx.Response(first_status, headers={"Retry-After": retry_after})
+        return httpx.Response(200, text="<p>ok</p>", headers={"Content-Type": "text/html"})
+
+    sleeps = Sleeps()
+    fetcher = HttpFetcher(FetchConfig(min_interval=0.0, **config), client=httpx.Client(transport=httpx.MockTransport(handler)),
+                          sleep=sleeps)
+    return fetcher, sleeps, calls
+
+
+def test_a_retry_after_date_in_the_future_is_waited_for():
+    fetcher, sleeps, calls = _server_fetcher(503, _date_header(30), retries=2)
+    assert fetcher.fetch("https://example.org/p").outcome == "ok" and len(calls) == 2
+    assert len(sleeps.values) == 1 and 25 <= sleeps.values[0] <= 30, "HTTP-date, read as seconds from now"
+
+
+def test_a_retry_after_date_beyond_max_wait_fails_the_page():
+    fetcher, sleeps, calls = _server_fetcher(429, _date_header(3600), retries=2, max_wait=60.0)
+    result = fetcher.fetch("https://example.org/p")
+    assert result.outcome == "failed" and "asked to wait" in result.error and len(calls) == 1 and sleeps.values == []
+
+
+def test_a_retry_after_date_in_the_past_means_retry_now():
+    fetcher, sleeps, calls = _server_fetcher(503, _date_header(-3600), retries=2)
+    assert fetcher.fetch("https://example.org/p").outcome == "ok" and len(calls) == 2
+    assert sleeps.values == [0.0]
+
+
+def test_an_unreadable_retry_after_falls_back_to_the_normal_backoff():
+    fetcher, sleeps, _ = _server_fetcher(503, "soon", retries=2, backoff_base=2.0)
+    assert fetcher.fetch("https://example.org/p").outcome == "ok" and sleeps.values == [2.0]
+
+
+def test_a_page_that_asks_for_a_long_wait_is_counted_as_failed_in_the_crawl_run(db, site):
+    fetcher, _ = make_fetcher(retries=2, max_wait=3.0)
+    crawler = Crawler(db, fetcher, fake_normalise_url, config=fetcher.config, pipeline_version="p1")
+    summary = crawler.run([f"{site.base}/retry-after"], domains=["technology/ai"])
+    row = db.execute("SELECT pages_failed, error FROM knowledge.crawl_runs WHERE id = %s", (summary.run_id,)).fetchone()
+    assert row[0] == 1 and "asked to wait" in row[1]
+    assert summary.failed == 1 and summary.fetched == 0
+    assert "asked to wait" in summary.errors[0]
 
 
 def test_a_timeout_is_a_failure_after_the_retries(site):
