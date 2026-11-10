@@ -63,7 +63,8 @@ Three views, all showing only the active config (see below). They live in
 [db/knowledge_views.sql](../db/knowledge_views.sql), which is **the contract between DE and AI**: any change to it
 (name, columns, types, filters) needs AI's approval.
 
-- `chunk_provenance`: chunk → `url`, `host`, `retrieved_at`, `license`, chunk and document hashes. It is **not**
+- `chunk_provenance`: chunk → `url`, `host`, `retrieved_at`, `license`, chunk and document hashes, plus (added 10 Nov 2026,
+  approved by AI in the review of PR #18) `crawl_run_id`, `page_title`, `pipeline_version` and `chunk_config_hash`. It is **not**
   filtered by `active_config` or `is_current`, so any chunk, old or new, can be traced.
 - `retrievable_chunks`: `text` plus the provenance columns and `skill_domains`, only for chunks of the active
   config whose document `is_current`, passed AI's quality check (`quality_ok`) and has `duplicate_of IS NULL`.

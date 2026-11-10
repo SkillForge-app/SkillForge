@@ -17,7 +17,11 @@ SELECT c.chunk_id      AS chunk_id,
        s.url,
        s.host,
        d.fetched_at    AS retrieved_at,
-       d.license                                     -- license as of the latest fetch
+       d.license,                                    -- license as of the latest fetch
+       d.crawl_run_id,                               -- the run that first stored this version
+       d.title         AS page_title,
+       d.pipeline_version,                           -- fetch/clean code version
+       c.chunk_config_hash                           -- which chunk set
 FROM knowledge.chunks c
 JOIN knowledge.documents d ON d.id = c.document_id
 JOIN knowledge.sources   s ON s.id = d.source_id;

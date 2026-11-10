@@ -1,6 +1,7 @@
 # Proposal: add the crawl run (and three more fields) to `chunk_provenance`
 
-Status: proposal, not applied. `db/knowledge_views.sql` is the DE-AI contract and was not touched. 5 November 2026.
+Status: **applied** (10 November 2026). AI (Zeyad) approved it in the review of PR #18; the four columns are now at the end of `chunk_provenance`
+in `db/knowledge_views.sql`. The other two views are unchanged. Written 5 November 2026.
 
 ## What was checked
 
@@ -20,7 +21,7 @@ its source". The brief for this work added: the source, the page, the licence an
 So the view covers the task plan's four items (URL, date, licence, hash). It does not cover the run, the page title or the version of
 the pipeline. Everything is *stored* by the pipeline (tested in `tests/test_provenance.py`); only the view lacks the columns.
 
-## How the code works around it today
+## How the code worked around it before (now it reads the view)
 
 `skillforge_data/provenance.get_provenance()` reads `chunk_provenance` and joins `documents` for `crawl_run_id` and `title`.
 `check_provenance()` checks that each chunk appears in the view with a URL, a time, a licence and a document hash, that

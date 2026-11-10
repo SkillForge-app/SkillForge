@@ -1,7 +1,7 @@
 """DE-06: provenance. Every chunk can be traced to its source: URL, retrieval date, licence, content hash, crawl run.
 
-`chunk_provenance` (db/knowledge_views.sql) gives chunk -> url, host, retrieved_at, license and the hashes. The crawl run and the
-title are one join further (`documents`), because the view does not carry them (see docs/proposals/de-06-provenance.md).
+`chunk_provenance` (db/knowledge_views.sql) gives chunk -> url, host, retrieved_at, license, the hashes, the crawl run, the page
+title, the pipeline version and the chunk config hash (the last four were added once AI approved docs/proposals/de-06-provenance.md).
 `check_provenance` is the "every chunk traceable" test of the task plan, as a function that can also run as a data-quality check
 (DE-11).
 """
@@ -31,6 +31,8 @@ class Provenance:
     source_id: uuid.UUID
     crawl_run_id: uuid.UUID | None
     title: str
+    pipeline_version: str
+    chunk_config_hash: str
 
 
 @dataclass
@@ -50,9 +52,8 @@ def get_provenance(conn: psycopg.Connection, chunk_id: str) -> list[Provenance]:
     rows = conn.execute(
         """
         SELECT p.chunk_id, p.chunk_uuid, p.url, p.host, p.retrieved_at, p.license, p.chunk_hash, p.document_hash,
-               p.document_id, p.source_id, d.crawl_run_id, d.title
+               p.document_id, p.source_id, p.crawl_run_id, p.page_title, p.pipeline_version, p.chunk_config_hash
         FROM knowledge.chunk_provenance p
-        JOIN knowledge.documents d ON d.id = p.document_id
         WHERE p.chunk_id = %s
         ORDER BY p.retrieved_at DESC
         """,
