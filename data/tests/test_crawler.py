@@ -6,6 +6,7 @@ import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import httpx
 import pytest
 from fakes import FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
 
@@ -36,6 +37,8 @@ class Site:
         self.headers: list[dict[str, str]] = []
         self.robots = "User-agent: *\nDisallow: /private\n"
         self.robots_status = 200
+        self.robots_chain = 0            # /robots.txt redirects through this many hops (/rc/1 ... /rc/N) before the real answer
+        self.robots_loop = False         # ... or redirects forever between /rc/1 and itself
         self.counters: dict[str, int] = {}
         self.base = ""
 
@@ -57,6 +60,20 @@ def _send(h, status, body=b"", headers=None, content_type="text/html"):
 
 def _routes(site: Site):
     def robots(h):
+        pass
+
+    def robots_hop(i):
+        def handler(h):
+            if site.robots_loop:
+                return _send(h, 302, headers={"Location": "/rc/1"})
+            if i < site.robots_chain:
+                return _send(h, 301, headers={"Location": f"/rc/{i + 1}"})
+            _send(h, 200, site.robots.encode(), content_type="text/plain")
+        return handler
+
+    def robots_entry(h):
+        if site.robots_chain or site.robots_loop:
+            return _send(h, 301, headers={"Location": "/rc/1"})
         _send(h, site.robots_status, site.robots.encode(), content_type="text/plain")
 
     def ok(h):
@@ -89,7 +106,8 @@ def _routes(site: Site):
         _send(h, 200, b"<p>slow</p>")
 
     return {
-        "/robots.txt": robots,
+        "/robots.txt": robots_entry,
+        **{f"/rc/{i}": robots_hop(i) for i in range(1, 9)},
         "/ok": ok,
         "/private": lambda h: _send(h, 200, b"<p>secret</p>"),
         "/redirect": lambda h: _send(h, 302, headers={"Location": "/ok"}),
@@ -171,6 +189,82 @@ def test_robots_txt_is_fetched_once_and_cached(site):
     fetcher.fetch(f"{site.base}/ok")
     fetcher.fetch(f"{site.base}/gone")
     assert site.hits.count("/robots.txt") == 1
+
+
+# ---------------------------------------------------------------- robots.txt redirects (RFC 9309, up to 5)
+def _fetch_ok_page(site):
+    fetcher, _ = make_fetcher()
+    return fetcher.fetch(f"{site.base}/ok")
+
+
+def test_one_robots_redirect_is_followed(site):
+    site.robots_chain = 1
+    site.robots = "User-agent: *\nDisallow: /private\n"
+    assert _fetch_ok_page(site).outcome == "ok"
+    fetcher, _ = make_fetcher()
+    assert fetcher.fetch(f"{site.base}/private").outcome == "blocked", "the rules found after the redirect are applied"
+    assert site.hits.count("/robots.txt") == 2 and "/rc/1" in site.hits
+
+
+def test_a_chain_of_five_robots_redirects_is_followed(site):
+    site.robots_chain = 5
+    site.robots = "User-agent: *\nDisallow: /\n"
+    result = _fetch_ok_page(site)
+    assert result.outcome == "blocked" and "disallowed by robots.txt" in result.error, "the rules at the end of the chain apply"
+    assert [h for h in site.hits if h.startswith("/rc/")] == [f"/rc/{i}" for i in range(1, 6)]
+
+
+def test_six_robots_redirects_make_robots_txt_unavailable(site):
+    site.robots_chain = 6
+    site.robots = "User-agent: *\nAllow: /\n"
+    result = _fetch_ok_page(site)
+    assert result.outcome == "blocked" and "robots.txt unavailable" in result.error, "same rule as any other robots.txt error"
+    assert "/ok" not in site.hits and "/rc/6" not in site.hits, "the sixth redirect is not followed and the page is never requested"
+
+
+def test_a_robots_redirect_loop_is_unavailable_and_ends(site):
+    site.robots_loop = True
+    result = _fetch_ok_page(site)
+    assert result.outcome == "blocked" and "robots.txt unavailable" in result.error
+    assert "/ok" not in site.hits and len(site.hits) <= 3
+
+
+def _mock_fetcher(handler, **config):
+    client = httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=False)
+    return HttpFetcher(FetchConfig(min_interval=0.0, **config), client=client, sleep=lambda s: None)
+
+
+def test_a_robots_redirect_to_another_host_is_followed_and_recorded(caplog):
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        if request.url.host == "example.org" and request.url.path == "/robots.txt":
+            return httpx.Response(301, headers={"Location": "https://www.example.org/robots.txt"})
+        if request.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: *\nDisallow: /nope\n")
+        return httpx.Response(200, text="<p>x</p>", headers={"Content-Type": "text/html"})
+
+    fetcher = _mock_fetcher(handler)
+    with caplog.at_level("WARNING"):
+        response = fetcher._fetch_robots("https://example.org")
+    assert response.status == 200 and response.redirects == ("https://www.example.org/robots.txt",)
+    assert any("another host" in r.message and "www.example.org" in r.message for r in caplog.records), "the cross-host hop is logged"
+    allowed, _ = fetcher._robots.allowed("https://example.org/nope")
+    assert allowed is False
+    assert fetcher._robots.allowed("https://example.org/fine") == (True, "robots.txt (redirected to host www.example.org)")
+
+
+def test_a_robots_redirect_to_a_denied_host_is_not_followed():
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.host)
+        return httpx.Response(302, headers={"Location": "https://blocked.example.net/robots.txt"})
+
+    fetcher = _mock_fetcher(handler, denylist=frozenset({"blocked.example.net"}))
+    assert fetcher._fetch_robots("https://example.org").status is None
+    assert seen == ["example.org"]
 
 
 def test_the_request_names_the_bot(site):

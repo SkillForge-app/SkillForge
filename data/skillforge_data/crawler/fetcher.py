@@ -24,6 +24,8 @@ logger = logging.getLogger("skillforge_data.crawler")
 USER_AGENT = "SkillForgeBot/0.1 (+https://github.com/SkillForge-app/SkillForge; knowledge collection for agent skills)"
 MAX_BYTES = 20 * 1024 * 1024            # 20 MB, the limit proposed in docs/object-storage.md
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
+ROBOTS_MAX_REDIRECTS = 5                 # RFC 9309: follow at least five consecutive redirects
 
 Outcome = Literal["ok", "not_modified", "blocked", "too_large", "failed"]
 
@@ -100,15 +102,44 @@ class HttpFetcher:
 
     # --- robots.txt -----------------------------------------------------------------------------------------
     def _fetch_robots(self, origin: str) -> RobotsResponse:
-        """One request for <origin>/robots.txt, rate-limited like any other request (no retries: errors mean disallow)."""
-        self._limiter.wait(_host_key(origin))
-        try:
-            response = self._client.get(f"{origin}/robots.txt", headers={"Accept": "text/plain"})
-        except httpx.HTTPError as exc:
-            logger.warning("robots.txt of %s not reachable: %s", origin, exc)
-            return RobotsResponse(None)
+        """<origin>/robots.txt, rate-limited like any other request (no retries: errors mean disallow).
+
+        Follows up to ROBOTS_MAX_REDIRECTS redirects (RFC 9309). More than that, a redirect loop, a redirect without a Location, a
+        redirect to something that is not http(s) or to a deny-listed host all count as "request failed" (status None).
+        A redirect to another host is followed but logged and returned in `RobotsResponse.redirects`.
+        """
+        current = f"{origin}/robots.txt"
+        followed: list[str] = []
+        seen = {current}
+        while True:
+            self._limiter.wait(_host_key(current))
+            try:
+                response = self._client.get(current, headers={"Accept": "text/plain"})
+            except httpx.HTTPError as exc:
+                logger.warning("robots.txt of %s not reachable (%s): %s", origin, current, exc)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if response.status_code not in REDIRECT_STATUSES:
+                break
+            location = response.headers.get("location")
+            target = urljoin(current, location) if location else None
+            parts = urlsplit(target) if target else None
+            if not parts or parts.scheme not in ("http", "https") or not parts.hostname:
+                logger.warning("robots.txt of %s: redirect without a usable Location from %s", origin, current)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if parts.hostname.lower() in self.config.denylist:
+                logger.warning("robots.txt of %s: redirect to deny-listed host %s", origin, parts.hostname)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if len(followed) >= ROBOTS_MAX_REDIRECTS or target in seen:
+                why = "a redirect loop" if target in seen else f"more than {ROBOTS_MAX_REDIRECTS} redirects"
+                logger.warning("robots.txt of %s: %s, treated as unavailable", origin, why)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if parts.netloc.lower() != urlsplit(current).netloc.lower():
+                logger.warning("robots.txt of %s redirects to another host: %s", origin, target)
+            followed.append(target)
+            seen.add(target)
+            current = target
         text = response.text if response.status_code == 200 and len(response.content) <= 512 * 1024 else ""
-        return RobotsResponse(response.status_code, text)
+        return RobotsResponse(response.status_code, text, tuple(followed))
 
     # --- one URL --------------------------------------------------------------------------------------------
     def fetch(self, url: str, validators: Validators | None = None) -> FetchResult:
@@ -133,7 +164,7 @@ class HttpFetcher:
             if response is None:
                 return result
             result.http_status = response.status_code
-            if response.status_code in (301, 302, 303, 307, 308):
+            if response.status_code in REDIRECT_STATUSES:
                 location = response.headers.get("location")
                 response.close()
                 if not location:
