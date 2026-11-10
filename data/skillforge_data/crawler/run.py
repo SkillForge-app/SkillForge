@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 import psycopg
 
 from ..interfaces import NormaliseUrl
+from ..licensing import web_page_licence
 from ..pipeline.process import RawPage
 from ..store import bump_crawl_run, finish_crawl_run, start_crawl_run, upsert_source
 from .fetcher import FetchConfig, PageFetcher, Validators
@@ -59,6 +60,9 @@ class CrawlSummary:
 class CrawlTarget:
     """One URL to crawl and the licence its list (AI's `crawl_list()`) gave it, if any.
 
+    Built from a `(url, label)` pair, the label is mapped by `licensing.web_page_licence` ('cc-by-4.0' -> CC-BY-4.0, manual; an unknown
+    label -> unknown). Built directly, `license` and `license_source` are stored as given.
+
     `license` is the value to store in `sources.license` when the page itself declares nothing (a SPDX id, a LicenseRef or 'unknown');
     `license_source` is how we know it ('manual': a person or list decided it). A licence the page declares wins over this one.
     """
@@ -77,8 +81,9 @@ def as_target(item: CrawlItem) -> CrawlTarget:
         return item
     if isinstance(item, str):
         return CrawlTarget(item)
-    url, license_ = item
-    return CrawlTarget(url, license_)
+    url, label = item                  # the label of crawl_list(): see licensing.WEB_LICENCE_LABELS
+    mapped = web_page_licence(label)
+    return CrawlTarget(url, mapped.license, mapped.license_source)
 
 
 # A handler gets each fetched page and may return a status string; "unchanged" is counted in pages_unchanged.

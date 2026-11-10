@@ -645,6 +645,26 @@ store sets every transaction READ ONLY; `SET LOCAL` is allowed there.
 | Crawl and pipeline logs | logs | 90 days | Delete |
 | Sources with license `unknown` | `sources`, `documents` | Allowed as background knowledge only | Never copied as examples (DE-08) |
 
+### Licence policy (DE-08, decided by AI; code in `skillforge_data/licensing.py`)
+
+Two separate policies. No view filters on the licence; the question to AI is in [p3-progress.md](p3-progress.md).
+
+- **Public SKILL.md files** (examples we may copy): only `MIT`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `ISC`, `CC0-1.0`, `Unlicense`
+  and `CC-BY-4.0`. Refused: CC-BY-SA, every GPL (also LGPL, AGPL), MPL, anything NC or ND, and `unknown` (no licence means all rights
+  reserved). `register_skill_file` stores a file only if allowed, as a `skill_md` source with its `url` and `license`
+  (`license_source = 'repo'`), which is what the attribution needs. A refused file is not stored.
+- **Web pages from `crawl_list()`**: the list gives a label per site, mapped like this (no schema change: `sources.license_source` already
+  accepts `page`, `repo`, `manual` and `unknown`). A licence the page declares itself (`detect_license`) always wins (`license_source = 'page'`).
+
+| crawl_list label | `sources.license` | `sources.license_source` |
+|---|---|---|
+| `public-domain-us-gov` | `LicenseRef-us-gov-public-domain` | `manual` |
+| `cc-by-4.0` | `CC-BY-4.0` | `manual` |
+| `cc-by-sa-4.0` | `CC-BY-SA-4.0` | `manual` |
+| `copyright-summarise-and-cite` | `unknown` | `unknown` (default use: summarise and cite only) |
+
+An unknown or missing label is read as `unknown`, never as permission.
+
 Personal data: these tables hold public web content only. User requests and accounts belong to
 Backend; user deletion and request-text retention are handled in DE-13 and should not add user
 columns here.
