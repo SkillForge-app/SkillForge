@@ -2,7 +2,14 @@
 from datetime import UTC, datetime, timedelta
 
 import pytest
-from fakes import T0, FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
+from fakes import (
+    T0,
+    FakeEmbed,
+    FakeExtract,
+    fake_config,
+    fake_normalise_url,
+    page_bytes,
+)
 
 from skillforge_data.crawler import Crawler, FetchConfig
 from skillforge_data.crawler.fetcher import FetchResult
@@ -14,10 +21,9 @@ from skillforge_data.dedup import (
     jaccard,
     shingles,
 )
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import RawPage, process_document
 
-CONFIG = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+CONFIG = fake_config()
 
 
 def words(seed: str, n: int = 150, change: int | None = None) -> str:

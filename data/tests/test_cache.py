@@ -2,7 +2,14 @@
 from datetime import timedelta
 
 import pytest
-from fakes import T0, FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
+from fakes import (
+    T0,
+    FakeEmbed,
+    FakeExtract,
+    fake_config,
+    fake_normalise_url,
+    page_bytes,
+)
 
 from skillforge_data.cache import (
     domain_and_parents,
@@ -11,10 +18,9 @@ from skillforge_data.cache import (
     plan_domain,
 )
 from skillforge_data.freshness import FreshnessRules
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import RawPage, process_document
 
-CONFIG = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+CONFIG = fake_config()
 NOW = T0 + timedelta(days=100)
 RULES = FreshnessRules(min_documents=3)          # 30 days for web pages, 90 for skill_md and repo_file
 

@@ -10,7 +10,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import httpx
 import pytest
-from fakes import FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
+from fakes import FakeEmbed, FakeExtract, fake_config, fake_normalise_url, page_bytes
 
 from skillforge_data.crawler import (
     Crawler,
@@ -23,7 +23,6 @@ from skillforge_data.crawler import (
 from skillforge_data.crawler.license import detect_license, to_spdx
 from skillforge_data.crawler.ratelimit import HostRateLimiter
 from skillforge_data.crawler.robots import RobotsPolicy, RobotsResponse
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import process_document
 
 LICENSED_PAGE = (
@@ -550,7 +549,7 @@ def test_a_run_where_everything_fails_has_status_failed(db, crawl):
 def test_a_crawl_feeds_the_pipeline_and_a_second_crawl_changes_nothing(db, crawl):
     make, site = crawl
     extract, embed = FakeExtract(), FakeEmbed()
-    config = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+    config = fake_config()
 
     def handler(page):
         return process_document(db, page, config=config, extract=extract, embed=embed, normalise_url=fake_normalise_url)

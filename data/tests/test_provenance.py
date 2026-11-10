@@ -3,15 +3,21 @@ import hashlib
 from datetime import timedelta
 
 import pytest
-from fakes import T0, FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
+from fakes import (
+    T0,
+    FakeEmbed,
+    FakeExtract,
+    fake_config,
+    fake_normalise_url,
+    page_bytes,
+)
 
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import RawPage, process_document
 from skillforge_data.provenance import check_provenance, get_provenance
 from skillforge_data.storage import BUCKET_RAW, MemoryStorage
 from skillforge_data.store import start_crawl_run
 
-CONFIG = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+CONFIG = fake_config()
 URL = "https://Docs.Example.org/guide/"
 CANONICAL = "https://docs.example.org/guide"
 CONTENT = page_bytes(("alpha one", "alpha two"), title="Guide")

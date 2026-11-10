@@ -19,6 +19,31 @@ from skillforge_data.interfaces import ExtractedChunk, ExtractedPage
 T0 = datetime(2026, 11, 5, 10, 0, tzinfo=UTC)
 
 
+class FakeChunking:
+    """Not the 500/50 of the first draft and not AI's defaults (180/40): a test passes only if the values come from the config."""
+
+    def __init__(self, target_words: int = 123, overlap_words: int = 17) -> None:
+        self.target_words, self.overlap_words = target_words, overlap_words
+
+
+class FakeExtractConfig:
+    """Stands for AI's ExtractConfig: `chunking` and `fingerprint()`."""
+
+    def __init__(self, *, target_words: int = 123, overlap_words: int = 17, version: str = "1") -> None:
+        self.chunking = FakeChunking(target_words, overlap_words)
+        self._version = version
+
+    def fingerprint(self) -> str:
+        return hashlib.sha256(f"fake-extract-config:{self._version}:{self.chunking.target_words}:{self.chunking.overlap_words}"
+                              .encode()).hexdigest()
+
+
+def fake_config(*, pipeline_version: str = "p1", embedding_version: str = "rev-1", **extract_options):
+    from skillforge_data.pipeline.config import PipelineConfig
+    return PipelineConfig(pipeline_version=pipeline_version, embedding_version=embedding_version,
+                          extract_config=FakeExtractConfig(**extract_options))
+
+
 def page_bytes(paragraphs=("alpha text one", "beta text two"), *, title="A page", reject=(), screening=None) -> bytes:
     return json.dumps(
         {"title": title, "paragraphs": list(paragraphs), "reject": list(reject), "screening": screening}
