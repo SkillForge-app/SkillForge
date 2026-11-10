@@ -436,13 +436,19 @@ have compared; the new shape is the one AI asked for.
 
 ## `active_config`: one chunk config, one embedding version
 
-`chunk_config` has fixed keys: `size`, `overlap`, `splitter` (AI-owned values) and `pipeline_version` (ours), plus an
-optional fifth key, `extract_fingerprint`, enforced by a CHECK. `extract_fingerprint` is `ExtractConfig.fingerprint()` from AI: 64 hex
+`chunk_config` has exactly five keys, all required (a CHECK enforces it): `size` and `overlap` (AI's chunking settings
+`ExtractConfig.chunking.target_words` and `.overlap_words`; the pipeline reads them from the injected config, not from numbers in our code),
+`splitter` (the name of the splitting method, `sentence`), `pipeline_version` (ours), and `extract_fingerprint`.
+`extract_fingerprint` is `ExtractConfig.fingerprint()` from AI (final since 1 November 2026): 64 lower-case hex
 characters, the sha256 of every extraction setting except the per-site `site_boilerplate`, so every host gives the
-same value and the single `active_config` row keeps working. **TODO:** the key is optional until AI finishes and
-pins the function (the default config gives `f33bf1b5...5483`); then it becomes required, and the pipeline (DE-05)
-fills it from `ExtractConfig.fingerprint()`. **TODO (DE-05): make `extract_fingerprint` mandatory in the CHECK (a schema
-change) as soon as the pipeline starts writing it;** until then rows without it are accepted. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
+same value and the single `active_config` row keeps working (the default config gives `f33bf1b5...5483`). AI notes that `size`, `overlap`
+and `splitter` repeat part of the fingerprint; we keep them (harmless, and readable in SQL).
+
+**Schema change of 10 November 2026 (Backend must know):** the fifth key used to be optional and is now required, so rows without it are
+refused. Chunks stored before 4 November (the day AI made the extraction final) were built without the final extraction and are not final
+either; rebuild them. The local database volume must be reset to get the new CHECK, because the root `compose.yaml` applies the schema only
+on the first start of an empty volume: `docker compose down -v`, then `up -d`. The shared schema is Backend's contract too, so this change
+needs their review in the PR. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
 version, or any new chunk setting, is a new config and a new chunk set. Rows of the old and new config can exist
 side by side while a rebuild runs, so the same text would appear twice.
 
