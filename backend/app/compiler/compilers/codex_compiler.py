@@ -1,28 +1,18 @@
-
+﻿from collections.abc import Mapping
 from typing import Any
 
 from backend.app.compiler.base_compiler import BaseCompiler
 from backend.app.compiler.platform_schema import CODEX_SCHEMA
+from backend.app.compiler.spec_adapter import get_validated_spec, render_skill
 
 
 class CodexCompiler(BaseCompiler):
-    """Generate Codex instruction files from an agent specification."""
+    """Compile SkillSpec into Codex instruction files."""
 
-    def compile(self, agent_spec: dict[str, Any]) -> dict[str, str]:
-
-        name = agent_spec.get("name", "Unnamed Agent")
-        description = agent_spec.get("description", "")
-        instructions = agent_spec.get("instructions", "")
-
-        content = f"""# {name}
-
-## Description
-{description}
-
-## Instructions
-{instructions}
-"""
+    def compile(self, skill_spec: Mapping[str, Any]) -> dict[str, str]:
+        spec = get_validated_spec(skill_spec)
+        content = render_skill(spec, "OpenAI Codex")
 
         return {
-            CODEX_SCHEMA.instruction_file: content
+            CODEX_SCHEMA.instruction_file: content,
         }

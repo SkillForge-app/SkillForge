@@ -1,12 +1,12 @@
-
-from abc import ABC, abstractmethod
+﻿from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from typing import Any
 
 
 class BaseCompiler(ABC):
-    """Base interface for all platform compilers."""
+    """Base interface for SkillSpec platform compilers."""
 
     @abstractmethod
-    def compile(self, agent_spec: dict[str, Any]) -> dict[str, str]:
-        """Convert an AgentSpec into platform-specific files."""
-        pass
+    def compile(self, skill_spec: Mapping[str, Any]) -> dict[str, str]:
+        """Compile a validated SkillSpec into platform-specific files."""
+        raise NotImplementedError
