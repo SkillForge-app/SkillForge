@@ -4,7 +4,8 @@
 name = "skillforge"
 version = "0.1.0"
 description = "SkillForge: build agent skills for Claude, Codex and ChatGPT"
-requires-python = ">=3.11"
+# 3.11.5, not 3.11: soupsieve 3.0.2 and later need it (see the exclude-newer notes below).
+requires-python = ">=3.11.5"
 dependencies = [
     "pydantic>=2.7,<3",
     "jinja2>=3.1,<4",
@@ -56,6 +57,9 @@ dev = [
 # Moved 2026-11-10 to 2026-10-25 (16 days back) for fastembed 0.9.1 (uploaded 2026-10-24 18:23 UTC)
 # and pillow 13.0.0 (2026-10-16). Only those two were upgraded. filelock stays 3.x: litellm 1.104.2
 # requires filelock<4, and the first litellm that allows 4 (1.108.x) is from November.
+# 2026-11-13, same cutoff: soupsieve 2.10 -> 3.0.4 (2026-10-22) for CVE-2026-126191 (Trivy #35).
+# It needs Python >=3.11.5, hence requires-python. CVE-2026-126190 (#34) needs soupsieve 4.0
+# (2026-11-03), which meets the two-week rule on 2026-11-17.
 exclude-newer = "2026-10-25T00:00:00Z"
 
 [build-system]
