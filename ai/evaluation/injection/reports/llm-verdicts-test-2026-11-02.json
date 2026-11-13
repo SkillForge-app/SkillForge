@@ -1,0 +1,1162 @@
+{
+  "developers.google.com-0af9dc7e-03a39f4f": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-049a3685": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-0e5091d5": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-1815d201": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-1d6b6281": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-0af9dc7e-220a0229": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-317efba0": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-3351ee63": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-375a164d": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-3a1cb345": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-3ee5f9ed": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-3fc262b2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-43b58fc0": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-48005f7e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-5260b8e2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-581bfb04": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-6231c27e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-87fed0a6": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-97f6d3a3": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-983e8030": {
+    "injection": true,
+    "category": "override",
+    "confidence": 0.95
+  },
+  "developers.google.com-0af9dc7e-a43e7190": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-ae1409de": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-bc20ae2c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-c8e43f18": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-cec5cded": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-d18c11b5": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-d8fb0877": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-e4be5b00": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.97
+  },
+  "developers.google.com-0af9dc7e-eb9e0d44": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-0af9dc7e-eccc80f3": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-0af9dc7e-f55ed255": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-8d7d5b41-07163e24": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-8d7d5b41-14f2c4f7": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-8d7d5b41-19ceeaab": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-8d7d5b41-369b0849": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-8d7d5b41-3e403d17": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-58049267": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-583ec9f9": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-62242943": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.96
+  },
+  "developers.google.com-8d7d5b41-6823106c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-93153682": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-a5bc912c": {
+    "injection": true,
+    "category": "spec_tamper",
+    "confidence": 0.72
+  },
+  "developers.google.com-8d7d5b41-a96be1af": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-8d7d5b41-b44d403e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-b669f3ba": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "developers.google.com-8d7d5b41-b7547b59": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-cc9738bd": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-e3710a11": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "developers.google.com-8d7d5b41-eae06262": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-0cf53441": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-0ff89e2f": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-48be61c2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-4fb36358": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-53337ff0": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "en.wikipedia.org-b43f8e16-59cb8015": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "en.wikipedia.org-b43f8e16-5a6bd4dc": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "en.wikipedia.org-b43f8e16-74f255e4": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-92959619": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.9
+  },
+  "en.wikipedia.org-b43f8e16-a3d251f4": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "en.wikipedia.org-b43f8e16-b485764a": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-e3859959": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "en.wikipedia.org-b43f8e16-ff9f296c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-194ba0c8-01853963": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-194ba0c8-0e58902b": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-194ba0c8-1e574e8b": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-218e42ee": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.95
+  },
+  "ftc.gov-194ba0c8-229ba703": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-24cf9d89": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-33904d69": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-42325e50": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-194ba0c8-507aeba3": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-59a4cf84": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-7aee3e80": {
+    "injection": true,
+    "category": "multilingual",
+    "confidence": 0.97
+  },
+  "ftc.gov-194ba0c8-7e0ffa97": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-92897893": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-94606192": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-99353e2e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-194ba0c8-a97efdc6": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-b3f01225": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-194ba0c8-bc6e0f78": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.97
+  },
+  "ftc.gov-194ba0c8-e43d57bb": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.95
+  },
+  "ftc.gov-194ba0c8-fa2b3fd9": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-5c252d1a-1a1a2d4e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-5c252d1a-5ce3c6b9": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-5c252d1a-99b8bfd1": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-003f5481": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-00b99e18": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-0355a470": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-069496ba": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-06d0ecb7": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-07022e4c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-07751124": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-08e568af": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-08fa23e2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-0a9935aa": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-140e54b4": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-15bd9c01": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-17fa7551": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-19172d6b": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-1d603481": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-1f971e5c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-2051a490": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-2292519f": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.95
+  },
+  "ftc.gov-629fbc85-23491e41": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-245336c9": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-26410ff7": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-2a3155b1": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-2aab73b6": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-2d46aba5": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-2ef04dee": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-3037e71f": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-34847d49": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-35ffb3cf": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-3636ee18": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-378486fc": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-38352d37": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-3b948156": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-3bea25db": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-3e1f376b": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-3f2b80fe": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-3f395261": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-40d65de0": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-42f484a8": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-43e33ee2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-4485d9c7": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-487f3323": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-48dc754e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-4b44443e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-4be01341": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-4dd68223": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-543e1d15": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-57ce62ca": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-58a38916": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-58dfcb8a": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-5ae6e60a": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-5e566cfb": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-604eadc6": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-641e1014": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-652f9183": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-67fbe83e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-693f3345": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-6d4842d4": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-6e9e3861": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-73eba4a6": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-75330a44": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-77905d04": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-7c1ecdf9": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-7d75800c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-7f63d2d7": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-803ad03e": {
+    "injection": true,
+    "category": "override",
+    "confidence": 0.95
+  },
+  "ftc.gov-629fbc85-805cc53c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-805fbe2c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-812df29c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-83284dae": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-8afbd7f0": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-8bdf07ca": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-8beedc4a": {
+    "injection": true,
+    "category": "multilingual",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-8fb06f27": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-918a264a": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-934e8524": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-97178587": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-979d5f8a": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-9a8ec04a": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-9ac104ea": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-9d90e531": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-9e748b4f": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-a5828c2c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-a6e3d699": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-a742d8d3": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-a810f3b1": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-a8f6fc34": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-ac021dc2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-ac240bff": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-b1c48f61": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-b90990b6": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-ba364f88": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-be7076c5": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-c0c29fda": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-c332b7c8": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-c49c9c8d": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-c673270b": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-c6e10751": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-c701a532": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-c85d2c65": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-c8faf94d": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.95
+  },
+  "ftc.gov-629fbc85-ca23da03": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-ca3e6443": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-ca4f4d07": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-cd32e80f": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-ce1f5f20": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-d33472c2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-d432ea6e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-d56660b9": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-d7005c36": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-d7056cb5": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-db5b61e7": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-dbab74ae": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-dc2f4b31": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-df0a90ce": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-e09f5f9b": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-e2d1938f": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-e4cdfec0": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-e6b80c75": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-e995a9ba": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-ebc0cbfc": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.9
+  },
+  "ftc.gov-629fbc85-eccc87d2": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-ed8900f4": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-ee404ab8": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-ef24c31e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-f3f75d48": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-f6156308": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-f7c4197c": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-f98887a1": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-f98b5d00": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "ftc.gov-629fbc85-fa14eef5": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-fab878cf": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-fdf32f24": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "ftc.gov-629fbc85-ff39b379": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "genai.owasp.org-742d684f-0feaa6cb": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.9
+  },
+  "genai.owasp.org-742d684f-43959600": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "genai.owasp.org-742d684f-4d5c9bd8": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "genai.owasp.org-742d684f-53add82b": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.95
+  },
+  "genai.owasp.org-742d684f-8330b610": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "genai.owasp.org-742d684f-84780955": {
+    "injection": true,
+    "category": "role_marker",
+    "confidence": 0.8
+  },
+  "genai.owasp.org-742d684f-c4d3e78b": {
+    "injection": true,
+    "category": "exfiltration",
+    "confidence": 0.95
+  },
+  "genai.owasp.org-742d684f-e8cd56a3": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "genai.owasp.org-742d684f-ea75a4c7": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.95
+  },
+  "genai.owasp.org-742d684f-ecbb0b0e": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.97
+  },
+  "genai.owasp.org-742d684f-f194fc3d": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.95
+  },
+  "nist.gov-54dbc154-0615c612": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "nist.gov-54dbc154-25768e49": {
+    "injection": false,
+    "category": "none",
+    "confidence": 0.98
+  },
+  "nist.gov-54dbc154-999b067f": {
+    "injection": true,
+    "category": "addressee",
+    "confidence": 0.9
+  }
+}

@@ -72,12 +72,29 @@ class SkillIndex(Protocol):
 - **Card fields:**
   - `id`, unique across indexes (`registry:<name>`, `corpus:<name>`)
   - `name`, `title`, `description` (at most 300 chars), `kind`, `domain`, `use_when` (at most 10), `source`
-  - `url` and `licence` for corpus cards. Only permissively licensed SKILL.md files go in (DE-08).
+  - `url` and `licence` for corpus cards. Only permissively licensed SKILL.md files go in (DE-08, [the list below](#licences-in-the-corpus-de-08)).
 - **From a SkillSpec:** `SkillCard.from_spec(spec)` builds the card, which suits BE-11's published skills.
 - **Vectors:** embed `skill_text(card)` with `core.llm.embed(..., model_role="embedding")`, keep them unit length, and rank by cosine (`1 - (embedding <=> query)` in pgvector).
   - Store the model string `local/BAAI/bge-small-en-v1.5` with them, so `info().model` can be checked.
   - The pinned model files are in `docs/ai/retrieval.md` (for `embedding_version`).
 - **Re-embed** a card when its title, description, kind, domain or `use_when` changes.
+
+### Licences in the corpus (DE-08)
+Agreed by AI and DE on 2026-11-09. A default for a legal reviewer, not legal advice. DE-08 filters the files before they become cards; AI's code doesn't check the licence again.
+- **Allowed** (SPDX ids, as stored in `licence`): `MIT`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `ISC`, `CC0-1.0`, `Unlicense`, `CC-BY-4.0`.
+  - Keep `url` and `licence` on every corpus card, so a style example can be attributed (`CC-BY-4.0` requires it).
+- **Out: everything else**, including `CC-BY-SA-*`, the GPL family (GPL, LGPL, AGPL), `MPL-2.0`, any NC or ND licence, and `unknown`. A SKILL.md with no licence is all rights reserved.
+- **Web pages use a different rule.** Source discovery labels each page with a licence note, and DE stores it like this ([source-discovery.md](source-discovery.md#storing-the-note-des-license-column-agreed-with-de-2026-11-09)):
+
+| AI note | `license` | `license_source` |
+|---|---|---|
+| `public-domain-us-gov` | `LicenseRef-us-gov-public-domain` | `manual` |
+| `cc-by-4.0` | `CC-BY-4.0` | `manual` |
+| `cc-by-sa-4.0` | `CC-BY-SA-4.0` | `manual` |
+| `copyright-summarise-and-cite` | `unknown` | `unknown` |
+| `excluded-terms` | never stored: not on the crawl list | |
+
+A licence the page declares itself wins (`license_source = 'page'`). Pages are only summarised and cited in skills (spec §5), so `CC-BY-SA-4.0` pages are fine there but not as corpus examples.
 
 ## Pipeline: a proposed step (not wired yet)
 Wiring the gap check into `core/pipeline/interface.py` changes the BE contract, so it waits for AI and BE to agree. The proposal:
