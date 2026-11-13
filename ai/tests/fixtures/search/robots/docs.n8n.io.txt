@@ -1,0 +1,7 @@
+User-agent: *
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
+Allow: /~gitbook/image?*
+Allow: /~gitbook/icon?*
+Allow: /favicon.ico
+Allow: /
+Sitemap: https://docs.n8n.io/sitemap.xml

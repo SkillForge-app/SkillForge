@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# Webflow's robots disallowed these — preserved for parity.
+Disallow: /summit/
+Disallow: /tools-page-link-capture
+Disallow: /castmagic-agency-landing-page
+
+Sitemap: https://www.castmagic.io/sitemap-index.xml

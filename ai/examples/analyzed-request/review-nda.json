@@ -1,0 +1,29 @@
+{
+  "kind": "task",
+  "domain": "legal/contracts",
+  "risk": "high",
+  "audience": null,
+  "expected_outputs": [
+    "NDA review with flagged clauses"
+  ],
+  "skill_name": "review-nda",
+  "summary": "A task skill that reviews NDAs before signing and flags risky or unusual clauses.",
+  "needs_clarification": false,
+  "questions": [],
+  "request": "Build a skill that reviews NDAs before I sign them and flags risky clauses.",
+  "targets": [
+    "claude",
+    "codex"
+  ],
+  "answers": [],
+  "analyzer": {
+    "prompt_id": "analysis/request",
+    "prompt_version": 1
+  },
+  "safety": {
+    "conditions": [
+      "professional_disclaimer"
+    ],
+    "prompt_version": 1
+  }
+}

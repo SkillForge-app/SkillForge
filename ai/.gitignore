@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Raw per-call outputs of the AI-05/06/07 evaluations (predictions, generated specs) stay local.
+# Their reports are tracked: evaluation/<task>/reports/, written only by --live runs.
+evaluation/analyzer/runs/
+evaluation/safety/runs/
+evaluation/architect/runs/
+
+# Local model files and the local knowledge index (AI-11): downloaded / built, not source
+.data/

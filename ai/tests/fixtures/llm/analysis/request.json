@@ -1,0 +1,15 @@
+{
+  "kind": "role",
+  "domain": "marketing/strategy",
+  "risk": "low",
+  "audience": "a small marketing team",
+  "expected_outputs": [
+    "marketing plan",
+    "campaign brief"
+  ],
+  "skill_name": "marketing-strategist",
+  "summary": "A marketing strategist skill that turns business goals into positioning and campaign plans.",
+  "needs_clarification": false,
+  "questions": [],
+  "mentioned_targets": []
+}

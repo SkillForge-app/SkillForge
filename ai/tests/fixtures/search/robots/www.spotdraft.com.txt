@@ -1,0 +1,39 @@
+User-agent: *
+Allow: /
+Disallow: /cdn-cgi/
+
+# AI Crawlers - Explicitly allow for training and citations
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+#LLM Guidance File
+#https://www.spotdraft.com/llms.txt
+
+Sitemap: https://www.spotdraft.com/sitemap.xml

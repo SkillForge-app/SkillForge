@@ -1,0 +1,211 @@
+# Model roles. Code and prompt files ask for a role, never for a model name,
+# so switching provider or model is a one-line change here.
+#
+# model: a LiteLLM model string, "<provider>/<model>".
+# Claude models go through OpenRouter (key: OPENROUTER_API_KEY). The commented `# direct:` line
+# under each role is the same model via Anthropic's own API (key: ANTHROPIC_API_KEY).
+# OpenRouter ids use dots ("claude-sonnet-5.5"); Anthropic ids use dashes ("claude-sonnet-5-5").
+# Override one role without editing this file: SKILLFORGE_MODEL_<ROLE>=<provider>/<model>
+#   e.g. SKILLFORGE_MODEL_ANALYSIS=anthropic/claude-sonnet-5-5
+# Keys come from the environment or from ai/.env locally (see .env.example).
+#
+# Fallbacks (AI-21): when a role's model fails (after its retries) or refuses, the gateway tries
+# `fallbacks` in order. The rule: never a weaker model, so safety and spec quality do not drop
+# during an incident. Sonnet roles go to Opus via OpenRouter (about 2x the price; alert
+# AIFallbackRateHigh watches it), Haiku goes to Sonnet. The last hop is the same model through
+# Anthropic's own API, for an OpenRouter outage; it is skipped when ANTHROPIC_API_KEY is not
+# set. OpenRouter itself already fails over between hosting providers (Anthropic, Bedrock,
+# Vertex) for one model, so these chains are for model- and OpenRouter-level failures.
+# Every CallRecord says which link answered (`fallback`: 0 is the primary).
+#
+# Claude 5.5 models: do NOT set `temperature` (any value other than the default is a 400).
+# Thinking is adaptive and on by default, and thinking tokens count toward max_tokens,
+# so keep max_tokens generous. `reasoning_effort` (low|medium|high|xhigh|max) is the
+# cost/quality lever; AI-20 tunes it per role.
+roles:
+  default:
+    model: openrouter/anthropic/claude-sonnet-5.5
+    # direct: anthropic/claude-sonnet-5-5
+    fallbacks: [openrouter/anthropic/claude-opus-5.5, anthropic/claude-sonnet-5-5]
+    max_tokens: 16000
+    timeout_s: 120
+    num_retries: 2
+
+  # Request Analyzer (AI-05).
+  analysis:
+    model: openrouter/anthropic/claude-sonnet-5.5
+    # direct: anthropic/claude-sonnet-5-5
+    fallbacks: [openrouter/anthropic/claude-opus-5.5, anthropic/claude-sonnet-5-5]
+    max_tokens: 16000
+    timeout_s: 120
+    num_retries: 2
+
+  # Safety screening of skill requests (AI-06). Its own role so it can be tuned separately.
+  safety:
+    model: openrouter/anthropic/claude-sonnet-5.5
+    # direct: anthropic/claude-sonnet-5-5
+    fallbacks: [openrouter/anthropic/claude-opus-5.5, anthropic/claude-sonnet-5-5]
+    max_tokens: 16000
+    timeout_s: 120
+    num_retries: 2
+
+  # Skill Architect (AI-07): writes a whole SkillSpec, so it needs room for output and thinking.
+  architect:
+    model: openrouter/anthropic/claude-sonnet-5.5
+    # direct: anthropic/claude-sonnet-5-5
+    fallbacks: [openrouter/anthropic/claude-opus-5.5, anthropic/claude-sonnet-5-5]
+    max_tokens: 24000
+    timeout_s: 300
+    num_retries: 2
+
+  # Cheap, high-volume work on scraped pages (AI-10, AI-20).
+  extraction:
+    model: openrouter/anthropic/claude-haiku-5.5
+    # direct: anthropic/claude-haiku-5-5
+    fallbacks: [openrouter/anthropic/claude-sonnet-5.5, anthropic/claude-haiku-5-5]
+    max_tokens: 16000
+    timeout_s: 90
+    num_retries: 2
+
+  # LLM-as-judge for evaluation (Track B, AI-16).
+  judge:
+    model: openrouter/anthropic/claude-sonnet-5.5
+    # direct: anthropic/claude-sonnet-5-5
+    fallbacks: [openrouter/anthropic/claude-opus-5.5, anthropic/claude-sonnet-5-5]
+    max_tokens: 16000
+    timeout_s: 120
+    num_retries: 2
+
+  # Embeddings for the Gap Checker (AI-08) and retrieval (AI-11).
+  # `dimensions` is a contract: pgvector columns (DE-02) are sized from it.
+  # Embedding roles may not have fallbacks: another model's vectors would corrupt the index.
+  # Chosen in AI-11 (evaluation/retrieval/reports/recall-2026-10-26.md): a local model, run
+  # on CPU with fastembed (core/llm/local_embed.py). No API key, no per-call cost. Its files
+  # are pinned to a commit and checked against the sha256; fetch them ahead of time with
+  # `python -m core.llm.local_embed download`. Changing the model means rebuilding the index.
+  # Hosted alternative (needs OPENAI_API_KEY): model: openai/text-embedding-3-small, no `local`.
+  embedding:
+    model: local/BAAI/bge-small-en-v1.5
+    dimensions: 384
+    timeout_s: 60
+    num_retries: 0  # a local model has no transient network errors to retry
+    # BGE v1.5's instruction for short queries that look for passages (not for documents).
+    query_prefix: "Represent this sentence for searching relevant passages: "
+    local:
+      repo: Qdrant/bge-small-en-v1.5-onnx-Q
+      revision: aa8f8b060edb00e03bfdd08813a2949946c8ba55
+      file: model_optimized.onnx
+      sha256: 51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431
+
+# LiteLLM model-map entries, registered with litellm.register_model() when the real gateway
+# starts. Needed for models the pinned LiteLLM does not know yet (it has no entry for
+# claude-sonnet-5-5 or claude-haiku-5-5): without them cost cannot be computed and LiteLLM
+# may send parameters these models reject. Our values override LiteLLM's built-in ones.
+# Prices are USD per token, from https://platform.claude.com/docs/en/about-claude/pricing
+# (cache prices use Anthropic's standard multipliers: write 1.25x input, read 0.1x input).
+# Capability flags mirror LiteLLM's own claude-opus-5-5 entry; supports_output_config is what
+# lets `reasoning_effort` map to output_config.effort.
+model_info:
+  # ---- Claude via OpenRouter (the models the roles use). Prices from openrouter.ai/api/v1/models
+  # on 2026-10-24 (same per-token prices as Anthropic's own API). The gateway prefers the cost
+  # OpenRouter reports for each call (exact, incl. caching); these prices are the fallback.
+  openrouter/anthropic/claude-sonnet-5.5:
+    litellm_provider: openrouter
+    mode: chat
+    input_cost_per_token: 2.0e-06
+    output_cost_per_token: 1.0e-05
+    cache_read_input_token_cost: 1.0e-07
+    cache_creation_input_token_cost: 2.5e-06
+    max_input_tokens: 1000000
+    max_output_tokens: 128000
+    max_tokens: 128000
+    supports_response_schema: true
+    supports_reasoning: true
+    supports_function_calling: true
+    supports_tool_choice: true
+
+  openrouter/anthropic/claude-haiku-5.5:
+    litellm_provider: openrouter
+    mode: chat
+    input_cost_per_token: 1.0e-07
+    output_cost_per_token: 5.0e-07
+    input_cost_per_token_above_100k_tokens: 5.0e-07
+    output_cost_per_token_above_100k_tokens: 2.5e-06
+    cache_read_input_token_cost: 1.0e-08
+    cache_creation_input_token_cost: 1.25e-07
+    max_input_tokens: 1000000
+    max_output_tokens: 128000
+    max_tokens: 128000
+    supports_response_schema: true
+    supports_reasoning: true
+    supports_function_calling: true
+    supports_tool_choice: true
+
+  openrouter/anthropic/claude-opus-5.5:
+    litellm_provider: openrouter
+    mode: chat
+    input_cost_per_token: 4.0e-06
+    output_cost_per_token: 2.0e-05
+    cache_read_input_token_cost: 2.0e-07
+    cache_creation_input_token_cost: 5.0e-06
+    max_input_tokens: 1000000
+    max_output_tokens: 128000
+    max_tokens: 128000
+    supports_response_schema: true
+    supports_reasoning: true
+    supports_function_calling: true
+    supports_tool_choice: true
+
+  # ---- Claude via Anthropic's own API (the commented `# direct:` alternatives above).
+  claude-sonnet-5-5:
+    litellm_provider: anthropic
+    mode: chat
+    input_cost_per_token: 2.0e-06
+    output_cost_per_token: 1.0e-05
+    cache_creation_input_token_cost: 2.5e-06
+    cache_read_input_token_cost: 2.0e-07
+    max_input_tokens: 1000000
+    max_output_tokens: 128000
+    max_tokens: 128000
+    thinking_always_on: true
+    supports_native_structured_output: true
+    supports_response_schema: true
+    supports_forced_tool_use: false
+    supports_sampling_params: false
+    supports_assistant_prefill: false
+    supports_adaptive_thinking: true
+    supports_output_config: true
+    supports_max_reasoning_effort: true
+    supports_xhigh_reasoning_effort: true
+    supports_mid_conversation_system: true
+    supports_reasoning: true
+    supports_function_calling: true
+    supports_tool_choice: true
+    supports_prompt_caching: true
+
+  claude-haiku-5-5:
+    litellm_provider: anthropic
+    mode: chat
+    input_cost_per_token: 1.0e-07
+    output_cost_per_token: 5.0e-07
+    input_cost_per_token_above_100k_tokens: 5.0e-07
+    output_cost_per_token_above_100k_tokens: 2.5e-06
+    cache_creation_input_token_cost: 1.25e-07
+    cache_read_input_token_cost: 1.0e-08
+    max_input_tokens: 1000000
+    max_output_tokens: 128000
+    max_tokens: 128000
+    supports_native_structured_output: true
+    supports_response_schema: true
+    supports_forced_tool_use: false
+    supports_sampling_params: false
+    supports_assistant_prefill: false
+    supports_adaptive_thinking: true
+    supports_output_config: true
+    supports_max_reasoning_effort: true
+    supports_xhigh_reasoning_effort: true
+    supports_mid_conversation_system: true
+    supports_reasoning: true
+    supports_function_calling: true
+    supports_tool_choice: true
+    supports_prompt_caching: true

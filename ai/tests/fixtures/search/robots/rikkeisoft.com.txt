@@ -1,0 +1,6 @@
+# fetched 2026-10-26 from https://rikkeisoft.com/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+
+Sitemap: https://rikkeisoft.com/sitemap_index.xml

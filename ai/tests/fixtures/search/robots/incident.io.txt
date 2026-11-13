@@ -1,0 +1,26 @@
+User-Agent: *
+Allow: /
+
+User-Agent: *
+Disallow: /careers/
+
+User-Agent: Googlebot
+Allow: /careers/
+
+User-Agent: Bingbot
+Allow: /careers/
+
+User-Agent: DuckDuckBot
+Allow: /careers/
+
+User-Agent: LinkedInBot
+Allow: /careers/
+
+User-Agent: Twitterbot
+Allow: /careers/
+
+User-Agent: SemrushBot
+Allow: /careers/
+
+Host: https://incident.io
+Sitemap: https://incident.io/sitemap/sitemap-index.xml

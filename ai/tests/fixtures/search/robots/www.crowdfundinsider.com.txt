@@ -1,0 +1,9 @@
+# fetched 2026-10-26 from https://www.crowdfundinsider.com/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /wp-login.php*
+Disallow: /wp-admin/
+Sitemap: https://www.crowdfundinsider.com/news-sitemap.xml
+Sitemap: https://www.crowdfundinsider.com/sitemap_index.xml
+Disallow: *outlook-ical=*
+Disallow: *ical=*
+Disallow: */tag/*/20??-??/?outlook-ical=*

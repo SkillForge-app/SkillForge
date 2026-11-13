@@ -1,0 +1,6 @@
+User-Agent: *
+Allow: /
+Disallow: /sanity-api/
+Disallow: /studio/
+
+Sitemap: https://tessl.io/sitemap.xml

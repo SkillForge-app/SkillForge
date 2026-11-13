@@ -1,0 +1,10 @@
+# fetched 2026-10-26 from https://it.vt.edu/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /intranet/
+Disallow: /blogs/
+Disallow: /init/blogs/
+
+User-agent: Googlebot
+Disallow: /intranet/
+Disallow: /blogs/
+Disallow: /init/blogs/

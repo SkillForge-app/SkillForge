@@ -1,0 +1,6 @@
+# fetched 2026-10-26 from https://www.slq.qld.gov.au/robots.txt (HTTP 200)
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Disallow: /connect-wifi
+
+Sitemap: /sitemap.xml

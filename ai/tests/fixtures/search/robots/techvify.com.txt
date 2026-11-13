@@ -1,0 +1,16 @@
+# fetched 2026-10-26 from https://techvify.com/robots.txt (HTTP 200)
+User-Agent: *
+Allow: /
+Disallow: /api/
+Disallow: /thank-you
+Disallow: /download-portfolio
+Disallow: /archive
+Disallow: /disclaimer
+
+Sitemap: https://techvify.com/sitemap.xml
+Sitemap: https://techvify.com/sitemap/0.xml
+Sitemap: https://techvify.com/sitemap/1.xml
+Sitemap: https://techvify.com/sitemap/2.xml
+Sitemap: https://techvify.com/sitemap/3.xml
+Sitemap: https://techvify.com/sitemap/4.xml
+Sitemap: https://techvify.com/sitemap/5.xml

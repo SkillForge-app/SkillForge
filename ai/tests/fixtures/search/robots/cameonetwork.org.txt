@@ -1,0 +1,3 @@
+# fetched 2026-10-26 from https://cameonetwork.org/robots.txt (HTTP 200)
+User-Agent: *
+Disallow:

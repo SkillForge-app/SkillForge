@@ -1,0 +1,254 @@
+# Fixture passages for FakeRetriever (contract A4). Two seed domains: marketing, technology/ai.
+#
+# Every passage is a short summary written in our own words, never copied text (spec §5:
+# skills contain summarised, cited knowledge). Every URL was opened and checked on its
+# `retrieved` date, and `title` is the page's own title. Only state what the page says.
+# Adding a source: verify it the same way and add it to VERIFIED_SOURCES in
+# tests/knowledge/test_retrieval.py.
+version: 1.0.0
+passages:
+  # ---------------------------------------------------------------- marketing
+  - chunk_id: mkt-ftc-advertising-01
+    domain: marketing
+    source_url: https://www.ftc.gov/business-guidance/advertising-marketing
+    title: Advertising and Marketing | Federal Trade Commission
+    retrieved: 2026-10-23
+    text: >-
+      Under US law, advertising must be truthful and not misleading, and an advertiser needs
+      evidence that backs up its claims before it makes them. The FTC's business guidance
+      applies these basics to every medium, online ads included.
+  - chunk_id: mkt-ftc-advertising-02
+    domain: marketing
+    source_url: https://www.ftc.gov/business-guidance/advertising-marketing
+    title: Advertising and Marketing | Federal Trade Commission
+    retrieved: 2026-10-23
+    text: >-
+      The FTC's advertising guidance is organised by topic, for example health claims,
+      environmental claims, "Made in USA" claims, endorsements and reviews, and online
+      advertising. Before a campaign goes live, check the topic page that matches the kind of
+      claim the campaign makes.
+  - chunk_id: mkt-ftc-endorsements-01
+    domain: marketing
+    source_url: https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking
+    title: "FTC's Endorsement Guides: What People Are Asking"
+    retrieved: 2026-10-23
+    text: >-
+      When an endorser has a material connection to a brand, such as payment, free products,
+      or a family or work relationship, the endorsement needs a clear and conspicuous
+      disclosure of it. The disclosure should be in plain words, hard to miss, and placed with
+      the endorsement itself, not only in a profile bio or behind a "more" link.
+  - chunk_id: mkt-ftc-endorsements-02
+    domain: marketing
+    source_url: https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking
+    title: "FTC's Endorsement Guides: What People Are Asking"
+    retrieved: 2026-10-23
+    text: >-
+      An endorsement must reflect the endorser's honest opinion and real experience, and an
+      influencer cannot make claims the advertiser itself could not back up. Advertisers
+      should train and monitor the influencers they work with, because both the brand and the
+      endorser can be liable for a misleading endorsement.
+  - chunk_id: mkt-can-spam-01
+    domain: marketing
+    source_url: https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business
+    title: "CAN-SPAM Act: A Compliance Guide for Business | Federal Trade Commission"
+    retrieved: 2026-10-24
+    text: >-
+      The US CAN-SPAM Act covers all commercial email, business-to-business messages included.
+      The header information (From, To, Reply-To and routing) must be accurate, the subject
+      line must not deceive, and the message must disclose clearly that it is an
+      advertisement.
+  - chunk_id: mkt-can-spam-02
+    domain: marketing
+    source_url: https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business
+    title: "CAN-SPAM Act: A Compliance Guide for Business | Federal Trade Commission"
+    retrieved: 2026-10-24
+    text: >-
+      Each commercial email must include a valid physical postal address and a clear way to
+      opt out of future email. Opt-out requests must be honoured within 10 business days, the
+      opt-out mechanism must keep working for at least 30 days after sending, and a business
+      stays responsible even when another company sends its email marketing.
+  - chunk_id: mkt-asa-cap-code-01
+    domain: marketing
+    source_url: https://www.asa.org.uk/codes-and-rulings/advertising-codes/non-broadcast-code.html
+    title: Non-broadcast Code
+    retrieved: 2026-10-24
+    text: >-
+      In the UK, non-broadcast marketing, including online ads, brand and influencer posts on
+      social media, direct marketing and sales promotions, falls under the CAP Code. The
+      Committee of Advertising Practice writes it and the Advertising Standards Authority
+      enforces it. Its central rule is that marketing must be legal, decent, honest and
+      truthful.
+  - chunk_id: mkt-asa-cap-code-02
+    domain: marketing
+    source_url: https://www.asa.org.uk/codes-and-rulings/advertising-codes/non-broadcast-code.html
+    title: Non-broadcast Code
+    retrieved: 2026-10-24
+    text: >-
+      The CAP Code requires marketing to be obviously identifiable as marketing, so a paid
+      influencer post needs a clear label such as "Ad". Marketers must hold evidence for
+      objective claims before publishing them, and must not mislead by leaving out material
+      information.
+  - chunk_id: mkt-google-seo-01
+    domain: marketing
+    source_url: https://developers.google.com/search/docs/fundamentals/seo-starter-guide
+    title: "SEO Starter Guide: The Basics"
+    retrieved: 2026-10-23
+    text: >-
+      Google describes search engine optimisation as helping search engines understand your
+      content and helping users find your site. The basics: make sure Google can find and
+      crawl your pages (a sitemap helps), use descriptive URLs, group related pages in
+      directories, and reduce duplicate content or mark the canonical version.
+  - chunk_id: mkt-google-seo-02
+    domain: marketing
+    source_url: https://developers.google.com/search/docs/fundamentals/seo-starter-guide
+    title: "SEO Starter Guide: The Basics"
+    retrieved: 2026-10-23
+    text: >-
+      Give each page a unique, descriptive title and meta description, since they can appear
+      as the title link and snippet in search results. Write content that is easy to read,
+      well organised and useful, with descriptive link text and image alt text. Google says it
+      ignores the meta keywords tag, and keyword stuffing goes against its spam policies.
+  - chunk_id: mkt-google-helpful-01
+    domain: marketing
+    source_url: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
+    title: Creating Helpful, Reliable, People-First Content
+    retrieved: 2026-10-24
+    text: >-
+      Google's ranking systems aim to reward helpful, reliable content made mainly to benefit
+      people, not to rank in search engines. Google suggests self-assessment questions, such
+      as whether the content offers original information or analysis, and whether a reader
+      leaves feeling they learned enough to reach their goal.
+  - chunk_id: mkt-google-helpful-02
+    domain: marketing
+    source_url: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
+    title: Creating Helpful, Reliable, People-First Content
+    retrieved: 2026-10-24
+    text: >-
+      Google looks for signals of experience, expertise, authoritativeness and
+      trustworthiness (E-E-A-T), and trust matters most. It suggests asking who created the
+      content (clear authorship), how it was made (including any use of automation or AI),
+      and why it exists, which should be mainly to help people.
+
+  # ---------------------------------------------------------------- technology/ai
+  - chunk_id: ai-rag-paper-01
+    domain: technology/ai
+    source_url: https://arxiv.org/abs/2005.11401
+    title: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+    retrieved: 2026-10-23
+    text: >-
+      Lewis et al. (2020) pair a pretrained sequence-to-sequence model (parametric memory)
+      with a dense vector index of Wikipedia (non-parametric memory) that a neural retriever
+      searches. Retrieval-augmented generation set the state of the art on three open-domain
+      question answering tasks, beating parametric-only models and task-specific
+      retrieve-and-extract systems.
+  - chunk_id: ai-rag-paper-02
+    domain: technology/ai
+    source_url: https://arxiv.org/abs/2005.11401
+    title: Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
+    retrieved: 2026-10-23
+    text: >-
+      The RAG paper compares two formulations: RAG-Sequence uses the same retrieved passages
+      for the whole answer, while RAG-Token can draw on different passages for each token.
+      For language generation, RAG produced more specific, diverse and factual text than a
+      parametric-only baseline.
+  - chunk_id: ai-claude-evals-01
+    domain: technology/ai
+    source_url: https://platform.claude.com/docs/en/test-and-evaluate/develop-tests
+    title: Define success criteria and build evaluations
+    retrieved: 2026-10-23
+    text: >-
+      Good success criteria are specific, measurable, achievable and relevant: instead of
+      "classify sentiment well", set a target such as a minimum F1 score on a held-out test
+      set. Most uses need several criteria, for example task fidelity, consistency,
+      relevance, tone, privacy, use of context, latency and price.
+  - chunk_id: ai-claude-evals-02
+    domain: technology/ai
+    source_url: https://platform.claude.com/docs/en/test-and-evaluate/develop-tests
+    title: Define success criteria and build evaluations
+    retrieved: 2026-10-23
+    text: >-
+      Make evaluations task-specific, mirror real inputs including edge cases, and automate
+      grading where you can; many automatically graded questions beat a few graded by hand.
+      Code-based grading (exact or string match) is fastest and most reliable, human grading
+      is most flexible but slow, and LLM-based grading works well with a clear rubric.
+  - chunk_id: ai-claude-prompting-01
+    domain: technology/ai
+    source_url: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview
+    title: Prompt engineering overview
+    retrieved: 2026-10-24
+    text: >-
+      Before prompt engineering, have a clear definition of success criteria for the use
+      case, a way to test against those criteria empirically, and a first draft prompt to
+      improve. Not every failure is best fixed by prompting: problems such as latency and
+      cost can sometimes be solved more easily by choosing a different model.
+  - chunk_id: ai-nist-ai-rmf-01
+    domain: technology/ai
+    source_url: https://www.nist.gov/itl/ai-risk-management-framework
+    title: AI Risk Management Framework | NIST
+    retrieved: 2026-10-23
+    text: >-
+      The NIST AI Risk Management Framework (AI RMF 1.0, released January 2023) is voluntary
+      guidance for managing the risks AI poses to individuals, organisations and society. It
+      helps build trustworthiness into the design, development, use and evaluation of AI
+      products and systems, and was developed through an open, consensus-driven process.
+  - chunk_id: ai-nist-ai-rmf-02
+    domain: technology/ai
+    source_url: https://www.nist.gov/itl/ai-risk-management-framework
+    title: AI Risk Management Framework | NIST
+    retrieved: 2026-10-23
+    text: >-
+      The AI RMF organises risk management into four functions: Govern, Map, Measure and
+      Manage. NIST also publishes a companion Playbook and, since July 2024, a Generative AI
+      Profile (NIST AI 600-1) that helps organisations identify the particular risks of
+      generative AI and the actions that manage them.
+  - chunk_id: ai-lost-in-middle-01
+    domain: technology/ai
+    source_url: https://arxiv.org/abs/2307.03172
+    title: "Lost in the Middle: How Language Models Use Long Contexts"
+    retrieved: 2026-10-24
+    text: >-
+      Liu et al. tested how language models use long input contexts on multi-document
+      question answering and key-value retrieval. Performance is often highest when the
+      relevant information is at the beginning or end of the context, and drops
+      significantly when it sits in the middle, even for models built for long contexts.
+  - chunk_id: ai-lost-in-middle-02
+    domain: technology/ai
+    source_url: https://arxiv.org/abs/2307.03172
+    title: "Lost in the Middle: How Language Models Use Long Contexts"
+    retrieved: 2026-10-24
+    text: >-
+      For retrieval-augmented prompts, these results suggest putting the most relevant
+      passages at the start or end of the context rather than burying them. In the paper's
+      open-domain question answering study, adding more retrieved documents soon stopped
+      helping much, so retrieving more is not a free win.
+  - chunk_id: ai-owasp-llm01-01
+    domain: technology/ai
+    source_url: https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+    title: LLM01:2025 Prompt Injection - OWASP Gen AI Security Project
+    retrieved: 2026-10-24
+    text: >-
+      Prompt injection happens when user prompts or other inputs change an LLM's behaviour or
+      output in unintended ways. Direct injection comes from the user's own input; indirect
+      injection comes from external content the model processes, such as web pages or files.
+      Injected text does not need to be visible to people, only parsed by the model.
+  - chunk_id: ai-owasp-llm01-02
+    domain: technology/ai
+    source_url: https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+    title: LLM01:2025 Prompt Injection - OWASP Gen AI Security Project
+    retrieved: 2026-10-24
+    text: >-
+      OWASP's mitigations for prompt injection: constrain the model's behaviour with clear
+      instructions about its role and limits, define and validate expected output formats,
+      filter inputs and outputs, give the model least-privilege access to tools and APIs,
+      require human approval for high-risk actions, separate and mark untrusted external
+      content, and run adversarial tests.
+  - chunk_id: ai-sbert-01
+    domain: technology/ai
+    source_url: https://arxiv.org/abs/1908.10084
+    title: "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks"
+    retrieved: 2026-10-24
+    text: >-
+      Sentence-BERT (Reimers and Gurevych, 2019) fine-tunes BERT in siamese and triplet
+      networks to produce sentence embeddings that can be compared with cosine similarity.
+      That cuts finding the most similar pair among 10,000 sentences from about 65 hours with
+      BERT to about 5 seconds, while keeping BERT's accuracy.

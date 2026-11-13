@@ -1,0 +1,189 @@
+# Dev set: for prompt tuning and few-shot examples ONLY. Never used to measure the 90% gate.
+name: analyzer-requests-dev
+version: 0.1.0
+split: dev
+requests:
+  - id: d-01
+    text: I want a skill that writes clear meeting minutes from my rough notes.
+    style: clear
+    kind: task
+    domain: writing/meeting-minutes
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-02
+    text: make me a teacher thing
+    style: vague
+    kind: role
+    domain: education/teaching
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+    notes: Too vague to know the subject, level or outputs.
+  - id: d-03
+    text: >-
+      Every quarter our 12-person agency closes the books: we reconcile the bank accounts,
+      chase unpaid invoices, accrue expenses and send a short report to the partners. I want a
+      Claude Code skill that walks our office manager through each stage in order and tells her
+      which items need the accountant.
+    style: detailed
+    kind: workflow
+    domain: finance/accounting
+    risk: high
+    needs_clarification: false
+    mentioned_targets: [claude]
+  - id: d-04
+    text: A skill that acts as a senior UX researcher for our mobile app team.
+    style: clear
+    kind: role
+    domain: research/user-research
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-05
+    text: something for sales
+    style: vague
+    kind: role
+    domain: sales/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-06
+    text: Create a skill that reviews Terraform changes for security mistakes, for Codex.
+    style: clear
+    kind: task
+    domain: technology/infrastructure
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [codex]
+  - id: d-07
+    text: >-
+      Our clinic's nurses spend too long writing discharge instructions. I want a skill that
+      turns the doctor's notes into plain-language instructions for the patient, with the
+      medication times in a table, and that always tells the patient who to call with
+      questions.
+    style: detailed
+    kind: task
+    domain: medical/patient-education
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-08
+    text: Help me plan a two-week trip through Japan on a mid-range budget.
+    style: clear
+    kind: task
+    domain: general/travel-planning
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-09
+    text: hr help please
+    style: vague
+    kind: role
+    domain: hr/general
+    risk: medium
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-10
+    text: >-
+      We hire about 30 warehouse staff every autumn. I want a skill that runs the whole
+      seasonal hiring process: write the ads, screen applications with the same criteria for
+      everyone, schedule interviews, and send offers and rejections. It must never look at age,
+      gender or photos.
+    style: detailed
+    kind: workflow
+    domain: hr/recruiting
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-11
+    text: A skill that writes product requirement documents from customer interview notes.
+    style: clear
+    kind: task
+    domain: product/requirements
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-12
+    text: something to make our designs better
+    style: vague
+    kind: role
+    domain: design/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-13
+    text: Make a custom GPT that answers customer questions about our return policy.
+    style: clear
+    kind: task
+    domain: customer-support/returns
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [chatgpt]
+  - id: d-14
+    text: >-
+      I manage operations for three restaurants. I want a skill that acts as an operations
+      manager: it plans staff rotas around expected covers, tracks stock and waste each week,
+      and writes simple procedures for opening and closing shifts.
+    style: detailed
+    kind: role
+    domain: operations/restaurant-operations
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-15
+    text: A skill that drafts privacy policies for small mobile apps.
+    style: clear
+    kind: task
+    domain: legal/privacy
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-16
+    text: data stuff for my boss
+    style: vague
+    kind: task
+    domain: data/reporting
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-17
+    text: >-
+      Our support team answers about 400 tickets a day. I want a skill that drafts replies in
+      our friendly tone, looks up the order history the agent pastes in, and escalates anything
+      about chargebacks or account security to a supervisor. It should work in any agent that
+      reads an AGENTS.md file.
+    style: detailed
+    kind: role
+    domain: customer-support/helpdesk
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: [generic]
+  - id: d-18
+    text: Write a skill that turns long research papers into one-page summaries for policymakers.
+    style: clear
+    kind: task
+    domain: research/science-communication
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-19
+    text: help with my side business
+    style: vague
+    kind: role
+    domain: general/small-business
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+    notes: Could be finance, marketing or operations; the analyzer should ask.
+  - id: d-20
+    text: >-
+      We release our web app every two weeks. I want a skill that runs the release process
+      with the team: freeze the branch, run the checklist, write release notes, deploy in
+      stages and confirm monitoring is green before we tell customers.
+    style: detailed
+    kind: workflow
+    domain: technology/release-management
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []

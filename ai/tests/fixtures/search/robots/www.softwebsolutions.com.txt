@@ -1,0 +1,62 @@
+# fetched 2026-10-26 from https://www.softwebsolutions.com/robots.txt (HTTP 200)
+User-agent: *
+
+Disallow:
+Disallow: */amp/
+Disallow: /*/*.html?tag*
+Disallow: /tag/*/amp/
+Disallow: *?utm_*
+Disallow: *?platform
+Disallow: */feed/
+Disallow: /wp-admin/
+Disallow: /category
+Disallow: /tag
+Disallow: *html/
+Disallow: /redesign/*
+Disallow: /wp-content/themes/softwebsolutions/images/CSR-Policy-Priya-Softweb-Solutions-Pvt-Ltd.pdf
+
+
+User-agent: IndeedBot
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+
+Disallow: /jobs.html
+Disallow: /jobs/sw-0124-01
+
+Sitemap: https://www.softwebsolutions.com/sitemap_index.xml
+sitemap: https://www.softwebsolutions.com/post-sitemap.xml
+sitemap: https://www.softwebsolutions.com/post-sitemap2.xml
+sitemap: https://www.softwebsolutions.com/page-sitemap.xml
+sitemap: https://www.softwebsolutions.com/post_tag-sitemap.xml

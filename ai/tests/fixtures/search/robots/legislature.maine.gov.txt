@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /bills/default_ps.asp
+Disallow: /legis/bills/default_ps.asp
+Disallow: /bills/search_ps.asp
+Disallow: /legis/bills/search_ps.asp
+Disallow: /LawMakerWeb
+Disallow: /legis/LawMakerWeb
+

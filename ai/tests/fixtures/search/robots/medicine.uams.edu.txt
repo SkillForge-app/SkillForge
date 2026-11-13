@@ -1,0 +1,79 @@
+# fetched 2026-10-26 from https://medicine.uams.edu/robots.txt (HTTP 200)
+# ============================================================
+# robots.txt — medicine.uams.edu
+# UAMS College of Medicine
+# Updated: April 19, 2026
+# ============================================================
+
+# --- Sitemaps ---
+Sitemap: https://medicine.uams.edu/sitemaps.xml
+Sitemap: https://medicine.uams.edu/academichouses/sitemaps.xml
+Sitemap: https://medicine.uams.edu/anesthesiology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/biochemistry/sitemaps.xml
+Sitemap: https://medicine.uams.edu/center-for-hearing-health-equity/sitemaps.xml
+Sitemap: https://medicine.uams.edu/cmdr/sitemaps.xml
+Sitemap: https://medicine.uams.edu/dbmi/sitemaps.xml
+Sitemap: https://medicine.uams.edu/dermatology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/emergencymedicine/sitemaps.xml
+Sitemap: https://medicine.uams.edu/familymedicine/sitemaps.xml
+Sitemap: https://medicine.uams.edu/geriatrics/sitemaps.xml
+Sitemap: https://medicine.uams.edu/gme/sitemaps.xml
+Sitemap: https://medicine.uams.edu/humanities/sitemaps.xml
+Sitemap: https://medicine.uams.edu/internal-medicine/sitemaps.xml
+Sitemap: https://medicine.uams.edu/mbim/sitemaps.xml
+Sitemap: https://medicine.uams.edu/neurobiology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/neurology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/neurosurgery/sitemaps.xml
+Sitemap: https://medicine.uams.edu/ophthalmology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/otolaryngology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/pain/sitemaps.xml
+Sitemap: https://medicine.uams.edu/pathology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/pediatrics/sitemaps.xml
+Sitemap: https://medicine.uams.edu/pharmtox/sitemaps.xml
+Sitemap: https://medicine.uams.edu/psychiatry/sitemaps.xml
+Sitemap: https://medicine.uams.edu/physiology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/pmr/sitemaps.xml
+Sitemap: https://medicine.uams.edu/radiology/sitemaps.xml
+Sitemap: https://medicine.uams.edu/radonc/sitemaps.xml
+Sitemap: https://medicine.uams.edu/research/sitemaps.xml
+Sitemap: https://medicine.uams.edu/residentwellness/sitemaps.xml
+Sitemap: https://medicine.uams.edu/surgery/sitemaps.xml
+Sitemap: https://medicine.uams.edu/transitionalyear/sitemaps.xml
+Sitemap: https://medicine.uams.edu/urology/sitemaps.xml
+
+# ─── AI answer engine crawlers: explicitly allowed ───────────────────────────
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# ─── Accessibility scanner ───────────────────────────────────────────────────
+User-agent: blackboardally
+Allow: /
+
+# ─── SEO & Aggressive Bots: blocked ──────────────────────────────────────────
+User-agent: rogerbot
+Disallow: /
+User-agent: ahrefsbot
+Disallow: /
+User-agent: SemrushBot
+Disallow: /
+
+# ─── Default: All crawlers ───────────────────────────────────────────────────
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+Disallow: /wp-includes/
+Disallow: /wp-content/plugins/
+Disallow: /wp-content/themes/
+Disallow: /search/
+Disallow: /cgi-bin/
+Disallow: *.xlsx$
+Disallow: *.xls$

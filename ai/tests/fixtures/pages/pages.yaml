@@ -1,0 +1,232 @@
+# Labelled pages for AI-10 extraction tests and the quality report (evaluation/extraction).
+#
+# Real pages: saved once on 2026-10-25, one GET each after a robots.txt check, openly licensed
+# only. To keep the repo small, inline <svg> and <style> bodies over 2,000 characters were
+# emptied; everything else is byte-for-byte as served. Tests never fetch.
+# Synthetic pages: written for these tests, modelled on real page structures.
+#
+# expected: [] means the page must pass; otherwise the exact quality reasons, in REASONS order.
+# must_contain: short facts that must survive in the chunks (case and spacing ignored).
+# must_not_contain: navigation, cookie and footer text that must not leak into the chunks.
+version: 1.2.0
+pages:
+  # ---------------------------------------------------------------- real pages
+  - file: ftc-endorsement-faq.html
+    url: https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking
+    retrieved: 2026-10-25
+    licence: US Government work, public domain (17 U.S.C. 105)
+    expected: []
+    title: "FTC's Endorsement Guides: What People Are Asking"
+    must_contain:
+      - clearly and conspicuously
+      - endorsements must be honest and not misleading
+      - significant minority of consumers
+    must_not_contain: &ftc_chrome
+      - An official website of the United States government
+      - Here’s how you know
+      - Report Fraud
+      # FTC template text inside the article body ("About the FTC" and the Ombudsman note);
+      # site boilerplate removal takes it out. Not the bare phrase "about the FTC": real
+      # content uses it ("What about the FTC's Guides...").
+      - The FTC works to prevent fraudulent
+      - ReportFraud.ftc.gov
+      - Subscribe to the FTC’s Business Blog
+      - National Small Business Ombudsman
+      - Your Opportunity to Comment
+  - file: ftc-can-spam.html
+    url: https://www.ftc.gov/business-guidance/resources/can-spam-act-compliance-guide-business
+    retrieved: 2026-10-25
+    licence: US Government work, public domain (17 U.S.C. 105)
+    expected: []
+    title: "CAN-SPAM Act: A Compliance Guide for Business"
+    must_contain:
+      - 10 business days
+      - valid physical postal address
+      - 30 days after you send
+    must_not_contain: *ftc_chrome
+  - file: ftc-advertising-hub.html
+    url: https://www.ftc.gov/business-guidance/advertising-marketing
+    retrieved: 2026-10-25
+    licence: US Government work, public domain (17 U.S.C. 105)
+    expected: []
+    notes: >-
+      Boundary: a hub page of topic summaries with many links. The summaries are real
+      content and the link share of the main text is low (about 0.14), so it passes.
+    title: Advertising and Marketing
+    must_contain:
+      - Made in USA Labeling Rule
+      - Children’s Online Privacy Protection
+      - suspicious conduct. (Question about kids
+    must_not_contain: *ftc_chrome
+  - file: nist-ai-rmf.html
+    url: https://www.nist.gov/itl/ai-risk-management-framework
+    retrieved: 2026-10-25
+    licence: US Government work, public domain (17 U.S.C. 105)
+    expected: []
+    title: AI Risk Management Framework
+    must_contain:
+      - intended for voluntary use
+      - January 26, 2023
+      - Generative Artificial Intelligence Profile
+    must_not_contain:
+      - An official website of the United States government
+      - Official websites use .gov
+      - Secure .gov websites use HTTPS
+      # Buttons, a "Learn more" link and the contact email (second review).
+      - Download the AI RMF 1.0
+      - View the AI RMF Playbook
+      - Visit the AI Resource Center
+      - capabilities. Learn more.
+      - aiframework [at] nist.gov
+  - file: google-seo-starter.html
+    url: https://developers.google.com/search/docs/fundamentals/seo-starter-guide
+    retrieved: 2026-10-25
+    licence: CC BY 4.0 (Google Search Central)
+    expected: []
+    notes: >-
+      Known gap: the "things we believe you shouldn't focus on" table (definition lists inside
+      table cells) is dropped in the default precision mode; extraction_mode=recall keeps it.
+    title: "SEO Starter Guide: The Basics"
+    must_contain:
+      - There are no secrets here
+      - sitemap
+    must_not_contain: &google_chrome
+      - Send feedback
+      - Except as otherwise noted
+      - Last updated
+      - Was this helpful
+  - file: google-helpful-content.html
+    url: https://developers.google.com/search/docs/fundamentals/creating-helpful-content
+    retrieved: 2026-10-25
+    licence: CC BY 4.0 (Google Search Central)
+    expected: []
+    title: Creating Helpful, Reliable, People-First Content
+    must_contain:
+      - people-first content
+      - E-E-A-T
+      - Who, How, and Why
+    must_not_contain: *google_chrome
+  - file: owasp-llm01.html
+    url: https://genai.owasp.org/llmrisk/llm01-prompt-injection/
+    retrieved: 2026-10-25
+    licence: CC BY-SA 4.0 (OWASP Gen AI Security Project)
+    expected: []
+    title: "LLM01:2025 Prompt Injection"
+    must_contain:
+      - Indirect prompt injections occur when an LLM accepts input from external sources
+      - Constrain model behavior
+      - least privilege
+    must_not_contain:
+      - Skip to content
+      - Join the Community
+  - file: wikipedia-rag.html
+    url: https://en.wikipedia.org/wiki/Retrieval-augmented_generation
+    retrieved: 2026-10-25
+    licence: CC BY-SA 4.0 (Wikipedia contributors)
+    expected: []
+    title: Retrieval-augmented generation
+    must_contain:
+      - Retrieval-augmented generation (RAG)
+      - vector database
+    must_not_contain:
+      - Jump to content
+      - From Wikipedia, the free encyclopedia
+      - This page was last edited
+      - Privacy policy
+      - Toggle the table of contents
+
+  # ---------------------------------------------------------------- synthetic pages
+  - file: synthetic-subscriber-footer.html
+    url: https://northwind-notes.example/blog/email-opt-in-form
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: []
+    notes: Must pass. The "Already a subscriber? Sign in" footer is not a paywall.
+    title: How to Write a Clear Email Opt-in Form
+    must_contain:
+      - Avoid pre-ticked boxes
+      - double opt-in
+    must_not_contain: &synthetic_chrome
+      - We use cookies
+      - Cookie settings
+      - All rights reserved
+      - Privacy policy
+      - Already a subscriber
+  - file: synthetic-short-faq.html
+    url: https://lanternbooks.example/help/gift-cards
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: []
+    notes: Boundary. About 170 words of real answers, just over min_words.
+    title: Gift Card FAQ
+    must_contain:
+      - never expire
+      - within 14 days
+    must_not_contain: *synthetic_chrome
+  - file: synthetic-div-soup.html
+    url: https://shipwright.example/blog/release-notes
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: []
+    notes: Unusual markup (no p, article or main tags). trafilatura still handles it.
+    title: Writing Release Notes Users Actually Read
+    must_contain:
+      - Start with the changes that require action
+      - Group small fixes
+    must_not_contain:
+      - Shipwright Labs
+  - file: synthetic-paywall-jsonld.html
+    url: https://retail-ledger.example/analysis/loyalty-checks
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [paywall_or_login]
+    notes: Paywall marked with schema.org isAccessibleForFree false; the teaser is long enough.
+    title: Five Checks Before You Launch a Loyalty Programme
+  - file: synthetic-paywall-phrase.html
+    url: https://agencyweekly.example/topics/client-retention
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [paywall_or_login]
+    notes: No paywall markup, only a "Subscribe to continue reading" box after a short teaser.
+    title: Why Small Agencies Lose Clients in the Second Year
+  - file: synthetic-login-wall.html
+    url: https://help.brightdesk.example/articles/sso-setup
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [paywall_or_login, too_short]
+  - file: synthetic-cookie-only.html
+    url: https://harbour-outdoor.example/
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [boilerplate, too_short]
+    notes: Only a consent dialog; the real page renders with JavaScript.
+  - file: synthetic-link-farm.html
+    url: https://growthlinkhub.example/resources
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [boilerplate, too_short]
+    notes: Forty short links under headings; almost all main text is link text.
+  - file: synthetic-stub.html
+    url: https://tutornotes.example/articles/course-pricing
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [too_short]
+    title: Pricing Strategy for Online Courses
+  - file: synthetic-js-shell.html
+    url: https://app.quanta-analytics.example/
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [empty]
+    title: Quanta Analytics
+  - file: synthetic-french.html
+    url: https://carnet-marketing.example/articles/referencement-local
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [wrong_language]
+    language: fr
+  - file: synthetic-arabic.html
+    url: https://souq-blog.example/articles/email-marketing
+    retrieved: 2026-10-25
+    licence: synthetic, written for SkillForge tests
+    expected: [wrong_language]
+    language: ar

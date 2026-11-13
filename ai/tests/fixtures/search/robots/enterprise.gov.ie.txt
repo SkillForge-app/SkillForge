@@ -1,0 +1,5 @@
+# fetched 2026-10-26 from https://enterprise.gov.ie/robots.txt (HTTP 200)
+﻿User-agent: *
+Allow: /
+User-agent: MJ12bot
+Disallow: /
