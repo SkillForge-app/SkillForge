@@ -1,0 +1,145 @@
+{
+  "created": "2026-11-02T18:22:37Z",
+  "live": true,
+  "prompt": {
+    "id": "analysis/request",
+    "version": 1
+  },
+  "model": "openrouter/anthropic/claude-sonnet-5.5",
+  "data_sources": [
+    {
+      "name": "skillforge-seed-benchmark",
+      "version": "0.1.0",
+      "sha256": "f0a92ff2f445ef0e96099d1f2a9cbbc87b2bf598d8b16f13752e3b6a9e4d3337"
+    },
+    {
+      "name": "analyzer-requests-test",
+      "version": "0.2.0",
+      "sha256": "d7e559b372a1b7f82853970a71db87b3c190baccbc80670029e6919586d5b06b"
+    },
+    {
+      "name": "analyzer-requests-dev",
+      "version": "0.1.0",
+      "sha256": "115cca6ce3c1b00e7f4f6d76a9c861df57f7f14549fb7db89025e2ddf7ddb6c4"
+    },
+    {
+      "name": "analyzer-requests-arabic",
+      "version": "0.1.0",
+      "sha256": "31af0650fc13665ddb427af7a24bfb84b9c3b34f5db7f4f02fb120aa12e33634"
+    }
+  ],
+  "sets": {
+    "dev": {
+      "n": 20,
+      "fields": {
+        "kind": {
+          "correct": 20,
+          "accuracy": 1.0,
+          "confusion": {
+            "role": {
+              "role": 8
+            },
+            "task": {
+              "task": 9
+            },
+            "workflow": {
+              "workflow": 3
+            }
+          }
+        },
+        "domain_area": {
+          "correct": 19,
+          "accuracy": 0.95,
+          "confusion": {
+            "customer-support": {
+              "customer-support": 2
+            },
+            "data": {
+              "data": 1
+            },
+            "design": {
+              "design": 1
+            },
+            "education": {
+              "education": 1
+            },
+            "finance": {
+              "finance": 1
+            },
+            "general": {
+              "general": 2
+            },
+            "hr": {
+              "hr": 2
+            },
+            "legal": {
+              "legal": 1
+            },
+            "medical": {
+              "medical": 1
+            },
+            "operations": {
+              "operations": 1
+            },
+            "product": {
+              "product": 1
+            },
+            "research": {
+              "design": 1,
+              "research": 1
+            },
+            "sales": {
+              "sales": 1
+            },
+            "technology": {
+              "technology": 2
+            },
+            "writing": {
+              "writing": 1
+            }
+          }
+        },
+        "risk": {
+          "correct": 20,
+          "accuracy": 1.0,
+          "confusion": {
+            "high": {
+              "high": 3
+            },
+            "low": {
+              "low": 14
+            },
+            "medium": {
+              "medium": 3
+            }
+          }
+        }
+      },
+      "joint_accuracy": 0.95,
+      "needs_clarification": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "question_rule_kept": 1.0
+      },
+      "mentioned_targets": {
+        "n": 20,
+        "exact_match": 1.0
+      },
+      "errors": {},
+      "latency_ms": {
+        "p50": 2423.2,
+        "max": 6533.5
+      }
+    }
+  },
+  "gate": null,
+  "usage": {
+    "calls": 21,
+    "errors": 1,
+    "input_tokens": 66647,
+    "output_tokens": 4157,
+    "cost_usd": 0.1749
+  },
+  "run": "20261102T182254Z"
+}
