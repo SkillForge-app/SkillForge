@@ -1,5 +1,6 @@
 """LiteLLMGateway against a mocked litellm: request shape, retries, fallbacks, repair, cost."""
 
+import asyncio
 import json
 import logging
 import os
@@ -195,6 +196,20 @@ async def test_a_refusal_stays_a_refusal_when_a_fallback_is_down(llm: FakeLiteLL
 
 
 # ---------------------------------------------------------------- provider errors
+
+
+async def test_an_attempt_cut_off_by_a_deadline_is_still_logged(
+    llm: FakeLiteLLM, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    async def hangs(**kwargs: Any) -> Any:
+        await asyncio.sleep(5)
+        return chat()
+
+    monkeypatch.setattr(litellm, "acompletion", hangs)
+    with pytest.raises(TimeoutError):
+        await asyncio.wait_for(make_gateway().complete("demo/greet", INPUTS, Greeting), 0.05)
+    [rec] = records(caplog)
+    assert (rec["status"], rec["error_type"], rec["cost_usd"]) == ("error", "CancelledError", None)
 
 
 async def test_timeout_is_retried_then_succeeds(

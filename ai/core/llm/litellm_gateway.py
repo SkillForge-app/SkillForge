@@ -209,7 +209,7 @@ class LiteLLMGateway:
                 response = await litellm.acompletion(
                     **_completion_args(call.role, model, messages, output_model)
                 )
-            except Exception as exc:
+            except (Exception, asyncio.CancelledError) as exc:  # cancelled: a step deadline
                 call.record(model, start, error=type(exc).__name__)
                 raise
             choice = response.choices[0]
@@ -282,7 +282,7 @@ class LiteLLMGateway:
                     metrics |= self._metrics(response, model)
                     items = sorted(response.data, key=lambda item: _field(item, "index"))
                     vectors = [list(_field(item, "embedding")) for item in items]
-            except Exception as exc:
+            except (Exception, asyncio.CancelledError) as exc:  # cancelled: a step deadline
                 call.record(model, start, error=type(exc).__name__, **metrics)
                 raise
             if len(vectors) != len(batch) or any(len(v) != dimensions for v in vectors):
