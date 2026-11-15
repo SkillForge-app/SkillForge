@@ -1,7 +1,8 @@
 """Test-wide guards. Tests use the fake retriever, a throwaway index folder and no real
 embedding model, unless a test opts in (`pytest -m model` for the real local model). They also
-use the fake LLM backend and have no outbound network, unless marked `live` (`pgvector` tests
-keep the network for their database)."""
+use the fake LLM backend, unless marked `live` or `model` (the local model runs through the real
+gateway), and have no outbound network, unless marked `live` (`pgvector` tests keep the
+network for their database)."""
 
 import ipaddress
 import socket
@@ -46,10 +47,13 @@ def _no_paid_calls_and_no_network(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> Iterator[None]:
     """The real LLM backend loads ai/.env, so a test that forgot the fake would make paid calls.
-    CI also cuts the network (ai.yml); this keeps a developer machine just as safe."""
-    if request.node.get_closest_marker("live") is None:
-        monkeypatch.setenv(LLM_BACKEND_ENV, "fake")  # the default is "litellm"
-        if request.node.get_closest_marker("pgvector") is None:
+    CI also cuts the network (ai.yml); this keeps a developer machine just as safe. `model`
+    tests keep the real backend for the local embedding model, but not the network."""
+    marked = {m.name for m in request.node.iter_markers()}
+    if "live" not in marked:
+        if "model" not in marked:
+            monkeypatch.setenv(LLM_BACKEND_ENV, "fake")  # the default is "litellm"
+        if "pgvector" not in marked:
             monkeypatch.setattr(socket, "getaddrinfo", _local_getaddrinfo)
             monkeypatch.setattr(socket.socket, "connect", _local_connect)
             monkeypatch.setattr(socket.socket, "connect_ex", _local_connect_ex)

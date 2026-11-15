@@ -305,9 +305,9 @@ print(run.total_usd)
 `tests/llm/test_live.py` calls the real providers and costs a few cents. These tests **never run in the normal test run**, because `pyproject.toml` sets `-m 'not live'`.
 
 **Every other test is also guarded** (`tests/conftest.py`):
-- it gets the fake LLM backend, because the real default loads `ai/.env` and would make a forgotten call paid;
+- it gets the fake LLM backend, because the real default loads `ai/.env` and would make a forgotten call paid. Tests marked `model` keep the real backend, because the local embedding model runs through it;
 - it has no outbound network: any DNS lookup or connection that isn't loopback raises `OSError`. Tests marked `pgvector` keep the network for their database.
-- Only a test marked `live` gets the real backend and the network.
+- Only a test marked `live` gets both the real backend and the network.
 
 Run the live tests on purpose:
 
