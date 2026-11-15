@@ -1,14 +1,26 @@
 """Test-wide guards. Tests use the fake retriever, a throwaway index folder and no real
-embedding model, unless a test opts in (`pytest -m model` for the real local model)."""
+embedding model, unless a test opts in (`pytest -m model` for the real local model). They also
+use the fake LLM backend and have no outbound network, unless marked `live` (`pgvector` tests
+keep the network for their database)."""
 
+import ipaddress
+import socket
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from core.knowledge import set_retriever
 from core.knowledge.retrieval import BACKEND_ENV
 from core.knowledge.store import INDEX_PATH_ENV, STORE_ENV
+from core.llm import set_gateway
+from core.llm.gateway import BACKEND_ENV as LLM_BACKEND_ENV
+
+NETWORK_BLOCKED = "outbound network is blocked in tests; mark the test `live` if it needs it"
+_getaddrinfo = socket.getaddrinfo
+_connect = socket.socket.connect
+_connect_ex = socket.socket.connect_ex
 
 
 @pytest.fixture(autouse=True)
@@ -27,3 +39,53 @@ def _fake_retrieval_and_no_local_model(
     set_retriever(None)
     yield
     set_retriever(None)
+
+
+@pytest.fixture(autouse=True)
+def _no_paid_calls_and_no_network(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[None]:
+    """The real LLM backend loads ai/.env, so a test that forgot the fake would make paid calls.
+    CI also cuts the network (ai.yml); this keeps a developer machine just as safe."""
+    if request.node.get_closest_marker("live") is None:
+        monkeypatch.setenv(LLM_BACKEND_ENV, "fake")  # the default is "litellm"
+        if request.node.get_closest_marker("pgvector") is None:
+            monkeypatch.setattr(socket, "getaddrinfo", _local_getaddrinfo)
+            monkeypatch.setattr(socket.socket, "connect", _local_connect)
+            monkeypatch.setattr(socket.socket, "connect_ex", _local_connect_ex)
+    set_gateway(None)
+    yield
+    set_gateway(None)
+
+
+def _is_local(host: object) -> bool:
+    if host is None:
+        return True
+    if isinstance(host, bytes):
+        host = host.decode()
+    if not isinstance(host, str):
+        return False
+    if host in ("localhost", "localhost.localdomain"):
+        return True
+    try:
+        return ipaddress.ip_address(host.split("%")[0]).is_loopback
+    except ValueError:
+        return False
+
+
+def _local_getaddrinfo(host: Any, *args: Any, **kwargs: Any) -> Any:
+    if not _is_local(host):
+        raise socket.gaierror(f"{NETWORK_BLOCKED} (lookup of {host!r})")
+    return _getaddrinfo(host, *args, **kwargs)
+
+
+def _local_connect(self: socket.socket, address: Any) -> None:
+    if self.family in (socket.AF_INET, socket.AF_INET6) and not _is_local(address[0]):
+        raise OSError(f"{NETWORK_BLOCKED} (connect to {address!r})")
+    _connect(self, address)
+
+
+def _local_connect_ex(self: socket.socket, address: Any) -> int:
+    if self.family in (socket.AF_INET, socket.AF_INET6) and not _is_local(address[0]):
+        raise OSError(f"{NETWORK_BLOCKED} (connect to {address!r})")
+    return _connect_ex(self, address)
