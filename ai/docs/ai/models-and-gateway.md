@@ -74,7 +74,7 @@ Every error is a subclass of `LLMError`. Catch the most specific one you can han
 | `LLMInputError` | Other bad caller input, e.g. a blank text to embed, or a prompt longer than the environment's `max_input_chars` (AI-21) |
 | `ConfigError` | Unknown model role, bad `models.yaml`, unknown backend |
 | `LLMOutputInvalid` | The output did not validate against `output_model`, even after one repair attempt. Also raised when the reply was cut off at `max_tokens` |
-| `LLMRefused` | The model, and every fallback, declined the request (e.g. a safety refusal). It is a subclass of `LLMOutputInvalid`, so existing handlers still catch it |
+| `LLMRefused` | A model declined the request (e.g. a safety refusal) and no other model in the chain answered, even if a later fallback failed or was skipped for a missing key. It is a subclass of `LLMOutputInvalid`, so existing handlers still catch it |
 | `LLMUnavailable` | Every model failed: timeout, rate limit, outage, bad key. It comes after retries and fallbacks. The message names the last error type; the original provider exception is chained as `__cause__`. Also raised when the local rate limit gives no slot within `max_wait_s` (AI-21) |
 | `BudgetExceeded` | The skill run's cost budget is used up (AI-21): no further model call is made. The pipeline returns `failed` with `error_code="budget_exceeded"` |
 
@@ -90,7 +90,7 @@ A chained provider exception (`__cause__`) can. If you log tracebacks of `LLMUna
    - **`max_tokens`** is capped by the environment's `max_output_tokens`.
 2. **Transient errors are retried on the same model**, `num_retries` times, with exponential backoff. These are timeouts, rate limits, connection errors and 5xx responses.
 3. **Other provider errors skip straight to the next fallback.** These are a bad key, a bad request or an unknown model. Retrying them would fail the same way.
-4. **A refusal** moves to the next fallback. If every model refuses, you get `LLMRefused`.
+4. **A refusal** moves to the next fallback. If no model answers after any of them refused, you get `LLMRefused`, not `LLMUnavailable`: an outage or a skipped hop later in the chain does not turn a refusal into "try again later".
 5. **A reply cut off at `max_tokens`** raises `LLMOutputInvalid` at once.
 6. **A reply that does not match `output_model`** gets one repair attempt: the bad reply and the validation errors are sent back. If that also fails, you get `LLMOutputInvalid`.
 

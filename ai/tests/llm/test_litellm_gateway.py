@@ -170,6 +170,30 @@ async def test_content_policy_errors_everywhere_is_a_refusal(llm: FakeLiteLLM) -
         await make_gateway(config).complete("demo/greet", INPUTS, Greeting)
 
 
+async def test_a_refusal_stays_a_refusal_when_the_direct_hop_has_no_key(
+    llm: FakeLiteLLM, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The production chain without ANTHROPIC_API_KEY: two refusals, then the direct-API hop
+    is skipped. A harmful request must come back as refused, not as 'try again later'."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY")
+    config = config_with(analysis={"fallbacks": (HAIKU, DIRECT_SONNET)})
+    llm.completions = [chat("", finish="content_filter"), chat("", finish="content_filter")]
+    with pytest.raises(LLMRefused):
+        await make_gateway(config).complete("demo/greet", INPUTS, Greeting)
+    assert [c["model"] for c in llm.calls] == [SONNET, HAIKU]
+
+
+async def test_a_refusal_stays_a_refusal_when_a_fallback_is_down(llm: FakeLiteLLM) -> None:
+    config = config_with(analysis={"fallbacks": (HAIKU,), "num_retries": 1})
+    llm.completions = [
+        chat("", finish="content_filter"),
+        provider_error(E.ServiceUnavailableError),
+        provider_error(E.ServiceUnavailableError),
+    ]
+    with pytest.raises(LLMRefused):
+        await make_gateway(config).complete("demo/greet", INPUTS, Greeting)
+
+
 # ---------------------------------------------------------------- provider errors
 
 

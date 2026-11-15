@@ -296,9 +296,11 @@ class LiteLLMGateway:
         """Try each model in order; retry transient errors on the same model with backoff.
 
         Before every attempt the skill's cost budget is checked (BudgetExceeded) and the role's
-        rate limit takes a slot (LLMUnavailable when none frees up in time)."""
+        rate limit takes a slot (LLMUnavailable when none frees up in time). Once any model
+        refused, no other model answering means LLMRefused, even if a later link failed or was
+        skipped: a harmful request must not come back as 'try again later'."""
         last: Exception | None = None
-        refused = False
+        refused = False  # sticky: set by the first refusal, never cleared
         call.chain = tuple(models)
         for model in models:
             for retry in range(call.role.num_retries + 1):
@@ -317,11 +319,13 @@ class LiteLLMGateway:
                     if action is None:
                         raise
                     last = exc
-                    refused = isinstance(exc, _E.ContentPolicyViolationError)
+                    refused = refused or isinstance(exc, _E.ContentPolicyViolationError)
                     if action == "next_model":
                         break
         if refused:
-            raise LLMRefused(f"role {call.role_name}: every model refused") from last
+            raise LLMRefused(
+                f"role {call.role_name}: a model refused and no other model answered"
+            ) from last
         raise LLMUnavailable(
             f"role {call.role_name}: all models failed ({', '.join(models)}); "
             f"last error {type(last).__name__}"
