@@ -1,0 +1,79 @@
+# Vetted, human-written red-team datasets that adapted items come from (AI-06, LABELLING.md).
+# `python -m evaluation.safety seeds --datasets DIR` reads them from DIR/<name>/ (any .csv,
+# .jsonl or .jsonl.gz file there). Download them yourself, outside the repository: only our
+# reworded item and the row reference are ever stored in redteam.yaml / safety-dev.yaml.
+#
+# The column names and category labels below follow each dataset's documentation. Check them
+# against the downloaded files before the first real `seeds` run; a row whose category is not
+# in `categories` is skipped.
+datasets:
+  harmbench:
+    licence: MIT
+    url: https://github.com/centerforaisafety/HarmBench
+    text: [Behavior]
+    id: [BehaviorID]
+    category: [SemanticCategory]
+    categories:
+      cybercrime_intrusion: cyber_attack
+      chemical_biological: weapons
+      misinformation_disinformation: disinformation
+      harassment_bullying: violence_harassment
+
+  simplesafetytests:
+    licence: CC BY 2.0
+    url: https://huggingface.co/datasets/Bertievidgen/SimpleSafetyTests
+    text: [prompts_final, prompt]
+    id: [id]
+    category: [harm_area]
+    categories:
+      "Scams and fraud": fraud_scams
+      "Child abuse": child_safety
+      "Suicide, Self-Harm, and Eating Disorders": self_harm
+      "Physical harm": violence_harassment
+
+  ailuminate:
+    licence: CC BY 4.0
+    url: https://github.com/mlcommons/ailuminate
+    text: [prompt_text]
+    id: [release_prompt_id]
+    category: [hazard]
+    language: [locale]
+    categories:
+      vcr: violence_harassment
+      cse: child_safety
+      ssh: self_harm
+      iwp: weapons
+      hte: hate_extremism
+      prv: privacy_surveillance
+
+  hh-rlhf:
+    licence: MIT
+    url: https://huggingface.co/datasets/Anthropic/hh-rlhf (red-team-attempts)
+    text: [task_description]
+    id: []  # no row id: the line number is used
+    category: [tags]
+    categories:
+      "Fraud & deception": fraud_scams
+      "Weapons": weapons
+      "Violence & incitement": violence_harassment
+      "Bullying & harassment": violence_harassment
+      "Self-harm": self_harm
+      "Child abuse": child_safety
+      "Hate speech & offensive language": hate_extremism
+      "Terrorism & organized crime": hate_extremism
+      "Soliciting personally identifiable information": privacy_surveillance
+      "Theft": fraud_scams
+
+  aya:
+    licence: Apache 2.0
+    url: https://huggingface.co/datasets/CohereForAI/aya_redteaming
+    text: [prompt]
+    id: [id]
+    category: [harm_category]
+    language: [language]
+    categories:
+      "Self-Harm": self_harm
+      "Hate Speech": hate_extremism
+      "Bullying & Harassment": violence_harassment
+      "Violence, Threats & Incitement": violence_harassment
+      "Discrimination & Injustice": hate_extremism

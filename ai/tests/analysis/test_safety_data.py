@@ -1,9 +1,11 @@
 """The safety sets: valid, complete where written, and clearly INCOMPLETE where not."""
 
 import re
+import textwrap
 from pathlib import Path
 
 import pytest
+import yaml
 
 from core.analysis.safety import CATEGORY_DESCRIPTIONS, CONDITION_DESCRIPTIONS
 from core.analysis.types import HARM_CATEGORIES, SAFETY_CONDITIONS
@@ -41,9 +43,95 @@ def test_redteam_is_an_empty_template_marked_incomplete() -> None:
     assert data.status("redteam") == "incomplete"
     assert data.load_set("redteam") == []
     header = data.FILES["redteam"].read_text(encoding="utf-8")
-    assert "INCOMPLETE" in header and "Do NOT generate them with an AI assistant" in header
+    assert "INCOMPLETE" in header and "non-Claude model" in header and "reviewer" in header
     gaps = data.coverage_gaps("redteam", [])
     assert "0 of 60 items" in gaps
+
+
+def write_redteam(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, items: list[dict[str, object]], status: str
+) -> None:
+    text = data.FILES["redteam"].read_text(encoding="utf-8")
+    text = text.replace("status: incomplete", f"status: {status}")
+    text = text.replace(
+        "requests: []", "requests:\n" + textwrap.indent(yaml.safe_dump(items), "  ")
+    )
+    path = tmp_path / "redteam.yaml"
+    path.write_text(text, encoding="utf-8")
+    monkeypatch.setitem(data.FILES, "redteam", path)
+
+
+def block_item(**fields: object) -> dict[str, object]:
+    item: dict[str, object] = {
+        "id": "r-01",
+        "text": "placeholder red-team request alpha bravo charlie",
+        "expected": "block",
+        "category": "fraud_scams",
+        "attack": "direct",
+        "origin": "generated",
+        "generator": "openrouter/qwen/qwen3.8-flash",
+        "reviewer": "ziad",
+        "reviewed_on": "2026-11-16",
+    }
+    return {**item, **fields}
+
+
+def codes_of(severity: str) -> set[str]:
+    return {i.code for i in data.check_data() if i.severity == severity}
+
+
+def test_a_complete_provenance_passes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    write_redteam(tmp_path, monkeypatch, [block_item()], "incomplete")
+    assert codes_of("error") == set()
+    assert "provenance" not in codes_of("warning")
+
+
+@pytest.mark.parametrize(
+    ("change", "status", "code", "severity"),
+    [
+        ({"reviewer": None}, "incomplete", "provenance", "warning"),
+        ({"reviewer": None}, "draft", "provenance", "error"),
+        ({"generator": None}, "draft", "provenance", "error"),
+        ({"origin": "adapted", "generator": None}, "draft", "provenance", "error"),
+        (
+            {"generator": "openrouter/anthropic/claude-sonnet-5.5"},
+            "incomplete",
+            "claude_generator",
+            "error",
+        ),
+        ({"category": "child_safety"}, "incomplete", "child_safety", "error"),
+    ],
+)
+def test_provenance_rules(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    change: dict[str, object],
+    status: str,
+    code: str,
+    severity: str,
+) -> None:
+    item = {k: v for k, v in block_item(**change).items() if v is not None}
+    write_redteam(tmp_path, monkeypatch, [item], status)
+    assert code in codes_of(severity)
+
+
+def test_a_near_copy_of_a_benign_item_is_an_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    benign = data.load_set("benign")[0]
+    words = benign.text.split()
+    near = " ".join([*words[:-1], "please"])  # one word changed: the same request
+    assert data.similarity(near, benign.text) >= data.NEAR_DUPLICATE
+    write_redteam(tmp_path, monkeypatch, [block_item(text=near)], "incomplete")
+    [issue] = [i for i in data.check_data() if i.code == "near_duplicate"]
+    assert issue.severity == "error" and f"benign:{benign.id}" in issue.message
+    assert "can't be both block and allow" in issue.message
+
+
+def test_different_requests_are_not_near_duplicates() -> None:
+    assert data.similarity("a skill for phishing emails", "a skill for garden planning") < 0.5
+    assert data.is_claude("anthropic/claude-sonnet-5-5") and data.is_claude("x/Claude-3")
+    assert not data.is_claude("openrouter/qwen/qwen3.8-flash")
 
 
 def test_dev_block_half_is_incomplete() -> None:

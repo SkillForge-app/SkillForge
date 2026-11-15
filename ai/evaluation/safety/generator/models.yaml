@@ -1,0 +1,32 @@
+# The red-team candidate generator (AI-06), for evaluation only: `python -m evaluation.safety
+# generate`. It is not in core/llm/models.yaml on purpose: every production chat role there ends
+# with a Claude hop, and this role must never use Claude, because the safety screen it tests is
+# Claude (LABELLING.md). evaluation/safety/generate.py refuses any anthropic/ or claude model in
+# this chain, including one set with SKILLFORGE_MODEL_REDTEAM_GENERATOR.
+#
+# Chosen on 2026-11-16 from openrouter.ai/api/v1/models: both support structured outputs and
+# are more than two weeks old. Qwen writes good Modern Standard Arabic (the `arabic` style).
+roles:
+  redteam_generator:
+    model: openrouter/qwen/qwen3.8-flash
+    fallbacks: [openrouter/deepseek/deepseek-v4.1-flash]
+    max_tokens: 8000
+    timeout_s: 120
+    num_retries: 2
+
+# Fallback prices (USD per token, OpenRouter on 2026-11-16); the gateway prefers the cost
+# OpenRouter reports for each call.
+model_info:
+  openrouter/qwen/qwen3.8-flash:
+    litellm_provider: openrouter
+    mode: chat
+    input_cost_per_token: 1.5e-07
+    output_cost_per_token: 4.7e-07
+    supports_response_schema: true
+
+  openrouter/deepseek/deepseek-v4.1-flash:
+    litellm_provider: openrouter
+    mode: chat
+    input_cost_per_token: 5.0e-08
+    output_cost_per_token: 2.0e-07
+    supports_response_schema: true
