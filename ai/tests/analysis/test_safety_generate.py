@@ -1,6 +1,7 @@
 """AI-06 red-team generation: the slot plan, the non-Claude rule, candidates only in runs/,
 the pre-filters and the dataset seeds. Placeholder texts only: no test holds harmful content."""
 
+import gzip
 import hashlib
 import json
 from collections import Counter
@@ -249,44 +250,54 @@ def test_the_generator_prompt_is_locked_and_renders_both_modes() -> None:
 
 
 def test_seeds_map_dataset_categories_and_prefer_arabic(tmp_path: Path) -> None:
+    # The real formats (checked on 2026-11-16): HarmBench keeps only `standard` rows, Aya has no
+    # row id, and hh-rlhf's red_team_attempts.jsonl.gz is one JSON array.
     (tmp_path / "harmbench").mkdir()
     (tmp_path / "harmbench" / "behaviors.csv").write_text(
-        "Behavior,BehaviorID,SemanticCategory\n"
-        "placeholder cyber seed one,hb-1,cybercrime_intrusion\n"
-        "placeholder cyber seed two,hb-2,cybercrime_intrusion\n"
-        "placeholder unmapped seed,hb-3,copyright\n",
+        "Behavior,FunctionalCategory,SemanticCategory,BehaviorID\n"
+        "placeholder cyber seed one,standard,cybercrime_intrusion,hb-1\n"
+        "placeholder cyber seed two,standard,cybercrime_intrusion,hb-2\n"
+        "placeholder contextual seed,contextual,cybercrime_intrusion,hb-4\n"
+        "placeholder unmapped seed,standard,copyright,hb-3\n",
         encoding="utf-8",
     )
     (tmp_path / "aya").mkdir()
     rows = [
-        {
-            "prompt": "بذرة تجريبية",
-            "id": "aya-1",
-            "harm_category": ["Self-Harm"],
-            "language": "Arabic",
-        },
+        {"prompt": "بذرة تجريبية", "harm_category": ["Self-Harm"], "language": "Arabic"},
         {
             "prompt": "placeholder english self-harm seed",
-            "id": "aya-2",
             "harm_category": "['Self-Harm']",
             "language": "English",
         },
     ]
-    (tmp_path / "aya" / "arabic.jsonl").write_text(
+    (tmp_path / "aya" / "aya_arb.jsonl").write_text(
         "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8"
     )
+    (tmp_path / "hh-rlhf").mkdir()
+    attempts = [
+        {"task_description": "placeholder untagged attempt", "tags": None},
+        {
+            "task_description": "placeholder drugs attempt",
+            "tags": ["Substance abuse & banned substances"],
+        },
+    ]
+    with gzip.open(
+        tmp_path / "hh-rlhf" / "red_team_attempts.jsonl.gz", "wt", encoding="utf-8"
+    ) as f:
+        json.dump(attempts, f)
     seeds = load_seeds(tmp_path)
     assert {(s.dataset, s.ref, s.category, s.arabic) for s in seeds} == {
         ("harmbench", "hb-1", "cyber_attack", False),
         ("harmbench", "hb-2", "cyber_attack", False),
-        ("aya", "aya-1", "self_harm", True),
-        ("aya", "aya-2", "self_harm", False),
+        ("aya", "aya_arb.jsonl:1", "self_harm", True),
+        ("aya", "aya_arb.jsonl:2", "self_harm", False),
+        ("hh-rlhf", "red_team_attempts.jsonl.gz:2", "illegal_drugs", False),
     }
     arabic_slot = Slot("r-30", "redteam", "self_harm", "arabic", "adapted")
     other = Slot("r-25", "redteam", "self_harm", "direct", "adapted")
     cyber = [Slot(f"r-0{i}", "redteam", "cyber_attack", "direct", "adapted") for i in (1, 2, 3)]
     picked = {s.slot: s for s in select_seeds([arabic_slot, other, *cyber], seeds)}
-    assert picked["r-30"].ref == "aya-1" and picked["r-25"].ref == "aya-2"
+    assert picked["r-30"].ref == "aya_arb.jsonl:1" and picked["r-25"].ref == "aya_arb.jsonl:2"
     assert {picked["r-01"].ref, picked["r-02"].ref} == {"hb-1", "hb-2"}
     assert "r-03" not in picked  # no third cyber seed: left for the reviewer to see
     assert {s.licence for s in seeds} == {"MIT", "Apache 2.0"}

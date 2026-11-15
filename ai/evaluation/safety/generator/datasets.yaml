@@ -1,18 +1,23 @@
 # Vetted, human-written red-team datasets that adapted items come from (AI-06, LABELLING.md).
 # `python -m evaluation.safety seeds --datasets DIR` reads them from DIR/<name>/ (any .csv,
-# .jsonl or .jsonl.gz file there). Download them yourself, outside the repository: only our
-# reworded item and the row reference are ever stored in redteam.yaml / safety-dev.yaml.
+# .jsonl or .jsonl.gz file there; a .jsonl.gz that holds one JSON array works too). Download
+# them yourself, outside the repository: only our reworded item and the row reference are
+# ever stored in redteam.yaml / safety-dev.yaml.
 #
-# The column names and category labels below follow each dataset's documentation. Check them
-# against the downloaded files before the first real `seeds` run; a row whose category is not
-# in `categories` is skipped.
+# Checked against the downloaded files on 2026-11-16 (columns and every label below exist).
+# A row whose category is not in `categories` is skipped; `where` keeps only matching rows.
+# Labels left out on purpose, because they span several of our categories or none:
+#   HarmBench illegal, harmful, copyright; SimpleSafetyTests "Illegal and Highly Regulated
+#   items"; AILuminate ncr, dfm, src, sxc_prn, spc_*; hh-rlhf Theft, Other, Adult content;
+#   Aya Profanity, Graphic material, Non-consensual sexual content, Harms of Representation.
 datasets:
   harmbench:
     licence: MIT
-    url: https://github.com/centerforaisafety/HarmBench
+    url: https://github.com/centerforaisafety/HarmBench (data/behavior_datasets/harmbench_behaviors_text_all.csv)
     text: [Behavior]
     id: [BehaviorID]
     category: [SemanticCategory]
+    where: {FunctionalCategory: standard}  # contextual rows need their long context passage
     categories:
       cybercrime_intrusion: cyber_attack
       chemical_biological: weapons
@@ -21,19 +26,19 @@ datasets:
 
   simplesafetytests:
     licence: CC BY 2.0
-    url: https://huggingface.co/datasets/Bertievidgen/SimpleSafetyTests
-    text: [prompts_final, prompt]
+    url: https://huggingface.co/datasets/Bertievidgen/SimpleSafetyTests (sst_test_cases.csv)
+    text: [prompt]
     id: [id]
     category: [harm_area]
     categories:
-      "Scams and fraud": fraud_scams
-      "Child abuse": child_safety
+      "Scams and Fraud": fraud_scams
+      "Child Abuse": child_safety
       "Suicide, Self-Harm, and Eating Disorders": self_harm
-      "Physical harm": violence_harassment
+      "Physical Harm and Violence": violence_harassment
 
   ailuminate:
     licence: CC BY 4.0
-    url: https://github.com/mlcommons/ailuminate
+    url: https://github.com/mlcommons/ailuminate (airr_official_1.0_demo_en_us_prompt_set_release.csv)
     text: [prompt_text]
     id: [release_prompt_id]
     category: [hazard]
@@ -48,10 +53,10 @@ datasets:
 
   hh-rlhf:
     licence: MIT
-    url: https://huggingface.co/datasets/Anthropic/hh-rlhf (red-team-attempts)
+    url: https://huggingface.co/datasets/Anthropic/hh-rlhf (red-team-attempts/red_team_attempts.jsonl.gz)
     text: [task_description]
-    id: []  # no row id: the line number is used
-    category: [tags]
+    id: []  # no row id: the position in the file is used
+    category: [tags]  # only about 2% of the rows are tagged; the others are skipped
     categories:
       "Fraud & deception": fraud_scams
       "Weapons": weapons
@@ -62,13 +67,14 @@ datasets:
       "Hate speech & offensive language": hate_extremism
       "Terrorism & organized crime": hate_extremism
       "Soliciting personally identifiable information": privacy_surveillance
-      "Theft": fraud_scams
+      "Substance abuse & banned substances": illegal_drugs
+      "Conspiracy theories & misinformation": disinformation
 
   aya:
     licence: Apache 2.0
-    url: https://huggingface.co/datasets/CohereForAI/aya_redteaming
+    url: https://huggingface.co/datasets/CohereLabs/aya_redteaming (aya_arb.jsonl, aya_eng.jsonl)
     text: [prompt]
-    id: [id]
+    id: []  # no row id: the file and line are used
     category: [harm_category]
     language: [language]
     categories:

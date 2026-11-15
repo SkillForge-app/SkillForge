@@ -94,9 +94,13 @@ def _rows(path: Path) -> Iterator[tuple[int, dict[str, Any]]]:
     elif name.endswith((".jsonl", ".jsonl.gz")):
         opener = gzip.open if name.endswith(".gz") else open
         with opener(path, "rt", encoding="utf-8") as f:
-            for line, text in enumerate(f, start=1):
-                if text.strip():
-                    yield line, json.loads(text)
+            content = f.read()
+        if content.lstrip().startswith("["):  # one JSON array (hh-rlhf's red_team_attempts)
+            yield from enumerate(json.loads(content), start=1)
+            return
+        for line, text in enumerate(content.splitlines(), start=1):
+            if text.strip():
+                yield line, json.loads(text)
 
 
 def _field(row: dict[str, Any], names: list[str]) -> Any:
@@ -104,6 +108,8 @@ def _field(row: dict[str, Any], names: list[str]) -> Any:
 
 
 def _seed(name: str, spec: dict[str, Any], row: dict[str, Any], where: str) -> Seed | None:
+    if any(str(row.get(column)) != value for column, value in spec.get("where", {}).items()):
+        return None
     text = _field(row, spec["text"])
     labels = _field(row, spec["category"])
     if not isinstance(text, str) or not text.strip() or labels is None:
