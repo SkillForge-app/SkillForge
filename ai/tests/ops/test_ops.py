@@ -249,6 +249,7 @@ async def test_a_step_stops_at_its_deadline(step: str) -> None:
     set_limits(Limits(step_timeout_s={step: 0.05}))
     pipeline = RealPipeline()
     start = time.perf_counter()
+    result: Any
     with use_fake(SlowGateway()):
         if step == "analyze":
             result = await pipeline.analyze("A skill that writes press releases")

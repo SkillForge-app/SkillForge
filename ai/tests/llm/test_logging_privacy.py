@@ -131,7 +131,12 @@ async def test_invalid_output_logs_field_names_and_error_types_only(
     too_long_and_extra = json.dumps(
         {"greeting": SECRET_OUTPUT * 3, "tone": "warm", SECRET_OUTPUT: 1}
     )
-    llm.completions = [chat(too_long_and_extra), chat(good), chat(f"not json {SECRET_OUTPUT}"), chat(good)]
+    llm.completions = [
+        chat(too_long_and_extra),
+        chat(good),
+        chat(f"not json {SECRET_OUTPUT}"),
+        chat(good),
+    ]
 
     await complete("demo/greet", INPUTS, StrictGreeting)  # one repair round each
     await complete("demo/greet", INPUTS, StrictGreeting)

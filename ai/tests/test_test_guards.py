@@ -21,6 +21,6 @@ def test_outbound_network_is_blocked() -> None:
 
 
 def test_loopback_still_works() -> None:
-    with socket.create_server(("127.0.0.1", 0)) as server:
-        with socket.create_connection(server.getsockname()[:2], timeout=2):
-            pass
+    server = socket.create_server(("127.0.0.1", 0))
+    with server, socket.create_connection(server.getsockname()[:2], timeout=2):
+        pass

@@ -16,8 +16,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from core.llm import ConfigError, LLMOutputInvalid, load_config
-from core.llm import local_embed
+from core.llm import ConfigError, LLMOutputInvalid, load_config, local_embed
 from core.llm.config import LocalModel, ModelConfig, ModelRole
 from core.llm.local_embed import CACHE_ENV, ensure_model, main, model_dir
 from tests.llm.litellm_mock import FakeLiteLLM, make_gateway
