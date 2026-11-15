@@ -77,6 +77,8 @@ RETRYABLE_ERRORS: tuple[type[Exception], ...] = (
 
 logger = logging.getLogger("skillforge.llm")
 _FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
+_FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
+MAX_INVALID_FIELDS = 20
 
 
 def configure_litellm(config: ModelConfig) -> None:
@@ -226,7 +228,13 @@ class LiteLLMGateway:
             try:
                 result = output_model.model_validate_json(_strip_fences(reply))
             except ValidationError as exc:
-                call.record(model, start, error=LLMOutputInvalid.__name__, **metrics)
+                call.record(
+                    model,
+                    start,
+                    error=LLMOutputInvalid.__name__,
+                    invalid_fields=_invalid_fields(exc),
+                    **metrics,
+                )
                 raise _BadOutput(reply, exc) from None
             call.record(model, start, **metrics)
             return result
@@ -424,6 +432,23 @@ def _repair_instruction(error: ValidationError) -> str:
         + "\n".join(problems[:20])
         + "\nReply again with only the corrected JSON object."
     )
+
+
+def _invalid_fields(error: ValidationError) -> list[str]:
+    """`<field path>:<error type>` for each validation error, for the call record. No values: a
+    path part that is not a plain identifier or an index becomes "?", and so does a key the
+    model made up (extra_forbidden), since the model chose its name."""
+    fields = []
+    for e in error.errors(include_url=False, include_input=False, include_context=False):
+        loc = list(e["loc"])
+        if e["type"] == "extra_forbidden" and loc:
+            loc[-1] = "?"
+        parts = [
+            str(p) if isinstance(p, int) or (isinstance(p, str) and _FIELD_NAME.match(p)) else "?"
+            for p in loc
+        ]
+        fields.append(f"{'.'.join(parts) or '(root)'}:{e['type']}")
+    return fields[:MAX_INVALID_FIELDS]
 
 
 def _strip_fences(reply: str) -> str:

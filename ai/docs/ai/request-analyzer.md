@@ -153,7 +153,9 @@ Prompt `analysis/request` **v1**, model `openrouter/anthropic/claude-sonnet-5.5`
 - **13 of the 113 gate calls (11.5%) returned output that failed validation (`LLMOutputInvalid`)** and were retried; every request got a valid answer on retry, with no fallback. Above 10%, `AILLMErrorRateHigh` would fire in production.
   - **Follow-up, not fixed yet:** find out which validation rules fail.
   - The gateway already sends the output schema as `response_format`.
-  - The call records hold no reply text, so they don't say which rule failed.
+  - **Diagnostics are now in place (review F4):** every invalid attempt's call record has `invalid_fields`, e.g. `["summary:string_too_long"]`: the field path and the error type, never the value. The 2026-11-02 records predate this, so they don't say which rule failed.
+  - **Next:** the next live AI-05 run reads `invalid_fields` from its call records. The prompt fix (for example, stating the length limits) is decided from that, and the gate is re-run before it ships.
+  - **The prompt stays at v1** until then, because the gate's 92/95/96% was measured on v1.
 
 ## Safety screening (AI-06)
 

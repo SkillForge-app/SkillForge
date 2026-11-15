@@ -48,6 +48,9 @@ class CallRecord(BaseModel):
     fallback: int = Field(default=0, ge=0)
     # AI-21: the skill run (BE's id) this call belongs to, so cost per skill can be summed.
     skill_run: str | None = None
+    # An output that failed validation: "<field path>:<error type>" per error (e.g.
+    # "summary:string_too_long"), never the value. None for every other attempt.
+    invalid_fields: list[str] | None = None
 
 
 @dataclass

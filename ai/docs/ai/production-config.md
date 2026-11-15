@@ -85,7 +85,7 @@ install_json_logs(sys.stdout)
 
 | Logger | Record | One per |
 |---|---|---|
-| `skillforge.llm` | `CallRecord`: role, model, `fallback`, status, `error_type`, tokens, `cost_usd`, `latency_ms`, `skill_run` | model attempt |
+| `skillforge.llm` | `CallRecord`: role, model, `fallback`, status, `error_type`, `invalid_fields`, tokens, `cost_usd`, `latency_ms`, `skill_run` | model attempt |
 | `skillforge.safety` | verdict, category, conditions, prompt version | safety decision |
 | `skillforge.pipeline` | `StepEvent`: step, status, `error_code`, calls, `cost_usd`, `latency_ms`, `skill_run`, `skill_cost_usd` | pipeline step |
 | `skillforge.knowledge` | `IngestPageEvent`: host, verdict reasons (e.g. `injection`), chunks, quarantined; `LLMScreenEvent`: screened, flagged | ingested page; LLM-screen batch |

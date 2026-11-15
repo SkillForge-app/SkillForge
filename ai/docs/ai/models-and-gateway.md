@@ -265,6 +265,8 @@ AI-21 added two fields:
 
 Both are additive changes to contract A1, for Track B to approve.
 
+A third optional field, `invalid_fields` (review F4), is set only on an attempt whose reply failed validation: one `"<field path>:<error type>"` per error, e.g. `["summary:string_too_long", "questions:too_short"]`, at most 20. It never holds a value. A path part that isn't a plain identifier or an index becomes `?`, and so does a key the model made up (`"?:extra_forbidden"`). A reply that isn't JSON gives `["(root):json_invalid"]`. Also additive to A1.
+
 Failed attempts that still got a reply (for example an invalid JSON reply) keep their tokens and cost. So you see, and count, everything that was paid for.
 
 **Metadata only.** The log never contains prompt text, inputs, embedded texts, model output or error messages.

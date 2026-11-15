@@ -30,7 +30,7 @@ What each AI alert means and what to do. The rules are in `ai/ops/alerts.yaml` a
 - **Do:**
   1. Group the errors by `error_type`.
   2. `RateLimitError`: lower the role's `requests_per_minute`, or ask DevOps to raise the provider limit.
-  3. `LLMOutputInvalid`: compare `prompt_version` and the model with the last good period, and roll back.
+  3. `LLMOutputInvalid`: group the records by `invalid_fields` to see which rule fails, then compare `prompt_version` and the model with the last good period, and roll back.
   4. Missing key: restore the secret.
 
 ### AILLMErrorRateCritical
