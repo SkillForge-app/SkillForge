@@ -218,6 +218,21 @@ async def test_a_used_up_budget_fails_cleanly_in_every_step(fake: FakeGateway) -
         assert result.usage.calls == 0 and result.user_message  # no model attempt was made
 
 
+async def test_the_documented_skill_run_gets_the_environment_budget(fake: FakeGateway) -> None:
+    """production-config.md: `with skill_run(job.id, spent_usd=job.cost_so_far):`, with no
+    budget_usd. The profile's budget per skill ($1.50 in production) must then apply."""
+    apply_environment("production")
+    fake.cost_usd = 0.40
+    with skill_run("job-1", spent_usd=1.50) as run:
+        stopped = await RealPipeline().design(screened())
+    assert run.budget_usd == 1.50
+    assert (stopped.status, stopped.error_code) == ("failed", "budget_exceeded")
+    assert stopped.usage.calls == 0
+    with skill_run("job-2", spent_usd=1.10) as run:
+        allowed = await RealPipeline().design(screened())
+    assert allowed.status == "ok" and run.total_usd == pytest.approx(1.50)
+
+
 async def test_the_step_budget_stops_a_repair_loop(fake: FakeGateway) -> None:
     set_limits(Limits(step_budget_usd={"design": 0.50}))
     fake.cost_usd = 0.60
