@@ -1,5 +1,6 @@
 from backend.app.api.routes.repositories import router as repositories_router
 from backend.app.api.routes.projects import router as projects_router
+from backend.app.api.routes.spec_versions import router as spec_versions_router
 
 from fastapi import FastAPI
 
@@ -36,5 +37,6 @@ def health_check():
     }
 
 app.include_router(projects_router)
+app.include_router(spec_versions_router)
 
 app.include_router(repositories_router)
