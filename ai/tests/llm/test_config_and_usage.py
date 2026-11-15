@@ -1,3 +1,6 @@
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -14,6 +17,18 @@ from core.llm.usage import CallRecord, log_call
 from tests.llm.helpers import Greeting
 
 INPUTS = {"name": "Ziad", "platform": "Claude"}
+AI_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_importing_core_keeps_litellm_on_its_bundled_price_map() -> None:
+    """LiteLLM downloads its price map from GitHub when it is imported, unless this variable is
+    set. Any `import core...` sets it, before anything in core (or BE) imports litellm."""
+    env = {k: v for k, v in os.environ.items() if k != "LITELLM_LOCAL_MODEL_COST_MAP"}
+    code = "import os, core; print(os.environ.get('LITELLM_LOCAL_MODEL_COST_MAP'))"
+    out = subprocess.run(
+        [sys.executable, "-c", code], cwd=AI_ROOT, env=env, capture_output=True, text=True
+    )
+    assert out.stdout.strip() == "True", out.stderr
 
 
 def test_default_config_has_the_contract_roles() -> None:
