@@ -6,6 +6,10 @@ No test here downloads or loads a real model; `pytest -m model` runs the one tha
 import hashlib
 import json
 import logging
+import sys
+import threading
+import time
+import types
 from pathlib import Path
 from typing import Any
 
@@ -13,9 +17,13 @@ import pytest
 from pydantic import ValidationError
 
 from core.llm import ConfigError, LLMOutputInvalid, load_config
+from core.llm import local_embed
 from core.llm.config import LocalModel, ModelConfig, ModelRole
 from core.llm.local_embed import CACHE_ENV, ensure_model, main, model_dir
 from tests.llm.litellm_mock import FakeLiteLLM, make_gateway
+
+# The real loader, taken at import: tests/conftest.py replaces it for tests not marked `model`.
+REAL_LOAD = local_embed._load
 
 CONTENT = b"not really an onnx model"
 PIN = LocalModel(
@@ -195,3 +203,31 @@ async def test_the_real_embedding_model_works(monkeypatch: pytest.MonkeyPatch) -
     assert len(a) == role.dimensions
     assert abs(dot(a, a) - 1) < 1e-3  # unit length
     assert dot(a, b) > dot(a, c)  # a paraphrase is closer than an unrelated sentence
+
+
+def test_two_first_embeds_at_once_load_the_model_once(monkeypatch: pytest.MonkeyPatch) -> None:
+    """embed() runs the model in worker threads: two first calls at the same time must not
+    both check, download and load it (the cache alone gives no mutual exclusion)."""
+    built: list[str] = []
+
+    class SlowTextEmbedding:
+        def __init__(self, name: str, specific_model_path: str) -> None:
+            built.append(name)
+            time.sleep(0.2)  # long enough for the other thread to miss the cache too
+
+    fake_fastembed = types.SimpleNamespace(TextEmbedding=SlowTextEmbedding)
+    monkeypatch.setitem(sys.modules, "fastembed", fake_fastembed)
+    monkeypatch.setattr(local_embed, "ensure_model", lambda local, **kw: Path("."))
+    name = f"test-model-{time.perf_counter_ns()}"  # a name no other test cached
+    start = threading.Barrier(2)
+
+    def first_embed() -> None:
+        start.wait()
+        REAL_LOAD(name, PIN)
+
+    threads = [threading.Thread(target=first_embed) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert built == [name]

@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import os
 import sys
+import threading
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -68,8 +69,18 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-@lru_cache(maxsize=4)
+_load_lock = threading.Lock()
+
+
 def _load(name: str, local: LocalModel) -> Any:
+    """The loaded model, once per process. embed() calls this from worker threads, and the
+    cache alone would let two first calls both check, download and load the files."""
+    with _load_lock:
+        return _cached_load(name, local)
+
+
+@lru_cache(maxsize=4)
+def _cached_load(name: str, local: LocalModel) -> Any:
     from fastembed import TextEmbedding
 
     return TextEmbedding(name, specific_model_path=str(ensure_model(local)))
