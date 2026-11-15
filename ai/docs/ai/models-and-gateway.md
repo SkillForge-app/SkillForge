@@ -198,6 +198,11 @@ The pinned LiteLLM version has no entry for `claude-sonnet-5-5` or `claude-haiku
 
 When you add a model that LiteLLM does not know, add an entry there. Copy the flags from a similar model in LiteLLM's map. `tests/llm/test_litellm_gateway.py::test_litellm_builds_a_valid_claude_request` checks the request LiteLLM builds.
 
+- **The OpenRouter entries use the same per-token prices as the direct ones.** `tests/llm/test_config_and_usage.py` checks every pair.
+- **LiteLLM's own price map stays the bundled one.** When LiteLLM is imported, it downloads its price map from GitHub `main` (unpinned prices, plus a network call with retries at startup), unless `LITELLM_LOCAL_MODEL_COST_MAP=True`.
+  - **Any `import core...` sets the variable first** (`core/__init__.py`).
+  - **For Backend:** a process that imports `litellm` before anything from `core` must set the variable itself.
+
 ### Upgrading LiteLLM
 
 LiteLLM has had compromised PyPI releases, so `pyproject.toml` pins one exact version, and `uv.lock` pins its file hashes. To upgrade:

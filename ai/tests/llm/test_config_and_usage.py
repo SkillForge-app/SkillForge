@@ -31,6 +31,31 @@ def test_importing_core_keeps_litellm_on_its_bundled_price_map() -> None:
     assert out.stdout.strip() == "True", out.stderr
 
 
+PRICES = (
+    "input_cost_per_token",
+    "output_cost_per_token",
+    "cache_read_input_token_cost",
+    "cache_creation_input_token_cost",
+)
+
+
+def test_openrouter_prices_match_the_direct_anthropic_prices() -> None:
+    """models.yaml: OpenRouter charges Anthropic's own per-token prices, so each OpenRouter
+    entry must price a call like the direct entry for the same model (used when OpenRouter
+    reports no cost)."""
+    info = load_config().model_info
+    prefix = "openrouter/anthropic/"
+    pairs = [
+        (name, name.removeprefix(prefix).replace(".", "-"))
+        for name in info
+        if name.startswith(prefix) and name.removeprefix(prefix).replace(".", "-") in info
+    ]
+    assert pairs  # at least Sonnet and Haiku have both entries
+    for openrouter, direct in pairs:
+        for price in PRICES:
+            assert info[openrouter].get(price) == info[direct].get(price), (openrouter, price)
+
+
 def test_default_config_has_the_contract_roles() -> None:
     config = load_config()
     assert {"default", "analysis", "extraction", "judge", "embedding"} <= config.roles.keys()
