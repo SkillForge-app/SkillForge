@@ -193,6 +193,10 @@ async def generate(
             except LLMError as exc:  # e.g. a refusal: the slot stays open
                 result.skipped.append(f"{slot.id}: {type(exc).__name__}")
                 continue
+            if not reply.candidates:  # a quiet refusal: the slot stays open
+                model = models[-1] if models else "the generator"
+                result.skipped.append(f"{slot.id}: {model} returned no candidates")
+                continue
             keep = 1 if slot.origin == "adapted" else PER_SLOT
             for request in reply.candidates[:keep]:
                 candidate = _candidate(slot, seed, request, models[-1] if models else None, known)

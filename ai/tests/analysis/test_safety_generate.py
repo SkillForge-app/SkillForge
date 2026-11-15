@@ -22,6 +22,7 @@ from evaluation.safety.generate import (
     GeneratedQA,
     generate,
     generator_config,
+    open_slots,
     prefilter,
     read_candidates,
 )
@@ -167,6 +168,19 @@ async def test_a_second_run_only_fills_slots_still_open(tmp_path: Path) -> None:
     first = await generate("dev", Scripted(), seeds={}, candidates_path=out)
     again = await generate("dev", Scripted(), seeds={}, candidates_path=out)
     assert first.calls == 5 and again.calls == 0  # every generated dev slot is waiting for review
+
+
+async def test_an_empty_reply_is_reported_and_leaves_the_slot_open(tmp_path: Path) -> None:
+    fake = FakeGateway(prompts_root=GENERATOR_PROMPTS, config=generator_config())
+    fake.register(PROMPT_ID, {"candidates": []})  # a quiet refusal
+    out = tmp_path / "c.jsonl"
+    result = await generate("dev", fake, seeds={}, limit=1, candidates_path=out)
+    assert result.calls == 1 and result.candidates == []
+    assert result.skipped == [
+        "sd-11: no seed (run `seeds` first)",  # adapted, no seed given here: no call
+        "sd-12: fake returned no candidates",
+    ]
+    assert "sd-12" in {s.id for s in open_slots("dev", read_candidates(out))}
 
 
 async def test_a_repeated_reply_is_filtered_as_a_duplicate(tmp_path: Path) -> None:
