@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /checkout
+Disallow: /account
+Disallow: /collect
+Disallow: /reset-password
+Disallow: /verify-account
+Disallow: /search
+
+Sitemap: http://bookstore.sautech.edu/sitemap.xml

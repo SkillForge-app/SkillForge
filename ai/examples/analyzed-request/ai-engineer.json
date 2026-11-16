@@ -1,0 +1,29 @@
+{
+  "kind": "role",
+  "domain": "technology/ai",
+  "risk": "low",
+  "audience": "a 6-person startup team building a support chatbot",
+  "expected_outputs": [
+    "model and embedding recommendations",
+    "retrieval design",
+    "evaluation sets",
+    "cost and risk warnings"
+  ],
+  "skill_name": "ai-engineer",
+  "summary": "A senior AI engineer skill that helps a startup design, evaluate and safely ship an LLM support chatbot.",
+  "needs_clarification": false,
+  "questions": [],
+  "request": "We are a 6-person startup building a support chatbot on top of an LLM. I want a skill that acts like a senior AI engineer for Codex: it should help us pick models and embeddings, design retrieval over our help-centre articles, write evaluation sets, and warn us about cost and prompt-injection risks before we ship.",
+  "targets": [
+    "codex"
+  ],
+  "answers": [],
+  "analyzer": {
+    "prompt_id": "analysis/request",
+    "prompt_version": 1
+  },
+  "safety": {
+    "conditions": [],
+    "prompt_version": 1
+  }
+}

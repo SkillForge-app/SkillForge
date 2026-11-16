@@ -1,0 +1,43 @@
+# beehiiv default robots.txt
+# This is automatically used when you leave custom content empty
+# Customize below or upload your own robots.txt file
+
+User-agent: Amazonbot
+Disallow: /
+
+# Googlebot obeys only its own group, so it repeats the * rules it needs
+User-agent: Googlebot
+Disallow: /login$
+Disallow: /login?
+Disallow: /login/
+Disallow: /polls/*/results
+Disallow: /polls/*/response
+Disallow: /unsubscribe/
+Disallow: /p/*/likes
+Disallow: /nogooglebot/
+
+User-agent: *
+Sitemap: https://iterai.beehiiv.com/sitemap.xml
+Disallow: /polls/*/results
+Disallow: /polls/*/response
+Disallow: /unsubscribe/
+Disallow: /p/*/likes
+Disallow: /login
+
+User-agent: adsbot-google
+Disallow: /login
+
+User-agent: Nutch
+Disallow: /
+
+User-agent: AhrefsBot
+Crawl-delay: 10
+Disallow: /login
+
+User-agent: AhrefsSiteAudit
+Crawl-delay: 10
+Disallow: /login
+
+User-agent: MJ12bot
+Crawl-Delay: 10
+Disallow: /login

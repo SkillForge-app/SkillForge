@@ -1,0 +1,25 @@
+# fetched 2026-10-26 from https://informationsecurity.iu.edu/robots.txt (HTTP 200)
+User-agent: AdsBot-Google-Mobile
+Allow: /campaigns/
+
+User-agent: AdsBot-Google
+Allow: /campaigns/
+
+
+User-agent: *
+Disallow: /*.pdf$
+Disallow: /_assets/
+Disallow: /_documentation/
+Disallow: /_examples/
+Disallow: /_feeds/
+Disallow: /_home/
+Disallow: /_includes/
+Disallow: /_internal/
+Disallow: /_php/
+Disallow: /_shared-sections/
+Disallow: /gwassets/
+Disallow: /error/
+Disallow: /*.file-extension$
+Disallow: /path/to/folder
+Disallow: /path/to/file-or-page.html
+Sitemap: https://informationsecurity.iu.edu/sitemap.xml

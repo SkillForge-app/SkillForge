@@ -1,0 +1,49 @@
+User-Agent: *
+Allow: /
+Allow: /api/templates/pdf
+Disallow: /api/
+Disallow: /admin/
+Disallow: /studio/
+Disallow: /draft/
+Disallow: /preview/
+Disallow: /support/
+Disallow: /404
+Disallow: /500
+Disallow: /*?preview=*
+Disallow: /*?draft=*
+Disallow: /tag/
+Disallow: /author/
+Disallow: /?via=96b1bc
+Disallow: /og-preview/
+Disallow: /heidi-arcade/
+Disallow: /debug-signup-utm/
+Disallow: /debug-announcements
+Disallow: /debug-announcements/
+Disallow: /base-layout/
+Disallow: /doc-extractor/
+Disallow: /*/design-system/
+Disallow: /*/intercom/
+Disallow: /*/test-error/
+Disallow: /*/test-global-error/
+Disallow: /*.pdf$
+Disallow: /*.doc$
+Disallow: /*.zip$
+Disallow: /*.json$
+
+User-Agent: ChatGPT-User
+Allow: /
+
+User-Agent: GPTBot
+Allow: /
+
+User-Agent: Google-Extended
+Allow: /
+
+User-Agent: Anthropic-ai
+Allow: /
+
+User-Agent: CCBot
+Allow: /
+
+Host: www.heidihealth.com
+Sitemap: https://www.heidihealth.com/sitemap-index.xml

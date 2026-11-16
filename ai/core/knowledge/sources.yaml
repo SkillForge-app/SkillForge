@@ -1,0 +1,368 @@
+# Source discovery registry (AI-09): how search queries are worded, which sites count as
+# authoritative, what is blocked, and the licence note DE-04 receives with every URL.
+# This is reviewable data: change it by pull request (AI lead + DE lead).
+#
+# Licence notes are conservative defaults for a legal reviewer, not legal advice:
+#   public-domain-us-gov          US federal government work (17 U.S.C. 105)
+#   cc-by-4.0, cc-by-sa-4.0       Creative Commons: attribute (and share alike)
+#   copyright-summarise-and-cite  the default: use only short summaries, always cite (spec §5)
+#   excluded-terms                the site's terms forbid scraping or reuse: never crawled
+version: 1.4.0
+
+# ---------------------------------------------------------------- queries
+# Topic = the domain's sub-area as words, put into the area's `topic` pattern; `hint` adds the
+# kind of source we want. Acronyms are written out in capitals.
+acronyms: [ai, ml, hr, pr, seo, sre, api, ui, ux, it, nda]
+areas:
+  technology: {topic: "{sub}", hint: "official documentation"}
+  data: {topic: "data {sub}", hint: "guide"}
+  design: {topic: "{sub} design", hint: "guidelines"}
+  product: {topic: "product {sub}", hint: "guide"}
+  marketing: {topic: "marketing {sub}", hint: "guide"}
+  sales: {topic: "sales {sub}", hint: "guide"}
+  customer-support: {topic: "customer support {sub}", hint: "guide"}
+  operations: {topic: "{sub}", hint: "operations guide"}
+  hr: {topic: "{sub}", hint: "employer guidance"}
+  education: {topic: "{sub}", hint: "teaching guide"}
+  writing: {topic: "{sub}", hint: "writing guide"}
+  research: {topic: "{sub} research", hint: "methods guide"}
+  finance: {topic: "{sub} finance", hint: "government guidance"}
+  legal: {topic: "{sub}", hint: "law"}
+  medical: {topic: "{sub}", hint: "clinical guidance"}
+  general: {topic: "{sub}", hint: "guide"}
+# Domain hints: added where the generic queries brought back off-topic pages (reviews of
+# 2026-10-26). `queries` run before the templates (at most 8 queries in all); `terms` also
+# count as on-topic words when ranking. `authorities` are the sites the reviewer named as this
+# domain's experts: they get a bonus, and most hint queries name them so search finds their
+# pages. `exclude` drops pages that mention a word that marks them off topic here, and
+# `templates: false` skips the generic templates. Domains whose results were on topic have none.
+domains:
+  legal/contracts:
+    templates: false  # "contracts guidelines site:.gov" brings back procurement handbooks
+    jurisdiction: US  # review-nda is about US law; other jurisdictions rank below, labelled
+    authorities: [law.cornell.edu, gov.uk, nolo.com, americanbar.org]
+    # Pinned: always first, still subject to robots, licence and the high-risk crawl rule.
+    # Each URL was opened and its title checked. The ABA's consumer contract guide is not
+    # pinned: americanbar.org refused our requests (HTTP 403), so it could not be checked.
+    pinned:
+      - {url: "https://www.law.cornell.edu/wex/non-disclosure_agreement_(nda)", title: "non-disclosure agreement (NDA)", verified: "2026-10-26"}
+      - {url: "https://www.law.cornell.edu/wex/contract", title: "contract", verified: "2026-10-26"}
+      # NDAs protect trade secrets; added when the stricter rules left too few US sources.
+      - {url: "https://www.law.cornell.edu/wex/trade_secret", title: "trade secret", verified: "2026-10-26"}
+      - {url: "https://www.uspto.gov/ip-policy/trade-secret-policy", title: "Trade secret policy", verified: "2026-10-26"}
+    terms: ["non-disclosure agreement", "NDA", "contract law", "confidentiality agreement"]
+    queries:
+      # The two Cornell LII Wex queries were dropped once both Wex pages were pinned: they
+      # mostly brought back law-review scholarship and Cornell's own NDA forms.
+      - "non-disclosure agreements site:gov.uk"
+      - "nolo.com nondisclosure agreements trade secrets"
+      - "American Bar Association contract law guide"
+      - "non-disclosure agreement NDA guide"
+  hr/recruiting:
+    authorities: [eeoc.gov, shrm.org, dol.gov, gov.uk]
+    pinned:
+      - {url: "https://www.eeoc.gov/prohibited-employment-policiespractices", title: "Prohibited Employment Policies/Practices", verified: "2026-10-26"}
+      - {url: "https://www.dol.gov/general/topic/hiring", title: "Hiring", verified: "2026-10-26"}
+      - {url: "https://www.shrm.org/topics-tools/tools/interview-questions", title: "Sample Job Interview Questions", verified: "2026-10-26"}
+    terms: ["hiring process", "structured interview", "job description", "fair hiring"]
+    queries:
+      - "eeoc.gov prohibited employment practices hiring"
+      - "shrm.org structured interview guide"
+      - "dol.gov hiring process employers"
+      - "gov.uk recruiting staff employer guidance job description"
+  medical/patient-education:
+    authorities: [cdc.gov, ahrq.gov, medlineplus.gov]
+    terms: ["health literacy", "teach-back", "plain language", "lab test results"]
+    queries:
+      - "cdc.gov health literacy plain language"
+      - "ahrq.gov health literacy universal precautions toolkit teach-back"
+      - "medlineplus.gov understanding lab test results"
+  technology/ai:
+    terms: ["machine learning", "large language model", "artificial intelligence"]
+    queries:
+      - "machine learning engineering best practices"
+      - "large language model evaluation guide"
+    pinned:
+      - {url: "https://www.nist.gov/itl/ai-risk-management-framework", title: "AI Risk Management Framework", verified: "2026-10-26"}
+      - {url: "https://developers.google.com/machine-learning/guides/rules-of-ml", title: "Rules of Machine Learning: Best Practices for ML Engineering", verified: "2026-10-26"}
+      - {url: "https://genai.owasp.org/llm-top-10/", title: "2025 Top 10 Risk & Mitigations for LLMs and Gen AI Apps", verified: "2026-10-26"}
+  technology/software-engineering:
+    # Terms only: the seed skill reviews code, and pages on code review or the SWEBOK often
+    # never say "software engineering" in their title or URL.
+    terms: ["code review", "SWEBOK"]
+  technology/incident-response:
+    authorities: [sre.google, response.pagerduty.com, atlassian.com]
+    terms: ["postmortem", "blameless", "incident management", "site reliability engineering"]
+    queries:
+      - "sre.google postmortem culture"
+      - "response.pagerduty.com postmortem"
+      - "atlassian incident management handbook postmortem"
+      - "blameless postmortem guide"
+  data/analytics:
+    terms: ["data analysis", "statistics", "data visualization"]
+    queries:
+      - "data analysis statistics guide site:.gov"
+      - "data visualization guidelines"
+  marketing/strategy:
+    authorities: [sba.gov, ftc.gov]
+    # SBA's old marketing-and-sales and market-research URLs now redirect to "Plan your
+    # business", which covers both.
+    pinned:
+      - {url: "https://www.ftc.gov/business-guidance/advertising-marketing", title: "Advertising and Marketing", verified: "2026-10-26"}
+      - {url: "https://www.ftc.gov/business-guidance/resources/ftcs-endorsement-guides-what-people-are-asking", title: "FTC's Endorsement Guides: What People Are Asking", verified: "2026-10-26"}
+      - {url: "https://www.sba.gov/counseling/plan-your-business/", title: "Plan your business", verified: "2026-10-26"}
+    exclude: ["medicare", "part d marketing"]  # Medicare plan marketing rules, not strategy
+    terms: ["marketing plan", "advertising", "marketing strategy"]
+    queries:
+      - "sba.gov business guide market research competitive analysis"
+      - "ftc.gov advertising and marketing business guidance"
+      - "small business marketing plan site:.gov"
+      - "truth in advertising business guidance"
+  finance/small-business:
+    authorities: [sba.gov, irs.gov, score.org]
+    terms: ["budget", "cash flow", "financial management"]
+    queries:
+      - "sba.gov manage your finances"
+      - "irs.gov small business self-employed"
+      - "score.org small business budget cash flow"
+      - "small business budget cash flow site:.gov"
+  writing/public-relations:
+    authorities: [prsa.org, cipr.co.uk, instituteforpr.org]
+    terms: ["press release", "news release", "public relations", "ethics"]
+    queries:
+      - "PRSA code of ethics public relations"  # CIPR has no query: search returned only its newsroom
+      - "public relations standards"  # finds the IPR pages
+      - "how to write a press release site:.edu"
+      - "news release style guide"
+
+# Two templates ask the search engine for authority directly (site:.gov, site:.edu). Brave and
+# most search APIs support `site:`; a provider that does not just gets broader results.
+templates:
+  - "{topic} {hint}"
+  - "{topic} best practices"
+  - "{topic} guidelines site:.gov"
+  - "{topic} guide site:.edu"
+  - "{topic} standards"
+
+# ---------------------------------------------------------------- authority
+# First match wins, and blocked rules are checked before these. `host` matches the site and
+# its subdomains, `suffix` the end of the host, `host_prefix` its start (both must hold when
+# given together). `areas` limits where a source counts as on-topic authority (empty: any).
+# Tiers: official 100 (government, standards and professional bodies, official docs),
+# academic 80 (universities, journals, scholarly publishers), reference 60 (encyclopedias,
+# well-known practitioner documentation), unknown 30 (everything else).
+sources:
+  # US federal government: public domain (17 U.S.C. 105).
+  - {host: nist.gov, tier: official, kind: "US standards body (NIST)", licence: public-domain-us-gov, areas: [technology, data, operations]}
+  - {host: cisa.gov, tier: official, kind: "US cybersecurity agency (CISA)", licence: public-domain-us-gov, areas: [technology, operations]}
+  - {host: nasa.gov, tier: official, kind: "US government agency (NASA)", licence: public-domain-us-gov, areas: [technology]}
+  - {host: gsa.gov, tier: official, kind: "US government agency (GSA)", licence: public-domain-us-gov}
+  - {host: medlineplus.gov, tier: official, kind: "US National Library of Medicine (MedlinePlus)", licence: public-domain-us-gov, areas: [medical]}
+  - {host: nih.gov, tier: official, kind: "US National Institutes of Health", licence: public-domain-us-gov, areas: [medical, research, data]}
+  - {host: cdc.gov, tier: official, kind: "US public health agency (CDC)", licence: public-domain-us-gov, areas: [medical]}
+  - {host: ahrq.gov, tier: official, kind: "US health care research agency (AHRQ)", licence: public-domain-us-gov, areas: [medical]}
+  - {host: ihs.gov, tier: official, kind: "US Indian Health Service", licence: public-domain-us-gov, areas: [medical]}
+  - {host: hhs.gov, tier: official, kind: "US Department of Health and Human Services", licence: public-domain-us-gov, areas: [medical, legal]}
+  - {host: sba.gov, tier: official, kind: "US Small Business Administration", licence: public-domain-us-gov, areas: [finance, operations, legal]}
+  - {host: irs.gov, tier: official, kind: "US tax agency (IRS)", licence: public-domain-us-gov, areas: [finance]}
+  - {host: fdic.gov, tier: official, kind: "US banking regulator (FDIC)", licence: public-domain-us-gov, areas: [finance]}
+  - {host: sec.gov, tier: official, kind: "US securities regulator (SEC)", licence: public-domain-us-gov, areas: [finance, legal]}
+  - {host: consumerfinance.gov, tier: official, kind: "US consumer finance regulator (CFPB)", licence: public-domain-us-gov, areas: [finance]}
+  - {host: ftc.gov, tier: official, kind: "US consumer protection regulator (FTC)", licence: public-domain-us-gov, areas: [marketing, legal, sales]}
+  - {host: eeoc.gov, tier: official, kind: "US employment discrimination regulator (EEOC)", licence: public-domain-us-gov, areas: [hr, legal]}
+  - {host: dol.gov, tier: official, kind: "US Department of Labor", licence: public-domain-us-gov, areas: [hr, legal]}
+  - {host: opm.gov, tier: official, kind: "US Office of Personnel Management", licence: public-domain-us-gov, areas: [hr]}
+  - {host: ed.gov, tier: official, kind: "US Department of Education", licence: public-domain-us-gov, areas: [education, technology]}
+  - {host: epa.gov, tier: official, kind: "US Environmental Protection Agency", licence: public-domain-us-gov}
+  - {host: usda.gov, tier: official, kind: "US Department of Agriculture", licence: public-domain-us-gov}
+  - {host: ojp.gov, tier: official, kind: "US Department of Justice (OJP)", licence: public-domain-us-gov, areas: [legal]}
+  - {host: fbi.gov, tier: official, kind: "US Federal Bureau of Investigation", licence: public-domain-us-gov, areas: [technology, legal]}
+  - {host: govinfo.gov, tier: official, kind: "US Government Publishing Office", licence: public-domain-us-gov, areas: [legal]}
+  - {host: house.gov, tier: official, kind: "US House of Representatives", licence: public-domain-us-gov}
+  # More known federal .gov hosts, so they are labelled "US (federal)" rather than "US (state or
+  # local)", the default for an unlisted .gov site.
+  - {host: cbca.gov, tier: official, kind: "US Civilian Board of Contract Appeals", licence: public-domain-us-gov, areas: [legal]}
+  - {host: census.gov, tier: official, kind: "US Census Bureau", licence: public-domain-us-gov}
+  - {host: bls.gov, tier: official, kind: "US Bureau of Labor Statistics", licence: public-domain-us-gov}
+  - {host: usa.gov, tier: official, kind: "US government portal (USA.gov)", licence: public-domain-us-gov}
+  - {host: justice.gov, tier: official, kind: "US Department of Justice", licence: public-domain-us-gov, areas: [legal]}
+  - {host: uscourts.gov, tier: official, kind: "US federal courts", licence: public-domain-us-gov, areas: [legal]}
+  - {host: congress.gov, tier: official, kind: "US Congress (Congress.gov)", licence: public-domain-us-gov}
+  - {host: senate.gov, tier: official, kind: "US Senate", licence: public-domain-us-gov}
+  - {host: ecfr.gov, tier: official, kind: "US Code of Federal Regulations (eCFR)", licence: public-domain-us-gov, areas: [legal]}
+  - {host: federalregister.gov, tier: official, kind: "US Federal Register", licence: public-domain-us-gov}
+  - {host: archives.gov, tier: official, kind: "US National Archives", licence: public-domain-us-gov}
+  - {host: gao.gov, tier: official, kind: "US Government Accountability Office", licence: public-domain-us-gov}
+  - {host: uspto.gov, tier: official, kind: "US Patent and Trademark Office", licence: public-domain-us-gov, areas: [legal]}
+  - {host: copyright.gov, tier: official, kind: "US Copyright Office", licence: public-domain-us-gov, areas: [legal]}
+  - {host: osha.gov, tier: official, kind: "US Occupational Safety and Health Administration", licence: public-domain-us-gov}
+  - {host: nlrb.gov, tier: official, kind: "US National Labor Relations Board", licence: public-domain-us-gov, areas: [hr, legal]}
+  - {host: cms.gov, tier: official, kind: "US Centers for Medicare & Medicaid Services", licence: public-domain-us-gov, areas: [medical]}
+  - {host: fda.gov, tier: official, kind: "US Food and Drug Administration", licence: public-domain-us-gov, areas: [medical]}
+  # Other government (state, foreign, international): licence varies, so summarise and cite.
+  - {suffix: .gov, tier: official, kind: "government site (.gov)"}
+  - {suffix: .mil, tier: official, kind: "US military site (.mil)"}
+  - {suffix: .gov.uk, tier: official, kind: "UK government site"}
+  - {host: gov.uk, tier: official, kind: "UK government (GOV.UK)", jurisdiction: UK}
+  - {suffix: .gc.ca, tier: official, kind: "Canadian government site"}
+  - {suffix: .gov.au, tier: official, kind: "Australian government site"}
+  - {suffix: .gov.ie, tier: official, kind: "Irish government site"}
+  - {host: gov.ie, tier: official, kind: "Irish government site"}
+  - {suffix: .europa.eu, tier: official, kind: "European Union site"}
+  - {host: who.int, tier: official, kind: "World Health Organization", areas: [medical]}
+  - {host: oecd.org, tier: official, kind: "OECD (intergovernmental)"}
+  - {host: oecd.ai, tier: official, kind: "OECD AI Policy Observatory", areas: [technology]}
+  - {host: acas.org.uk, tier: official, kind: "UK employment advisory body (Acas)", areas: [hr]}
+  # Standards bodies and professional bodies.
+  - {host: iso.org, tier: official, kind: "international standards body (ISO)"}
+  - {host: w3.org, tier: official, kind: "web standards body (W3C)", areas: [technology, design]}
+  - {host: ietf.org, tier: official, kind: "internet standards body (IETF)", areas: [technology]}
+  - {host: ieee.org, tier: official, kind: "engineering standards body (IEEE)", areas: [technology, data]}
+  - {host: owasp.org, tier: official, kind: "security standards community (OWASP)", licence: cc-by-sa-4.0, areas: [technology]}
+  - {host: shrm.org, tier: official, kind: "HR professional body (SHRM)", areas: [hr]}
+  - {host: americanbar.org, tier: official, kind: "US lawyers professional body (ABA)", areas: [legal], jurisdiction: US}
+  - {host: uniformlaws.org, tier: official, kind: "US Uniform Law Commission", areas: [legal], jurisdiction: US}
+  - {host: aicpa-cima.com, tier: official, kind: "accounting professional body (AICPA)", areas: [finance]}
+  - {host: icaew.com, tier: official, kind: "accounting professional body (ICAEW)", areas: [finance]}
+  - {host: ama.org, tier: official, kind: "marketing professional body (AMA)", areas: [marketing]}
+  - {host: prsa.org, tier: official, kind: "PR professional body (PRSA)", areas: [writing, marketing]}
+  - {host: cipr.co.uk, tier: official, kind: "UK PR professional body (CIPR)", areas: [writing, marketing]}
+  - {host: score.org, tier: official, kind: "SBA resource partner (SCORE)", areas: [finance, operations, marketing]}
+  - {host: jointcommission.org, tier: official, kind: "US health care accreditor (Joint Commission)", areas: [medical]}
+  # Official documentation. `path_prefix` limits a rule to one repository on a shared host.
+  - {host: github.com, path_prefix: /google/eng-practices, tier: official, kind: "official documentation (Google engineering practices)", areas: [technology]}
+  - {host: developers.google.com, tier: official, kind: "official documentation (Google)", licence: cc-by-4.0}
+  - {host: learn.microsoft.com, tier: official, kind: "official documentation (Microsoft)", areas: [technology, data]}
+  - {host: docs.python.org, tier: official, kind: "official documentation (Python)", areas: [technology, data]}
+  - {host: developer.mozilla.org, tier: official, kind: "official documentation (MDN)", licence: cc-by-sa-4.0, areas: [technology, design]}
+  - {host: platform.claude.com, tier: official, kind: "official documentation (Anthropic)", areas: [technology]}
+  # Universities, journals and scholarly publishers. (Library guides are link lists: blocked.)
+  - {host: law.cornell.edu, tier: academic, kind: "law school legal reference (Cornell LII)", areas: [legal], jurisdiction: US}
+  - {suffix: .edu, tier: academic, kind: "US university (.edu)"}
+  - {suffix: .ac.uk, tier: academic, kind: "UK university (.ac.uk)"}
+  - {suffix: .edu.au, tier: academic, kind: "Australian university (.edu.au)"}
+  - {host: arxiv.org, tier: academic, kind: "preprint server (arXiv)", areas: [technology, data, research]}
+  - {host: acm.org, tier: academic, kind: "computing society (ACM)", areas: [technology, data]}
+  - {host: aaai.org, tier: academic, kind: "AI society (AAAI)", areas: [technology]}
+  - {host: nature.com, tier: academic, kind: "scientific journal (Nature)"}
+  - {host: nejm.org, tier: academic, kind: "medical journal (NEJM)", areas: [medical]}
+  - {host: bmj.com, tier: academic, kind: "medical journal (BMJ)", areas: [medical]}
+  - {host: thelancet.com, tier: academic, kind: "medical journal (Lancet)", areas: [medical]}
+  - {host: biomedcentral.com, tier: academic, kind: "open-access journals (BMC)", areas: [medical, research]}
+  - {host: mayoclinic.org, tier: academic, kind: "academic medical centre (Mayo Clinic)", areas: [medical]}
+  - {host: clevelandclinic.org, tier: academic, kind: "academic medical centre (Cleveland Clinic)", areas: [medical]}
+  - {host: sagepub.com, tier: academic, kind: "scholarly publisher (SAGE)"}
+  - {host: hbr.org, tier: academic, kind: "management journal (Harvard Business Review)", areas: [marketing, sales, operations, hr, product]}
+  - {host: brookings.edu, tier: academic, kind: "research institute (Brookings)"}
+  - {host: instituteforpr.org, tier: academic, kind: "PR research institute (IPR)", areas: [writing, marketing]}
+  # Reference and well-known practitioner documentation.
+  - {host: wikipedia.org, tier: reference, kind: "encyclopedia (Wikipedia)", licence: cc-by-sa-4.0}
+  - {host: britannica.com, tier: reference, kind: "encyclopedia (Britannica)"}
+  - {host: google.github.io, tier: reference, kind: "practitioner documentation (Google)"}
+  - {host: sre.google, tier: reference, kind: "practitioner documentation (Google SRE)", areas: [technology, operations]}
+  - {host: response.pagerduty.com, tier: reference, kind: "practitioner documentation (PagerDuty)", licence: cc-by-4.0, areas: [technology, operations]}
+  - {host: atlassian.com, tier: reference, kind: "practitioner documentation (Atlassian)", areas: [operations]}
+  - {host: roadmap.sh, tier: reference, kind: "community learning roadmap", areas: [technology]}
+  - {host: nolo.com, tier: reference, kind: "legal publisher for non-lawyers (Nolo)", areas: [legal], jurisdiction: US}
+  - {host: law.justia.com, tier: reference, kind: "legal text database (Justia)", areas: [legal], jurisdiction: US}
+  # Self-published blog platforms: content varies a lot.
+  - {host: medium.com, tier: unknown, kind: "self-published blog platform"}
+  - {suffix: .substack.com, tier: unknown, kind: "self-published newsletter"}
+  - {suffix: .beehiiv.com, tier: unknown, kind: "self-published newsletter"}
+  - {host: dev.to, tier: unknown, kind: "self-published blog platform"}
+
+# ---------------------------------------------------------------- blocklist
+# Checked first. Every entry says why, and the review sheet lists what each rule removed.
+blocked:
+  # Spam planted on hijacked or forgotten parts of real sites (seen in real results).
+  - {pattern: "/Download_PDFS/", reason: "SEO spam (fake PDF download pages)"}
+  - {pattern: "/default\\.aspx/[A-Za-z0-9-]{4,}/\\d+/", reason: "SEO spam (fake document pages)"}
+  - {pattern: "/\\^\\d+", reason: "SEO spam (fake document pages)"}
+  - {pattern: "/(BOOK|PLAY|DOC)/[^/]+/[^/]+/", reason: "SEO spam (fake document pages)"}
+  - {pattern: "/ProductPdf/", reason: "SEO spam (fake document pages)"}
+  - {pattern: "^https?://(mail|autoconfig|analytics-origin|buildstatus|my-test|demo\\d*|staging|test|dev|lists|ratings)\\.", reason: "infrastructure subdomain serving articles (often hijacked for SEO spam)"}
+  - {pattern: "^https?://lb-\\d+-\\d+-\\d+-\\d+", reason: "mirror of another site on a load-balancer host: use the original"}
+  - {host: irishplaces.flinders.edu.au, reason: "SEO spam on a hijacked university subdomain"}
+  # Staging and test copies (review of 2026-10-26): a subdomain named for staging, test or dev,
+  # e.g. ccrsstg-acquia.nysed.gov or stagingmolly.molevalley.gov.uk. Crawl the live site.
+  - {pattern: "(?i)^https?://([a-z0-9-]+\\.)*[a-z0-9-]*(stg(?=[-.\\d])|staging|acquia)[a-z0-9-]*\\.[^/]+\\.", reason: "staging or test copy of a site: use the live page"}
+  - {pattern: "(?i)^https?://([a-z0-9-]+\\.)*([a-z0-9]+-)?(dev|test)\\d*(-[a-z0-9-]+)?\\.[^/]+\\.", reason: "staging or test copy of a site: use the live page"}
+  # Copies and archives: crawl the original instead.
+  - {host: govukdiff.njk.onl, reason: "copy of another site: use the original"}
+  - {host: corpora.tika.apache.org, reason: "test corpus copy of other sites' files: use the original"}
+  - {host: webarchive.library.unt.edu, reason: "web archive copy: use the original"}
+  - {suffix: .onrender.com, reason: "app-hosting subdomain (often a mirror): use the original"}
+  - {pattern: "/(hub_feeds|feed_items)/", reason: "feed aggregator copy of another site: use the original"}
+  # User-generated content and social media: unvetted, and their terms forbid scraping.
+  - {host: reddit.com, reason: "user forum; terms forbid scraping"}
+  - {host: quora.com, reason: "user Q&A; terms forbid scraping"}
+  - {host: pinterest.com, reason: "social media"}
+  - {host: linkedin.com, reason: "social media; terms forbid scraping"}
+  - {host: facebook.com, reason: "social media; terms forbid scraping"}
+  - {host: x.com, reason: "social media"}
+  - {host: twitter.com, reason: "social media"}
+  - {host: instagram.com, reason: "social media"}
+  - {host: tiktok.com, reason: "social media"}
+  # Uploaded documents and homework sites: authorship and rights unknown.
+  - {host: scribd.com, reason: "user-uploaded documents (rights unknown)"}
+  - {host: slideshare.net, reason: "user-uploaded slides (rights unknown)"}
+  - {host: academia.edu, reason: "user-uploaded papers (rights unknown)"}
+  - {host: coursehero.com, reason: "homework document dump"}
+  - {host: chegg.com, reason: "homework answers"}
+  - {host: studocu.com, reason: "student notes dump"}
+  - {host: cliffsnotes.com, reason: "student notes dump"}
+  - {host: docs.google.com, reason: "user documents (authorship unknown)"}
+  # Video, audio and shops: nothing to read or learn from.
+  - {host: youtube.com, reason: "video site"}
+  - {host: vimeo.com, reason: "video site"}
+  - {host: tunein.com, reason: "audio site"}
+  - {pattern: "^https?://([a-z0-9-]+\\.)*storytel\\.", reason: "audiobook shop"}
+  - {pattern: "^https?://([a-z0-9-]+\\.)*(ebay|amazon)\\.", reason: "shop listing"}
+  - {pattern: "^https?://([a-z0-9-]+\\.)*abebooks\\.", reason: "book shop listing"}
+  - {pattern: "^https?://(store|campusstore|bookstore|shop)\\.", reason: "shop listing"}
+  - {host: thriftbooks.com, reason: "book shop listing"}
+  - {host: goodreads.com, reason: "book review site"}
+  - {host: librarything.com, reason: "book catalogue"}
+  - {host: worldcat.org, reason: "library catalogue entry"}
+  - {host: prestomusic.com, reason: "shop listing"}
+  - {host: lafeltrinelli.it, reason: "book shop listing"}
+  - {host: betterread.com.au, reason: "book shop listing"}
+  - {host: schweitzer-online.de, reason: "book shop listing"}
+  - {host: sanmin.com.tw, reason: "book shop listing"}
+  - {host: vonmatt.ch, reason: "book shop listing"}
+  - {host: payhip.com, reason: "digital product shop"}
+  - {host: gumroad.com, reason: "digital product shop"}
+  - {host: selar.com, reason: "digital product shop"}
+  # Aggregators, AI summaries and content farms.
+  - {host: chaindesk.ai, reason: "AI summary of someone else's content"}
+  - {host: bestblogs.dev, reason: "aggregator of other sites' articles"}
+  - {host: libraries.io, reason: "package index, not an article"}
+  - {host: quizzly.ai, reason: "quiz content farm"}
+  - {host: theartofservice.com, reason: "glossary content farm"}
+  - {host: opencourser.com, reason: "course aggregator"}
+  - {host: myeducationpath.gelembjuk.com, reason: "course aggregator"}
+  - {host: lawinsider.com, reason: "clause and definition aggregator"}
+  - {host: vendordirectory.shrm.org, reason: "vendor product listing, not content"}
+  - {host: wildvisualizer.com, reason: "AI chat transcripts, not content"}
+  # Pages about content rather than content (review of 2026-10-26): catalogue records, events
+  # and courses, and university program marketing.
+  - {pattern: "/Record/", reason: "library catalogue record, not content"}
+  - {pattern: "^https?://(libcat|catalog|catalogue)\\.", reason: "library catalogue record, not content"}
+  - {host: profiles.nlm.nih.gov, reason: "library catalogue record, not content (NLM catalogue)"}
+  - {pattern: "(?i)/(events?|webinars?|workshops?|classes)/|[/-](webinar|workshop)s?[-/.]", reason: "event, webinar, workshop or class page, not content"}
+  - {pattern: "^https?://(ce|cme|continuing-?ed(ucation)?)\\.", reason: "continuing-education course page, not content"}
+  - {pattern: "(?i)^https?://[^/]+\\.edu/(.*/)?(programs?|degrees?|majors?|admissions)/", reason: "university program marketing page, not content"}
+  # Second review (2026-10-26): pages about the organisation itself, not guidance.
+  - {pattern: "(?i)/(jobs|careers?|job-vacancies|job-openings|employment-opportunities)(/|$|\\?)", reason: "the organisation's own job or careers page, not guidance"}
+  - {pattern: "(?i)^https?://disclosures?\\.|/foia?([/_-]|$)|freedom-of-information|/disclosure-log|/atisn\\d", reason: "freedom-of-information request or disclosure log, not guidance"}
+  - {title_pattern: "(?i)\\btransparency data\\b", reason: "transparency data publication (a list of records), not guidance"}
+  - {pattern: "(?i)[/_-]home/?$|/(site-?map|a-z(-index)?)(\\.\\w+)?/?$", reason: "landing or index page that only lists links, not content"}
+  - {pattern: "^https?://[^/]+/?$", reason: "landing or index page that only lists links, not content"}
+  - {pattern: "(?i)^https?://((lib|info|research|subject|hsl)guides\\.|(guides\\.(lib\\.|library\\.)?|library\\.)[^/]+\\.edu/)|/c\\.php\\?g=\\d+", reason: "library guide that only lists links, not content"}
+  - {title_pattern: "\\bLibGuides\\b", reason: "library guide that only lists links, not content"}
+  - {pattern: "(?i)/ListArchives/|/pipermail/|/mailman/", reason: "mailing-list archive message, not guidance"}
+  # Listing and feed pages, not articles.
+  - {pattern: "/(tag|tags|category|categories)/", reason: "tag or category listing page"}
+  - {pattern: "/feed/", reason: "feed, not a page"}
+  - {pattern: "[?&]page=\\d+", reason: "paginated listing page, not an article"}
+  - {pattern: "/([Ff]eatured-)?[Vv]ideos?/", reason: "video page"}

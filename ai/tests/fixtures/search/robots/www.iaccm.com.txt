@@ -1,0 +1,3 @@
+# fetched 2026-10-26: HTTP 503 (RFC 9309: assume disallow)
+User-agent: *
+Disallow: /

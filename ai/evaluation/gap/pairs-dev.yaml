@@ -1,0 +1,325 @@
+# Gap Checker labelled requests, DEV split: for tuning the text variant and thresholds ONLY.
+# Labels follow evaluation/gap/LABELLING.md. Every (request, card) pair not listed is no_match.
+name: gap-pairs-dev
+version: 0.1.0
+split: dev
+review: {status: reviewed, reviewer: Ziad Abdullah, date: 2026-10-27}
+requests:
+  # ------------------------------------------------------------- seed skill requests
+  - id: gd-01
+    text: I need an AI engineer skill that helps my team design RAG systems and evaluate LLM features.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: technology/ai, skill_name: ai-engineer, summary: "An AI engineer role that helps a team design RAG systems and evaluate LLM features.", expected_outputs: [RAG system design, LLM evaluation plan]}
+    match: [registry:ai-engineer]
+    near_miss: [registry:llm-prompt-engineer]
+  - id: gd-02
+    text: something to help with our AI stuff
+    style: vague
+    language: en
+    analysis: {kind: role, domain: technology/ai, skill_name: ai-helper, summary: "A general helper for a team's AI work.", expected_outputs: []}
+    match: []
+    near_miss: [registry:ai-engineer, registry:llm-prompt-engineer, corpus:tabular-ml-modeler]
+  - id: gd-03
+    text: Make a skill that reviews pull requests for bugs, security problems and readability.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/software-engineering, skill_name: pull-request-reviewer, summary: "A skill that reviews pull requests for bugs, security problems and readability.", expected_outputs: [review comments]}
+    match: [registry:code-reviewer]
+    near_miss: [corpus:secure-code-auditor, registry:unit-test-writer]
+  - id: gd-04
+    text: Create a data analyst skill that writes SQL, analyses spreadsheets and explains results to managers.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: data/analytics, skill_name: data-analyst, summary: "A data analyst role that writes SQL, analyses spreadsheets and explains results to managers.", expected_outputs: [SQL queries, analysis summary]}
+    match: [registry:data-analyst]
+    near_miss: [corpus:sql-query-helper, corpus:spreadsheet-formula-helper, registry:dashboard-builder]
+  - id: gd-05
+    text: I want help with my numbers
+    style: vague
+    language: en
+    analysis: {kind: role, domain: data/analytics, skill_name: numbers-helper, summary: "A skill that helps the user make sense of their numbers.", expected_outputs: []}
+    match: []
+    near_miss: [registry:data-analyst, corpus:spreadsheet-formula-helper, registry:small-business-budgeting, registry:personal-budget-planner]
+  - id: gd-06
+    text: Create a skill that explains blood test results to patients in plain language.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: medical/patient-education, skill_name: explain-blood-tests, summary: "A skill that explains blood test results to patients in plain language.", expected_outputs: [plain-language explanation]}
+    match: [registry:explain-medical-results]
+    near_miss: [corpus:medication-information]
+  - id: gd-07
+    text: I need a recruiter skill that writes job ads and structured interview plans.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: hr/recruiting, skill_name: recruiter, summary: "A recruiter role that writes job ads and structured interview plans.", expected_outputs: [job ad, interview plan]}
+    match: [registry:hr-recruiter]
+    near_miss: [registry:candidate-interview-coach, registry:employee-onboarding-planner]
+  - id: gd-08
+    text: >-
+      After every outage our team argues about whose fault it was and nothing changes. Build a
+      skill that walks us step by step through a blameless postmortem: collect the timeline from
+      logs and chat, find contributing causes with "5 whys", agree on impact, and produce action
+      items with owners and due dates in our postmortem template.
+    style: detailed
+    language: en
+    analysis: {kind: workflow, domain: technology/incident-response, skill_name: blameless-postmortem, summary: "A workflow that guides a team through a blameless postmortem from timeline to causes to owned action items.", expected_outputs: [incident timeline, postmortem document, action items]}
+    match: [registry:incident-postmortem]
+    near_miss: [registry:on-call-runbook-writer, corpus:live-incident-commander]
+  - id: gd-09
+    text: >-
+      We run a small online shop for handmade ceramics and post randomly on Instagram. I want a
+      skill that thinks like a marketing strategist: define who our buyers are, position us
+      against mass-produced brands, plan seasonal campaigns with a small budget, and make sure our
+      product claims and influencer posts are honest and properly disclosed.
+    style: detailed
+    language: en
+    analysis: {kind: role, domain: marketing/strategy, skill_name: ceramics-marketing-strategist, summary: "A marketing strategist role for a small ceramics shop that defines buyers, positioning and seasonal campaigns with honest claims.", expected_outputs: [buyer personas, positioning, campaign plan]}
+    match: [registry:marketing-strategist]
+    near_miss: [registry:social-media-copywriter]
+  - id: gd-10
+    text: something that reads contracts for me
+    style: vague
+    language: en
+    analysis: {kind: task, domain: legal/contracts, skill_name: contract-reader, summary: "A skill that reads and reviews contracts for the user.", expected_outputs: []}
+    match: []
+    near_miss: [registry:review-nda, registry:supplier-contract-reviewer]
+  - id: gd-11
+    text: >-
+      Our startup signs about ten NDAs a month with investors, partners and freelancers, and we
+      cannot afford a lawyer for each one. I want a skill that reviews an NDA under US law, tells
+      us whether it is mutual, flags non-competes or unusual terms hidden in it, checks the
+      required whistleblower carve-outs, and says clearly when we need a real lawyer.
+    style: detailed
+    language: en
+    analysis: {kind: task, domain: legal/contracts, skill_name: review-nda, summary: "A skill that reviews NDAs under US law, flags unusual terms and says when a lawyer is needed.", expected_outputs: [clause risk list, plain-language summary]}
+    match: [registry:review-nda]
+    near_miss: [corpus:draft-nda-template, registry:supplier-contract-reviewer]
+  - id: gd-12
+    text: >-
+      I run a small cafe with five staff and I never know if we can afford new equipment. I want a
+      skill that builds a 12-month budget and cash-flow forecast from my sales and costs, shows the
+      assumptions, warns me about months where cash runs short, and tells me when a question needs
+      my accountant, especially anything about tax.
+    style: detailed
+    language: en
+    analysis: {kind: task, domain: finance/small-business, skill_name: cafe-budget-planner, summary: "A skill that builds a 12-month budget and cash-flow forecast for a small cafe and flags short months.", expected_outputs: [12-month budget, cash-flow forecast]}
+    match: [registry:small-business-budgeting]
+    near_miss: [registry:personal-budget-planner]
+  - id: gd-13
+    text: >-
+      Our communications team writes about two press releases a month and they always come back
+      from editors. I want a skill that writes them in standard press-release format (headline,
+      dateline, lead paragraph that answers who, what, when, where and why, quotes, boilerplate,
+      media contact), keeps them under 500 words and marks every fact we still need to confirm.
+    style: detailed
+    language: en
+    analysis: {kind: task, domain: writing/public-relations, skill_name: press-release-writer, summary: "A skill that writes press releases in standard format under 500 words and marks facts to confirm.", expected_outputs: [press release]}
+    match: [registry:write-press-release]
+    near_miss: [registry:media-pitch-writer]
+
+  # ------------------------------------------------------------- requests another existing skill matches
+  - id: gd-14
+    text: I want a skill that writes clear meeting minutes from my rough notes.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/meeting-minutes, skill_name: meeting-minutes, summary: "A skill that turns rough notes into clear meeting minutes.", expected_outputs: [meeting minutes]}
+    match: [registry:meeting-minutes-writer]
+    near_miss: []
+  - id: gd-15
+    text: Make a skill that plans lessons for my 7th grade science classes, with objectives and a quiz at the end.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: education/teaching, skill_name: science-lesson-planner, summary: "A skill that plans 7th grade science lessons with objectives and an end-of-lesson quiz.", expected_outputs: [lesson plan, quiz]}
+    match: [registry:lesson-plan-designer]
+    near_miss: []
+  - id: gd-16
+    text: Create a skill that turns feature ideas into product requirement documents with user stories.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: product/requirements, skill_name: prd-writer, summary: "A skill that turns feature ideas into product requirement documents with user stories.", expected_outputs: [PRD, user stories]}
+    match: [registry:prd-writer]
+    near_miss: []
+  - id: gd-17
+    text: Build a skill that writes grant proposals for our nonprofit.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/grants, skill_name: grant-writer, summary: "A skill that writes grant proposals for a nonprofit.", expected_outputs: [grant proposal]}
+    match: [registry:grant-proposal-writer]
+    near_miss: []
+  - id: gd-18
+    text: >-
+      Every quarter our 12-person agency closes the books: we reconcile the bank accounts, chase
+      unpaid invoices, accrue expenses and send a short report to the partners. I want a Claude
+      Code skill that walks our office manager through each stage in order and tells her which
+      items need the accountant.
+    style: detailed
+    language: en
+    analysis: {kind: workflow, domain: finance/accounting, skill_name: quarterly-close, summary: "A workflow that walks an office manager through the quarterly close of a small agency's books.", expected_outputs: [close checklist, partner report]}
+    match: [registry:period-close-guide]
+    near_miss: []
+  - id: gd-19
+    text: We keep forgetting things when new people join. I want a skill that plans the first 90 days for a new hire.
+    style: clear
+    language: en
+    analysis: {kind: workflow, domain: hr/onboarding, skill_name: new-hire-onboarding, summary: "A workflow that plans a new hire's first 90 days so nothing is forgotten.", expected_outputs: [onboarding plan, checklist]}
+    match: [registry:employee-onboarding-planner]
+    near_miss: [registry:hr-recruiter]
+  - id: gd-20
+    text: Plan a weekly meal schedule and shopping list for a family of four.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: general/meal-planning, skill_name: family-meal-planner, summary: "A skill that plans a week of meals and a shopping list for a family of four.", expected_outputs: [meal plan, shopping list]}
+    match: [registry:meal-planner]
+    near_miss: []
+  - id: gd-21
+    text: Write an NDA template for our company from scratch.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/contracts, skill_name: nda-template-drafter, summary: "A skill that drafts a company's own NDA template from scratch.", expected_outputs: [NDA template]}
+    match: [corpus:draft-nda-template]
+    near_miss: [registry:review-nda]
+  - id: gd-22
+    text: A skill that writes tweets and LinkedIn posts to promote our product launches.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: marketing/social-media, skill_name: launch-social-posts, summary: "A skill that writes tweets and LinkedIn posts to promote product launches.", expected_outputs: [social media posts]}
+    match: [registry:social-media-copywriter]
+    near_miss: [registry:marketing-strategist]
+  - id: gd-23
+    text: A skill that writes pytest unit tests for our existing Python code.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/software-engineering, skill_name: pytest-writer, summary: "A skill that writes pytest unit tests for existing Python code.", expected_outputs: [unit tests]}
+    match: [registry:unit-test-writer]
+    near_miss: [registry:code-reviewer]
+  - id: gd-24
+    text: A skill that improves the system prompts of our LLM features and tests them.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/ai, skill_name: prompt-improver, summary: "A skill that improves and tests the system prompts of LLM features.", expected_outputs: [improved prompts, test cases]}
+    match: [registry:llm-prompt-engineer]
+    near_miss: [registry:ai-engineer]
+  - id: gd-25
+    text: Our app needs a privacy policy. Make a skill that writes one from what data we collect.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/privacy, skill_name: privacy-policy-writer, summary: "A skill that drafts an app's privacy policy from the data it collects.", expected_outputs: [privacy policy]}
+    match: [registry:privacy-policy-writer]
+    near_miss: []
+
+  # ------------------------------------------------------------- only a related skill exists
+  - id: gd-26
+    text: Review NDAs governed by UK law for our London office.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/contracts, skill_name: uk-nda-review, summary: "A skill that reviews NDAs governed by UK law.", expected_outputs: [clause risk list]}
+    match: []
+    near_miss: [registry:review-nda, registry:supplier-contract-reviewer]
+  - id: gd-27
+    text: Run a blameless retrospective after a marketing campaign that failed.
+    style: clear
+    language: en
+    analysis: {kind: workflow, domain: marketing/strategy, skill_name: campaign-retrospective, summary: "A workflow that runs a blameless retrospective after a failed marketing campaign.", expected_outputs: [retrospective report, action items]}
+    match: []
+    near_miss: [registry:incident-postmortem, registry:marketing-strategist]
+  - id: gd-28
+    text: Write monthly investor update emails for our startup.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/investor-relations, skill_name: investor-updates, summary: "A skill that writes monthly investor update emails for a startup.", expected_outputs: [investor update email]}
+    match: []
+    near_miss: [registry:write-press-release, corpus:internal-announcement-writer]
+  - id: gd-29
+    text: An AI engineer skill for computer vision models that run on phones.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: technology/ai, skill_name: mobile-vision-engineer, summary: "An AI engineer role for computer vision models that run on mobile phones.", expected_outputs: [model design, deployment plan]}
+    match: []
+    near_miss: [registry:ai-engineer, corpus:tabular-ml-modeler]
+  - id: gd-30
+    text: A recruiter skill that screens CVs automatically and rejects the weak candidates.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: hr/recruiting, skill_name: cv-screener, summary: "A skill that screens CVs automatically and rejects weak candidates.", expected_outputs: [shortlist, rejection list]}
+    match: []
+    near_miss: [registry:hr-recruiter]
+  - id: gd-31
+    text: A data analyst skill for clinical trial data, including survival analysis.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: data/biostatistics, skill_name: clinical-trial-analyst, summary: "A data analyst role for clinical trial data, including survival analysis.", expected_outputs: [statistical analysis, survival curves]}
+    match: []
+    near_miss: [registry:data-analyst]
+  - id: gd-32
+    text: Be a tutor that teaches kids aged 8 to 10 to code with Scratch.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: education/coding, skill_name: scratch-tutor, summary: "A tutor role that teaches children aged 8 to 10 to code with Scratch.", expected_outputs: [lessons, exercises]}
+    match: []
+    near_miss: [registry:lesson-plan-designer]
+
+  # ------------------------------------------------------------- nothing related exists
+  - id: gd-33
+    text: Write wedding speeches for the best man.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/speeches, skill_name: best-man-speech, summary: "A skill that writes best man wedding speeches.", expected_outputs: [speech]}
+    match: []
+    near_miss: []
+  - id: gd-34
+    text: Teach me music theory for the guitar.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: education/music, skill_name: guitar-theory-tutor, summary: "A tutor role that teaches music theory for the guitar.", expected_outputs: [lessons]}
+    match: []
+    near_miss: [registry:lesson-plan-designer]
+  - id: gd-35
+    text: A skill that prepares the checklist for a US visa application.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/immigration, skill_name: us-visa-checklist, summary: "A skill that prepares a checklist for a US visa application.", expected_outputs: [document checklist]}
+    match: []
+    near_miss: []
+  - id: gd-36
+    text: Help me prepare my tax return as a freelancer.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: finance/tax, skill_name: freelancer-tax-return, summary: "A skill that helps a freelancer prepare their tax return.", expected_outputs: [tax return checklist]}
+    match: []
+    near_miss: []
+  - id: gd-37
+    text: Set up Prometheus metrics and Grafana graphs for our web app.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/observability, skill_name: prometheus-grafana-setup, summary: "A skill that sets up Prometheus metrics and Grafana graphs for a web app.", expected_outputs: [metrics config, dashboards]}
+    match: []
+    near_miss: []
+  - id: gd-38
+    text: Help me learn Spanish vocabulary with a short quiz every day.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: education/languages, skill_name: spanish-vocab-coach, summary: "A tutor role that teaches Spanish vocabulary with a short daily quiz.", expected_outputs: [daily quiz]}
+    match: []
+    near_miss: [registry:lesson-plan-designer]
+  - id: gd-39
+    text: Plan a team-building day for 20 engineers.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: operations/events, skill_name: team-building-planner, summary: "A skill that plans a team-building day for 20 engineers.", expected_outputs: [event plan]}
+    match: []
+    near_miss: []
+  - id: gd-40
+    text: I need a skill that drafts wills and testaments for families.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/estate-planning, skill_name: will-drafter, summary: "A skill that drafts wills and testaments for families.", expected_outputs: [will draft]}
+    match: []
+    near_miss: []
+  - id: gd-41
+    text: أريد مهارة تساعدني في مراجعة اتفاقيات عدم الإفصاح قبل توقيعها
+    style: clear
+    language: ar
+    analysis: {kind: task, domain: legal/contracts, skill_name: review-nda, summary: "A skill that reviews non-disclosure agreements before signing them.", expected_outputs: [clause risk list]}
+    match: [registry:review-nda]
+    near_miss: [corpus:draft-nda-template, registry:supplier-contract-reviewer]

@@ -1,0 +1,32 @@
+# fetched 2026-10-26 from https://www.devon.gov.uk/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /wp-admin/
+Allow: /wp-admin/admin-ajax.php
+
+Sitemap: https://www.devon.gov.uk/sitemap_index.xml
+
+# --- OARS (Open Agent Readiness Standard) Level 1 — AI bot directives ---
+User-agent: GPTBot
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: GoogleBot-Extended
+Allow: /
+
+# Content usage preferences (Content-Signal)
+Content-Signal: search=yes, ai-input=yes, ai-train=no
+
+# OARS machine-readable resources
+# Manifest: https://www.devon.gov.uk/oars.json
+# Guidance: https://www.devon.gov.uk/llms.txt

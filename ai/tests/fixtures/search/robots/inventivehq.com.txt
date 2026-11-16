@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /cdn-cgi/
+
+Sitemap: https://inventivehq.com/sitemap.xml
+Sitemap: https://inventivehq.com/sitemap-static.xml
+Sitemap: https://inventivehq.com/sitemap-services.xml
+Sitemap: https://inventivehq.com/sitemap-industries.xml
+Sitemap: https://inventivehq.com/sitemap-blog.xml
+Sitemap: https://inventivehq.com/sitemap-kb.xml
+Sitemap: https://inventivehq.com/sitemap-case-studies.xml
+Sitemap: https://inventivehq.com/sitemaps/tools/sitemap.xml
+Sitemap: https://inventivehq.com/sitemap-glossary.xml
+Sitemap: https://inventivehq.com/sitemap-software.xml
+Sitemap: https://inventivehq.com/sitemap-cve.xml
+Sitemap: https://inventivehq.com/sitemap-cwe.xml

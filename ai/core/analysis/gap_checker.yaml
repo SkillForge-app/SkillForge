@@ -1,0 +1,13 @@
+# Gap Checker (AI-08) settings: which request text is embedded, and the two thresholds
+# on the top cosine score. Tuned on evaluation/gap/pairs-dev.yaml only
+# (python -m evaluation.gap tune); change by pull request together with the report.
+#   exists   top score at or above: an existing skill already does it (FE-09: use it)
+#   similar  top score at or above (below exists): a related skill to customize
+#   below    generate a new skill
+version: "2026-10-28"
+request_text: structured
+query_prefix: false
+same_area_for_exists: false
+exists: 0.8584
+similar: 0.7664
+tuned_on: "evaluation/gap/reports/gap-dev-2026-10-28.md"

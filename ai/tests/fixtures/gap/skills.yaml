@@ -1,0 +1,512 @@
+# Skill cards for the Gap Checker's fake index (AI-08). All text is our own: the 10 seed skills
+# of the benchmark (3 built from their example SkillSpecs) and hand-written distractors, many of
+# them deliberate near-misses of a seed skill. No third-party SKILL.md content is copied.
+# Corpus cards stand in for DE-08's public corpus; their URLs are placeholders.
+version: 0.1.0
+cards:
+  # ------------------------------------------------------------- seed skills (registry)
+  - {spec: examples/skillspec/ai-engineer.yaml, source: registry}
+  - {spec: examples/skillspec/marketing-strategist.yaml, source: registry}
+  - {spec: examples/skillspec/review-nda.yaml, source: registry}
+  - id: registry:code-reviewer
+    name: code-reviewer
+    title: Review Code Changes
+    kind: task
+    domain: technology/software-engineering
+    description: Reviews a code change for correctness, security and maintainability, and gives prioritised, actionable comments.
+    use_when:
+      - reviewing a pull request or diff before it is merged
+      - checking a function or module for bugs and security holes
+      - ranking review comments as blocking, should fix or nit
+    source: registry
+  - id: registry:data-analyst
+    name: data-analyst
+    title: Data Analyst
+    kind: role
+    domain: data/analytics
+    description: Data analyst who turns business questions into clean queries, sound analyses and clear charts, and says how confident the result is.
+    use_when:
+      - answering a business question from a CSV, spreadsheet or database
+      - writing SQL or pandas code for an analysis
+      - choosing a chart and explaining whether a change is real or noise
+    source: registry
+  - id: registry:explain-medical-results
+    name: explain-medical-results
+    title: Explain Medical Test Results
+    kind: task
+    domain: medical/patient-education
+    description: Explains lab and test results in plain language so patients can prepare questions for their clinician. Never diagnoses or replaces medical advice.
+    use_when:
+      - a patient asks what a lab value or reference range means
+      - explaining a blood test report line by line in plain language
+      - preparing questions to ask the doctor about a result
+    source: registry
+  - id: registry:hr-recruiter
+    name: hr-recruiter
+    title: HR Recruiter
+    kind: role
+    domain: hr/recruiting
+    description: Recruiter who writes inclusive job ads, structured interview plans and fair screening criteria, and protects candidates' personal data.
+    use_when:
+      - writing or improving a job ad
+      - building a structured interview plan with a scoring guide
+      - defining fair screening criteria for a role
+    source: registry
+  - id: registry:incident-postmortem
+    name: incident-postmortem
+    title: Incident Postmortem
+    kind: workflow
+    domain: technology/incident-response
+    description: Guides a team through a blameless incident postmortem, from timeline to root causes to tracked action items.
+    use_when:
+      - writing the postmortem after a production outage
+      - building an incident timeline from logs and chat
+      - running a blameless postmortem meeting
+    source: registry
+  - id: registry:small-business-budgeting
+    name: small-business-budgeting
+    title: Small Business Budgeting
+    kind: task
+    domain: finance/small-business
+    description: Builds and reviews simple budgets and cash-flow plans for small businesses, with clear assumptions. General information, not financial or tax advice.
+    use_when:
+      - building a monthly or yearly budget for a small business
+      - forecasting cash flow and spotting months that run short
+      - checking whether the business can afford a purchase
+    source: registry
+  - id: registry:write-press-release
+    name: write-press-release
+    title: Write a Press Release
+    kind: task
+    domain: writing/public-relations
+    description: Writes clear, newsworthy press releases in standard format, with accurate facts and quotes approved by the people quoted.
+    use_when:
+      - announcing a product launch, funding round or new executive to the press
+      - turning notes about company news into a press release
+      - checking a draft release against press-release format
+    source: registry
+
+  # ------------------------------------------------------------- near-misses of seed skills
+  - id: corpus:draft-nda-template
+    name: draft-nda-template
+    title: Draft an NDA Template
+    kind: task
+    domain: legal/contracts
+    description: Drafts a company's own mutual or one-way non-disclosure agreement template from scratch, with standard clauses and fill-in fields.
+    use_when:
+      - a company needs its own NDA template
+      - drafting a new confidentiality agreement rather than reviewing one
+    source: corpus
+    url: https://corpus.example/skills/draft-nda-template/SKILL.md
+    licence: own
+  - id: corpus:employment-contract-drafter
+    name: employment-contract-drafter
+    title: Employment Contract Drafter
+    kind: task
+    domain: legal/employment
+    description: Drafts employment contracts and offer letters for new hires, with salary, duties, notice period and confidentiality terms.
+    use_when:
+      - hiring a new employee and needing a written contract
+      - turning agreed offer terms into an offer letter
+    source: corpus
+    url: https://corpus.example/skills/employment-contract-drafter/SKILL.md
+    licence: own
+  - id: registry:supplier-contract-reviewer
+    name: supplier-contract-reviewer
+    title: Supplier Contract Reviewer
+    kind: task
+    domain: legal/contracts
+    description: Reviews supplier, vendor and software service agreements for a small business, focusing on liability, indemnity, termination and payment terms.
+    use_when:
+      - reviewing a vendor or supplier agreement before signing
+      - checking indemnity and limitation of liability clauses
+      - reviewing SaaS terms of service for a business purchase
+    source: registry
+  - id: corpus:contract-dispute-prep
+    name: contract-dispute-prep
+    title: Contract Dispute Preparation
+    kind: workflow
+    domain: legal/litigation
+    description: Helps a business prepare for a contract dispute or breach claim with a lawyer, organising facts, documents and a timeline.
+    use_when:
+      - being sued or threatened with a claim for breach of contract
+      - preparing documents for a meeting with a litigation lawyer
+    source: corpus
+    url: https://corpus.example/skills/contract-dispute-prep/SKILL.md
+    licence: own
+  - id: corpus:seo-content-writer
+    name: seo-content-writer
+    title: SEO Content Writer
+    kind: task
+    domain: marketing/seo
+    description: Writes search-optimised blog posts and landing page copy around chosen keywords, with titles, meta descriptions and internal links.
+    use_when:
+      - writing a blog post that should rank for a keyword
+      - improving page titles and meta descriptions
+    source: corpus
+    url: https://corpus.example/skills/seo-content-writer/SKILL.md
+    licence: own
+  - id: registry:social-media-copywriter
+    name: social-media-copywriter
+    title: Social Media Copywriter
+    kind: task
+    domain: marketing/social-media
+    description: Writes short posts, captions and hashtags for X, LinkedIn and Instagram in a brand's voice, and plans a weekly posting calendar.
+    use_when:
+      - writing tweets or LinkedIn posts to promote something
+      - planning a week of social media posts
+    source: registry
+  - id: corpus:sql-query-helper
+    name: sql-query-helper
+    title: SQL Query Helper
+    kind: task
+    domain: data/sql
+    description: Writes, explains and optimises SQL queries for PostgreSQL, MySQL and SQLite from a description of the tables.
+    use_when:
+      - writing a SQL query from a plain-language question
+      - explaining or speeding up a slow query
+    source: corpus
+    url: https://corpus.example/skills/sql-query-helper/SKILL.md
+    licence: own
+  - id: registry:dashboard-builder
+    name: dashboard-builder
+    title: BI Dashboard Builder
+    kind: task
+    domain: data/visualization
+    description: Designs business intelligence dashboards in Power BI, Tableau or Looker Studio, choosing KPIs, charts and filters for a team.
+    use_when:
+      - building a KPI dashboard for a team or manager
+      - choosing charts and filters for a Power BI or Tableau report
+    source: registry
+  - id: corpus:spreadsheet-formula-helper
+    name: spreadsheet-formula-helper
+    title: Spreadsheet Formula Helper
+    kind: task
+    domain: data/spreadsheets
+    description: Writes and fixes Excel and Google Sheets formulas, lookups and pivot tables, and explains them step by step.
+    use_when:
+      - writing a VLOOKUP, XLOOKUP or SUMIFS formula
+      - fixing a broken spreadsheet formula or building a pivot table
+    source: corpus
+    url: https://corpus.example/skills/spreadsheet-formula-helper/SKILL.md
+    licence: own
+  - id: registry:on-call-runbook-writer
+    name: on-call-runbook-writer
+    title: On-call Runbook Writer
+    kind: task
+    domain: technology/incident-response
+    description: Writes step-by-step runbooks that on-call engineers follow while an alert is firing, with checks, commands and escalation paths.
+    use_when:
+      - documenting what to do when a specific alert fires
+      - writing escalation steps for the on-call rotation
+    source: registry
+  - id: corpus:live-incident-commander
+    name: live-incident-commander
+    title: Live Incident Commander
+    kind: workflow
+    domain: technology/incident-response
+    description: Coordinates the response while an outage is happening, assigning roles, keeping a running log and sending status updates.
+    use_when:
+      - the site is down right now and the team needs coordination
+      - writing status updates during an ongoing incident
+    source: corpus
+    url: https://corpus.example/skills/live-incident-commander/SKILL.md
+    licence: own
+  - id: registry:unit-test-writer
+    name: unit-test-writer
+    title: Unit Test Writer
+    kind: task
+    domain: technology/software-engineering
+    description: Writes unit tests for existing functions with pytest or Jest, covering edge cases, errors and mocks.
+    use_when:
+      - adding unit tests to untested code
+      - finding edge cases a function does not handle
+    source: registry
+  - id: corpus:secure-code-auditor
+    name: secure-code-auditor
+    title: Secure Code Auditor
+    kind: workflow
+    domain: technology/security
+    description: Audits a whole codebase for security vulnerabilities such as injection, broken authentication and leaked secrets, and reports them by severity.
+    use_when:
+      - a security audit of an application before release
+      - checking a repository for OWASP Top 10 issues
+    source: corpus
+    url: https://corpus.example/skills/secure-code-auditor/SKILL.md
+    licence: own
+  - id: registry:llm-prompt-engineer
+    name: llm-prompt-engineer
+    title: LLM Prompt Engineer
+    kind: task
+    domain: technology/ai
+    description: Writes, tests and improves prompts for large language models, with examples, output formats and small evaluation sets.
+    use_when:
+      - a prompt gives inconsistent or wrong outputs
+      - writing a system prompt for a new LLM feature
+    source: registry
+  - id: corpus:tabular-ml-modeler
+    name: tabular-ml-modeler
+    title: Tabular Machine Learning Modeler
+    kind: role
+    domain: technology/machine-learning
+    description: Trains and evaluates classical machine learning models such as gradient boosting on tabular business data, with feature engineering and validation.
+    use_when:
+      - predicting churn, demand or prices from a table of data
+      - choosing and validating a scikit-learn or XGBoost model
+    source: corpus
+    url: https://corpus.example/skills/tabular-ml-modeler/SKILL.md
+    licence: own
+  - id: corpus:medication-information
+    name: medication-information
+    title: Medication Information
+    kind: task
+    domain: medical/pharmacy
+    description: Explains what a prescribed medicine is for, how it is usually taken and its common side effects, in plain language. Never gives doses or replaces a pharmacist.
+    use_when:
+      - a patient asks what a prescribed medicine does
+      - explaining the side effects listed on a leaflet
+    source: corpus
+    url: https://corpus.example/skills/medication-information/SKILL.md
+    licence: own
+  - id: registry:candidate-interview-coach
+    name: candidate-interview-coach
+    title: Candidate Interview Coach
+    kind: role
+    domain: hr/careers
+    description: Helps job seekers prepare for interviews with practice questions, answer feedback and salary negotiation tips.
+    use_when:
+      - a candidate is preparing for a job interview
+      - practising answers to behavioural interview questions
+    source: registry
+  - id: corpus:payroll-calculator
+    name: payroll-calculator
+    title: Payroll Calculator
+    kind: task
+    domain: finance/payroll
+    description: Calculates gross-to-net pay, employer costs and payroll totals for a small team from salaries and hours.
+    use_when:
+      - working out the monthly payroll cost of the team
+      - estimating the full cost of a new hire
+    source: corpus
+    url: https://corpus.example/skills/payroll-calculator/SKILL.md
+    licence: own
+  - id: registry:personal-budget-planner
+    name: personal-budget-planner
+    title: Personal Budget Planner
+    kind: task
+    domain: finance/personal
+    description: Builds a household budget from income and spending, sets savings goals and tracks monthly expenses for a family.
+    use_when:
+      - planning a family or personal monthly budget
+      - setting a savings goal from income and expenses
+    source: registry
+  - id: corpus:internal-announcement-writer
+    name: internal-announcement-writer
+    title: Internal Announcement Writer
+    kind: task
+    domain: writing/internal-communications
+    description: Writes internal emails and intranet posts that announce changes to staff, such as reorganisations, new policies or office moves.
+    use_when:
+      - announcing a change to employees
+      - writing an all-staff email from leadership
+    source: corpus
+    url: https://corpus.example/skills/internal-announcement-writer/SKILL.md
+    licence: own
+  - id: registry:media-pitch-writer
+    name: media-pitch-writer
+    title: Media Pitch Email Writer
+    kind: task
+    domain: writing/public-relations
+    description: Writes short personalised pitch emails to journalists and editors to get a story covered, with a hook and follow-up.
+    use_when:
+      - pitching a story idea to a journalist
+      - writing a follow-up email to an editor
+    source: registry
+
+  # ------------------------------------------------------------- other skills (other domains)
+  - id: registry:meeting-minutes-writer
+    name: meeting-minutes-writer
+    title: Meeting Minutes Writer
+    kind: task
+    domain: writing/meeting-minutes
+    description: Turns rough meeting notes or a transcript into clear minutes with decisions, action items, owners and due dates.
+    use_when:
+      - writing minutes from rough notes or a transcript
+      - listing decisions and action items after a meeting
+    source: registry
+  - id: corpus:ux-researcher
+    name: ux-researcher
+    title: UX Researcher
+    kind: role
+    domain: research/user-research
+    description: Plans and runs user research for digital products, with interview guides, usability tests and synthesis of findings into insights.
+    use_when:
+      - planning user interviews or usability tests
+      - turning research notes into findings and recommendations
+    source: corpus
+    url: https://corpus.example/skills/ux-researcher/SKILL.md
+    licence: own
+  - id: registry:lesson-plan-designer
+    name: lesson-plan-designer
+    title: Lesson Plan Designer
+    kind: task
+    domain: education/teaching
+    description: Designs lesson plans for school teachers with learning objectives, activities, timing and a short assessment, for any subject and grade.
+    use_when:
+      - planning a lesson or unit for a class
+      - writing learning objectives and an end-of-lesson quiz
+    source: registry
+  - id: corpus:support-reply-writer
+    name: support-reply-writer
+    title: Customer Support Reply Writer
+    kind: task
+    domain: customer-support/email
+    description: Drafts friendly, accurate replies to customer support emails and tickets, using the help-centre articles and the right tone.
+    use_when:
+      - answering a customer support ticket or email
+      - rewriting a reply to sound calmer and clearer
+    source: corpus
+    url: https://corpus.example/skills/support-reply-writer/SKILL.md
+    licence: own
+  - id: registry:prd-writer
+    name: prd-writer
+    title: Product Requirements Writer
+    kind: task
+    domain: product/requirements
+    description: Writes product requirement documents with the problem, users, goals, user stories, acceptance criteria and open questions.
+    use_when:
+      - turning a feature idea into a PRD
+      - writing user stories and acceptance criteria
+    source: registry
+  - id: corpus:sales-outreach-writer
+    name: sales-outreach-writer
+    title: Sales Outreach Writer
+    kind: task
+    domain: sales/outreach
+    description: Writes personalised B2B cold emails and follow-up sequences for sales teams, based on the prospect's company and role.
+    use_when:
+      - writing cold emails to potential customers
+      - planning a follow-up email sequence for a sales campaign
+    source: corpus
+    url: https://corpus.example/skills/sales-outreach-writer/SKILL.md
+    licence: own
+  - id: registry:grant-proposal-writer
+    name: grant-proposal-writer
+    title: Grant Proposal Writer
+    kind: task
+    domain: writing/grants
+    description: Writes grant proposals for nonprofits and researchers, with need statement, objectives, budget justification and evaluation plan.
+    use_when:
+      - applying for a foundation or government grant
+      - writing the budget justification of a proposal
+    source: registry
+  - id: corpus:api-docs-writer
+    name: api-docs-writer
+    title: API Documentation Writer
+    kind: task
+    domain: technology/documentation
+    description: Writes developer documentation for REST APIs from an OpenAPI file or code, with endpoints, parameters, examples and error codes.
+    use_when:
+      - documenting a REST API for external developers
+      - turning an OpenAPI spec into readable reference docs
+    source: corpus
+    url: https://corpus.example/skills/api-docs-writer/SKILL.md
+    licence: own
+  - id: registry:period-close-guide
+    name: period-close-guide
+    title: Month and Quarter Close Guide
+    kind: workflow
+    domain: finance/accounting
+    description: Walks a small company's office manager through closing the books each month or quarter, with reconciliations, accruals and a report for the owners.
+    use_when:
+      - closing the books at the end of a month or quarter
+      - reconciling bank accounts and chasing unpaid invoices before a report
+    source: registry
+  - id: corpus:brand-style-guide
+    name: brand-style-guide
+    title: Brand Style Guide Builder
+    kind: task
+    domain: design/branding
+    description: Builds a brand style guide with logo rules, colour palette, typography and tone of voice for a small company.
+    use_when:
+      - creating brand guidelines for a new company
+      - documenting colours, fonts and logo usage
+    source: corpus
+    url: https://corpus.example/skills/brand-style-guide/SKILL.md
+    licence: own
+  - id: registry:employee-onboarding-planner
+    name: employee-onboarding-planner
+    title: Employee Onboarding Planner
+    kind: workflow
+    domain: hr/onboarding
+    description: Plans the first 30, 60 and 90 days of a new employee, with accounts to set up, people to meet and training to finish.
+    use_when:
+      - a new hire starts next week
+      - writing an onboarding checklist for a role
+    source: registry
+  - id: corpus:literature-review-assistant
+    name: literature-review-assistant
+    title: Literature Review Assistant
+    kind: task
+    domain: research/literature-review
+    description: Helps researchers search, screen and summarise academic papers on a question and write a structured literature review with citations.
+    use_when:
+      - writing the literature review section of a thesis or paper
+      - summarising and comparing a set of research papers
+    source: corpus
+    url: https://corpus.example/skills/literature-review-assistant/SKILL.md
+    licence: own
+  - id: registry:meal-planner
+    name: meal-planner
+    title: Weekly Meal Planner
+    kind: task
+    domain: general/meal-planning
+    description: Plans a week of meals for a household with a shopping list, taking diets, budget and cooking time into account.
+    use_when:
+      - planning meals for the week
+      - making a shopping list from a meal plan
+    source: registry
+  - id: corpus:travel-itinerary-planner
+    name: travel-itinerary-planner
+    title: Travel Itinerary Planner
+    kind: task
+    domain: general/travel
+    description: Plans day-by-day travel itineraries with transport, places to visit, bookings and a rough budget.
+    use_when:
+      - planning a trip or holiday day by day
+      - fitting sights, transport and budget into a short trip
+    source: corpus
+    url: https://corpus.example/skills/travel-itinerary-planner/SKILL.md
+    licence: own
+  - id: registry:kubernetes-deploy-helper
+    name: kubernetes-deploy-helper
+    title: Kubernetes Deployment Helper
+    kind: task
+    domain: technology/devops
+    description: Writes and debugs Kubernetes manifests, Helm charts and deployment pipelines for containerised applications.
+    use_when:
+      - deploying an app to a Kubernetes cluster
+      - fixing a failing pod, service or Helm release
+    source: registry
+  - id: corpus:accessibility-auditor
+    name: accessibility-auditor
+    title: Web Accessibility Auditor
+    kind: task
+    domain: design/accessibility
+    description: Audits web pages against WCAG 2.2, lists accessibility problems by severity and suggests fixes for designers and developers.
+    use_when:
+      - checking a website or app screen for accessibility problems
+      - preparing for a WCAG compliance review
+    source: corpus
+    url: https://corpus.example/skills/accessibility-auditor/SKILL.md
+    licence: own
+  - id: registry:privacy-policy-writer
+    name: privacy-policy-writer
+    title: Privacy Policy Writer
+    kind: task
+    domain: legal/privacy
+    description: Drafts a plain-language privacy policy for a website or app from a description of the data it collects and why. Not legal advice.
+    use_when:
+      - a new website or app needs a privacy policy
+      - updating a privacy policy after adding new data collection
+    source: registry

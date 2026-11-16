@@ -1,0 +1,19 @@
+# fetched 2026-10-26 from https://docs.gitscrum.com/robots.txt (HTTP 200)
+# GitScrum Documentation - robots.txt
+# https://docs.gitscrum.com
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://docs.gitscrum.com/sitemap-index.xml
+
+# Block standalone pages from direct indexing (they are embedded in guides)
+Disallow: /*/standalone/
+
+# Block any test or draft pages
+Disallow: /test/
+Disallow: /draft/
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1

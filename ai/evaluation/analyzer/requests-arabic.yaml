@@ -1,0 +1,92 @@
+# Arabic slice: 10 requests in Arabic. Reported separately; NOT part of the 90% gate.
+# Labels use the same English vocabularies as the other sets.
+name: analyzer-requests-arabic
+version: 0.1.0
+split: arabic
+requests:
+  - id: a-01
+    text: أريد مهارة تكتب خطط دروس أسبوعية لمعلم رياضيات في المرحلة المتوسطة.
+    style: clear
+    kind: task
+    domain: education/lesson-planning
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: a-02
+    text: مساعدة في التسويق
+    style: vague
+    kind: role
+    domain: marketing/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: a-03
+    text: >-
+      نحن متجر إلكتروني صغير ونتلقى الكثير من الشكاوى. أريد مهارة تعمل كموظف خدمة عملاء:
+      ترد على الرسائل بلطف، وتشرح سياسة الإرجاع، وتحيل المشكلات الصعبة إلى المشرف.
+    style: detailed
+    kind: role
+    domain: customer-support/helpdesk
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: a-04
+    text: أريد مهارة تراجع عقود الإيجار التجارية وتنبهني إلى البنود الخطرة قبل التوقيع.
+    style: clear
+    kind: task
+    domain: legal/contracts
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: a-05
+    text: شيء يساعدني في عملي
+    style: vague
+    kind: role
+    domain: general/personal-assistant
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: a-06
+    text: >-
+      أدير مطعمًا صغيرًا ولا أعرف إن كنت أربح أم أخسر. أريد مهارة تبني ميزانية شهرية وتوقعًا
+      للتدفق النقدي لمدة سنة، وتوضح الافتراضات، وتخبرني متى أحتاج إلى محاسب.
+    style: detailed
+    kind: task
+    domain: finance/small-business
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: a-07
+    text: أريد مهارة لـ Claude Code تراجع طلبات الدمج في مستودعنا وتبحث عن الأخطاء الأمنية.
+    style: clear
+    kind: task
+    domain: technology/software-engineering
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [claude]
+  - id: a-08
+    text: >-
+      نوظف عشرين شخصًا كل صيف. أريد مهارة تدير عملية التوظيف كاملة: كتابة الإعلان، وفرز
+      الطلبات بمعايير واحدة للجميع، وجدولة المقابلات، وإرسال العروض والرفض.
+    style: detailed
+    kind: workflow
+    domain: hr/recruiting
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+  - id: a-09
+    text: أريد مهارة تشرح نتائج تحاليل الدم للمرضى بلغة بسيطة.
+    style: clear
+    kind: task
+    domain: medical/patient-education
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: a-10
+    text: بيانات
+    style: vague
+    kind: task
+    domain: data/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []

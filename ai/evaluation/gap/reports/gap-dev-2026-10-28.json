@@ -1,0 +1,93 @@
+{
+  "date": "2026-10-28",
+  "split": "dev",
+  "labels": {
+    "status": "reviewed",
+    "reviewer": "Ziad Abdullah",
+    "date": "2026-10-27"
+  },
+  "model": "local/BAAI/bge-small-en-v1.5",
+  "variants": [
+    {
+      "name": "summary",
+      "choice": {
+        "request_text": "summary",
+        "query_prefix": false,
+        "same_area_for_exists": false
+      },
+      "exists_threshold": 0.7484,
+      "exists": {
+        "tp": 18,
+        "fp": 2,
+        "fn": 5
+      },
+      "similar_threshold": 0.6607,
+      "related": {
+        "tp": 48,
+        "fp": 45,
+        "fn": 20
+      }
+    },
+    {
+      "name": "structured",
+      "choice": {
+        "request_text": "structured",
+        "query_prefix": false,
+        "same_area_for_exists": false
+      },
+      "exists_threshold": 0.8584,
+      "exists": {
+        "tp": 20,
+        "fp": 0,
+        "fn": 3
+      },
+      "similar_threshold": 0.7664,
+      "related": {
+        "tp": 42,
+        "fp": 5,
+        "fn": 26
+      }
+    },
+    {
+      "name": "structured+prefix",
+      "choice": {
+        "request_text": "structured",
+        "query_prefix": true,
+        "same_area_for_exists": false
+      },
+      "exists_threshold": 0.8475,
+      "exists": {
+        "tp": 18,
+        "fp": 0,
+        "fn": 5
+      },
+      "similar_threshold": 0.7583,
+      "related": {
+        "tp": 43,
+        "fp": 6,
+        "fn": 25
+      }
+    },
+    {
+      "name": "structured+area-gate",
+      "choice": {
+        "request_text": "structured",
+        "query_prefix": false,
+        "same_area_for_exists": true
+      },
+      "exists_threshold": 0.8584,
+      "exists": {
+        "tp": 20,
+        "fp": 0,
+        "fn": 3
+      },
+      "similar_threshold": 0.7664,
+      "related": {
+        "tp": 42,
+        "fp": 5,
+        "fn": 26
+      }
+    }
+  ],
+  "chosen": "structured"
+}

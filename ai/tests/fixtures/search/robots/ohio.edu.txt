@@ -1,0 +1,63 @@
+# fetched 2026-10-26 from https://ohio.edu/robots.txt (HTTP 200)
+User-agent: *
+Crawl-delay: 10
+# CSS, JS, Images
+Allow: /core/*.css$
+Allow: /core/*.css?
+Allow: /core/*.js$
+Allow: /core/*.js?
+Allow: /core/*.avif
+Allow: /core/*.gif
+Allow: /core/*.jpg
+Allow: /core/*.jpeg
+Allow: /core/*.png
+Allow: /core/*.svg
+Allow: /core/*.webp
+Allow: /profiles/*.css$
+Allow: /profiles/*.css?
+Allow: /profiles/*.js$
+Allow: /profiles/*.js?
+Allow: /profiles/*.avif
+Allow: /profiles/*.gif
+Allow: /profiles/*.jpg
+Allow: /profiles/*.jpeg
+Allow: /profiles/*.png
+Allow: /profiles/*.svg
+Allow: /profiles/*.webp
+# Directories
+Disallow: /core/
+Disallow: /profiles/
+Disallow: /modules/
+Disallow: /themes/
+# Files
+Disallow: /README.md
+Disallow: /web.config
+# Paths (clean URLs)
+Disallow: /comment/reply/
+Disallow: /filter/tips
+Disallow: /node/add/
+Disallow: /search/
+Disallow: /search?
+Disallow: /media/oembed
+Disallow: /*/media/oembed
+Disallow: /index.php/search?
+Disallow: */search?
+Disallow: /*/search/site
+Disallow: /directory?search
+Disallow: /directory/?search
+Disallow: /people/braselto
+Disallow: /food/menus?
+Disallow: */node/
+Disallow: /web-login
+Disallow: */ohio-alerts
+Disallow: */programs?
+Disallow: /programs-export-count?
+Disallow: /programs-export?
+Disallow: /experts?
+Disallow: /graduate/degree-programs?
+Disallow: /experience-ohio?
+# Taxonomy Page
+Disallow: */taxonomy/
+# Views Ajax
+Disallow: */views/ajax
+Disallow: /?search

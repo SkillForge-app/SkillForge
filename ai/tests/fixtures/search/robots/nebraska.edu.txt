@@ -1,0 +1,15 @@
+# fetched 2026-10-26 from https://nebraska.edu/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /archive/
+
+Sitemap: https://nebraska.edu/sitemap.xml
+Sitemap: https://nebraska.edu/services/ai/sitemap.xml
+Sitemap: https://nebraska.edu/president/sitemap.xml
+Sitemap: https://nebraska.edu/president/past-presidents/ted-carter/sitemap.xml
+Sitemap: https://nebraska.edu/president/past-presidents/susan-fritz/sitemap.xml
+Sitemap: https://nebraska.edu/president/past-presidents/hank-bounds/sitemap.xml
+Sitemap: https://nebraska.edu/president/past-presidents/chris-kabourek/sitemap.xml
+Sitemap: https://nebraska.edu/offices/procure-to-pay/sitemap.xml
+Sitemap: https://nebraska.edu/offices/information-technology-services/sitemap.xml
+Sitemap: https://nebraska.edu/offices/facilities-planning-and-capital-programs/sitemap.xml
+Sitemap: https://nebraska.edu/services/canvas/sitemap.xml
