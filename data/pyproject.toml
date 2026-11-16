@@ -20,6 +20,14 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5"]
+# AI's code (the `skillforge` package in ../ai: extract_page, embed_sync, normalise_url, ExtractConfig), for the real adapter
+# (skillforge_data/adapters/ai.py). OPTIONAL and heavy (spaCy, litellm, fastembed): the default install and the default CI do not use it.
+# `skillforge` is NOT the name of a package on PyPI that we own: install it from the path (uv: `uv sync --extra ai`, which reads
+# [tool.uv.sources] below) or `pip install -e ../ai`. Never `pip install ".[ai]"` with plain pip, which would look the name up on PyPI.
+ai = ["skillforge"]
+
+[tool.uv.sources]
+skillforge = { path = "../ai", editable = true }
 
 [tool.setuptools.packages.find]
 include = ["skillforge_data*"]
@@ -27,3 +35,9 @@ include = ["skillforge_data*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+# `ai_real` tests need AI's package installed: they are deselected by default (deselected is not skipped; data.yml fails on skips).
+# Run them with: pytest -m ai_real
+addopts = "-m 'not ai_real'"
+markers = [
+    "ai_real: contract tests against the real `skillforge` package (extra `ai`); not part of the default run",
+]
