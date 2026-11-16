@@ -1,4 +1,8 @@
 {
+  "safety/guard": {
+    "sha256": "88772606163500473f2fe239aefd1601a26275554c2f6115159b06dce90ae549",
+    "version": 1
+  },
   "safety/redteam": {
     "sha256": "cf260879f867a8c4c5ac3c6c7d492687b9031193a79a2d17f969be36b4e04b2b",
     "version": 1

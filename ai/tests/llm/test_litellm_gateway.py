@@ -111,6 +111,25 @@ async def test_code_fenced_json_is_accepted(llm: FakeLiteLLM) -> None:
 # ---------------------------------------------------------------- output problems
 
 
+async def test_complete_text_returns_the_raw_reply_without_a_schema(
+    llm: FakeLiteLLM, caplog: pytest.LogCaptureFixture
+) -> None:
+    llm.completions = [chat("unsafe\nS2")]
+    assert await make_gateway().complete_text("demo/greet", INPUTS) == "unsafe\nS2"
+    [sent] = llm.calls
+    assert "response_format" not in sent  # a plain-text model, e.g. a safety classifier
+    [rec] = records(caplog)
+    assert (rec["status"], rec["kind"], rec["model"]) == ("ok", "complete", SONNET)
+    assert rec["cost_usd"] is not None
+
+
+async def test_complete_text_refusals_move_to_the_fallback(llm: FakeLiteLLM) -> None:
+    config = config_with(analysis={"fallbacks": (HAIKU,)})
+    llm.completions = [chat("", finish="content_filter"), chat("safe", model=HAIKU)]
+    assert await make_gateway(config).complete_text("demo/greet", INPUTS) == "safe"
+    assert [c["model"] for c in llm.calls] == [SONNET, HAIKU]
+
+
 async def test_invalid_json_is_repaired_once(
     llm: FakeLiteLLM, caplog: pytest.LogCaptureFixture
 ) -> None:

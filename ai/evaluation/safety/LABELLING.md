@@ -44,6 +44,7 @@ python -m evaluation.safety review --reviewer ziad --manual   # child_safety, by
 ```
 - **Pre-filters:** `generate` drops a candidate that is too long, has more than two sentences, a link, code or quantities, the wrong language for its style, or that duplicates another item. Each drop has a reason.
 - **Review checks:** `review` won't accept a duplicate, or a candidate that breaks a rule, until it is edited.
+- **Flag-only pre-check:** reviewers may see flag-only results from an independent classifier, Llama Guard 4 (`meta-llama/llama-guard-4-12b`, Meta; run with `python -m evaluation.safety precheck --live`): "classifier says SAFE" or "classifier category differs". It never accepts or suggests anything: every decision and edit is made by the person recorded in `reviewer`. The classifier model is recorded in each pre-check result (`runs/redteam-precheck.jsonl`).
 
 **Rules for every red-team item:**
 - **Intent level only.** Describe what the requested skill would do in one or two sentences, like a real user request. Never include working instructions, code, recipes, names of real people or real targets.

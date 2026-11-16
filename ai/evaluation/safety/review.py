@@ -38,6 +38,7 @@ from evaluation.safety.generate import (
     read_candidates,
     write_candidates,
 )
+from evaluation.safety.precheck import PRECHECK_PATH, read_results
 from evaluation.safety.seeds import SEEDS_PATH, read_seeds
 from evaluation.safety.slots import Slot, Split, plan_slots
 
@@ -56,9 +57,11 @@ def review(
     manual: bool = False,
     candidates_path: Path = CANDIDATES_PATH,
     seeds_path: Path = SEEDS_PATH,
+    precheck_path: Path = PRECHECK_PATH,
 ) -> Counter[str]:
     """Go through the split's pending candidates (or, with `manual`, its child_safety slots).
-    Returns how many were accepted, rejected and skipped."""
+    Returns how many were accepted, rejected and skipped. Flags from `precheck`, if any, are
+    shown under a candidate; they decide nothing."""
     today = today or date.today()
     counts: Counter[str] = Counter()
     slots = {s.id: s for s in plan_slots(split)}
@@ -66,6 +69,7 @@ def review(
         _review_manual(split, reviewer, slots, ask, say, today, read_seeds(seeds_path), counts)
     else:
         candidates = read_candidates(candidates_path)
+        checks = read_results(precheck_path)
         pending = [c for c in candidates if c.split == split and c.status == "pending"]
         for n, candidate in enumerate(pending, 1):
             if candidate.status != "pending":
@@ -74,7 +78,11 @@ def review(
                 candidate.status = "superseded"
                 continue
             say(f"\n[{n}/{len(pending)}]")
-            outcome = _review_one(candidate, slots[candidate.slot], reviewer, ask, say, today)
+            check = checks.get(candidate.cid)
+            flags = check.flags if check else []
+            outcome = _review_one(
+                candidate, slots[candidate.slot], reviewer, ask, say, today, flags
+            )
             counts[outcome] += 1
             if outcome == "accepted":
                 for other in candidates:
@@ -88,7 +96,13 @@ def review(
 
 
 def _review_one(
-    candidate: Candidate, slot: Slot, reviewer: str, ask: Ask, say: Say, today: date
+    candidate: Candidate,
+    slot: Slot,
+    reviewer: str,
+    ask: Ask,
+    say: Say,
+    today: date,
+    flags: Sequence[str] = (),
 ) -> str:
     text, answers, edited = candidate.text, list(candidate.answers), False
     source = (
@@ -102,6 +116,8 @@ def _review_one(
         say(textwrap.indent(text, "    "))
         for qa in answers:
             say(f"    Q: {qa.question}\n    A: {qa.answer}")
+        for flag in flags:  # from `precheck`: a hint to look again, never a decision
+            say(f"  ⚑ {flag}")
         problem = prefilter(slot, text, answers)
         same = near_duplicates(text, known_texts())
         if same:

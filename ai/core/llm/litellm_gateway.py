@@ -199,32 +199,70 @@ class LiteLLMGateway:
                 "after one repair attempt"
             ) from bad.error
 
+    async def complete_text(
+        self,
+        prompt_id: str,
+        inputs: Mapping[str, Any],
+        *,
+        model_role: str | None = None,
+    ) -> str:
+        """Like `complete`, for a model that answers in plain text (e.g. a safety classifier):
+        no JSON schema, no validation, no repair. The same retries, fallbacks, budget, rate
+        limit and CallRecord logging."""
+        prompt = load_prompt(prompt_id, self.prompts_root)
+        messages = prompt.render(inputs)
+        check_input_size(prompt_id, sum(len(str(m["content"])) for m in messages))
+        role_name = model_role or prompt.meta.model_role
+        call = _Call(
+            role_name=role_name,
+            role=self.config.role(role_name),
+            fields={"kind": "complete", "prompt_id": prompt_id, "prompt_version": prompt.version},
+        )
+
+        async def attempt(model: str) -> str:
+            reply, metrics, start = await self._reply(call, model, messages, None)
+            call.record(model, start, **metrics)
+            return reply
+
+        return await self._with_retries(call, [call.role.model, *call.role.fallbacks], attempt)
+
+    async def _reply(
+        self,
+        call: _Call,
+        model: str,
+        messages: list[Message],
+        output_model: type[BaseModel] | None,
+    ) -> tuple[str, dict[str, Any], float]:
+        """One request to `model`: the reply text, its metrics and the start time. Failures,
+        refusals and cut-off replies are recorded and raised here."""
+        start = time.perf_counter()
+        try:
+            _require_key(model)
+            response = await litellm.acompletion(
+                **_completion_args(call.role, model, messages, output_model)
+            )
+        except (Exception, asyncio.CancelledError) as exc:  # cancelled: a step deadline
+            call.record(model, start, error=type(exc).__name__)
+            raise
+        choice = response.choices[0]
+        metrics = self._metrics(response, model)
+        metrics["finish_reason"] = finish = choice.finish_reason
+        if finish in REFUSAL_FINISH_REASONS:
+            call.record(model, start, error=LLMRefused.__name__, **metrics)
+            raise _TryNextModel(model)
+        if finish == "length":
+            call.record(model, start, error=LLMOutputInvalid.__name__, **metrics)
+            raise LLMOutputInvalid(
+                f"{call.fields['prompt_id']}: reply cut off at max_tokens="
+                f"{capped_max_tokens(call.role.max_tokens)} on {model}"
+            )
+        return choice.message.content or "", metrics, start
+
     async def _complete_once(
         self, call: _Call, messages: list[Message], output_model: type[T]
     ) -> T:
         async def attempt(model: str) -> T:
-            start = time.perf_counter()
-            try:
-                _require_key(model)
-                response = await litellm.acompletion(
-                    **_completion_args(call.role, model, messages, output_model)
-                )
-            except (Exception, asyncio.CancelledError) as exc:  # cancelled: a step deadline
-                call.record(model, start, error=type(exc).__name__)
-                raise
-            choice = response.choices[0]
-            metrics = self._metrics(response, model)
-            metrics["finish_reason"] = finish = choice.finish_reason
-            if finish in REFUSAL_FINISH_REASONS:
-                call.record(model, start, error=LLMRefused.__name__, **metrics)
-                raise _TryNextModel(model)
-            if finish == "length":
-                call.record(model, start, error=LLMOutputInvalid.__name__, **metrics)
-                raise LLMOutputInvalid(
-                    f"{call.fields['prompt_id']}: reply cut off at max_tokens="
-                    f"{capped_max_tokens(call.role.max_tokens)} on {model}"
-                )
-            reply = choice.message.content or ""
+            reply, metrics, start = await self._reply(call, model, messages, output_model)
             try:
                 result = output_model.model_validate_json(_strip_fences(reply))
             except ValidationError as exc:
@@ -403,15 +441,16 @@ def _classify(exc: Exception) -> str | None:
 
 
 def _completion_args(
-    role: ModelRole, model: str, messages: list[Message], output_model: type[BaseModel]
+    role: ModelRole, model: str, messages: list[Message], output_model: type[BaseModel] | None
 ) -> dict[str, Any]:
     args: dict[str, Any] = {
         "model": model,
         "messages": messages,
-        "response_format": output_model,
         "timeout": role.timeout_s,
         "num_retries": 0,
     }
+    if output_model is not None:  # None: a plain-text reply (complete_text)
+        args["response_format"] = output_model
     optional = {
         "max_tokens": capped_max_tokens(role.max_tokens),
         "temperature": role.temperature,

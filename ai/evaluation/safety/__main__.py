@@ -164,6 +164,45 @@ def generate_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def precheck_command(args: argparse.Namespace) -> int:
+    from collections import Counter
+
+    from evaluation.safety.generate import GENERATOR_PROMPTS, read_candidates
+    from evaluation.safety.precheck import GUARD_ROLE, guard_config, precheck, read_results
+
+    config = guard_config()  # refuses a Claude or Qwen model anywhere in the chain
+    model = config.role(GUARD_ROLE).model
+    done = read_results()
+    todo = [
+        c
+        for c in read_candidates()
+        if c.status == "pending" and c.cid not in done and c.category != "child_safety"
+    ]
+    if not args.live:
+        print(f"refusing to call {model} without --live (it costs money): {len(todo)} candidates")
+        return 2
+    load_dotenv(AI_ROOT / ".env", override=False)
+    key = key_env_for(model)
+    if key and not os.environ.get(key):
+        print(f"--live needs {key} for {model} (env var or ai/.env)")
+        return 2
+    from core.llm.litellm_gateway import LiteLLMGateway
+
+    gateway = LiteLLMGateway(config=config, prompts_root=GENERATOR_PROMPTS)
+    result = asyncio.run(precheck(gateway, limit=args.limit))
+    verdicts = Counter(r.verdict for r in result.checked)
+    flagged = [r for r in result.checked if r.flags]
+    classifiers = ", ".join(sorted({str(r.classifier) for r in result.checked}))
+    print(
+        f"{result.calls} calls by {classifiers}: "
+        f"{verdicts['unsafe']} unsafe, {verdicts['safe']} safe; {len(flagged)} flagged; "
+        f"{len(result.skipped)} skipped; ${result.cost_usd:.4f}"
+    )
+    for note in result.skipped:
+        print(f"  skipped {note}")
+    return 0
+
+
 def review_command(args: argparse.Namespace) -> int:
     from evaluation.safety.review import review
 
@@ -192,6 +231,9 @@ def main(argv: list[str] | None = None) -> int:
     gen.add_argument("--split", choices=["redteam", "dev", "all"], default="all")
     gen.add_argument("--limit", type=int, default=0, help="at most N model calls per split")
     gen.add_argument("--live", action="store_true", help="call the real model (costs money)")
+    pre = commands.add_parser("precheck", help="flag-only Llama Guard check before review")
+    pre.add_argument("--limit", type=int, default=0, help="at most N model calls")
+    pre.add_argument("--live", action="store_true", help="call the real model (costs money)")
     rev = commands.add_parser("review", help="accept, edit or reject each candidate")
     rev.add_argument("--reviewer", choices=["ziad", "yousef"], required=True)
     rev.add_argument("--split", choices=["redteam", "dev"], default="redteam")
@@ -205,6 +247,8 @@ def main(argv: list[str] | None = None) -> int:
         return seeds_command(args)
     if args.command == "generate":
         return generate_command(args)
+    if args.command == "precheck":
+        return precheck_command(args)
     if args.command == "review":
         return review_command(args)
     return run_command(args)

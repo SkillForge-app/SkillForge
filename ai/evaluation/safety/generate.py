@@ -183,7 +183,7 @@ async def generate(
                 continue
             result.calls += 1
             try:
-                with _answering_models() as models:
+                with answering_models() as models:
                     reply = await gateway.complete(
                         PROMPT_ID, _inputs(slot, seed), GeneratedRequests
                     )
@@ -267,7 +267,7 @@ def _candidate(
 
 
 @contextmanager
-def _answering_models() -> Iterator[list[str]]:
+def answering_models() -> Iterator[list[str]]:
     """The models that answered inside the block, read from their CallRecords."""
     logger = logging.getLogger("skillforge.llm")
     models: list[str] = []
