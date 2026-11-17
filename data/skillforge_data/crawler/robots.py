@@ -15,8 +15,9 @@ from __future__ import annotations
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from urllib.parse import urlsplit
 from urllib.robotparser import RobotFileParser
+
+from ..urls import host_key, origin_key
 
 PRODUCT_TOKEN = "SkillForgeBot"
 TTL_OK_SECONDS = 24 * 3600
@@ -38,8 +39,7 @@ class _Entry:
 
 
 def origin_of(url: str) -> str:
-    parts = urlsplit(url)
-    return f"{parts.scheme.lower()}://{parts.netloc.lower()}"
+    return origin_key(url)                      # one rule for the host everywhere: skillforge_data/urls.py
 
 
 class RobotsPolicy:
@@ -96,8 +96,8 @@ class RobotsPolicy:
 
 def _other_host_note(origin: str, redirects: tuple[str, ...]) -> str:
     """' (redirected to host X)' when robots.txt was served by another host than the origin; else ''."""
-    hosts = [urlsplit(r).netloc.lower() for r in redirects]
-    other = [h for h in hosts if h != urlsplit(origin).netloc.lower()]
+    hosts = [host_key(r) for r in redirects]
+    other = [h for h in hosts if h != host_key(origin)]
     return f" (redirected to host {other[-1]})" if other else ""
 
 

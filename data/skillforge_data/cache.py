@@ -22,6 +22,7 @@ from typing import Literal
 import psycopg
 
 from .freshness import FreshnessRules
+from .urls import host_key as _host_key
 
 logger = logging.getLogger("skillforge_data.cache")
 
@@ -41,6 +42,15 @@ class DueSource:
     host: str
     source_type: str
     last_fetched_at: datetime | None       # None: never fetched (no current document)
+
+    @property
+    def host_key(self) -> str:
+        """The key the crawler's rate limiter uses for this source (`skillforge_data/urls.py`). `host` stays the stored column value
+        (`sources.host`, no port); group a schedule by `host_key` so it matches the crawler. A URL that is not http(s) gives `host`."""
+        try:
+            return _host_key(self.url)
+        except ValueError:
+            return self.host
 
 
 @dataclass

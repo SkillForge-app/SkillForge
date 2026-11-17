@@ -177,3 +177,23 @@ Decisions I took:
 - **P5 plan:** `docs/de-task-plan.pdf` could **not be read** (no PDF reader here; installing one was refused by the permission system and I did not work around it).
   The plan uses the "Done when" lines of `CLAUDE.md`. Please compare with the PDF. I also found that **DE-10 is not started** and DE-16 needs it.
 - The commit message for Task 4 was not given; I used "DE-11: P5 plan for DE-11 to DE-16".
+
+## ملاحظات الجولة (notes of the round, host helper)
+
+Task: one host helper (`skillforge_data/urls.py`: `host_key(url)` and `origin_key(url)`), decided with Backend in the de-09 review. Not pushed, no PR.
+Last result: `ruff check .` pass; `pytest -q -rs` **262 passed, 0 skipped, 7 deselected** (28 new tests in `tests/test_urls.py`).
+
+- **Rules** (AI's `normalise_url`): lower-case; default port dropped (80 for http, 443 for https; other ports kept); `user:password@` dropped; IPv6 with brackets.
+  Anything not http(s), or with a bad port, raises `ValueError`.
+- **Where it is used:** the crawler's rate limit (`fetcher.py`), the robots.txt cache origin and the "redirected to host" note (`robots.py`, `origin_of`),
+  the robots redirect and the page redirect checks, and the cache (`DueSource.host_key`, a property computed from the URL; a source that is not http(s) falls back to `host`).
+- **Not changed:** `sources.host` (still `urlsplit(url).hostname.lower()` in `run.py`, `process.py`, `licensing.py`), the deny-list check (it matches the bare hostname, no port, on purpose),
+  `DueSource.host` (still the stored value), `storage/keys.py`. No schema or view was touched.
+- **One behaviour change you may notice:** a URL written with its default port or with `user:password@` used to get its own rate-limit bucket and robots.txt entry; now it shares the one of the plain URL (tests for each case).
+- **Decision:** the trailing dot is **kept** (`example.org.` stays), because that is what AI's `normalise_url` does. The test documents it.
+
+Questions (the stored value and the helper differ):
+1. **Port:** `sources.host` has no port, the key has one when it is not the default. So `example.org` and `example.org:8443` are one `host` but two keys. Is `sources.host` meant to name a server or a site? (It matters for DE-09's `host_boilerplate` key, which AI's `find_site_boilerplate` also gives without a port.)
+2. **IPv6:** `sources.host` is `::1`, the key is `[::1]`. A migration would be needed to align them; no test or data depends on it today.
+3. **Trailing dot and IDN:** neither the stored host nor the key joins `example.org.` with `example.org`, nor converts `bücher.example` to punycode. AI's `find_site_boilerplate` key (`HttpUrl.host`) does convert IDN. Do we want to join the trailing dot too (better for rate limits, but it departs from AI's `normalise_url`)?
+4. The crawler fetches the **original** URL and stores the canonical one; the key is computed from the original, so it has the same value as from the canonical URL only for the cases above. Confirm that is what you want for the rate limit.

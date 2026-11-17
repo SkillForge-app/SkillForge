@@ -17,6 +17,7 @@ from urllib.parse import urljoin, urlsplit
 
 import httpx
 
+from ..urls import host_key
 from .ratelimit import HostRateLimiter
 from .robots import RobotsPolicy, RobotsResponse
 
@@ -113,7 +114,7 @@ class HttpFetcher:
         followed: list[str] = []
         seen = {current}
         while True:
-            self._limiter.wait(_host_key(current))
+            self._limiter.wait(host_key(current))
             try:
                 response = self._client.get(current, headers={"Accept": "text/plain"})
             except httpx.HTTPError as exc:
@@ -124,6 +125,10 @@ class HttpFetcher:
             location = response.headers.get("location")
             target = urljoin(current, location) if location else None
             parts = urlsplit(target) if target else None
+            try:
+                host_key(target) if target else None
+            except ValueError:                           # not http(s), no host, or a bad port
+                parts = None
             if not parts or parts.scheme not in ("http", "https") or not parts.hostname:
                 logger.warning("robots.txt of %s: redirect without a usable Location from %s", origin, current)
                 return RobotsResponse(None, redirects=tuple(followed))
@@ -134,7 +139,7 @@ class HttpFetcher:
                 why = "a redirect loop" if target in seen else f"more than {ROBOTS_MAX_REDIRECTS} redirects"
                 logger.warning("robots.txt of %s: %s, treated as unavailable", origin, why)
                 return RobotsResponse(None, redirects=tuple(followed))
-            if parts.netloc.lower() != urlsplit(current).netloc.lower():
+            if host_key(target) != host_key(current):
                 logger.warning("robots.txt of %s redirects to another host: %s", origin, target)
             followed.append(target)
             seen.add(target)
@@ -148,7 +153,9 @@ class HttpFetcher:
         current = url
         for hop in range(self.config.max_redirects + 1):
             parts = urlsplit(current)
-            if parts.scheme not in ("http", "https") or not parts.hostname:
+            try:
+                host_key(current)
+            except ValueError:
                 result.error = f"not an http(s) URL: {current}"
                 return result
             if parts.hostname.lower() in self.config.denylist:
@@ -184,7 +191,7 @@ class HttpFetcher:
             headers["If-None-Match"] = validators.etag
         if validators and validators.last_modified:
             headers["If-Modified-Since"] = validators.last_modified
-        host = _host_key(url)
+        host = host_key(url)
         delay = self._robots.crawl_delay(url)
         for attempt in range(self.config.retries + 1):
             self._limiter.wait(host, delay)
@@ -246,11 +253,6 @@ class HttpFetcher:
             return result
         finally:
             response.close()
-
-
-def _host_key(url: str) -> str:
-    parts = urlsplit(url)
-    return parts.netloc.lower()
 
 
 def _retry_after_seconds(value: str | None, now: datetime) -> float | None:
