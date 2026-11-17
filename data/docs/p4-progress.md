@@ -157,3 +157,23 @@ They are **deselected**, not skipped, in the default run: `pytest -q -rs` shows 
 - **You:** open the PR and decide whether to push the local commits into it; run the `ai_real` tests once in an environment with `uv sync --extra ai` (they have never run); reset your local volume (`docker compose down -v`, `up -d`) to get the five-key `chunk_config` CHECK.
 - **Backend:** review the `chunk_config` CHECK change (five required keys) and the `chunk_provenance` columns; proposals de-04, de-05, de-09 still wait.
 - **DevOps:** a separate, optional CI job for `ai_real`; and do not add `data/uv.lock` without thinking about `--all-extras`.
+
+## Round of 17 November 2026 (proposals, audit, reviewer guide, P5 plan)
+
+Four tasks, one commit each (`21dbe82`, `9bb67c7`, `babd360`, `611d161`). Last result: `ruff check .` pass, `pytest -q -rs` **234 passed, 0 skipped, 7 deselected** (`ai_real`, not run).
+Pushed once at the end to `Data-Engineering`; no PR opened; nothing pushed to main.
+
+Decisions I took:
+- **de-05, `clean_object_key`:** in Case 1 today the function does not touch the key at all, so "fill NULL, never replace" is new behaviour, compatible with the code.
+  I added one guard (not filled when `clean_deleted_at` is set) and applied the same rule to Case 3. Tested on a throwaway database inside a transaction.
+  Orphans: `sweep_orphans()` in `storage/jobs.py` (daily, 24 h age rule). `schema-draft.sql` was **not** changed.
+- **de-04, validators:** the crawler already updated them only after a 200 (a 304 branch never wrote). Now a 200 without validators drops the old pair (before it kept them).
+  `ValidatorStore.set` stays as an alias of `replace`. 3 new tests. This is the only code change in the round besides the audit fix.
+- **de-09, hosts:** the crawler, cache and pipeline normalise hosts in four different ways (table in the proposal). Decision proposed: one helper built on `normalise_url`
+  (`host_of`, `origin_of`); **not implemented**, because the task said proposals only. Hash facts are "from the code, waiting for AI to confirm"; expiry policy is an **assumption**.
+- **Audit (Task 2):** only `bench/generate.sql` failed the mandatory CHECK (confirmed by running it on a throwaway database: `chunks_chunk_config_check`); fixed with a placeholder
+  fingerprint, benchmark meaning unchanged (a 64-char key more per row). New `tests/test_chunk_config_writers.py` lists every file that inserts into `knowledge.chunks`.
+  Migration note written in `data-architecture.md` and both paths tried (delete first / `NOT VALID`, with the warning that a `NOT VALID` check still refuses `UPDATE` of old rows).
+- **P5 plan:** `docs/de-task-plan.pdf` could **not be read** (no PDF reader here; installing one was refused by the permission system and I did not work around it).
+  The plan uses the "Done when" lines of `CLAUDE.md`. Please compare with the PDF. I also found that **DE-10 is not started** and DE-16 needs it.
+- The commit message for Task 4 was not given; I used "DE-11: P5 plan for DE-11 to DE-16".
