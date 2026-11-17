@@ -197,3 +197,42 @@ Questions (the stored value and the helper differ):
 2. **IPv6:** `sources.host` is `::1`, the key is `[::1]`. A migration would be needed to align them; no test or data depends on it today.
 3. **Trailing dot and IDN:** neither the stored host nor the key joins `example.org.` with `example.org`, nor converts `bücher.example` to punycode. AI's `find_site_boilerplate` key (`HttpUrl.host`) does convert IDN. Do we want to join the trailing dot too (better for rate limits, but it departs from AI's `normalise_url`)?
 4. The crawler fetches the **original** URL and stores the canonical one; the key is computed from the original, so it has the same value as from the canonical URL only for the cases above. Confirm that is what you want for the rate limit.
+
+## ملاحظات الجولة (notes of the round: plan, capacity, corpus, monitoring, retention, restore drill, proposals)
+
+Seven tasks, one commit each (`f7b3fc3`, `80077b8`, `97394eb`, `02cc0e4`, `14b9af2`, `31df035`, `a0aea25`). Nothing pushed, no PR (the commits stay local until the current PR is merged).
+Last result: `ruff check .` pass; `pytest -q -rs` **315 passed, 0 skipped, 7 deselected** (`ai_real`, not run). No network, no new container; `knowledge_views.sql`, `schema-draft.sql`, `.github/`, `devops/`, `compose.yaml` and `ai/` untouched.
+
+What was done
+- **Plan (`p5-plan.md`):** rewritten from the task plan text you pasted: DE-08 to DE-16 each with real state, what is missing against "Done when", the dependency (OPS-xx, AI-xx, BE-xx) and what to build now; section "Differences from the PDF" (10 points). Corrected: P5 is DE-16 only, and DE-16 needs AI-23 (not DE-10).
+- **Capacity (`capacity-plan.md`, `bench/capacity_model.py`):** formulas from the measured benchmark numbers (3.3 KB per chunk in tables, 1.95 KB per vector in HNSW), three scenarios (5k / 50k / 500k pages), inputs needed from AI and DevOps. Every guessed input is marked "assumption".
+- **Corpus (`skillforge_data/corpus/`):** `GitHubClient` interface and `CorpusCollector`; 18 tests with a fake client. Refused or unknown licences are counted and never downloaded or stored; a file stored earlier whose repository licence becomes refused is **withdrawn** (deleted).
+- **Monitoring (`skillforge_data/monitoring/`):** seven checks (failed run, empty run, stuck run, no success in N days, volume drop, unprocessed documents, no new data), `Alert`, `Notifier` interface, `LogNotifier`, structured JSON log events; 23 tests on a real database.
+- **Retention (`storage/retention.py`, `storage/daily.py`):** superseded documents after 90 days and `crawl_runs` after 12 months, database first then objects, idempotent, batched; `run_daily_jobs` = raw job, retention, orphan sweep. 13 tests.
+- **Restore drill (`scripts/restore_drill.py`, `docs/backup-restore.md`):** ran twice for real (2,000 and 20,000 chunks) inside the existing container: PASSED, throwaway databases dropped.
+- **Proposals:** `de-08-corpus.md`, `de-10-datasets.md`, `de-12-analytics-events.md`, `de-13-user-data.md` (questions only). The SQL of the first three was run on throwaway databases; none is applied.
+
+What I could not do, and why
+- **Read `de-task-plan.pdf`:** no PDF tool; you pasted the text, which I used. 
+- **A real GitHub client:** needs network, a token (a secret) and OPS-09. The interface and the policy are ready.
+- **A real notifier and metrics/traces:** need OPS-10. Only the interface and a log notifier exist.
+- **A scheduler, a production backup, a restore at production size, the 1M benchmark:** need DevOps (OPS-12, a server with RAM). The drill proves the procedure, not the timing at scale.
+- **User-data deletion (DE-13):** needs BE-04 and Backend's answers; I wrote questions instead of guessing.
+- **A type checker, GitHub issues, staging:** not mine to decide or not possible (listed in the plan).
+- The AI-04 data format: not on main; the DE-10 proposal is a guess of the shape and says so.
+
+Decisions I took (to confirm)
+- Retention counts the age of a superseded document from `fetched_at`, because there is no "superseded at" column; "12 months" is 365 days from `started_at`; a `running` run is never deleted.
+- An **empty** `succeeded` run does not count as a success for `no_recent_success` (otherwise a crawler that finds nothing looks healthy).
+- Corpus: the licence is the **repository's** (GitHub reports one SPDX id per repository), a file over 1 MB is skipped, and the raw bytes go to the raw bucket only for allowed files.
+- The restore drill does not compare the HNSW top-10 sets of source and restore: two builds of an HNSW graph differ (overlap was 4 of 10 at 20,000 random vectors). It compares exact results, the nearest chunk, and recall.
+- The audit test of the earlier round (`test_chunk_config_writers.py`) caught my new `test_retention.py` as a writer of `knowledge.chunks`; I listed it (its jsonb has the five keys).
+- Correction: earlier notes named the daily storage job `run_daily()`; the real name is `run_daily_storage_job()` (and the new `run_daily_jobs()`). Fixed in the de-05 proposal and the plan.
+
+Open questions (also in the proposals)
+1. DE-13: what user data can reach us, and the agreed deletion time (nowhere written; planning assumption 30 days).
+2. A "superseded at" column on `documents` (makes retention exact), and a `crawl_runs.pages_refused` counter for the corpus (`de-08-corpus.md`).
+3. Corpus: should a repository that turns restrictive be **withdrawn (deleted)** or kept and hidden?
+4. AI: where is AI-04, how are runs written (`evaluation.runs`), what do runs record to be repeatable?
+5. FE and BE: the events and the weekly-review questions of DE-12; who owns `actor_key`.
+6. DevOps: backup method and RPO/RTO, production object storage, and who runs the monthly partition and the daily jobs (a scheduler).
