@@ -31,7 +31,14 @@ logger = logging.getLogger("skillforge_data.crawler")
 
 class ValidatorStore:
     """ETag and Last-Modified of the last fetch of a URL. In memory until the proposed columns exist
-    (docs/proposals/de-04-conditional-get.md)."""
+    (docs/proposals/de-04-conditional-get.md).
+
+    Two rules (also in the proposal, so a database version must keep them):
+    1. They are updated only after a successful 200 (`replace`). A 304, a failure or a block never touches them, even if the 304
+       carries headers or carries none.
+    2. A 200 replaces both values as a pair: a page that no longer sends an ETag must not keep an old one, because the next request
+       would send a validator that belongs to a different version.
+    """
 
     def __init__(self) -> None:
         self._items: dict[str, Validators] = {}
@@ -39,9 +46,14 @@ class ValidatorStore:
     def get(self, url: str) -> Validators | None:
         return self._items.get(url)
 
-    def set(self, url: str, validators: Validators) -> None:
+    def replace(self, url: str, validators: Validators) -> None:
+        """Call this only for a successful 200. No validators in the response means the old ones are dropped."""
         if validators.etag or validators.last_modified:
             self._items[url] = validators
+        else:
+            self._items.pop(url, None)
+
+    set = replace          # the name the earlier code and tests used
 
 
 @dataclass
@@ -167,7 +179,7 @@ class Crawler:
         elif result.outcome == "ok":
             summary.fetched += 1
             bump_crawl_run(self._conn, summary.run_id, "pages_fetched")
-            self._validators.set(canonical, result.validators)
+            self._validators.replace(canonical, result.validators)   # only here: a 200 that was fetched
             # What the source row says now (a known licence is never replaced by 'unknown'): the document gets the same.
             stored_license, stored_source = self._conn.execute(
                 "SELECT license, license_source FROM knowledge.sources WHERE id = %s", (source_id,)).fetchone()

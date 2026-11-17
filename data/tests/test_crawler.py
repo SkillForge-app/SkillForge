@@ -83,6 +83,16 @@ def _routes(site: Site):
             return _send(h, 304, headers={"ETag": '"v1"'})
         _send(h, 200, LICENSED_PAGE, {"ETag": '"v1"', "Last-Modified": "Wed, 04 Nov 2026 10:00:00 GMT"})
 
+    def bare_304(h):                                   # 200 with validators, then a 304 that carries NO headers
+        if h.headers.get("If-None-Match") == '"v1"':
+            return _send(h, 304)
+        _send(h, 200, LICENSED_PAGE, {"ETag": '"v1"', "Last-Modified": "Wed, 04 Nov 2026 10:00:00 GMT"})
+
+    def lost_validators(h):                            # 200 with validators, then a 200 without any
+        if site.count("lost") == 1:
+            return _send(h, 200, LICENSED_PAGE, {"ETag": '"v1"', "Last-Modified": "Wed, 04 Nov 2026 10:00:00 GMT"})
+        _send(h, 200, LICENSED_PAGE + b"<!-- changed -->")
+
     def big_declared(h):
         _send(h, 200, b"x" * 3000)                      # Content-Length 3000
 
@@ -115,6 +125,8 @@ def _routes(site: Site):
         "/redirect": lambda h: _send(h, 302, headers={"Location": "/ok"}),
         "/redirect-private": lambda h: _send(h, 302, headers={"Location": "/private"}),
         "/loop": lambda h: _send(h, 302, headers={"Location": "/loop"}),
+        "/bare-304": bare_304,
+        "/lost-validators": lost_validators,
         "/big-declared": big_declared,
         "/big-stream": big_stream,
         "/flaky": flaky,
@@ -537,6 +549,40 @@ def test_a_second_crawl_with_the_same_etag_counts_as_unchanged(db, crawl):
     second = make(validators).run([f"{site.base}/ok"], domains=["technology/ai"])
     assert first.fetched == 1 and second.fetched == 0 and second.unchanged == 1 and second.status == "succeeded"
     assert validators.get(f"{site.base}/ok") == Validators('"v1"', "Wed, 04 Nov 2026 10:00:00 GMT")
+
+
+def test_a_304_without_headers_does_not_erase_the_stored_validators(db, crawl):
+    make, site = crawl
+    validators = ValidatorStore()
+    url = f"{site.base}/bare-304"
+    make(validators).run([url], domains=["technology/ai"])
+    stored = validators.get(url)
+    assert stored == Validators('"v1"', "Wed, 04 Nov 2026 10:00:00 GMT")
+    second = make(validators).run([url], domains=["technology/ai"])
+    third = make(validators).run([url], domains=["technology/ai"])
+    assert (second.unchanged, third.unchanged) == (1, 1), "the validators survived the bare 304, so the third request was conditional too"
+    assert validators.get(url) == stored
+
+
+def test_validators_change_only_after_a_successful_200(db, crawl):
+    make, site = crawl
+    validators = ValidatorStore()
+    url = f"{site.base}/lost-validators"
+    make(validators).run([url], domains=["technology/ai"])
+    assert validators.get(url) is not None
+    make(validators).run([url], domains=["technology/ai"])          # a 200 that carries none: the old pair must go
+    assert validators.get(url) is None
+
+
+def test_validator_store_ignores_everything_that_is_not_a_200():
+    store = ValidatorStore()
+    store.replace("u", Validators('"a"', "d1"))
+    store.replace("u", Validators('"b"', None))                      # a later 200 replaces the pair as a whole
+    assert store.get("u") == Validators('"b"', None)
+    store.replace("u", Validators(None, None))
+    assert store.get("u") is None
+    store.replace("other", Validators(None, None))                   # nothing to remember, nothing stored
+    assert store.get("other") is None
 
 
 def test_a_run_where_everything_fails_has_status_failed(db, crawl):
