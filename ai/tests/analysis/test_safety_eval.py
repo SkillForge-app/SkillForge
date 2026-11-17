@@ -190,3 +190,28 @@ def test_cli_run_puts_the_budget_cap_around_every_call(
     args = ["run", "--set", "dev", "--limit", "3", "--budget-usd", "0.3"]
     assert main([*args, "--runs", str(tmp_path / "runs")]) == 0
     assert seen == [0.3, 0.3, 0.3]  # each screening call runs inside the capped skill run
+
+
+def test_cli_run_can_finish_a_run_with_only_the_given_ids(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    install_empty_copies(tmp_path, monkeypatch)
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    screened: list[str] = []
+
+    async def screen_request(text: str, answers: object = ()) -> SafetyDecision:
+        screened.append(text)
+        return SafetyDecision(verdict="allow", rationale="placeholder")
+
+    monkeypatch.setattr(evaluate, "screen_request", screen_request)
+    runs = str(tmp_path / "runs")
+    assert main(["run", "--set", "dev", "--ids", "sd-02, sd-07", "--runs", runs]) == 0
+    assert len(screened) == 2
+    (rows,) = (tmp_path / "runs").glob("*/predictions.jsonl")
+    assert [json.loads(r)["id"] for r in rows.read_text(encoding="utf-8").splitlines()] == [
+        "sd-02",
+        "sd-07",
+    ]
+    assert list((tmp_path / "runs").glob("*/safety-dev-ids-*.md"))
+    assert main(["run", "--set", "dev", "--ids", "sd-02,nope", "--runs", runs]) == 2
+    assert "unknown ids in --set dev: nope" in capsys.readouterr().out

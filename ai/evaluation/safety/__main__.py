@@ -75,12 +75,21 @@ def run_command(args: argparse.Namespace) -> int:
         return refused
     names: list[SetName] = ["redteam", "benign", "normal"] if args.set == "all" else [args.set]
     try:  # child_safety rows are read from the local dataset download
-        sets: dict[str, Sequence[SafetyEvalItem]] = {
-            name: load_set(name)[: args.limit] if args.limit else load_set(name) for name in names
-        }
+        sets: dict[str, Sequence[SafetyEvalItem]] = {name: load_set(name) for name in names}
     except VerbatimTextMissing as exc:
         print(f"cannot run: {exc}")
         return 1
+    label = args.set
+    if args.ids:  # e.g. finishing a run whose items failed with provider errors
+        wanted = {i.strip() for i in args.ids.split(",") if i.strip()}
+        sets = {name: [i for i in items if i.id in wanted] for name, items in sets.items()}
+        unknown = wanted - {i.id for items in sets.values() for i in items}
+        if unknown:
+            print(f"unknown ids in --set {args.set}: {', '.join(sorted(unknown))}")
+            return 2
+        label = f"{args.set}-ids"
+    if args.limit:
+        sets = {name: items[: args.limit] for name, items in sets.items()}
     calls = sum(len(items) for items in sets.values())
     if args.live:
         cost = estimate_cost(calls)
@@ -91,7 +100,7 @@ def run_command(args: argparse.Namespace) -> int:
     reports_dir, run_dir = output_dirs(
         args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
     )
-    files = write_report(report, outcomes, label=args.set, reports_dir=reports_dir, run_dir=run_dir)
+    files = write_report(report, outcomes, label=label, reports_dir=reports_dir, run_dir=run_dir)
     print(render_markdown(report))
     print(f"report written to {files.md} and {files.json.name}; predictions in {files.run}")
     return 0 if report.passed in (None, True) else 1
@@ -260,6 +269,7 @@ def main(argv: list[str] | None = None) -> int:
     run = commands.add_parser("run", help="evaluate the safety screen")
     run.add_argument("--set", choices=["redteam", "benign", "dev", "normal", "all"], default="all")
     run.add_argument("--limit", type=int, default=0, help="only the first N of each set")
+    run.add_argument("--ids", default="", help="only these item ids, comma-separated")
     run.add_argument("--concurrency", type=int, default=4)
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
     run.add_argument(
