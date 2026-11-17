@@ -25,11 +25,11 @@ def add_doc(db, source, n, *, current, age_days, raw_key=None, clean_key=None, r
         (source, NOW - age_days * DAY, f"{n:064x}", current, raw_key, clean_key, run)).fetchone()[0]
 
 
-def add_chunk(db, doc, n):
+def add_chunk(db, doc, n, index=0):
     chunk = db.execute(
         "INSERT INTO knowledge.chunks (chunk_id, document_id, chunk_index, text, content_hash, chunk_config, chunk_config_hash) "
-        "VALUES (%s, %s, 0, 't', %s, %s::jsonb, 'cfg') RETURNING id",
-        (f"x-{n}", doc, f"{n:064x}",
+        "VALUES (%s, %s, %s, 't', %s, %s::jsonb, 'cfg') RETURNING id",
+        (f"x-{n}", doc, index, f"{n:064x}",
          '{"size":1,"overlap":0,"splitter":"sentence","pipeline_version":"p","extract_fingerprint":"' + "a" * 64 + '"}')).fetchone()[0]
     db.execute("INSERT INTO knowledge.embeddings (chunk_id, embedding, embedding_model, embedding_version, domains) "
                "VALUES (%s, l2_normalize(array_fill(0.1::real, ARRAY[384])::vector), 'local/BAAI/bge-small-en-v1.5', 'v1', ARRAY['technology/ai'])", (chunk,))
@@ -171,3 +171,118 @@ def test_the_daily_job_runs_the_raw_job_then_retention_then_the_sweep(db):
     assert report.storage.raw_expired == 1 and report.retention.documents_deleted == 1 and report.storage.orphans_deleted == 1
     assert report.errors == [] and count(db, "documents") == 0
     assert list(storage.list(BUCKET_RAW)) == [] and list(storage.list(BUCKET_CLEAN)) == []
+
+
+# ------------------------------------------------------------------------ review checks (17 Nov 2026)
+def test_a_old_current_document_and_its_chunks_survive_even_next_to_old_superseded_ones(db):
+    """(a) A current document older than 90 days is never deleted, with its chunks and embeddings; its superseded sibling goes."""
+    source = add_source(db, 1)
+    current = add_doc(db, source, 1, current=True, age_days=200)
+    superseded = add_doc(db, source, 2, current=False, age_days=300)
+    add_chunk(db, current, 1)
+    add_chunk(db, superseded, 2)
+    report = run_daily_retention_job(db, None, now=NOW)
+    assert report.documents_deleted == 1
+    assert [r[0] for r in db.execute("SELECT id FROM knowledge.documents").fetchall()] == [current]
+    assert (count(db, "chunks"), count(db, "embeddings")) == (1, 1), "the current document keeps its chunks and embeddings"
+
+
+def test_old_superseded_document_goes_and_its_chunks_and_embeddings_go_by_cascade(db):
+    """(b) Before: 3 chunks and 3 embeddings exist; after: none, and the cascade did it (the job never touches those tables)."""
+    source = add_source(db, 1)
+    old = add_doc(db, source, 1, current=False, age_days=91)
+    for n in range(3):
+        add_chunk(db, old, n, index=n)
+    assert (count(db, "chunks"), count(db, "embeddings")) == (3, 3)
+    delete_superseded_documents(db, None, now=NOW)
+    assert (count(db, "documents"), count(db, "chunks"), count(db, "embeddings")) == (0, 0, 0)
+
+
+def test_a_superseded_document_younger_than_90_days_stays_with_its_chunks(db):
+    """(c)"""
+    source = add_source(db, 1)
+    young = add_doc(db, source, 1, current=False, age_days=30)
+    add_chunk(db, young, 1)
+    assert delete_superseded_documents(db, None, now=NOW).documents_deleted == 0
+    assert (count(db, "documents"), count(db, "chunks"), count(db, "embeddings")) == (1, 1, 1)
+
+
+def test_deleting_an_old_crawl_run_does_not_delete_or_break_its_documents(db):
+    """(d) The FK is ON DELETE SET NULL: the documents stay, with their chunks and embeddings, and only lose the pointer."""
+    run = add_run(db, age_days=400)
+    source = add_source(db, 1)
+    doc = add_doc(db, source, 1, current=True, age_days=1, run=run)
+    superseded = add_doc(db, source, 2, current=False, age_days=5, run=run)
+    add_chunk(db, doc, 1)
+    report = delete_old_crawl_runs(db, now=NOW)
+    assert report.crawl_runs_deleted == 1, "no error: the foreign key does not block the delete"
+    assert count(db, "crawl_runs") == 0 and count(db, "documents") == 2 and (count(db, "chunks"), count(db, "embeddings")) == (1, 1)
+    assert db.execute("SELECT count(*) FROM knowledge.documents WHERE crawl_run_id IS NOT NULL").fetchone()[0] == 0
+    assert db.execute("SELECT is_current FROM knowledge.documents WHERE id = %s", (superseded,)).fetchone()[0] is False
+
+
+def test_running_the_whole_job_twice_changes_nothing_the_second_time(db):
+    """(e) The state after the first run is identical to the state after the second, table by table."""
+    source = add_source(db, 1)
+    add_doc(db, source, 1, current=True, age_days=500)
+    old = add_doc(db, source, 2, current=False, age_days=500)
+    add_doc(db, source, 3, current=False, age_days=10)
+    add_chunk(db, old, 1)
+    add_run(db, age_days=400)
+    add_run(db, age_days=10)
+
+    def snapshot():
+        return {t: sorted(map(str, db.execute(f"SELECT id FROM knowledge.{t}").fetchall()))
+                for t in ("documents", "chunks", "embeddings", "crawl_runs")}
+
+    first = run_daily_retention_job(db, None, now=NOW)
+    after_first = snapshot()
+    second = run_daily_retention_job(db, None, now=NOW)
+    assert (first.documents_deleted, first.crawl_runs_deleted) == (1, 1)
+    assert (second.documents_deleted, second.crawl_runs_deleted, second.objects_deleted) == (0, 0, 0)
+    assert snapshot() == after_first
+
+
+def test_a_document_that_becomes_current_while_the_delete_waits_is_not_deleted(scratch_db_url):
+    """The race of the A -> B -> A case, with two real connections. The DELETE selects a superseded document, then blocks on the row
+    lock of another session that is making the same document current; when that session commits, the outer WHERE is checked again on the
+    new row version and the document is skipped. (Committed rows, removed at the end.)"""
+    import threading
+    import time
+
+    import psycopg
+
+    setup = psycopg.connect(scratch_db_url, autocommit=True)
+    holder = psycopg.connect(scratch_db_url)
+    worker = psycopg.connect(scratch_db_url)
+    source = doc = None
+    try:
+        source = add_source(setup, 991)
+        doc = add_doc(setup, source, 991, current=False, age_days=200)
+        holder.execute("UPDATE knowledge.documents SET is_current = true WHERE id = %s", (doc,))     # row lock, not committed
+        result = {}
+
+        def delete():
+            result["report"] = delete_superseded_documents(worker, None, now=NOW)
+
+        thread = threading.Thread(target=delete)
+        thread.start()
+        for _ in range(100):                                                    # wait until the DELETE is blocked on the lock
+            waiting = setup.execute("SELECT count(*) FROM pg_stat_activity WHERE datname = current_database() "
+                                    "AND wait_event_type = 'Lock'").fetchone()[0]
+            if waiting:
+                break
+            time.sleep(0.05)
+        assert waiting, "the DELETE should be waiting for the lock"
+        holder.commit()
+        thread.join(timeout=10)
+        assert not thread.is_alive()
+        assert result["report"].documents_deleted == 0
+        assert setup.execute("SELECT is_current FROM knowledge.documents WHERE id = %s", (doc,)).fetchone() == (True,)
+    finally:
+        for conn in (holder, worker):
+            conn.rollback()
+            conn.close()
+        if source is not None:
+            setup.execute("DELETE FROM knowledge.sources WHERE id = %s", (source,))               # cascades to the document
+        setup.close()

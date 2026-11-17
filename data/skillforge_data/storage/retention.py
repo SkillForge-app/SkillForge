@@ -49,9 +49,12 @@ def delete_superseded_documents(
     while True:
         with conn.transaction():                          # 1. the database first
             rows = conn.execute(
-                "DELETE FROM knowledge.documents WHERE id IN ("
+                # The conditions are repeated in the outer WHERE on purpose: if a document becomes current between the inner SELECT
+                # and the DELETE (the A -> B -> A case of record_document_version), Postgres re-checks the outer WHERE on the new
+                # row version and skips it. Without the repeat it would be deleted while current.
+                "DELETE FROM knowledge.documents WHERE NOT is_current AND fetched_at < %s AND id IN ("
                 "  SELECT id FROM knowledge.documents WHERE NOT is_current AND fetched_at < %s ORDER BY fetched_at LIMIT %s) "
-                "RETURNING raw_object_key, clean_object_key", (cutoff, batch)).fetchall()
+                "RETURNING raw_object_key, clean_object_key", (cutoff, cutoff, batch)).fetchall()
         if not rows:
             return report
         report.documents_deleted += len(rows)

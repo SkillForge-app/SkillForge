@@ -236,3 +236,26 @@ Open questions (also in the proposals)
 4. AI: where is AI-04, how are runs written (`evaluation.runs`), what do runs record to be repeatable?
 5. FE and BE: the events and the weekly-review questions of DE-12; who owns `actor_key`.
 6. DevOps: backup method and RPO/RTO, production object storage, and who runs the monthly partition and the daily jobs (a scheduler).
+
+## Review of the retention job (17 November 2026, before the PR is reviewed)
+
+Checked the SQL of `storage/retention.py`, wrote the explicit tests, and ran two mutations. Result: `ruff check .` pass; `pytest -q -rs` **321 passed, 0 skipped, 7 deselected**.
+
+**Problem found and fixed (race, not a logic error).** The old statement was
+`DELETE FROM knowledge.documents WHERE id IN (SELECT id ... WHERE NOT is_current AND fetched_at < cutoff LIMIT n)`: the conditions were only in the inner SELECT.
+If another session made the same document current between the SELECT and the DELETE (the A -> B -> A case of `record_document_version()`), the DELETE still removed it, because
+`id IN (...)` is not evaluated again for the new row version. A current document could be deleted. The conditions are now repeated in the outer WHERE, which Postgres does re-check
+on the new row version. A test with two real connections reproduces it (the first connection holds a row lock while making the document current; the DELETE waits, then skips it).
+It is very unlikely (it needs a superseded document older than 90 days to become current at that very moment), but the consequence was deleting live data, so it is fixed.
+No problem found in the crawl-run delete: one statement, and `documents.crawl_run_id` is `ON DELETE SET NULL`.
+
+**The exact conditions:**
+- documents: `DELETE FROM knowledge.documents WHERE NOT is_current AND fetched_at < :now - 90 days AND id IN (SELECT id FROM knowledge.documents WHERE NOT is_current AND fetched_at < :now - 90 days ORDER BY fetched_at LIMIT 500) RETURNING raw_object_key, clean_object_key` (looped until it returns nothing; one transaction per batch).
+- crawl runs: `DELETE FROM knowledge.crawl_runs WHERE status <> 'running' AND started_at < :now - 365 days`.
+
+**What a deleted crawl run does to documents:** nothing is deleted and nothing breaks; the foreign key sets `documents.crawl_run_id` to NULL (tested, including the chunks and embeddings of those documents, which stay).
+Side effect to know: the DE-11 injection-rejection query groups documents by `crawl_run_id`, so after 12 months the old documents no longer belong to any run in that report.
+
+**Mutation checks (done, then reverted):**
+1. Removing `NOT is_current` from both conditions made 4 tests fail (the three "current document is never deleted" tests and the two-connection race test).
+2. Removing only the outer guard (the old form) made the two-connection test fail and nothing else, so that test is the one that protects the fix.
