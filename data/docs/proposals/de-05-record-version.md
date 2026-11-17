@@ -37,7 +37,7 @@ source at the same time is **not tested**; DE-14 should avoid it by queueing per
 ## Orphans: who removes what a failed run leaves behind
 
 A crash between "upload" and "commit" leaves an object that no row points to. That is covered by the **daily orphan sweep**:
-`sweep_orphans()` in [skillforge_data/storage/jobs.py](../../skillforge_data/storage/jobs.py), run by `run_daily()` in the same file
+`sweep_orphans()` in [skillforge_data/storage/jobs.py](../../skillforge_data/storage/jobs.py), run by `run_daily_storage_job()` in the same file and by `run_daily_jobs()` in `storage/daily.py`
 (scheduling it is DE-14). It deletes objects older than 24 hours (`ORPHAN_AGE`) that no `documents` row references; clean text of a
 live document is kept. The age rule matters: a young object may belong to a transaction that is still running. Tested in
 `tests/test_storage.py` (`test_orphans_older_than_24_hours_are_swept_and_referenced_objects_are_not`). So, with the proposal applied,

@@ -15,6 +15,7 @@ KNOWN_WRITERS = {
     "skillforge_data/pipeline/process.py": "PipelineConfig.chunk_config() (the pipeline)",
     "bench/generate.sql": "a literal with extract_fingerprint (the DE-02 benchmark data)",
     "tests/test_document_versions.py": "CHUNK_CONFIG / explicit jsonb in the tests",
+    "tests/test_retention.py": "an explicit five-key jsonb in the test helper",
 }
 
 

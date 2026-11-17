@@ -663,11 +663,11 @@ store sets every transaction READ ONLY; `SET LOCAL` is allowed there.
 | Raw HTML | object storage | 30 days after the first upload (a re-fetch of unchanged content does not extend it; see [object-storage.md](object-storage.md)) | Daily DE-05 job: set `raw_deleted_at`, clear `raw_object_key`, then delete the object; keep the document row |
 | Clean text | object storage | Until the page is crawled again and a newer version is stored (not a fixed number of days). AI asked for it to outlive the raw HTML so they can re-chunk or re-embed without a re-crawl; this satisfies it | Delete the old version's object, set `clean_deleted_at` |
 | Chunks and embeddings of a superseded version | `chunks`, `embeddings` | Until newer clean text replaces it (agreed in review). **Backend's condition:** never before the new version has been processed and stored successfully, in the same transaction | Delete as soon as the new version's chunks and embeddings are stored; see the DE-05 TODO below |
-| Superseded documents (`is_current = false`) | `documents` | 90 days (AI agreed) | Delete row (its chunks and embeddings are already gone) |
+| Superseded documents (`is_current = false`) | `documents` | 90 days (AI agreed) | Delete row (its chunks and embeddings are already gone). **Enforced** by `storage/retention.py` since 17 Nov 2026; age counted from `fetched_at` (no "superseded at" column) |
 | Chunks and embeddings of a current document, active config | `chunks`, `embeddings` | While the document exists | Cascade with the document |
 | Chunks of an inactive chunk config, embeddings of an inactive version | `chunks`, `embeddings` | 30 days after `active_config` switched away from them | Delete |
 | Sources never fetched, or not fetched for 12 months | `sources` | 12 months | Delete (cascades to `source_domains`, `documents`) |
-| `crawl_runs` | `crawl_runs` | 12 months (AI agreed) | Delete; `documents.crawl_run_id` becomes NULL |
+| `crawl_runs` | `crawl_runs` | 12 months (AI agreed) | Delete; `documents.crawl_run_id` becomes NULL. **Enforced** by `storage/retention.py` (365 days from `started_at`; a running run is kept) |
 | Crawl and pipeline logs | logs | 90 days | Delete |
 | Sources with license `unknown` | `sources`, `documents` | Allowed as background knowledge only | Never copied as examples (DE-08) |
 
