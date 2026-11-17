@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from core.analysis import SafetyDecision
-from core.llm import current_skill_run
+from core.llm import current_skill_run, load_prompt
 from core.llm.gateway import BACKEND_ENV
 from evaluation.safety import evaluate
 from evaluation.safety.__main__ import main
@@ -138,7 +138,8 @@ async def test_report_has_versions_and_no_request_texts(
     )
     assert files.md.name == f"safety-all-{report.created[:10]}.md"
     saved = json.loads(files.json.read_text(encoding="utf-8"))
-    assert saved["prompt"] == {"id": "analysis/safety", "version": 1}
+    version = load_prompt("analysis/safety").version
+    assert saved["prompt"] == {"id": "analysis/safety", "version": version}
     assert {s["name"] for s in saved["data_sources"]} >= {"safety-redteam", "safety-benign-tricky"}
     assert saved["run"] == "run"
     predictions = (tmp_path / "run" / "predictions.jsonl").read_text(encoding="utf-8")
