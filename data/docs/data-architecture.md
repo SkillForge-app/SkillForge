@@ -452,6 +452,26 @@ needs their review in the PR. Because `pipeline_version` is inside `chunk_config
 version, or any new chunk setting, is a new config and a new chunk set. Rows of the old and new config can exist
 side by side while a rebuild runs, so the same text would appear twice.
 
+**Migration note: a database that already has old chunks.** The local reset above is the simple way. On a database you cannot reset
+(staging, a shared dev database), the mandatory CHECK needs one of two paths. First replace the function:
+`CREATE OR REPLACE FUNCTION knowledge.is_valid_chunk_config(...)` with the five-key body from `db/schema-draft.sql` (the existing
+constraint calls the function by name, so it uses the new body at once; existing rows are not re-checked). Then either:
+
+- **A. Delete the old chunks first** (the cascade removes their embeddings; the pipeline rebuilds them on the next run, and chunks from before
+  4 November must be rebuilt anyway):
+  `DELETE FROM knowledge.chunks WHERE NOT knowledge.is_valid_chunk_config(chunk_config);`
+- **B. Keep them for now** with a constraint that skips the old rows:
+  `ALTER TABLE knowledge.chunks DROP CONSTRAINT chunks_chunk_config_check, ADD CONSTRAINT chunks_chunk_config_check CHECK (knowledge.is_valid_chunk_config(chunk_config)) NOT VALID;`
+  New rows must pass, old rows stay. **Warning:** a `NOT VALID` check is still enforced when an old row is *updated*, for any column, so
+  an `UPDATE` of an old chunk fails until it is rebuilt. When the old rows are gone or rebuilt:
+  `ALTER TABLE knowledge.chunks VALIDATE CONSTRAINT chunks_chunk_config_check;` (it fails while an invalid row remains).
+
+Both paths were tried on throwaway databases (17 Nov 2026): A deleted the old row and accepted a new one; B kept the old row, accepted a new
+one, refused an `UPDATE` of the old one, failed `VALIDATE` while it existed and passed after it was deleted. Writers of `knowledge.chunks`
+were audited the same day: the pipeline (`pipeline/process.py`, five keys from `PipelineConfig.chunk_config()`), the tests, and
+`bench/generate.sql`, which had four keys and failed on the CHECK; it now writes a fixed placeholder fingerprint
+(`sha256('bench')`) and `tests/test_chunk_config_writers.py` lists the known writers so a new one is noticed.
+
 `active_config` is a table that can hold only one row (`id boolean PRIMARY KEY CHECK (id)`), with
 `chunk_config_hash` and `embedding_version`. `retrievable_chunks` and `knowledge_chunks` join it, so only the live
 set is visible and no text repeats. To switch, the pipeline loads the new set, then updates this row in one

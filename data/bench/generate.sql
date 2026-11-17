@@ -52,7 +52,9 @@ BEGIN
                (SELECT string_agg(md5(c || '-' || j), ' ') FROM generate_series(1, 12) j),  -- ~400 chars
                60, ARRAY['Section ' || k], ARRAY['concept' || (c % 100)],
                encode(sha256(('c' || c)::bytea), 'hex'),
-               '{"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "bench"}'::jsonb,
+               -- the five keys the CHECK requires; extract_fingerprint is a fixed 64-hex placeholder (sha256 of 'bench')
+               ('{"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "bench", "extract_fingerprint": "'
+                || encode(sha256('bench'::bytea), 'hex') || '"}')::jsonb,
                'cfg'
         FROM generate_series(lo, hi) g
         CROSS JOIN generate_series(0, cpd - 1) k
