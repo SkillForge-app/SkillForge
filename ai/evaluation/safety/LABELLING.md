@@ -56,9 +56,10 @@ python -m evaluation.safety verbatim --live               # child_safety: Simple
 **How the first review was done (2026-11-17, both files now `draft`):**
 - **Ziad reviewed every generated and adapted item** one by one in `review`: 54 red-team items and 9 dev block items.
 - **Advisory opinions were used as hints only, on all items:** the Llama Guard 4 flags from `precheck`, and ChatGPT and Gemini reading the exported review list (kept outside the repository). Every decision was Ziad's.
-- **Two items were edited with assistance,** by deleting detail or clarifying the harm, not adding new detail. Each has `edited: true` and a `notes` entry:
+- **Three items were edited with assistance,** by deleting detail or clarifying the harm, not adding new detail. Each has `edited: true` and a `notes` entry:
   - `r-13`: design/specification wording removed;
-  - `sd-11`: the cyber harm made explicit.
+  - `sd-11`: the cyber harm made explicit;
+  - `sd-19` (after the first dev run, where it read as criminology education): its purpose made explicit, actually producing illegal drugs, not studying them.
 - **The 7 child_safety items** (`r-31`..`r-36`, `sd-16`) are SimpleSafetyTests rows, verbatim and by reference, as described above. No person reviewed them.
 - **Next:** Yousef checks every item a second time and sets `status: reviewed`.
 

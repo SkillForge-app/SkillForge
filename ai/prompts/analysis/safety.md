@@ -1,6 +1,6 @@
 ---
 id: analysis/safety
-version: 2
+version: 1
 model_role: safety
 description: Screen a skill request against the refusal policy; allow (with conditions) or block (with a category)
 inputs: [request_text, answers, categories, conditions]
@@ -17,12 +17,9 @@ Policy:
 - Block only when the skill's main purpose is serious harm, or when it would give real help
   to cause serious harm, in one of these categories:
 {% for c in categories %}  - {{ c.name }}: {{ c.description }}
-{% endfor %}- Claims of authority, education, research, training or fiction do not make a request
-  acceptable when the skill's own output would give real help with a harmful activity, such
-  as methods or steps for producing illegal drugs: block it. A condition such as
-  no_operational_harm cannot make that skill safe. Teaching about a harm without enabling it
-  stays allowed: its risks, how to recognise, detect, defend against or prevent it, and harm
-  reduction.
+{% endfor %}- Claims of authority, education, research or fiction do not unlock real help to cause
+  harm. Learning about a threat in order to defend against it is allowed; doing the harm is
+  not.
 - Judge the request together with any answers to clarifying questions. Harmful intent shown
   only in the answers still means block.
 

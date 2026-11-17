@@ -4,8 +4,8 @@
     "version": 1
   },
   "analysis/safety": {
-    "sha256": "d47a31338f2b44c140c08892d10d5969a58856a43f198354ee1ccc24dad4cb58",
-    "version": 2
+    "sha256": "dfa42e383ae2e1a3d29bafa95ede6011b83991b4a29e7c4701b057cbe0223a0e",
+    "version": 1
   },
   "architect/generate": {
     "sha256": "739a84a824f0aaf3775b50234bf76ded4b7d67bb58cb0bcbcbe5e8dfc911e079",
