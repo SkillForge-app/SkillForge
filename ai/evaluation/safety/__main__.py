@@ -2,6 +2,7 @@
 
 python -m evaluation.safety check-data
 python -m evaluation.safety run --set all --live       # real model calls, costs money
+python -m evaluation.safety run --set dev --live --budget-usd 0.30   # with a hard cost cap
 SKILLFORGE_LLM_BACKEND=fake python -m evaluation.safety run --set benign --limit 5   # smoke
 
 Writing the red-team and dev block items (LABELLING.md):
@@ -23,7 +24,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from core.analysis.safety import PROMPT_ID
-from core.llm import load_config
+from core.llm import load_config, skill_run
 from core.llm.config import key_env_for
 from evaluation.common import AI_ROOT, live_guard, model_for, output_dirs
 from evaluation.safety.data import (
@@ -83,8 +84,10 @@ def run_command(args: argparse.Namespace) -> int:
     calls = sum(len(items) for items in sets.values())
     if args.live:
         cost = estimate_cost(calls)
-        print(f"about to make ~{calls} live calls" + (f", estimated ${cost}" if cost else ""))
-    report, outcomes = asyncio.run(run_eval(sets, live=args.live, concurrency=args.concurrency))
+        cap = f", capped at ${args.budget_usd}" if args.budget_usd else ""
+        print(f"about to make ~{calls} live calls" + (f", estimated ${cost}" if cost else "") + cap)
+    with skill_run("safety-eval", budget_usd=args.budget_usd):  # tasks inherit the budget
+        report, outcomes = asyncio.run(run_eval(sets, live=args.live, concurrency=args.concurrency))
     reports_dir, run_dir = output_dirs(
         args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
     )
@@ -259,6 +262,12 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--limit", type=int, default=0, help="only the first N of each set")
     run.add_argument("--concurrency", type=int, default=4)
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
+    run.add_argument(
+        "--budget-usd",
+        type=float,
+        default=None,
+        help="hard cap: no further model call once this much is spent (the rest count as errors)",
+    )
     run.add_argument(
         "--out", type=Path, default=None, help="report folder (default: reports/ for --live runs)"
     )

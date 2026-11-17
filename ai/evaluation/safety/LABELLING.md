@@ -6,8 +6,8 @@ The policy itself is `ai/docs/ai/refusal-policy.md`. These rules say how to writ
 
 | File | Size | Expected verdict | Status |
 |---|---|---|---|
-| `redteam.yaml` | 60 | all `block` | **INCOMPLETE: to be generated or adapted, then reviewed item by item (below)** |
-| `safety-dev.yaml` | 20 = 10 block + 10 allow | mixed | The allow half is done. **The block half is incomplete** (same process as red-team) |
+| `redteam.yaml` | 60 | all `block` | **Draft** (2026-11-17): reviewed item by item by Ziad; needs a second check by Yousef |
+| `safety-dev.yaml` | 20 = 10 block + 10 allow | mixed | **Draft** (2026-11-17): allow half by the AI team; block half reviewed by Ziad, as red-team |
 | `benign-tricky.yaml` | 60 | all `allow` | Draft, needs a second reviewer |
 | "normal" (the analyzer's gate, dev and Arabic sets) | 130 | all `allow` | Reused, not stored here |
 
@@ -37,6 +37,8 @@ This applies to `redteam.yaml` and to the block half of `safety-dev.yaml`. **Rul
   - **No person reviews them** (`reviewer` is not required), and `check-data` rejects any other origin for child_safety.
 
 **Every other item is reviewed by a person** (Ziad or Yousef), one at a time: accepted, edited or rejected. `reviewer` and `reviewed_on` are recorded, and `edited: true` marks a changed text.
+- **Advisory opinions are hints only.** A reviewer may consult other models (the classifier pre-check below, or chat assistants reading an exported list), but every accept, edit and reject is the reviewer's own decision.
+- **An edit made with assistance** may only delete detail or clarify the harm, never add new detail. It is recorded in the item's `notes`.
 - **The `status` values:** `draft` once every slot is accepted; `reviewed` once the other person has checked every item too.
 
 **The workflow:**
@@ -50,6 +52,15 @@ python -m evaluation.safety verbatim --live               # child_safety: Simple
 - **Pre-filters:** `generate` drops a candidate that is too long, has more than two sentences, a link, code or quantities, the wrong language for its style, or that duplicates another item. Each drop has a reason.
 - **Review checks:** `review` won't accept a duplicate, or a candidate that breaks a rule, until it is edited.
 - **Flag-only pre-check:** reviewers may see flag-only results from an independent classifier, Llama Guard 4 (`meta-llama/llama-guard-4-12b`, Meta; run with `python -m evaluation.safety precheck --live`): "classifier says SAFE" or "classifier category differs". It never accepts or suggests anything: every decision and edit is made by the person recorded in `reviewer`. The classifier model is recorded in each pre-check result (`runs/redteam-precheck.jsonl`).
+
+**How the first review was done (2026-11-17, both files now `draft`):**
+- **Ziad reviewed every generated and adapted item** one by one in `review`: 54 red-team items and 9 dev block items.
+- **Advisory opinions were used as hints only, on all items:** the Llama Guard 4 flags from `precheck`, and ChatGPT and Gemini reading the exported review list (kept outside the repository). Every decision was Ziad's.
+- **Two items were edited with assistance,** by deleting detail or clarifying the harm, not adding new detail. Each has `edited: true` and a `notes` entry:
+  - `r-13`: design/specification wording removed;
+  - `sd-11`: the cyber harm made explicit.
+- **The 7 child_safety items** (`r-31`..`r-36`, `sd-16`) are SimpleSafetyTests rows, verbatim and by reference, as described above. No person reviewed them.
+- **Next:** Yousef checks every item a second time and sets `status: reviewed`.
 
 **Rules for every red-team item:**
 - **Intent level only.** Describe what the requested skill would do in one or two sentences, like a real user request. Never include working instructions, code, recipes, names of real people or real targets.

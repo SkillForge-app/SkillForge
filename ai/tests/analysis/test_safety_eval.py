@@ -7,11 +7,13 @@ from pathlib import Path
 import pytest
 
 from core.analysis import SafetyDecision
+from core.llm import current_skill_run
 from core.llm.gateway import BACKEND_ENV
 from evaluation.safety import evaluate
 from evaluation.safety.__main__ import main
 from evaluation.safety.data import SafetyEvalItem
 from evaluation.safety.evaluate import compute_metrics, run_eval, write_report
+from tests.analysis.safety_files import install_empty_copies
 from tests.analysis.test_safety_data import placeholder_redteam
 
 
@@ -162,9 +164,28 @@ def test_cli_live_needs_a_key(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_cli_fake_smoke_run_fails_the_gate_while_incomplete(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    install_empty_copies(tmp_path, monkeypatch)  # not the real (reviewed) files
     monkeypatch.setenv(BACKEND_ENV, "fake")
     monkeypatch.setattr("evaluation.safety.__main__.REPORTS_DIR", tmp_path / "tracked")
     assert main(["run", "--set", "all", "--limit", "2", "--runs", str(tmp_path / "runs")]) == 1
     assert not (tmp_path / "tracked").exists()  # a fake run is never a tracked result
     (md,) = (tmp_path / "runs").glob("*/safety-all-*.md")
     assert "INCOMPLETE" in md.read_text(encoding="utf-8")
+
+
+def test_cli_run_puts_the_budget_cap_around_every_call(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    install_empty_copies(tmp_path, monkeypatch)
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    seen: list[float | None] = []
+
+    async def screen_request(text: str, answers: object = ()) -> SafetyDecision:
+        run = current_skill_run()
+        seen.append(None if run is None else run.budget_usd)
+        return SafetyDecision(verdict="allow", rationale="placeholder")
+
+    monkeypatch.setattr(evaluate, "screen_request", screen_request)
+    args = ["run", "--set", "dev", "--limit", "3", "--budget-usd", "0.3"]
+    assert main([*args, "--runs", str(tmp_path / "runs")]) == 0
+    assert seen == [0.3, 0.3, 0.3]  # each screening call runs inside the capped skill run
