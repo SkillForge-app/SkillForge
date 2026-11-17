@@ -1,5 +1,54 @@
 # P4 progress: sync with main, the real AI adapter
 
+## من فين يبدأ المراجع (where a reviewer starts)
+
+The PR is big: about 40 files, 3,000 added lines, 24 commits (2 of 3 are tests and docs). Do not read it in commit order. This order
+goes from the contracts to the code that uses them. Estimated time for a careful read: 2 to 3 hours.
+
+### 1. Read these first (the contracts: they are the reason for a review by AI and Backend)
+
+1. `db/schema-draft.sql`: `is_valid_chunk_config()` now needs **exactly five keys** (`extract_fingerprint` is required, 64 hex).
+2. `db/knowledge_views.sql`: **four columns added at the end of `chunk_provenance`** (`crawl_run_id`, `page_title`, `pipeline_version`,
+   `chunk_config_hash`). Existing columns keep name and order. The other views are unchanged.
+3. `docs/data-architecture.md`, sections "`active_config`" and the migration note for old chunks.
+4. `docs/proposals/` (de-04, de-05, de-09): **proposals only, nothing is applied**. They need Backend's answer; no code depends on them.
+
+### 2. Then the code, in this order
+
+5. `skillforge_data/interfaces.py` (the small types between us and AI) and `pipeline/config.py` (`chunk_config` from `ExtractConfig`).
+6. `skillforge_data/adapters/ai.py`: the only place that imports AI's code, lazily. `pyproject.toml`: extra `ai`, marker `ai_real`, no `uv.lock`.
+7. `skillforge_data/pipeline/process.py` (small diff), `provenance.py` (reads the 4 new columns).
+8. `skillforge_data/crawler/fetcher.py`, `robots.py`, `run.py`: robots redirects, Retry-After, the licence, validators.
+9. `skillforge_data/licensing.py` (DE-08), `dedup.py` (DE-07), `cache.py` and `freshness.py` (DE-09). New files, no old behaviour.
+10. Tests last: read the test **names**, they are written as sentences.
+
+### 3. What changed in old behaviour (the part that can surprise a consumer)
+
+| What | Before | Now | Who can notice |
+|---|---|---|---|
+| `Retry-After` | seconds only; waited `min(value, max_wait)` and retried | seconds or HTTP-date; waits and retries if the value is within `max_wait`; a longer wait **fails the page** with a clear error (no retry) | crawl counters: more `pages_failed` on rate-limited sites |
+| `robots.txt` redirects | a 3xx answer was not followed | followed up to 5 hops (RFC 9309), also to another host (logged and recorded); a 6th hop, a loop or a bad target means "robots unavailable" (origin disallowed for 10 minutes) | which URLs are crawlable |
+| `chunk_config` | 4 keys, `extract_fingerprint` optional | **5 keys, all required** | Backend (shared schema) |
+| The CHECK on `chunks.chunk_config` | `is_valid_chunk_config` with 4 keys | 5 keys; an old chunk cannot be updated under the new check | **anyone with an existing database**: reset the volume or run the migration note |
+| `PipelineConfig(...)` | `chunk_size`, `chunk_overlap`, `extract_fingerprint` arguments | takes `extract_config` (AI's `ExtractConfig`); the three arguments are gone | callers of the pipeline |
+| `chunk_provenance` view | 10 columns | 14 (4 appended) | AI (the contract) |
+| `ValidatorStore` | `set()` ignored a 200 without validators | `replace()` (and `set` as an alias): drops the old pair then; a 304 never changes it | crawler only (in memory) |
+| `Crawler.run` | plain URLs | also `(url, label)` pairs and `CrawlTarget`; licence from the page wins over the list | crawler callers |
+| `datasketch` dependency | declared | removed (our own MinHash) | install size |
+| `bench/generate.sql` | 4-key chunk_config (would now fail the CHECK) | 5 keys with a placeholder fingerprint | whoever reruns the benchmark |
+
+### 4. What can be skipped
+
+- `docs/p2-plan.md`, `p2-progress.md`, `p3-progress.md` and the rest of this file: history and decisions; read them only for the "why".
+- `tests/test_ai_adapter_real.py`: 7 tests marked `ai_real`, **deselected by default and never run against the real AI code**. Skim only.
+- `docs/object-storage.md`, `storage/keys.py` (one line), `proposals/de-06-provenance.md` (status changed to "applied").
+- Test files that only follow a code change (`test_storage.py`, `test_pipeline.py`, `test_provenance.py`, `test_document_versions.py`).
+
+### 5. Checks to run
+
+`ruff check .` and `pytest -q -rs` in `data/` (needs the local Postgres on port 5433): 0 skipped is the rule. After a pull, reset the
+local volume (`docker compose down -v`, then `up -d`) to get the five-key CHECK.
+
 Status: 16 November 2026. Branch `Data-Engineering`. **Nothing was pushed in this round** (see Task 2). Nothing outside `data/` was touched;
 `.github/`, `devops/`, `compose.yaml`, `db/knowledge_views.sql` and `ai/` are unchanged by me (the merge brought `ai/` from main).
 
