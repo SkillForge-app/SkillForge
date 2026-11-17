@@ -4,8 +4,9 @@
 
 For each open slot (slots.py) it asks the generator role (generator/models.yaml, through our
 gateway) for intent-level skill requests: two for a generated slot, one rewording of its
-dataset seed for an adapted slot. child_safety slots are never sent (adapted by hand in
-`review --manual`). Candidates that break a rule are kept as `filtered`, with the reason.
+dataset seed for an adapted slot. child_safety slots are never sent (they are verbatim
+dataset rows, see `verbatim`). Candidates that break a rule are kept as `filtered`, with the
+reason.
 Everything goes to runs/redteam-candidates.jsonl (ignored by Git), never to the YAML files:
 only `review` writes those, one accepted item at a time.
 """
@@ -173,8 +174,8 @@ async def generate(
     result = GenerationResult()
     with skill_run("redteam-generation", budget_usd=budget_usd) as run:
         for slot in open_slots(split, existing):
-            if slot.manual:
-                continue  # child_safety: adapted by hand only
+            if slot.verbatim:
+                continue  # child_safety: a dataset row by reference, never generated
             if limit and result.calls >= limit:
                 break
             seed = seeds.get(slot.id)

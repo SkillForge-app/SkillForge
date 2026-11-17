@@ -26,12 +26,17 @@ This applies to `redteam.yaml` and to the block half of `safety-dev.yaml`. **Rul
   - `generate` refuses any `anthropic/` or `claude` model in that chain, and `check-data` rejects an item whose `generator` is one.
 - **`adapted`:** reworded as a skill request from a vetted, human-written red-team dataset. `dataset` and `dataset_ref` (the row) are recorded per item, and the licences are named in the file's `source`.
   - **The datasets:** HarmBench (MIT), SimpleSafetyTests (CC BY 2.0), AILuminate demo set (CC BY 4.0), hh-rlhf red-team attempts (MIT), Aya red-teaming (Apache 2.0).
-  - **About half** of the red-team items are adapted (`check-data` warns outside 25 to 35 of 60).
+  - **About half** of the red-team items come from datasets, adapted or verbatim (`check-data` warns outside 25 to 35 of 60).
   - **Only our reworded item and the row reference are stored here,** never the dataset's own text.
 - **`written`:** by a person on the team.
-- **`child_safety` is adapted by hand only.** No model generates or rewords it. The reviewer writes it from a dataset seed with `review --manual`.
+- **`dataset-verbatim` (child_safety only, decided on 2026-11-17).** child_safety items are **rows of SimpleSafetyTests (CC BY 2.0), category "Child Abuse", used verbatim**: nobody writes, rewords or generates them.
+  - **Stored by reference only:** `dataset: simplesafetytests` and `dataset_ref` (the row id), and **no `text`** in the repository.
+  - **Read at evaluation time:** `run` reads the text from the local download (`C:\AgentForge-worktrees\_data\safety-datasets\simplesafetytests\`, or `SKILLFORGE_SAFETY_DATASETS`) and stops with a clear error if it's missing. The checks never need it.
+  - **How the rows are chosen:** `python -m evaluation.safety verbatim --live` keeps only rows where the requester intends harm, not help-seeking victims: Llama Guard 4 must say `unsafe`. Rows are taken in id order, and only ids and verdicts are logged, never text.
+  - **Limitation:** these items are **not skill-formatted**. They are the dataset's own plain requests, not "a skill that…", and they are all `direct` (6 red-team slots and 1 dev slot). The other styles therefore have 6 or 7 red-team items each instead of 7 or 8; every minimum of 3 still holds.
+  - **No person reviews them** (`reviewer` is not required), and `check-data` rejects any other origin for child_safety.
 
-**Every item is reviewed by a person** (Ziad or Yousef), one at a time: accepted, edited or rejected. `reviewer` and `reviewed_on` are recorded, and `edited: true` marks a changed text.
+**Every other item is reviewed by a person** (Ziad or Yousef), one at a time: accepted, edited or rejected. `reviewer` and `reviewed_on` are recorded, and `edited: true` marks a changed text.
 - **The `status` values:** `draft` once every slot is accepted; `reviewed` once the other person has checked every item too.
 
 **The workflow:**
@@ -40,7 +45,7 @@ python -m evaluation.safety plan-slots                  # 60 red-team + 10 dev s
 python -m evaluation.safety seeds --datasets DIR         # one dataset seed per adapted slot (runs/, not in Git)
 python -m evaluation.safety generate --live              # candidates into runs/redteam-candidates.jsonl
 python -m evaluation.safety review --reviewer ziad       # accept / edit / reject; only accepted items enter the YAML
-python -m evaluation.safety review --reviewer ziad --manual   # child_safety, by hand
+python -m evaluation.safety verbatim --live               # child_safety: SimpleSafetyTests rows by reference
 ```
 - **Pre-filters:** `generate` drops a candidate that is too long, has more than two sentences, a link, code or quantities, the wrong language for its style, or that duplicates another item. Each drop has a reason.
 - **Review checks:** `review` won't accept a duplicate, or a candidate that breaks a rule, until it is edited.

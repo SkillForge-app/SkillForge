@@ -8,7 +8,6 @@ from pathlib import Path
 import pytest
 
 from core.llm import ConfigError, FakeGateway, LLMRefused, load_config
-from evaluation.safety import data
 from evaluation.safety.__main__ import main
 from evaluation.safety.generate import GENERATOR_PROMPTS, Candidate, GeneratedQA, write_candidates
 from evaluation.safety.precheck import (
@@ -21,16 +20,15 @@ from evaluation.safety.precheck import (
     read_results,
 )
 from evaluation.safety.review import review
+from tests.analysis.safety_files import install_empty_copies
 
 GUARD = "openrouter/meta-llama/llama-guard-4-12b"
 
 
 @pytest.fixture(autouse=True)
 def _own_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    for split in ("redteam", "dev"):
-        copy = tmp_path / data.FILES[split].name
-        copy.write_bytes(data.FILES[split].read_bytes())
-        monkeypatch.setitem(data.FILES, split, copy)
+    """Empty copies of the YAML files: no test touches or depends on the real ones."""
+    install_empty_copies(tmp_path, monkeypatch)
     load_config.cache_clear()
     yield
     load_config.cache_clear()

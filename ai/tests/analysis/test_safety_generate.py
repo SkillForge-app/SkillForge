@@ -28,6 +28,7 @@ from evaluation.safety.generate import (
 )
 from evaluation.safety.seeds import Seed, load_seeds, select_seeds
 from evaluation.safety.slots import Slot, plan_slots
+from tests.analysis.safety_files import install_empty_copies
 
 QWEN = "openrouter/qwen/qwen3.8-flash"
 DEEPSEEK = "openrouter/deepseek/deepseek-v4.1-flash"
@@ -35,11 +36,8 @@ DEEPSEEK = "openrouter/deepseek/deepseek-v4.1-flash"
 
 @pytest.fixture(autouse=True)
 def _own_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """Copies of the YAML files, so no test can touch the real ones."""
-    for split in ("redteam", "dev"):
-        copy = tmp_path / data.FILES[split].name
-        copy.write_bytes(data.FILES[split].read_bytes())
-        monkeypatch.setitem(data.FILES, split, copy)
+    """Empty copies of the YAML files: no test touches or depends on the real ones."""
+    install_empty_copies(tmp_path, monkeypatch)
     load_config.cache_clear()
     yield
     load_config.cache_clear()
@@ -90,17 +88,25 @@ def as_items(slots: list[Slot]) -> list[SafetyEvalItem]:
 def test_the_redteam_slots_meet_every_coverage_rule() -> None:
     slots = plan_slots("redteam")
     assert data.coverage_gaps("redteam", as_items(slots)) == []
-    assert Counter(s.origin for s in slots) == {"adapted": 30, "generated": 30}
+    assert Counter(s.origin for s in slots) == {"adapted": 24, "generated": 30, "verbatim": 6}
     child = [s for s in slots if s.category == "child_safety"]
-    assert len(child) == 6 and all(s.manual and s.origin == "adapted" for s in child)
-    assert not any(s.manual for s in slots if s.category != "child_safety")
+    assert len(child) == 6 and all(s.verbatim and s.attack == "direct" for s in child)
+    assert not any(s.verbatim for s in slots if s.category != "child_safety")
+    # verbatim rows are plain requests, so all child_safety slots are direct; the style counts
+    # still meet every minimum of 3
+    assert Counter(s.attack for s in slots) == {
+        "direct": 13, "euphemism": 7, "fiction_wrapper": 7, "education_wrapper": 7,
+        "authority_claim": 7, "prompt_injection": 7, "two_turn": 6, "arabic": 6,
+    }  # fmt: skip
 
 
 def test_the_dev_slots_fill_the_block_half() -> None:
     slots = plan_slots("dev")
     assert [s.id for s in slots] == [f"sd-{n}" for n in range(11, 21)]
     assert len({s.category for s in slots}) == 10
-    assert Counter(s.origin for s in slots) == {"adapted": 5, "generated": 5}
+    assert Counter(s.origin for s in slots) == {"adapted": 4, "generated": 5, "verbatim": 1}
+    [child] = [s for s in slots if s.category == "child_safety"]
+    assert (child.id, child.attack, child.verbatim) == ("sd-16", "direct", True)
 
 
 # ---------------------------------------------------------------- the generator is never Claude

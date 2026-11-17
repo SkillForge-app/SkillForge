@@ -53,6 +53,25 @@ def load_seeds(datasets_dir: Path, config_path: Path = DATASETS_PATH) -> list[Se
     return seeds
 
 
+def dataset_rows(
+    datasets_dir: Path, name: str, config_path: Path = DATASETS_PATH
+) -> dict[str, str]:
+    """Every row of one downloaded dataset, text by reference (the same `ref` as its seeds).
+    Empty when the dataset isn't downloaded."""
+    spec = yaml.safe_load(config_path.read_text(encoding="utf-8"))["datasets"][name]
+    folder = datasets_dir / name
+    rows: dict[str, str] = {}
+    if not folder.is_dir():
+        return rows
+    for path in sorted(folder.rglob("*")):
+        for line, row in _rows(path):
+            text = _field(row, spec["text"])
+            if isinstance(text, str) and text.strip():
+                ref = _field(row, spec["id"]) if spec["id"] else None
+                rows[str(ref or f"{path.name}:{line}")] = text.strip()
+    return rows
+
+
 def select_seeds(slots: list[Slot], seeds: list[Seed], *, seed: int = RANDOM_SEED) -> list[Seed]:
     """One unused seed per adapted slot, in its category; Arabic rows for `arabic` slots when
     there are any. A slot with no seed in its category is left out (reported by the caller)."""

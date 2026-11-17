@@ -13,6 +13,13 @@ from core.llm import load_prompt
 from evaluation.safety import data
 from evaluation.safety.__main__ import main
 from evaluation.safety.data import ATTACK_STYLES, SafetyEvalItem
+from tests.analysis.safety_files import install_empty_copies
+
+
+@pytest.fixture(autouse=True)
+def _empty_copies(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """The tests here describe the rules, not the state of the real (filling) files."""
+    install_empty_copies(tmp_path, monkeypatch)
 
 
 def placeholder_redteam(n: int = 60) -> list[SafetyEvalItem]:

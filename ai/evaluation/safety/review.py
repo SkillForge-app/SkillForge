@@ -2,10 +2,10 @@
 items are written into redteam.yaml / safety-dev.yaml, with their provenance and the reviewer.
 
     python -m evaluation.safety review --reviewer ziad [--split redteam|dev]
-    python -m evaluation.safety review --reviewer ziad --manual    # child_safety, by hand
 
 A candidate that duplicates another item or breaks a rule can't be accepted as it is: edit it
 or reject it. When every slot of the file is filled, the reviewer may set `status: draft`.
+child_safety slots are not reviewed here: they are verbatim dataset rows (`verbatim`).
 """
 
 import json
@@ -22,6 +22,8 @@ import yaml
 from evaluation.safety.data import (
     DATASET_LICENCES,
     FILES,
+    VERBATIM,
+    VERBATIM_DATASET,
     SafetyFile,
     _items,
     coverage_gaps,
@@ -30,7 +32,6 @@ from evaluation.safety.data import (
     near_duplicates,
 )
 from evaluation.safety.generate import (
-    ATTACK_DESCRIPTIONS,
     CANDIDATES_PATH,
     Candidate,
     GeneratedQA,
@@ -39,7 +40,6 @@ from evaluation.safety.generate import (
     write_candidates,
 )
 from evaluation.safety.precheck import PRECHECK_PATH, read_results
-from evaluation.safety.seeds import SEEDS_PATH, read_seeds
 from evaluation.safety.slots import Slot, Split, plan_slots
 
 Ask = Callable[[str], str]
@@ -54,43 +54,35 @@ def review(
     ask: Ask = input,
     say: Say = print,
     today: date | None = None,
-    manual: bool = False,
     candidates_path: Path = CANDIDATES_PATH,
-    seeds_path: Path = SEEDS_PATH,
     precheck_path: Path = PRECHECK_PATH,
 ) -> Counter[str]:
-    """Go through the split's pending candidates (or, with `manual`, its child_safety slots).
-    Returns how many were accepted, rejected and skipped. Flags from `precheck`, if any, are
-    shown under a candidate; they decide nothing."""
+    """Go through the split's pending candidates. Returns how many were accepted, rejected and
+    skipped. Flags from `precheck`, if any, are shown under a candidate; they decide nothing."""
     today = today or date.today()
     counts: Counter[str] = Counter()
     slots = {s.id: s for s in plan_slots(split)}
-    if manual:
-        _review_manual(split, reviewer, slots, ask, say, today, read_seeds(seeds_path), counts)
-    else:
-        candidates = read_candidates(candidates_path)
-        checks = read_results(precheck_path)
-        pending = [c for c in candidates if c.split == split and c.status == "pending"]
-        for n, candidate in enumerate(pending, 1):
-            if candidate.status != "pending":
-                continue  # superseded by an earlier accept for the same slot
-            if _filled(split, candidate.slot):
-                candidate.status = "superseded"
-                continue
-            say(f"\n[{n}/{len(pending)}]")
-            check = checks.get(candidate.cid)
-            flags = check.flags if check else []
-            outcome = _review_one(
-                candidate, slots[candidate.slot], reviewer, ask, say, today, flags
-            )
-            counts[outcome] += 1
-            if outcome == "accepted":
-                for other in candidates:
-                    if other.slot == candidate.slot and other.status == "pending":
-                        other.status = "superseded"
-            if outcome == "quit":
-                break
-        write_candidates(candidates, candidates_path)
+    candidates = read_candidates(candidates_path)
+    checks = read_results(precheck_path)
+    pending = [c for c in candidates if c.split == split and c.status == "pending"]
+    for n, candidate in enumerate(pending, 1):
+        if candidate.status != "pending":
+            continue  # superseded by an earlier accept for the same slot
+        if _filled(split, candidate.slot):
+            candidate.status = "superseded"
+            continue
+        say(f"\n[{n}/{len(pending)}]")
+        check = checks.get(candidate.cid)
+        flags = check.flags if check else []
+        outcome = _review_one(candidate, slots[candidate.slot], reviewer, ask, say, today, flags)
+        counts[outcome] += 1
+        if outcome == "accepted":
+            for other in candidates:
+                if other.slot == candidate.slot and other.status == "pending":
+                    other.status = "superseded"
+        if outcome == "quit":
+            break
+    write_candidates(candidates, candidates_path)
     _finish(split, ask, say)
     return counts
 
@@ -163,64 +155,6 @@ def _review_one(
             return "skipped"
         elif choice == "q":
             return "quit"
-
-
-def _review_manual(
-    split: Split,
-    reviewer: str,
-    slots: dict[str, Slot],
-    ask: Ask,
-    say: Say,
-    today: date,
-    seeds: dict[str, Any],
-    counts: Counter[str],
-) -> None:
-    """child_safety slots: the reviewer writes the item from a dataset seed; no model involved."""
-    for slot in slots.values():
-        if not slot.manual or _filled(split, slot.id):
-            continue
-        seed = seeds.get(slot.id)
-        say(f"\n{slot.id} | {slot.category} | {slot.attack}: {ATTACK_DESCRIPTIONS[slot.attack]}")
-        if seed:
-            say(f"  seed from {seed.dataset} {seed.ref} ({seed.licence}):")
-            say(textwrap.indent(seed.text, "    "))
-        text = " ".join(ask("intent-level request (Enter skips this slot): ").split())
-        if not text:
-            counts["skipped"] += 1
-            continue
-        answers: list[GeneratedQA] = []
-        while slot.attack == "two_turn" and len(answers) < 2:
-            question = ask("clarifying question (Enter ends): ").strip()
-            if not question:
-                break
-            answers.append(GeneratedQA(question=question, answer=ask("the answer: ").strip()))
-        dataset = seed.dataset if seed else ask(f"dataset ({', '.join(DATASET_LICENCES)}): ")
-        dataset_ref = seed.ref if seed else ask("row reference: ").strip()
-        problem = prefilter(slot, text, answers)
-        if dataset not in DATASET_LICENCES or not dataset_ref:
-            problem = "a known dataset and a row reference are needed"
-        if same := near_duplicates(text, known_texts()):
-            problem = f"the same request as {same[0]}"
-        if problem:
-            say(f"  not accepted: {problem}")
-            counts["skipped"] += 1
-            continue
-        append_item(
-            split,
-            item_dict(
-                slot,
-                text,
-                answers,
-                origin="adapted",
-                generator=None,
-                dataset=dataset,
-                dataset_ref=dataset_ref,
-                reviewer=reviewer,
-                today=today,
-                edited=False,
-            ),
-        )
-        counts["accepted"] += 1
 
 
 def item_dict(
@@ -300,7 +234,8 @@ def set_status(split: str, status: str, path: Path | None = None) -> None:
 def _source(split: str, parsed: SafetyFile) -> str:
     block = [r for r in parsed.requests if r.expected == "block"]
     generators = sorted({r.generator for r in block if r.generator})
-    datasets = sorted({r.dataset for r in block if r.dataset})
+    datasets = sorted({r.dataset for r in block if r.dataset and r.origin == "adapted"})
+    verbatim = [r for r in block if r.origin == VERBATIM]
     reviewers = sorted({r.reviewer for r in block if r.reviewer})
     parts = []
     if generators:
@@ -308,7 +243,13 @@ def _source(split: str, parsed: SafetyFile) -> str:
     if datasets:
         named = ", ".join(f"{d} ({DATASET_LICENCES[d]})" for d in datasets)
         parts.append(f"adapted from {named}, reworded as skill requests")
-    text = "; ".join(parts) + f"; every item reviewed by {', '.join(reviewers)}"
+    if verbatim:
+        parts.append(
+            f"child_safety: {len(verbatim)} {VERBATIM_DATASET} "
+            f"({DATASET_LICENCES[VERBATIM_DATASET]}) rows verbatim, by reference"
+        )
+    every = "every other item" if verbatim else "every item"
+    text = "; ".join(parts) + (f"; {every} reviewed by {', '.join(reviewers)}" if reviewers else "")
     return f"allow half written by the AI team; block half {text}" if split == "dev" else text
 
 

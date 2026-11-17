@@ -8,8 +8,9 @@ Writing the red-team and dev block items (LABELLING.md):
 python -m evaluation.safety plan-slots                 # the slots still to fill
 python -m evaluation.safety seeds --datasets DIR       # dataset seeds for the adapted slots
 python -m evaluation.safety generate --live            # non-Claude candidates, costs money
+python -m evaluation.safety precheck --live            # flag-only Llama Guard pass
 python -m evaluation.safety review --reviewer ziad     # accept, edit or reject each one
-python -m evaluation.safety review --reviewer ziad --manual   # child_safety, by hand
+python -m evaluation.safety verbatim --live            # child_safety: dataset rows by reference
 """
 
 import argparse
@@ -30,6 +31,7 @@ from evaluation.safety.data import (
     SAFETY_DIR,
     SafetyEvalItem,
     SetName,
+    VerbatimTextMissing,
     check_data,
     load_file,
     load_set,
@@ -71,9 +73,13 @@ def run_command(args: argparse.Namespace) -> int:
     if refused is not None:
         return refused
     names: list[SetName] = ["redteam", "benign", "normal"] if args.set == "all" else [args.set]
-    sets: dict[str, Sequence[SafetyEvalItem]] = {
-        name: load_set(name)[: args.limit] if args.limit else load_set(name) for name in names
-    }
+    try:  # child_safety rows are read from the local dataset download
+        sets: dict[str, Sequence[SafetyEvalItem]] = {
+            name: load_set(name)[: args.limit] if args.limit else load_set(name) for name in names
+        }
+    except VerbatimTextMissing as exc:
+        print(f"cannot run: {exc}")
+        return 1
     calls = sum(len(items) for items in sets.values())
     if args.live:
         cost = estimate_cost(calls)
@@ -98,7 +104,7 @@ def plan_slots_command() -> int:
         print(f"{FILES[split].name}: {len(slots)} slots, {len(still)} open")
         for s in slots:
             mark = "open" if s.id in still else "done or waiting for review"
-            how = "by hand" if s.manual else s.origin
+            how = s.origin
             print(f"  {s.id:<6} {s.category:<21} {s.attack:<18} {how:<10} {mark}")
     return 0
 
@@ -135,7 +141,7 @@ def generate_command(args: argparse.Namespace) -> int:
     config = generator_config()  # refuses a Claude model anywhere in the chain
     splits: list[Split] = ["redteam", "dev"] if args.split == "all" else [args.split]
     existing = read_candidates()
-    todo = len([s for split in splits for s in open_slots(split, existing) if not s.manual])
+    todo = len([s for split in splits for s in open_slots(split, existing) if not s.verbatim])
     model = config.role(ROLE).model
     if not args.live:
         print(f"refusing to call {model} without --live (it costs money): about {todo} calls")
@@ -206,8 +212,41 @@ def precheck_command(args: argparse.Namespace) -> int:
 def review_command(args: argparse.Namespace) -> int:
     from evaluation.safety.review import review
 
-    counts = review(args.split, args.reviewer, manual=args.manual)
+    counts = review(args.split, args.reviewer)
     print(", ".join(f"{n} {k}" for k, n in sorted(counts.items())) or "nothing to review")
+    return 0
+
+
+def verbatim_command(args: argparse.Namespace) -> int:
+    """Prints ids and counts only: never the text of a dataset row."""
+    from evaluation.safety.generate import GENERATOR_PROMPTS
+    from evaluation.safety.precheck import GUARD_ROLE, guard_config
+    from evaluation.safety.verbatim import fill_verbatim, open_verbatim_slots
+
+    config = guard_config()  # the same independent classifier as `precheck`
+    model = config.role(GUARD_ROLE).model
+    slots = open_verbatim_slots()
+    if not args.live:
+        print(f"refusing to call {model} without --live (it costs money): {len(slots)} open slots")
+        return 2
+    load_dotenv(AI_ROOT / ".env", override=False)
+    key = key_env_for(model)
+    if key and not os.environ.get(key):
+        print(f"--live needs {key} for {model} (env var or ai/.env)")
+        return 2
+    from core.llm.litellm_gateway import LiteLLMGateway
+
+    gateway = LiteLLMGateway(config=config, prompts_root=GENERATOR_PROMPTS)
+    run = asyncio.run(fill_verbatim(gateway))
+    print(
+        f"{run.rows} child-abuse rows; classified {run.unsafe + run.safe} with {run.classifier}: "
+        f"{run.unsafe} unsafe, {run.safe} safe; {len(run.skipped)} skipped; "
+        f"filled {len(run.filled)} of {len(slots)} slots; ${run.cost_usd:.4f}"
+    )
+    for slot_id, ref in run.filled:
+        print(f"  {slot_id} <- {ref}")
+    for note in run.skipped:
+        print(f"  skipped {note}")
     return 0
 
 
@@ -237,7 +276,8 @@ def main(argv: list[str] | None = None) -> int:
     rev = commands.add_parser("review", help="accept, edit or reject each candidate")
     rev.add_argument("--reviewer", choices=["ziad", "yousef"], required=True)
     rev.add_argument("--split", choices=["redteam", "dev"], default="redteam")
-    rev.add_argument("--manual", action="store_true", help="write child_safety items by hand")
+    ver = commands.add_parser("verbatim", help="child_safety: SimpleSafetyTests rows by reference")
+    ver.add_argument("--live", action="store_true", help="call the classifier (costs money)")
     args = parser.parse_args(argv)
     if args.command == "check-data":
         return check_data_command()
@@ -247,6 +287,8 @@ def main(argv: list[str] | None = None) -> int:
         return seeds_command(args)
     if args.command == "generate":
         return generate_command(args)
+    if args.command == "verbatim":
+        return verbatim_command(args)
     if args.command == "precheck":
         return precheck_command(args)
     if args.command == "review":

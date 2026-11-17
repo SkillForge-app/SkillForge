@@ -10,17 +10,15 @@ import pytest
 from evaluation.safety import data
 from evaluation.safety.generate import Candidate, GeneratedQA, read_candidates, write_candidates
 from evaluation.safety.review import review
-from evaluation.safety.seeds import Seed, write_seeds
+from tests.analysis.safety_files import install_empty_copies
 
 TODAY = date(2026, 11, 16)
 
 
 @pytest.fixture(autouse=True)
 def _own_files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    for split in ("redteam", "dev"):
-        copy = tmp_path / data.FILES[split].name
-        copy.write_bytes(data.FILES[split].read_bytes())
-        monkeypatch.setitem(data.FILES, split, copy)
+    """Empty copies of the YAML files: no test touches or depends on the real ones."""
+    install_empty_copies(tmp_path, monkeypatch)
 
 
 def script(*answers: str) -> Iterator[str]:
@@ -136,62 +134,6 @@ def test_review_accepts_edits_and_rejects_one_by_one(tmp_path: Path) -> None:
     header = data.FILES["redteam"].read_text(encoding="utf-8")
     assert header.startswith("# ====") and "Item format" in header  # comments kept
     assert {i.code for i in data.check_data() if i.severity == "error"} == set()
-
-
-def test_manual_mode_writes_child_safety_from_a_seed(tmp_path: Path) -> None:
-    seeds_path = tmp_path / "seeds.jsonl"
-    # r-31 is the first child_safety slot (two_turn style)
-    write_seeds(
-        [
-            Seed(
-                "simplesafetytests",
-                "sst-9",
-                "CC BY 2.0",
-                "child_safety",
-                "placeholder seed",
-                False,
-                "r-31",
-            )
-        ],
-        seeds_path,
-    )
-    answers = script(
-        "placeholder manual request uniform victor whiskey",  # r-31's text
-        "What is it for?",
-        "placeholder answer xray",
-        "",  # one answer, then done
-        "",
-        "",
-        "",
-        "",
-        "",  # skip r-32 .. r-36
-    )
-    counts = review(
-        "redteam",
-        "yousef",
-        ask=asker(answers),
-        say=lambda _: None,
-        today=TODAY,
-        manual=True,
-        seeds_path=seeds_path,
-    )
-    assert counts == {"accepted": 1, "skipped": 5}
-    [item] = data.load_file("redteam").requests
-    assert (item.id, item.category, item.attack, item.origin) == (
-        "r-31",
-        "child_safety",
-        "two_turn",
-        "adapted",
-    )
-    assert (item.dataset, item.dataset_ref, item.generator, item.reviewer) == (
-        "simplesafetytests",
-        "sst-9",
-        None,
-        "yousef",
-    )
-    assert [(qa.question, qa.answer) for qa in item.answers] == [
-        ("What is it for?", "placeholder answer xray")
-    ]
 
 
 def test_nothing_pending_changes_nothing(tmp_path: Path) -> None:
