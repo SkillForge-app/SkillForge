@@ -1,0 +1,313 @@
+# Deploy to staging (OPS-06 skeleton, OPS-04 infrastructure). OFF until the repository variable
+# STAGING_DEPLOY_ENABLED is `true`: every job is skipped before then, and none of them touches Azure.
+# Turn it on only after devops/terraform/README.md, "First deploy", steps 1-7.
+#
+# When on, after CI passes on main (or by hand, from main):
+#   build   web, api and the worker (target `baked`), tagged with the git sha, pushed to the registry
+#           (only once apps_enabled = true in staging.tfvars: the first run is infrastructure only)
+#   deploy  terraform apply (envs/staging) -> the migrate job (alembic upgrade head) -> the new images
+#           on api, worker and web -> smoke test (api /openapi.json and web / answer 200)
+# Target: about 10 minutes; the job timeouts (gate 2 + build 7 + deploy 6) cap it at 15.
+# Rollback: run it by hand with `image_tag` = an earlier sha (no build). Migrations are not rolled
+# back, so they must be expand-then-contract.
+#
+# Azure access: OpenID Connect to the deploy identity bootstrap/ created (no stored keys). Only jobs
+# in the `staging` GitHub environment (deployment branch: main) can get a token; its secrets are
+# AZURE_CLIENT_ID, AZURE_TENANT_ID and AZURE_SUBSCRIPTION_ID. Its variable STAGING_API_URL is the
+# Terraform output `api_url`, baked into the web image.
+name: deploy-staging
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Deploy these existing images (an earlier git sha) without building. Empty: build this commit."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+# One deploy at a time; a running deploy is never cancelled half-way.
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  TERRAFORM_VERSION: 1.17.1
+  TERRAFORM_SHA256: 4638628058e71a55212b1c563712eac03b902128f40740f3dc8174df12135061
+
+jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    if: >-
+      vars.STAGING_DEPLOY_ENABLED == 'true' &&
+      ((github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+        github.event.workflow_run.event == 'push') ||
+       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'))
+    outputs:
+      sha: ${{ steps.what.outputs.sha }}
+      tag: ${{ steps.what.outputs.tag }}
+      build: ${{ steps.what.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+          sparse-checkout: devops/terraform/envs/staging
+      - name: What to deploy
+        id: what
+        env:
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_TAG: ${{ inputs.image_tag }}
+        run: |
+          sha="${RUN_SHA:-${GITHUB_SHA}}"
+          if [ -n "${INPUT_TAG}" ]; then
+            tag="${INPUT_TAG}"
+            build=false
+          else
+            tag="${sha}"
+            build=true
+          fi
+          # First run (apps_enabled = false): infrastructure only, no image is needed yet.
+          if ! grep -Eq '^[[:space:]]*apps_enabled[[:space:]]*=[[:space:]]*true' devops/terraform/envs/staging/staging.tfvars; then
+            build=false
+            echo "::notice::apps_enabled is false: infrastructure only, no images built"
+          fi
+          if ! printf '%s' "${tag}" | grep -Eq '^[0-9a-f]{40}$'; then
+            echo "::error::image_tag must be a full 40-character git sha"
+            exit 1
+          fi
+          {
+            echo "sha=${sha}"
+            echo "tag=${tag}"
+            echo "build=${build}"
+          } >> "$GITHUB_OUTPUT"
+          echo "deploy ${tag} (build: ${build})"
+
+  build:
+    name: build (${{ matrix.image }})
+    needs: gate
+    if: needs.gate.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: true
+      matrix:
+        image: [web, api, worker]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+          persist-credentials: false
+      - name: Build settings for ${{ matrix.image }}
+        id: spec
+        env:
+          IMAGE: ${{ matrix.image }}
+          API_URL: ${{ vars.STAGING_API_URL }}
+        run: |
+          case "${IMAGE}" in
+            web)
+              # NEXT_PUBLIC_API_BASE_URL is baked in at build time: the api's staging URL.
+              if [ -z "${API_URL}" ]; then
+                echo "::error::set the staging variable STAGING_API_URL (the api_url output of the first run) before apps_enabled = true"
+                exit 1
+              fi
+              dir=frontend; context=frontend; dockerfile=devops/docker/web.Dockerfile
+              args="--build-arg NEXT_PUBLIC_API_BASE_URL=${API_URL}" ;;
+            api)
+              dir=backend; context=backend; dockerfile=devops/docker/api.Dockerfile; args="" ;;
+            worker)
+              dir=ai; context=.; dockerfile=devops/docker/worker.Dockerfile; args="--target baked" ;;
+          esac
+          if [ ! -d "${dir}" ]; then
+            echo "::error::${dir}/ is not on main yet, so the ${IMAGE} image cannot be built"
+            exit 1
+          fi
+          {
+            echo "context=${context}"
+            echo "dockerfile=${dockerfile}"
+            echo "args=${args}"
+          } >> "$GITHUB_OUTPUT"
+      - name: Azure login (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Build and push
+        env:
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          IMAGE: ${{ matrix.image }}
+          TAG: ${{ needs.gate.outputs.tag }}
+          CONTEXT: ${{ steps.spec.outputs.context }}
+          DOCKERFILE: ${{ steps.spec.outputs.dockerfile }}
+          ARGS: ${{ steps.spec.outputs.args }}
+        run: |
+          set -o pipefail
+          # The registry name, as modules/naming derives it: sha1(subscription id)[:8].
+          suffix="$(printf '%s' "${SUBSCRIPTION_ID}" | sha1sum | cut -c1-8)"
+          registry="acrskillforgestg${suffix}"
+          az acr login --name "${registry}"
+          ref="${registry}.azurecr.io/skillforge-${IMAGE}"
+          # The previous main image is the layer cache (inline cache, the default docker driver).
+          # shellcheck disable=SC2086 # ARGS holds several flags on purpose
+          docker build --file "${DOCKERFILE}" ${ARGS} \
+            --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from "${ref}:main" \
+            --tag "${ref}:${TAG}" --tag "${ref}:main" "${CONTEXT}"
+          docker push "${ref}:${TAG}"
+          docker push "${ref}:main"
+
+  deploy:
+    name: deploy
+    needs: [gate, build]
+    # Runs after a successful build, or with no build at all (rollback to an existing tag).
+    if: >-
+      always() && needs.gate.result == 'success' &&
+      (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    environment: staging
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TAG: ${{ needs.gate.outputs.tag }}
+      # Terraform authenticates with the same OIDC token (azurerm provider and backend).
+      ARM_USE_OIDC: "true"
+      ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_subscription_id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      TF_VAR_tenant_id: ${{ secrets.AZURE_TENANT_ID }}
+      TF_IN_AUTOMATION: "true"
+      TF_DIR: devops/terraform/envs/staging
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.gate.outputs.sha }}
+          persist-credentials: false
+      - name: Install Terraform
+        run: |
+          curl -sSfL -o /tmp/terraform.zip \
+            "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+          echo "${TERRAFORM_SHA256}  /tmp/terraform.zip" | sha256sum -c -
+          mkdir -p "${RUNNER_TEMP}/bin"
+          unzip -q /tmp/terraform.zip terraform -d "${RUNNER_TEMP}/bin"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+      - name: Azure login (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: terraform apply
+        id: tf
+        env:
+          API_URL_VAR: ${{ vars.STAGING_API_URL }}
+        run: |
+          set -o pipefail
+          # Apps need all three images; web is only built once STAGING_API_URL is set.
+          if grep -Eq '^[[:space:]]*apps_enabled[[:space:]]*=[[:space:]]*true' "${TF_DIR}/staging.tfvars" \
+            && [ -z "${API_URL_VAR}" ]; then
+            echo "::error::apps_enabled = true needs the staging variable STAGING_API_URL (the api_url output of a first run)"
+            exit 1
+          fi
+          # shellcheck disable=SC2046 # backend-config.sh prints one argument per line
+          terraform -chdir="${TF_DIR}" init -input=false -lockfile=readonly \
+            $(devops/terraform/backend-config.sh "${ARM_SUBSCRIPTION_ID}")
+          terraform -chdir="${TF_DIR}" apply -input=false -auto-approve \
+            -var-file=staging.tfvars -var "image_tag=${TAG}"
+          apps="$(terraform -chdir="${TF_DIR}" output -raw apps_enabled)"
+          api_url="$(terraform -chdir="${TF_DIR}" output -raw api_url)"
+          web_url="$(terraform -chdir="${TF_DIR}" output -raw web_url)"
+          rg="$(terraform -chdir="${TF_DIR}" output -raw resource_group)"
+          registry="$(terraform -chdir="${TF_DIR}" output -raw registry_login_server)"
+          {
+            echo "apps_enabled=${apps}"
+            echo "api_url=${api_url}"
+            echo "web_url=${web_url}"
+            echo "rg=${rg}"
+            echo "registry=${registry}"
+          } >> "$GITHUB_OUTPUT"
+          terraform -chdir="${TF_DIR}" output -json app_names > "${RUNNER_TEMP}/app_names.json"
+          {
+            echo "### Staging"
+            echo "- apps_enabled: \`${apps}\`"
+            echo "- api_url: ${api_url} (set the \`staging\` environment variable STAGING_API_URL to this)"
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${apps}" = true ] && [ "${API_URL_VAR}" != "${api_url}" ]; then
+            echo "::error::STAGING_API_URL (${API_URL_VAR:-unset}) is not the api_url output (${api_url}); the web image would call the wrong API"
+            exit 1
+          fi
+      - name: Database bootstrap (TODO, OPS-06)
+        if: steps.tf.outputs.apps_enabled == 'true'
+        run: |
+          # Compose's first-start step has no Azure equivalent yet: CREATE EXTENSION vector, Data
+          # Engineering's data/db/ SQL and the roles (passwords from Key Vault), before Alembic.
+          # Who owns which tables is to be agreed by DE and Backend (devops/terraform/README.md, R10).
+          echo "::warning::the database bootstrap step is not written yet (OPS-06)"
+      - name: Migrations (the migrate job, alembic upgrade head)
+        if: steps.tf.outputs.apps_enabled == 'true'
+        env:
+          RG: ${{ steps.tf.outputs.rg }}
+          REGISTRY: ${{ steps.tf.outputs.registry }}
+        run: |
+          set -o pipefail
+          job="$(jq -r .migrate "${RUNNER_TEMP}/app_names.json")"
+          az containerapp job update --name "${job}" --resource-group "${RG}" \
+            --image "${REGISTRY}/skillforge-api:${TAG}" --output none
+          execution="$(az containerapp job start --name "${job}" --resource-group "${RG}" --query name --output tsv)"
+          echo "execution ${execution}"
+          for _ in $(seq 1 18); do
+            status="$(az containerapp job execution show --name "${job}" --resource-group "${RG}" \
+              --job-execution-name "${execution}" --query properties.status --output tsv)"
+            echo "status: ${status}"
+            case "${status}" in
+              Succeeded) exit 0 ;;
+              Failed|Stopped|Degraded)
+                echo "::error::migrations ${status}; no app was changed"
+                exit 1 ;;
+            esac
+            sleep 10
+          done
+          echo "::error::migrations did not finish within 3 minutes; no app was changed"
+          exit 1
+      - name: Roll out the new images (api, worker, web)
+        if: steps.tf.outputs.apps_enabled == 'true'
+        env:
+          RG: ${{ steps.tf.outputs.rg }}
+          REGISTRY: ${{ steps.tf.outputs.registry }}
+        run: |
+          set -o pipefail
+          for role in api worker web; do
+            app="$(jq -r ".${role}" "${RUNNER_TEMP}/app_names.json")"
+            echo "${app} -> skillforge-${role}:${TAG}"
+            az containerapp update --name "${app}" --resource-group "${RG}" \
+              --image "${REGISTRY}/skillforge-${role}:${TAG}" --output none
+          done
+      - name: Smoke test
+        if: steps.tf.outputs.apps_enabled == 'true'
+        env:
+          API_URL: ${{ steps.tf.outputs.api_url }}
+          WEB_URL: ${{ steps.tf.outputs.web_url }}
+        run: |
+          # Both scale from zero, so the first request can take a while.
+          curl -fsS --retry 12 --retry-delay 5 --retry-all-errors --max-time 30 \
+            -o /dev/null "${API_URL}/openapi.json"
+          curl -fsS --retry 12 --retry-delay 5 --retry-all-errors --max-time 30 \
+            -o /dev/null "${WEB_URL}/"
+          {
+            echo "- deployed \`${TAG}\`"
+            echo "- web: ${WEB_URL}"
+          } >> "$GITHUB_STEP_SUMMARY"
