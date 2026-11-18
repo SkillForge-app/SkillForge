@@ -141,7 +141,7 @@ Prompt `analysis/request` **v1**, model `openrouter/anthropic/claude-sonnet-5.5`
 | 2 | trial v2 | 100% | 95% | 100% | `analyzer-dev-2026-11-02-2.md` |
 
 - **Run 1's only miss:** d-04, "a senior UX researcher": labelled research, predicted design.
-- **The v2 trial** added one sentence applying the "expertise, not the subject" rule to research ("a role that studies users, markets or literature is research, even when what it studies is a product's design"). It fixed d-04, but d-18 (research papers → one-page summaries) moved from research to writing. Dev stayed at 95%.
+- **The v2 trial** added one sentence applying the "expertise, not the subject" rule to research ("a role that studies users, markets or literature is research, even when what it studies is a product's design"). It fixed d-04, but d-18 (research papers → one-page summaries) moved from research to writing. Dev stayed at 95%. The v2 text was never committed: `prompts/analysis/request.md` is still v1, and the "prompt version 2" in `analyzer-dev-2026-11-02-2.json` is this trial (the sentence it added is quoted above).
 - **Why we kept v1:**
   - The trial showed no gain on dev, and with 20 requests, one request moving is within run-to-run noise.
   - Changing the prompt further would have meant fitting single dev items.
