@@ -36,6 +36,8 @@ The model is strict and frozen, and unknown fields are rejected. The list order 
   - In the real index a chunk can serve several domains; it matches when any of them does. It is still returned once.
   - No matching passage returns `[]`. That is not an error, so the Architect can carry on without sources.
   - **The real backend only:** an *empty* index raises `ConfigError` ("the knowledge index is empty; run ingest"), and so does an index built with a different embedding model. Neither is a "no match": both are a setup problem, so they fail loudly.
+    - **The check is cached for 60 s** (`INFO_TTL_S`): on pgvector it's a count over the whole view, too heavy for every query. Only a passed check is trusted; a failing one runs again on the next query. So an index that is emptied *after* a passed check is noticed within 60 s, and until then a query returns `[]`.
+    - The store's blocking calls (`info`, `search`) run in a worker thread, so a query doesn't hold up the event loop.
 - **`k`:** 1 to 20; the default is 5. You get at most `k` passages.
 - **Errors:** a blank query, an unknown area (or a badly formed domain), or `k` outside 1 to 20 raises `RetrievalInputError`. It is a subclass of `core.llm.LLMInputError` and `ValueError`.
 
@@ -114,6 +116,7 @@ Page(html, url, retrieved, ["marketing/strategy", "legal/contracts"])   # a page
   - **Read-only by default:** `search` and `info` work on a read-only view, every transaction is `READ ONLY`, and `replace_source` / `create_schema` raise `ConfigError`.
   - **Writing is opt-in:** `PgVectorStore(dsn, writable=True)` or `SKILLFORGE_PGVECTOR_WRITABLE=1`, for tests and local databases only.
   - **Every search turns on iterative scan** in its own transaction, then re-sorts the rows. See [Search settings](#search-settings-de-02-benchmark).
+  - **A row it can't use is skipped, not fatal:** a row that isn't a valid `ChunkRecord` (for example a domain outside the SkillSpec rule, such as `marketing/social_media`) is left out of the results and logged on `skillforge.knowledge` (`knowledge.row_skipped`, with the `chunk_id` and the field names only).
 
 ### Search settings (DE-02 benchmark)
 Every `PgVectorStore.search` runs, in one transaction (a `READ ONLY` transaction allows both):
