@@ -1,0 +1,10 @@
+# Terraform working files. The provider lock files (.terraform.lock.hcl) ARE committed.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+# Values for a local run (subscription and tenant ids): never committed.
+*.local.tfvars
+local.auto.tfvars

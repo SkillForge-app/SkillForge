@@ -22,6 +22,7 @@ places (listed below).
 | `docker/web.Dockerfile` (+ `.dockerignore`) | The web app image, built from `frontend/` (Frontend's code). DevOps-owned |
 | `docker/api.Dockerfile` (+ `.dockerignore`) | The API image (also used by `migrate`), built from `backend/` (Backend's code). DevOps-owned |
 | `docker/worker.Dockerfile` (+ `.dockerignore`), `docker/worker_check.py` | The worker image (also used by `model-init`): AI's code from `ai/`, installed from `ai/uv.lock`; the model check and placeholder worker. DevOps-owned |
+| `terraform/` | Staging on Azure for Students (OPS-04): bootstrap, modules, `envs/staging`. See its README |
 
 ## Local stack (OPS-03)
 
@@ -30,6 +31,14 @@ starts postgres + pgvector (`127.0.0.1:5433`) and redis (`127.0.0.1:6379`); add 
 web app (`127.0.0.1:3000`), or `--profile api --build` for the API (`127.0.0.1:8000`, after `migrate`).
 `.github/workflows/compose.yml` checks the stack (`stack`), the web image (`web`) and the API image (`api`);
 none is a required check. `frontend.yml` runs Frontend's `npm ci`, checks and build.
+
+## Staging on Azure (OPS-04)
+
+See [terraform/README.md](terraform/README.md). In short: Azure for Students ($100 credit), Container Apps (web, api,
+worker, redis, a migrate job), Postgres flexible B1ms with PG 18 + pgvector, Key Vault, ACR Basic; about $33-60 from
+25 Nov to 31 Dec. GitHub deploys through OIDC (a managed identity, no keys). Not applied yet: the account is not
+chosen. `.github/workflows/terraform.yml` checks fmt and validate (no credentials); `deploy-staging.yml` (OPS-06) stays
+off until the repository variable `STAGING_DEPLOY_ENABLED` is `true`.
 
 ## Security (OPS-11)
 
