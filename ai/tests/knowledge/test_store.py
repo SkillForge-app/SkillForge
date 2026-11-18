@@ -517,3 +517,116 @@ def test_pgvector_rare_domain_still_returns_k_rows(monkeypatch: pytest.MonkeyPat
     finally:
         with writer._connect() as conn:
             conn.execute(f"DROP TABLE IF EXISTS {table}")
+
+
+# ------------------------------------------------------------------ DE's real view (review F22)
+
+PGVECTOR_READER_DSN_ENV = "SKILLFORGE_PGVECTOR_READER_DSN"  # tests only: DE's read-only role
+DE_TEST_URL = "https://f22.example/guide"
+DE_TEST_VERSION = "f22-test-embedding-version"
+
+
+def unit_vector(*values: float, dims: int = 384) -> str:
+    vector = np.zeros(dims)
+    vector[: len(values)] = values
+    vector /= np.linalg.norm(vector)
+    return "[" + ",".join(f"{x:.7f}" for x in vector) + "]"
+
+
+@pytest.mark.pgvector
+def test_pgvector_reads_des_view_as_the_reader_role() -> None:
+    """Opt-in, on a throwaway database with DE's data/db/*.sql loaded (the `pgvector` CI job):
+    SKILLFORGE_PGVECTOR_DSN may write DE's tables, SKILLFORGE_PGVECTOR_READER_DSN is
+    skillforge_ai_reader. Rows go into DE's own tables, and AI reads them through
+    knowledge_chunks as the reader role, as in production."""
+    admin_dsn = os.environ.get(PGVECTOR_DSN_ENV)
+    reader_dsn = os.environ.get(PGVECTOR_READER_DSN_ENV)
+    if not (admin_dsn and reader_dsn):
+        pytest.skip(f"{PGVECTOR_DSN_ENV} and {PGVECTOR_READER_DSN_ENV} not set")
+    import psycopg
+
+    config = {
+        "size": 180,
+        "overlap": 40,
+        "splitter": "sentence",
+        "pipeline_version": "f22-test",
+        # Five keys: valid under today's CHECK and under DE's coming one (all five required).
+        "extract_fingerprint": "f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483",
+    }
+    config_json = json.dumps(config, sort_keys=True, separators=(",", ":"))
+    config_hash = hashlib.sha256(config_json.encode()).hexdigest()
+    chunks = [  # (text, domains, embedding)
+        ("Disclose paid endorsements clearly.", ["marketing/strategy"], unit_vector(1.0)),
+        (
+            "Influencer contracts need it too.",
+            ["legal/contracts", "marketing"],
+            unit_vector(0.6, 0.8),
+        ),
+        ("A domain DE accepts, AI does not.", ["marketing/social_media"], unit_vector(0.99, 0.14)),
+    ]
+    ids = [f"f22.example-{i:08d}-0000f22f" for i in range(len(chunks))]
+    with psycopg.connect(admin_dsn, autocommit=True) as admin:
+        if admin.execute("SELECT count(*) FROM knowledge.active_config").fetchone()[0]:  # type: ignore[index]
+            pytest.fail("knowledge.active_config already has a row: use a throwaway database")
+        try:
+            source = admin.execute(
+                "INSERT INTO knowledge.sources (url, host, source_type) "
+                "VALUES (%s, 'f22.example', 'web_page') RETURNING id",
+                (DE_TEST_URL,),
+            ).fetchone()[0]  # type: ignore[index]
+            document = admin.execute(
+                "INSERT INTO knowledge.documents "
+                "(source_id, fetched_at, content_hash, pipeline_version, title) "
+                "VALUES (%s, '2026-11-18T10:00:00Z', %s, 'f22-test', 'F22 disclosure guide') "
+                "RETURNING id",
+                (source, "a" * 64),
+            ).fetchone()[0]  # type: ignore[index]
+            for i, (text, domains, vector) in enumerate(chunks):
+                chunk = admin.execute(
+                    "INSERT INTO knowledge.chunks (chunk_id, document_id, chunk_index, text, "
+                    "section, concepts, content_hash, chunk_config, chunk_config_hash) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s) RETURNING id",
+                    (ids[i], document, i, text, ["Guide"], ["disclosure"],
+                     hashlib.sha256(text.encode()).hexdigest(), config_json, config_hash),
+                ).fetchone()[0]  # type: ignore[index]  # fmt: skip
+                admin.execute(
+                    "INSERT INTO knowledge.embeddings "
+                    "(chunk_id, embedding, embedding_model, embedding_version, domains) "
+                    "VALUES (%s, %s::vector, %s, %s, %s)",
+                    (chunk, vector, MODEL, DE_TEST_VERSION, domains),
+                )
+            admin.execute(
+                "INSERT INTO knowledge.active_config (chunk_config_hash, embedding_version) "
+                "VALUES (%s, %s)",
+                (config_hash, DE_TEST_VERSION),
+            )
+
+            store = PgVectorStore(reader_dsn)  # knowledge_chunks, through search_path = knowledge
+            info = store.info()
+            assert (info.count, info.model, info.dimensions) == (3, MODEL, 384)
+            query = [1.0] + [0.0] * 383
+            results = store.search(query, "marketing", 5)  # filter on text[], SET LOCAL hnsw.*
+            assert [r.chunk_id for r, _ in results] == ids[:2]  # the third row is skipped (F7)
+            first, score = results[0]
+            assert score == pytest.approx(1.0, abs=1e-5)
+            assert (str(first.source_url), first.title, first.retrieved) == (
+                DE_TEST_URL,
+                "F22 disclosure guide",
+                date(2026, 11, 18),
+            )
+            assert first.content_hash == hashlib.sha256(chunks[0][0].encode()).hexdigest()
+            assert [r.chunk_id for r, _ in store.search(query, "legal", 5)] == [ids[1]]
+
+            with pytest.raises(ConfigError, match="read-only"):  # our own guard
+                store.replace_source(DE_TEST_URL, [], [], model=MODEL)
+            with psycopg.connect(reader_dsn) as reader:  # and the role itself
+                for sql in ("SELECT 1 FROM knowledge.chunks", "DELETE FROM knowledge.sources"):
+                    with pytest.raises(psycopg.errors.InsufficientPrivilege):
+                        reader.execute(sql)
+                    reader.rollback()
+        finally:
+            admin.execute(
+                "DELETE FROM knowledge.active_config WHERE embedding_version = %s",
+                (DE_TEST_VERSION,),
+            )
+            admin.execute("DELETE FROM knowledge.sources WHERE url = %s", (DE_TEST_URL,))

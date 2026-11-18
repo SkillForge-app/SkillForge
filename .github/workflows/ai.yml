@@ -1,6 +1,7 @@
-# AI department CI (OPS-02), called by ci.yml when ai/ changed.
-# Locked, hash-checked install; lint, format, strict types, prompt lock and schema checks; tests
-# without network. The live, model and pgvector tests stay off (ai/pyproject.toml addopts).
+# AI department CI (OPS-02), called by ci.yml when ai/ or DE's data/db/ changed.
+# test: locked, hash-checked install; lint, format, strict types, prompt lock and schema checks;
+# tests without network. The live, model and pgvector tests stay off (ai/pyproject.toml addopts).
+# pgvector: the pgvector tests against DE's real schema and view, as the reader role (F22).
 name: ai
 
 on:
@@ -82,3 +83,92 @@ jobs:
             fi
             exec .venv/bin/python -m pytest -q
           '
+
+  pgvector:
+    name: pgvector
+    # TODO: make required after 1 week green (added 2026-11-18): remove continue-on-error, so
+    # a failure here fails the `ai` call and so ci-ok. Until then it shows red but blocks no PR,
+    # DE's included.
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    services:
+      postgres:
+        # The same image as compose.yaml and data.yml (pgvector 0.8.6, PostgreSQL 18).
+        image: pgvector/pgvector:0.8.6-pg18@sha256:2ba9ca5f2e7daa0f0e7723cba1ee9167bab54efd3640516a44ac1a928dd67e7a
+        # Throwaway CI-only credentials, as in data.yml: this database lives only inside this
+        # job, is reachable only from the runner, and holds no data. Never reuse them anywhere.
+        # The database is named skillforge because data/db/roles-local.sql grants CONNECT on it.
+        env:
+          POSTGRES_USER: skillforge
+          POSTGRES_PASSWORD: skillforge_dev
+          POSTGRES_DB: skillforge
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U skillforge -d skillforge"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      UV_PYTHON: "3.11"
+    defaults:
+      run:
+        working-directory: ai
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check ai/ and data/db/ are in this branch
+        id: present
+        working-directory: .
+        run: |
+          if [ -f ai/pyproject.toml ] && [ -f data/db/schema-draft.sql ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::ai/ or data/db/ is not in this branch; nothing to check"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        if: steps.present.outputs.present == 'true'
+        with:
+          version: "0.13.0"
+          enable-cache: true
+          cache-dependency-glob: ai/uv.lock
+          cache-python: true
+
+      - name: Install from uv.lock (hash-checked)
+        if: steps.present.outputs.present == 'true'
+        run: uv sync --locked --extra dev --extra pgvector
+
+      - name: Load DE's schema, views and reader role (data/db/, read only)
+        if: steps.present.outputs.present == 'true'
+        working-directory: .
+        env:
+          PG: ${{ job.services.postgres.id }}
+        run: |
+          for f in data/db/schema-draft.sql data/db/knowledge_views.sql data/db/roles-local.sql; do
+            echo "loading $f"
+            docker exec -i "$PG" psql -U skillforge -d skillforge -v ON_ERROR_STOP=1 -q < "$f"
+          done
+
+      - name: pytest -m pgvector (0 skipped)
+        if: steps.present.outputs.present == 'true'
+        # These tests talk only to the service above and make no LLM calls (the fake backend is
+        # the default). The network can't be cut like in `test`: the service is on the host network.
+        env:
+          SKILLFORGE_PGVECTOR_DSN: postgresql://skillforge:skillforge_dev@localhost:5432/skillforge
+          # The reader role's dev password, from data/db/roles-local.sql.
+          SKILLFORGE_PGVECTOR_READER_DSN: postgresql://skillforge_ai_reader:skillforge_dev_reader@localhost:5432/skillforge
+        run: |
+          .venv/bin/python -m pytest -m pgvector -rs -v --junitxml=/tmp/pgvector.xml
+          python3 - <<'EOF'
+          import sys
+          import xml.etree.ElementTree as ET
+          suites = ET.parse("/tmp/pgvector.xml").getroot().iter("testsuite")
+          skipped = sum(int(s.get("skipped", 0)) for s in suites)
+          print(f"skipped: {skipped}")
+          sys.exit(1 if skipped else 0)
+          EOF

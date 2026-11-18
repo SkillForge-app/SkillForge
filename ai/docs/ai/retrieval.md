@@ -224,6 +224,8 @@ GRANT SELECT ON knowledge.knowledge_chunks TO skillforge_ai_reader;
 - **`embedding_version`:** store the pinned model files with each vector (see below), so a model change is visible. AI only reads `embedding_model`.
 - **Never run `pg_schema()` against DE's database:** it creates tables and indexes, and AI's user can't. `create_schema` refuses unless the store is writable.
 - **Tests:** the opt-in `pytest -m pgvector` (with `SKILLFORGE_PGVECTOR_DSN` for a database where the user may create tables) writes a base table, creates the view, and reads it through a read-only `PgVectorStore`. A second test checks that a rare domain far from the query still returns `k` rows; it first checks that the same query without iterative scan returns fewer.
+  - **Against DE's real schema** (review F22): with `SKILLFORGE_PGVECTOR_READER_DSN` too (the `skillforge_ai_reader` role), a third test writes rows into DE's own tables, then reads them through `knowledge_chunks` as the reader. It checks `info`, the domain filter on `text[]`, the HNSW settings, `content_hash char(64)`, a skipped row with a domain AI rejects, and that the role can't read or write DE's tables. Run it only on a throwaway database with `data/db/schema-draft.sql`, `knowledge_views.sql` and `roles-local.sql` loaded: it refuses a database whose `active_config` already has a row, and removes its rows afterwards.
+  - **In CI:** the `pgvector` job in `.github/workflows/ai.yml` does exactly that, with the pinned pgvector 0.8.6 image. It runs when `ai/` or `data/db/` changes. For now it is `continue-on-error` and not part of `ci-ok`, until it has been green for a week.
 
 ### The pinned embedding model (for `embedding_version`)
 From `core/llm/models.yaml`, role `embedding`:
