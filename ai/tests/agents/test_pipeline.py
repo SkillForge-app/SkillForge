@@ -1,11 +1,20 @@
 """The AI pipeline interface (contract for BE-07/BE-08): statuses, progress, usage, the fake."""
 
+from collections.abc import Callable
+
 import pytest
 from pydantic import TypeAdapter
 
 from core.analysis import AnalyzedRequest, Answer
 from core.analysis.safety import refusal_message
-from core.llm import FakeGateway, LLMOutputInvalid, LLMUnavailable, use_fake
+from core.llm import (
+    BudgetExceeded,
+    FakeGateway,
+    LLMOutputInvalid,
+    LLMRefused,
+    LLMUnavailable,
+    use_fake,
+)
 from core.pipeline import (
     AIPipeline,
     FakePipeline,
@@ -14,9 +23,20 @@ from core.pipeline import (
     StepResult,
     interface,
 )
-from core.pipeline.interface import INVALID_ANSWERS_MESSAGE, INVALID_REQUEST_MESSAGE
+from core.pipeline.fake import _unanswered, example_request
+from core.pipeline.interface import (
+    DESIGN_BLOCKED_MESSAGE,
+    DESIGN_BUDGET_MESSAGE,
+    DESIGN_INVALID_MESSAGE,
+    DESIGN_NOT_READY_MESSAGE,
+    DESIGN_PAUSED_MESSAGE,
+    DESIGN_READY_MESSAGE,
+    INVALID_ANSWERS_MESSAGE,
+    INVALID_REQUEST_MESSAGE,
+    closing_event,
+)
 from core.spec import SkillSpec
-from tests.agents.helpers import ScriptedGateway, bad_spec, screened
+from tests.agents.helpers import ScriptedGateway, bad_spec, good_spec, screened
 
 QUESTIONS = [
     {"id": "q1", "text": "Who is it for?", "about": "audience"},
@@ -210,6 +230,86 @@ async def test_design_status_mapping(
     with use_fake(ScriptedGateway(script)):  # type: ignore[arg-type]
         result = await RealPipeline().design(screened("ai-engineer", **analyzed_changes))
     assert (result.status, result.error_code) == (status, code)
+
+
+# ---------------------------------------------------------------- closing event (review F12)
+
+
+def not_ready() -> AnalyzedRequest:
+    return _unanswered(example_request("marketing-strategist"))  # open questions, screened
+
+
+@pytest.mark.parametrize(
+    ("analyzed", "script", "outcome", "closing"),
+    [
+        (lambda: screened(), {}, ("ok", None), ("done", 1, DESIGN_READY_MESSAGE)),
+        (
+            lambda: screened(safety=None),
+            {},
+            ("failed", "not_screened"),
+            ("failed", None, DESIGN_NOT_READY_MESSAGE),
+        ),
+        (
+            not_ready,
+            {},
+            ("needs_input", "open_questions"),
+            ("failed", None, DESIGN_NOT_READY_MESSAGE),
+        ),
+        (
+            lambda: screened(),
+            {"architect/generate": [LLMUnavailable("down")]},
+            ("retry_later", "provider_unavailable"),
+            ("failed", 1, DESIGN_PAUSED_MESSAGE),
+        ),
+        (
+            lambda: screened(),
+            {"architect/generate": [LLMRefused("no")]},
+            ("blocked", "blocked.other"),
+            ("failed", 1, DESIGN_BLOCKED_MESSAGE),
+        ),
+        (
+            lambda: screened(),
+            {"architect/generate": [BudgetExceeded("spent")]},
+            ("failed", "budget_exceeded"),
+            ("failed", 1, DESIGN_BUDGET_MESSAGE),
+        ),
+    ],
+)
+async def test_every_design_ends_with_exactly_one_closing_event(
+    analyzed: Callable[[], AnalyzedRequest],
+    script: dict[str, list[object]],
+    outcome: tuple[str, str | None],
+    closing: tuple[str, int | None, str],
+) -> None:
+    gateway = ScriptedGateway(script or {"architect/generate": [good_spec()]})
+    events: list[ProgressEvent] = []
+    with use_fake(gateway):  # type: ignore[arg-type]
+        result = await RealPipeline().design(analyzed(), on_progress=events.append)
+    assert (result.status, result.error_code) == outcome
+    assert [e.stage in ("done", "failed") for e in events].count(True) == 1
+    assert (events[-1].stage, events[-1].attempt, events[-1].message) == closing
+    if result.status == "needs_input":
+        assert result.value is None  # design's needs_input: run clarify first
+
+
+@pytest.mark.parametrize(
+    ("status", "code", "message"),
+    [
+        ("ok", None, DESIGN_READY_MESSAGE),
+        ("failed", "invalid_spec", DESIGN_INVALID_MESSAGE),
+        ("retry_later", "deadline_exceeded", DESIGN_PAUSED_MESSAGE),
+        ("blocked", "blocked.other", DESIGN_BLOCKED_MESSAGE),
+    ],
+)
+async def test_the_fake_closes_design_like_the_real_pipeline(
+    status: str, code: str | None, message: str
+) -> None:
+    fake = FakePipeline()
+    fake.set("design", status, error_code=code)  # type: ignore[arg-type]
+    events: list[ProgressEvent] = []
+    await fake.design(screened(), on_progress=events.append)
+    assert [e.stage in ("done", "failed") for e in events].count(True) == 1
+    assert events[-1].message == message == closing_event(status, code)[1]  # type: ignore[arg-type]
 
 
 # ---------------------------------------------------------------- FakePipeline

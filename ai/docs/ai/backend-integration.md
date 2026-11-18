@@ -142,7 +142,7 @@ def design_job(skill_id: str, attempt: int = 0) -> None:
   - **`analyze`:** the text is 1 to 4000 characters after trimming spaces. A blank text or a longer one returns `failed` / `invalid_request` with no model call. Checking it in the API first saves a job, but isn't required.
   - **`clarify`:** answers only to the questions that were asked, at most one each. An answer to another question, or two answers to one question, returns `failed` / `invalid_request`.
   - **Skipping:** when the user skips everything, send either an empty list or one `Answer(question_id=q.id, text=None)` per question. Both mean every question was skipped. Skipping some questions is fine too: send only the answers you have.
-- **Progress (BE-08):** `design` sends no closing progress event when it ends in `retry_later`, `blocked`, `failed/budget_exceeded` or `not_screened` (review F12). Treat the saved result as the end of the stream.
+- **Progress (BE-08):** every `design` ends with exactly one closing progress event (`done` or `failed`; the messages are in `pipeline-interface.md`). Pass the events to the browser as they come, but take the job's outcome from the saved `StepResult.status`: a `failed` event can mean "paused, will retry".
 
 ## 4. Environment and keys
 

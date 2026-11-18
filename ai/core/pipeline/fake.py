@@ -24,6 +24,7 @@ from core.pipeline.interface import (
     StepStatus,
     Usage,
     check_text,
+    closing_event,
     prepare_answers,
 )
 from core.spec import SkillSpec, Target, load_spec
@@ -126,10 +127,8 @@ class FakePipeline:
                     message="Designing the skill (attempt 1)",
                 )
             )
-            final = "done" if result.status == "ok" else "failed"
-            on_progress(
-                ProgressEvent(step="design", stage=final, attempt=1, message=f"Design {final}")
-            )
+            stage, message = closing_event(result.status, result.error_code)  # as the real one
+            on_progress(ProgressEvent(step="design", stage=stage, attempt=1, message=message))
         return result
 
 

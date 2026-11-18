@@ -144,6 +144,30 @@ INVALID_REQUEST_MESSAGE = "Please describe the skill you want in 1 to 4000 chara
 INVALID_ANSWERS_MESSAGE = "Please answer only the questions shown, at most once each."
 _REQUEST_TEXT: TypeAdapter[str] = TypeAdapter(RequestText)
 
+# The closing progress event of `design` (review F12): exactly one, whatever the outcome. The
+# outcome itself is StepResult.status; the last event never decides it.
+DESIGN_READY_MESSAGE = "Design ready"
+DESIGN_INVALID_MESSAGE = "Could not produce a valid design"
+DESIGN_PAUSED_MESSAGE = "Paused: we'll try again shortly"
+DESIGN_BLOCKED_MESSAGE = "Stopped: this request can't be built"
+DESIGN_BUDGET_MESSAGE = "Stopped: too much work for one request"
+DESIGN_NOT_READY_MESSAGE = "Stopped: the request isn't ready"
+
+
+def closing_event(status: StepStatus, error_code: str | None) -> tuple[Stage, str]:
+    """(stage, message) of the event that closes a `design` with this result."""
+    if status == "ok":
+        return "done", DESIGN_READY_MESSAGE
+    if status == "retry_later":
+        return "failed", DESIGN_PAUSED_MESSAGE
+    if status == "blocked":
+        return "failed", DESIGN_BLOCKED_MESSAGE
+    if error_code == "budget_exceeded":
+        return "failed", DESIGN_BUDGET_MESSAGE
+    if status == "needs_input" or error_code == "not_screened":
+        return "failed", DESIGN_NOT_READY_MESSAGE
+    return "failed", DESIGN_INVALID_MESSAGE
+
 
 def check_text(text: str) -> "StepResult[AnalyzedRequest] | None":
     """analyze's `failed` / "invalid_request" result for text the analyzer can't take (blank,
@@ -212,18 +236,25 @@ class RealPipeline:
         existing_names: Collection[str] = (),
         on_progress: OnProgress | None = None,
     ) -> StepResult[SkillSpec]:
+        closed = False  # a closing event ("done" or "failed") was sent
+        last_attempt: int | None = None
+
         def emit(stage: Stage, attempt: int | None, message: str) -> None:
+            nonlocal closed
+            closed = closed or stage in ("done", "failed")
             if on_progress:
                 on_progress(
                     ProgressEvent(step="design", stage=stage, attempt=attempt, message=message)
                 )
 
         def from_architect(stage: str, attempt: int) -> None:
+            nonlocal last_attempt
+            last_attempt = attempt
             messages = {
                 "attempt": f"Designing the skill (attempt {attempt})",
                 "repairing": f"Fixing problems in the design (attempt {attempt})",
-                "done": "Design ready",
-                "failed": "Could not produce a valid design",
+                "done": DESIGN_READY_MESSAGE,
+                "failed": DESIGN_INVALID_MESSAGE,
             }
             emit(stage, attempt, messages.get(stage, stage))  # type: ignore[arg-type]
 
@@ -272,6 +303,9 @@ class RealPipeline:
                         user_message=FAILED_MESSAGE,
                         issues=[IssueRecord.of(i) for i in result.issues],
                     )
+        if not closed:  # review F12: every design ends with exactly one closing event
+            stage, message = closing_event(outcome.status, outcome.error_code)
+            emit(stage, last_attempt, message)
         if outcome.status == "ok" and outcome.value is not None:
             _maybe_sample(outcome.value.skill.name)
         return _finish(outcome, usage, start)

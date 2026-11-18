@@ -48,7 +48,7 @@ Every step **returns** a `StepResult`; it never raises for an expected outcome. 
 | Status | What the worker does |
 |---|---|
 | `ok` | Continue with `value` |
-| `needs_input` | Show `value.questions` (3 to 5). Then call `clarify` |
+| `needs_input` | `analyze`/`clarify`: show `value.questions` (3 to 5), then call `clarify`. `design` (`error_code` `open_questions`): `value` is `None`; the request still has open questions, so call `clarify` first |
 | `blocked` | Show `user_message`. **Start no job, store no skill** (BE-14) |
 | `retry_later` | A provider or the safety screen was down (`provider_unavailable`), or the step passed its time limit (`deadline_exceeded`). Retry the job later, and show `user_message` if it keeps failing |
 | `failed` | No usable result, for example no valid spec after 3 attempts, or input that broke a rule above (`invalid_request`). Show `user_message`; `issues` say why |
@@ -62,6 +62,20 @@ started → attempt 1 → (repairing 2 → repairing 3) → done | failed
 
 The `message` is short and safe to show, for example "Fixing problems in the design (attempt 2)".
 
+**Every `design` ends with exactly one closing event** (`done` or `failed`), whatever happens:
+
+| Result | Closing event |
+|---|---|
+| `ok` | `done`, "Design ready" |
+| `failed` / `invalid_spec` | `failed`, "Could not produce a valid design" |
+| `retry_later` | `failed`, "Paused: we'll try again shortly" |
+| `blocked` | `failed`, "Stopped: this request can't be built" |
+| `failed` / `budget_exceeded` | `failed`, "Stopped: too much work for one request" |
+| `needs_input` / `open_questions`, `failed` / `not_screened` | `failed`, "Stopped: the request isn't ready" |
+
+- **The closing event shows progress, not the outcome:** a `failed` stage can mean "paused, will retry". Decide what happened from `StepResult.status` (the job status), not from the last event.
+- When the design stops before any attempt (`not_screened`, `open_questions`), the closing event comes right after `started`, with `attempt` `None`.
+
 ## FakePipeline (for backend tests)
 ```python
 fake = FakePipeline()                                   # every step returns "ok" with example data
@@ -71,5 +85,6 @@ fake.set("design", "failed", error_code="invalid_spec")
 fake.calls                                              # every call, in order
 ```
 - **Data:** it returns the example AnalyzedRequests and SkillSpecs from `ai/examples/`.
-- **Events:** it sends the same progress events as the real pipeline.
+- **Events:** `started`, `attempt 1`, then the same closing event the real pipeline sends for the scripted result (table above).
+- **Input rules:** it applies the real input rules first, so a blank text or an unknown answer gives `invalid_request` whatever is scripted.
 - **Pairing:** use it together with `SKILLFORGE_LLM_BACKEND=fake` when you also want the real pipeline code to run without a key.
