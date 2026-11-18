@@ -240,7 +240,10 @@ The two items the first test run missed (d-v35 and d-v38, formerly t-v22 and t-v
   - **Every item gives the same result as with version 1:** each injection, control and clean page has the same outcome and the same rules. **Visible injections caught on test: 16 of 28 before and after.** Dev stays at 39 of 39.
   - The five new dev controls reach the chunks with no finding.
   - None of the 20 labelled AI-10 pages changes (text, chunks, reasons).
-- **(c) was not re-measured.** No `--llm` run was made, because it waits for API credit. No test chunk changed, so the saved verdicts above should still cover the run; recomputing with `--verdicts` would make no paid call, but it is an `--llm` run and was left for later.
+- **(c) recomputed from the saved 2 Nov verdicts, no model call (2026-11-18): 54 of 54, the same as on 2 Nov.** The done-when still passes (report `injection-test-2026-11-18`).
+  - Command: `report --split test --llm --verdicts reports/llm-verdicts-test-2026-11-02.json`, run with the network blocked (the `netblock` stand-in for CI's `unshare --net`: a lookup of openrouter.ai was refused first), no API keys in the environment, and the fake LLM backend.
+  - With `--verdicts` the command never calls the LLM screen, and it stops (exit 2) if any chunk lacks a saved verdict. None did: no test chunk changed with the version-2 rules.
+  - The LLM-screen numbers in that report (0 of 214 clean passages flagged, 17 of 18 injected-page passages) are the 2 Nov verdicts. Its "live" label is the report's fixed heading for any `--llm` run; nothing was called on 18 Nov.
 - **No new test split was made.** The rules changed after the second test split, which strictly calls for a new one. The narrowing was checked on dev, and the second test split gives the same result for every item.
 
 ## Known limits
