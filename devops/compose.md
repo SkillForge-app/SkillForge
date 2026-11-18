@@ -210,6 +210,14 @@ the image, starts it, and checks three things:
 - it doesn't run as root;
 - the API URL is in the browser code.
 
+The `worker` job builds the worker image from `ai/`. It also runs when `ai/uv.lock`, `ai/pyproject.toml` or the model pin
+changes. It checks:
+- the base image matches the API image's, pinned by digest;
+- it doesn't run as root and holds no `.env`;
+- `model-init` fills the cache, and a second run with no network downloads nothing;
+- the worker loads the model with no network and a read-only cache;
+- an empty cache fails with the model-init message.
+
 ## For Data Engineering
 This stack is the one local database for every department. Your `DATABASE_URL` (`data/.env.example`) points
 at it.
