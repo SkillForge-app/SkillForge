@@ -12,8 +12,16 @@ store it as JSON (`model_dump_json()`) and decide what to do from `status`:
 - blocked      show `user_message`; start no job (BE-14)
 - retry_later  a provider or the safety screen was unavailable; retry the job later
 - failed       no usable result (e.g. no valid spec after 3 tries); `issues` say why
-                 (error_code "budget_exceeded": the skill's model budget is used up, AI-21)
+                 (error_code "budget_exceeded": the skill's model budget is used up, AI-21;
+                 "invalid_request": the input broke a rule below, checked before any model call)
 Changes to this file need a PR approved by AI and BE.
+
+Input rules (checked by both RealPipeline and FakePipeline, before any model call):
+- analyze: the request text is 1 to 4000 characters after trimming spaces (AnalyzedRequest's
+  own rule). Otherwise `failed` / "invalid_request".
+- clarify: answers only to questions that were asked, at most one each. No answers at all
+  means every question was skipped; so does one empty answer (text None) per question.
+  Otherwise `failed` / "invalid_request".
 
 Cost budget (AI-21): wrap each step of one job in `core.llm.skill_run(skill_id,
 spent_usd=<cost of earlier steps>)`; the budget then covers the whole skill. Without it, each
@@ -25,7 +33,7 @@ from collections.abc import Awaitable, Callable, Collection, Iterator, Sequence
 from contextlib import contextmanager, nullcontext
 from typing import Any, Generic, Literal, Protocol, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from core.agents import (
     ArchitectRefused,
@@ -43,6 +51,7 @@ from core.analysis import (
     refusal_message,
     screen_and_analyze,
 )
+from core.analysis.types import RequestText
 from core.llm import (
     BudgetExceeded,
     LLMError,
@@ -129,6 +138,38 @@ class AIPipeline(Protocol):
 RETRY_LATER_MESSAGE = "Something went wrong on our side. Please try again in a few minutes."
 FAILED_MESSAGE = "We could not design this skill. Please rephrase or add detail and try again."
 BUDGET_MESSAGE = "This skill needs more work than we can do for one request. Please narrow it down."
+INVALID_REQUEST_MESSAGE = "Please describe the skill you want in 1 to 4000 characters."
+INVALID_ANSWERS_MESSAGE = "Please answer only the questions shown, at most once each."
+_REQUEST_TEXT: TypeAdapter[str] = TypeAdapter(RequestText)
+
+
+def check_text(text: str) -> "StepResult[AnalyzedRequest] | None":
+    """analyze's `failed` / "invalid_request" result for text the analyzer can't take (blank,
+    or over 4000 characters), or None when the text is fine. Makes no model call."""
+    try:
+        _REQUEST_TEXT.validate_python(text)
+    except ValidationError:
+        return _result(
+            "analyze", "failed", error_code="invalid_request", user_message=INVALID_REQUEST_MESSAGE
+        )
+    return None
+
+
+def prepare_answers(
+    analyzed: AnalyzedRequest, answers: Sequence[Answer]
+) -> "tuple[list[Answer], StepResult[AnalyzedRequest] | None]":
+    """clarify's answers, checked before any model call: (answers to use, None), or
+    ([], the `failed` / "invalid_request" result). No answers at all means every question was
+    skipped, the same as one empty answer per question."""
+    asked = [q.id for q in analyzed.questions]
+    answered = [a.question_id for a in answers]
+    if len(set(answered)) != len(answered) or set(answered) - set(asked):
+        return [], _result(
+            "clarify", "failed", error_code="invalid_request", user_message=INVALID_ANSWERS_MESSAGE
+        )
+    if not answers:
+        return [Answer(question_id=q, text=None) for q in asked], None
+    return list(answers), None
 
 
 class RealPipeline:
@@ -139,9 +180,13 @@ class RealPipeline:
     ) -> StepResult[AnalyzedRequest]:
         start = time.perf_counter()
         with _step_budget("analyze"), track_usage() as usage:
-            outcome = await _analysis_step(
-                "analyze", screen_and_analyze(text, selected_targets=selected_targets)
-            )
+            invalid = check_text(text)
+            if invalid is not None:
+                outcome = invalid
+            else:
+                outcome = await _analysis_step(
+                    "analyze", screen_and_analyze(text, selected_targets=selected_targets)
+                )
         return _finish(outcome, usage, start)
 
     async def clarify(
@@ -149,7 +194,13 @@ class RealPipeline:
     ) -> StepResult[AnalyzedRequest]:
         start = time.perf_counter()
         with _step_budget("clarify"), track_usage() as usage:
-            outcome = await _analysis_step("clarify", answer_questions_safely(analyzed, answers))
+            checked, invalid = prepare_answers(analyzed, answers)
+            if invalid is not None:
+                outcome = invalid
+            else:
+                outcome = await _analysis_step(
+                    "clarify", answer_questions_safely(analyzed, checked)
+                )
         return _finish(outcome, usage, start)
 
     async def design(
@@ -242,7 +293,9 @@ async def _analysis_step(
         return _result(
             step, "retry_later", error_code="provider_unavailable", user_message=RETRY_LATER_MESSAGE
         )
-    except LLMError as exc:
+    except (LLMError, ValidationError) as exc:
+        # ValidationError: a rule the input checks above don't cover. Its message holds the
+        # user's text, so only the class name goes into error_code (review F2).
         return _result(
             step,
             "failed",

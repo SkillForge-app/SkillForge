@@ -32,7 +32,7 @@ architect_input = analyzed                                               # A3, n
 | `audience`, `expected_outputs` | Extracted from the request. They may be empty |
 | `skill_name`, `summary` | A suggested kebab-case name, and a one-sentence restatement in English |
 | `needs_clarification`, `questions` | If the request is vague: `true` plus 3 to 5 questions (`id` q1 to q5, `text` in the request's language, and `about`, one of audience, outputs, platforms, scope, tone, constraints or domain) |
-| `answers` | After the second pass: one entry per answered question. `text: null` means the user skipped it |
+| `answers` | After the second pass: the answers `clarify` got, at most one per question. `text: null` means the user skipped it. When `clarify` got no answers at all, every question has an entry with `text: null` |
 | `analyzer` | The `prompt_id` and `prompt_version` that produced the analysis |
 
 **Rules:**

@@ -1,6 +1,7 @@
 """The AI pipeline interface (contract for BE-07/BE-08): statuses, progress, usage, the fake."""
 
 import pytest
+from pydantic import TypeAdapter
 
 from core.analysis import AnalyzedRequest, Answer
 from core.analysis.safety import refusal_message
@@ -11,7 +12,9 @@ from core.pipeline import (
     ProgressEvent,
     RealPipeline,
     StepResult,
+    interface,
 )
+from core.pipeline.interface import INVALID_ANSWERS_MESSAGE, INVALID_REQUEST_MESSAGE
 from core.spec import SkillSpec
 from tests.agents.helpers import ScriptedGateway, bad_spec, screened
 
@@ -77,6 +80,82 @@ async def test_analyze_failed_when_analysis_is_invalid(fake: FakeGateway) -> Non
     result = await RealPipeline().analyze("x")
     assert result.status == "failed"
     assert result.error_code == "analysis_failed.LLMOutputInvalid"
+
+
+# ---------------------------------------------------------------- input rules (review F2)
+
+
+@pytest.mark.parametrize("text", ["", "   \n ", "x" * 4001])
+async def test_analyze_refuses_bad_text_before_any_model_call(fake: FakeGateway, text: str) -> None:
+    for pipeline in (RealPipeline(), FakePipeline()):
+        result = await pipeline.analyze(text)
+        assert (result.status, result.error_code) == ("failed", "invalid_request")
+        assert result.user_message == INVALID_REQUEST_MESSAGE and result.value is None
+        assert result.usage.calls == 0
+    assert fake.calls == []  # not one paid call
+
+
+async def test_analyze_takes_exactly_4000_characters(fake: FakeGateway) -> None:
+    for pipeline in (RealPipeline(), FakePipeline()):
+        assert (await pipeline.analyze("x" * 4000)).status == "ok"
+
+
+async def first_pass(fake: FakeGateway) -> AnalyzedRequest:
+    fake.register(
+        "analysis/request", {**ANALYSIS, "needs_clarification": True, "questions": QUESTIONS}
+    )
+    first = await RealPipeline().analyze("help")
+    assert first.value is not None
+    fake.register("analysis/request", ANALYSIS)
+    fake.calls.clear()
+    return first.value
+
+
+@pytest.mark.parametrize(
+    "answers",
+    [
+        [],  # no answers at all: every question skipped
+        [Answer(question_id=q, text=None) for q in ("q1", "q2", "q3")],  # one empty answer each
+    ],
+)
+async def test_clarify_with_every_question_skipped(
+    fake: FakeGateway, answers: list[Answer]
+) -> None:
+    analyzed = await first_pass(fake)
+    for pipeline in (RealPipeline(), FakePipeline()):
+        result = await pipeline.clarify(analyzed, answers)
+        assert result.status == "ok" and result.value is not None
+    sent = [c for c in fake.calls if c.prompt_id == "analysis/request"][0]
+    assert sent.inputs is not None
+    assert [a["answer"] for a in sent.inputs["answers"]] == [None, None, None]
+
+
+@pytest.mark.parametrize(
+    "answers",
+    [
+        [Answer(question_id="q4", text="not asked")],
+        [Answer(question_id="q1", text="one"), Answer(question_id="q1", text="two")],
+    ],
+)
+async def test_clarify_refuses_answers_to_unasked_or_repeated_questions(
+    fake: FakeGateway, answers: list[Answer]
+) -> None:
+    analyzed = await first_pass(fake)
+    for pipeline in (RealPipeline(), FakePipeline()):
+        result = await pipeline.clarify(analyzed, answers)
+        assert (result.status, result.error_code) == ("failed", "invalid_request")
+        assert result.user_message == INVALID_ANSWERS_MESSAGE and result.usage.calls == 0
+    assert fake.calls == []
+
+
+async def test_an_unexpected_validation_error_is_a_result_without_the_users_text() -> None:
+    async def run() -> AnalyzedRequest:
+        TypeAdapter(int).validate_python("SECRET user text")
+        raise AssertionError("unreachable")
+
+    result = await interface._analysis_step("analyze", run())
+    assert (result.status, result.error_code) == ("failed", "analysis_failed.ValidationError")
+    assert "SECRET" not in result.model_dump_json()
 
 
 async def test_clarify_then_design(fake: FakeGateway) -> None:

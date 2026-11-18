@@ -61,6 +61,7 @@ await pipeline.design(analyzed: AnalyzedRequest, *, existing_names: Collection[s
 | `failed` | `budget_exceeded` | The skill used up its model budget. Show `user_message`; don't retry |
 | `failed` | `invalid_spec` (`design`) | No valid spec after 3 attempts; `issues` say why. Show `user_message` |
 | `failed` | `not_screened` (`design`) | The `AnalyzedRequest` has no safety clearance: always pass the one `analyze`/`clarify` returned, from your own database |
+| `failed` | `invalid_request` (`analyze`, `clarify`) | The input broke a rule (see "Input rules" below). No model was called. Show `user_message`; don't retry the same input |
 | `failed` | `analysis_failed.<ErrorType>` | The analysis could not be used. Show `user_message` |
 
 - **A step deadline shows as `retry_later` / `provider_unavailable`** for now.
@@ -137,8 +138,10 @@ def design_job(skill_id: str, attempt: int = 0) -> None:
 - **No automatic retries.** A model call costs money, and the gateway already retries transient errors and falls back to other models. A blind retry would pay for the same calls twice. `retry_later` is the only case to re-run, on purpose, with `enqueue_in`.
 - **`job_timeout` must stay above the step deadline,** so the pipeline stops first and returns `retry_later` cleanly. RQ's timeout only catches a stuck job.
 - **Analyze and clarify jobs** follow the same pattern, with `job_timeout=300`.
-  - Before enqueueing `analyze`, check that the text is 1 to 4000 characters and not blank.
-  - For `clarify`, when the user skips everything, send one `Answer(question_id=q.id, text=None)` per question, not an empty list. Today a blank text, a text over 4000 characters or an empty answer list raises a `ValidationError` after the model calls (review F2). Never log that exception's message, because it contains the user's text.
+- **Input rules** (the same in `pipeline-interface.md`; checked before any model call, by `RealPipeline` and `FakePipeline`):
+  - **`analyze`:** the text is 1 to 4000 characters after trimming spaces. A blank text or a longer one returns `failed` / `invalid_request` with no model call. Checking it in the API first saves a job, but isn't required.
+  - **`clarify`:** answers only to the questions that were asked, at most one each. An answer to another question, or two answers to one question, returns `failed` / `invalid_request`.
+  - **Skipping:** when the user skips everything, send either an empty list or one `Answer(question_id=q.id, text=None)` per question. Both mean every question was skipped. Skipping some questions is fine too: send only the answers you have.
 - **Progress (BE-08):** `design` sends no closing progress event when it ends in `retry_later`, `blocked`, `failed/budget_exceeded` or `not_screened` (review F12). Treat the saved result as the end of the stream.
 
 ## 4. Environment and keys
