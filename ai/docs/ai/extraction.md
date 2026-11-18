@@ -18,7 +18,7 @@ else:
     page.quality.reasons     # e.g. ("paywall_or_login",): store the verdict, make no chunks
 ```
 
-`raw_html` can be `str` or `bytes`. Bytes are decoded as UTF-8, and other encodings are detected. A URL that is not http(s) raises `ExtractionInputError`. A bad page never raises: it comes back with `quality.reasons` set. A single token longer than a passage (over 2000 characters, e.g. base64 or minified code) can't be chunked, so it's dropped and the page is judged again without it; if too little is left, the usual reason (`too_short`, `empty`) applies. Pages without such a token are not affected, so the fingerprint is unchanged.
+`raw_html` can be `str` or `bytes`. Bytes are decoded as UTF-8, and other encodings are detected. A URL that is not http(s) raises `ExtractionInputError`. A bad page never raises: it comes back with `quality.reasons` set (`extraction_error` when the page can't be built at all). A single token longer than a passage (over 2000 characters, e.g. base64 or minified code) can't be chunked, so it's dropped and the page is judged again without it; if too little is left, the usual reason (`too_short`, `empty`) applies. Pages without such a token are not affected, so the fingerprint is unchanged.
 
 ## For DE-05: from a fetched page to rows in the knowledge view
 Data Engineering owns storage. DE-05 runs AI's code and writes the result into DE's tables. AI reads it back through the read-only view `knowledge.knowledge_chunks` (the columns are in [retrieval.md](retrieval.md#for-data-engineering-the-knowledge-view)). The same steps as `ingest_pages`, AI's local equivalent:
@@ -157,6 +157,7 @@ A page is rejected when it has any of these reasons. They are always listed in t
 | `wrong_language` | The language is not in `languages` (default `("en",)`), or its confidence is below 0.80 |
 | `too_short` | Fewer than 150 words of main text |
 | `injection` | AI-19: any high-severity prompt-injection finding, or `injection_max_low` (3) low ones ([injection-defence.md](injection-defence.md)) |
+| `extraction_error` | The page passed every check above, but its chunks or page could not be built (a validation error). Always alone. It replaces an exception, so no page text reaches the caller's error log |
 
 - **Word-count guards:** these keep normal pages from being flagged. A long article with an "Already a subscriber? Sign in" footer, or a login box in the sidebar, passes.
 - **Languages:** only `en` has a spaCy pipeline. `ExtractConfig(languages=("fr",))` is rejected until a pipeline is added. To add Arabic, wire in a pipeline and an Arabic concept extractor first.

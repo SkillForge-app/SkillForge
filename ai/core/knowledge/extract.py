@@ -48,7 +48,13 @@ from core.spec.models import Line, SpecModel
 PASSAGE_MAX_CHARS: int = get_args(PassageText)[1].max_length
 
 Reason = Literal[
-    "empty", "paywall_or_login", "boilerplate", "wrong_language", "too_short", "injection"
+    "empty",
+    "paywall_or_login",
+    "boilerplate",
+    "wrong_language",
+    "too_short",
+    "injection",
+    "extraction_error",
 ]
 REASONS: tuple[Reason, ...] = (
     "empty",
@@ -57,6 +63,10 @@ REASONS: tuple[Reason, ...] = (
     "wrong_language",
     "too_short",
     "injection",
+    # review F8: the page passed every check, but its chunks or page could not be built (a
+    # validation error). It is rejected instead of raising, so no page text ends up in a
+    # caller's error log.
+    "extraction_error",
 )
 Extractor = Literal["trafilatura", "bs4", "none"]
 # Languages with a spaCy pipeline wired in (nlp.SPACY_MODEL). Add a pipeline before a language.
@@ -266,7 +276,8 @@ def extract_page(
         content = replace(content, blocks=_drop_unchunkable_tokens(content.blocks))
         text, quality = _assess(content, signals, config, screening)
     title = _title(content.title, content.sitename, tree, url)
-    if not quality.ok:
+
+    def rejected(quality: QualityReport) -> ExtractedPage:
         return ExtractedPage(
             url=page_url,
             title=title,
@@ -279,6 +290,9 @@ def extract_page(
             screening=screening,
         )
 
+    if not quality.ok:
+        return rejected(quality)
+
     analysed = nlp.analyse([title] + [b.text for b in content.blocks])
     title_terms, block_sentences = analysed[0], analysed[1:]
     units = _units(content.blocks, block_sentences)
@@ -287,22 +301,27 @@ def extract_page(
         + [t for u in units if u.new_section for t in u.terms]
     )
     raw_chunks = chunk_units(units, config.chunking)
-    return ExtractedPage(
-        url=page_url,
-        title=title,
-        retrieved=retrieved,
-        extractor=content.extractor,
-        text=text,
-        quality=quality,
-        concepts=nlp.rank_concepts(
-            (t for u in units for t in u.terms), boost=boost, top=config.page_concepts
-        ),
-        chunks=[
-            _chunk(raw, i, page_url, title, retrieved, boost, config)
-            for i, raw in enumerate(raw_chunks)
-        ],
-        screening=screening,
-    )
+    try:
+        return ExtractedPage(
+            url=page_url,
+            title=title,
+            retrieved=retrieved,
+            extractor=content.extractor,
+            text=text,
+            quality=quality,
+            concepts=nlp.rank_concepts(
+                (t for u in units for t in u.terms), boost=boost, top=config.page_concepts
+            ),
+            chunks=[
+                _chunk(raw, i, page_url, title, retrieved, boost, config)
+                for i, raw in enumerate(raw_chunks)
+            ],
+            screening=screening,
+        )
+    except ValidationError:
+        # Review F8: a page that passed every check but can't be built (e.g. a chunk over the
+        # passage limit) is rejected, not raised: its message would carry the page's text.
+        return rejected(quality.model_copy(update={"reasons": ("extraction_error",)}))
 
 
 def _chunk(
