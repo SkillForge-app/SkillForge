@@ -1,0 +1,60 @@
+# AI service environments (AI-21). One variable picks the profile:
+#   SKILLFORGE_ENV=dev | staging | production      (unset: dev)
+# `backends` are defaults for the variables the modules already read; a variable set explicitly
+# wins (but `python -m core.ops check` refuses fakes in production). `limits` go to
+# core.llm.limits; budgets are in USD. The numbers are provisional until AI-20 measures the real
+# cost per skill and traffic; change them here, by pull request, with the reason.
+version: 1
+environments:
+  dev:
+    backends:
+      SKILLFORGE_LLM_BACKEND: litellm
+      SKILLFORGE_RETRIEVER: real
+      SKILLFORGE_VECTOR_STORE: local
+      SKILLFORGE_SEARCH: fake
+    limits:
+      max_output_tokens: 32000
+      max_input_chars: 400000
+      max_wait_s: 30
+      skill_budget_usd: 5.00
+      step_budget_usd: {analyze: 1.00, clarify: 1.00, design: 4.00}
+      default_role: {max_concurrency: 4, requests_per_minute: 30}
+      roles: {}
+    quality_sample_rate: 0.0
+    daily_spend_usd: 20
+
+  staging:
+    backends:
+      SKILLFORGE_LLM_BACKEND: litellm
+      SKILLFORGE_RETRIEVER: real
+      SKILLFORGE_VECTOR_STORE: pgvector
+      SKILLFORGE_SEARCH: brave
+    limits:
+      max_output_tokens: 32000
+      max_input_chars: 200000
+      max_wait_s: 30
+      skill_budget_usd: 3.00
+      step_budget_usd: {analyze: 0.50, clarify: 0.50, design: 2.00}
+      default_role: {max_concurrency: 8, requests_per_minute: 60}
+      roles:
+        architect: {max_concurrency: 4, requests_per_minute: 30}
+    quality_sample_rate: 1.0  # every staging spec is sampled for the AI-16 judge
+    daily_spend_usd: 30
+
+  production:
+    backends:
+      SKILLFORGE_LLM_BACKEND: litellm
+      SKILLFORGE_RETRIEVER: real
+      SKILLFORGE_VECTOR_STORE: pgvector
+      SKILLFORGE_SEARCH: brave
+    limits:
+      max_output_tokens: 32000
+      max_input_chars: 200000
+      max_wait_s: 30
+      skill_budget_usd: 1.50
+      step_budget_usd: {analyze: 0.25, clarify: 0.25, design: 1.00}
+      default_role: {max_concurrency: 8, requests_per_minute: 60}
+      roles:
+        architect: {max_concurrency: 4, requests_per_minute: 60}
+    quality_sample_rate: 0.05
+    daily_spend_usd: 150  # AILLMSpendRateHigh fires above 3x this rate per hour

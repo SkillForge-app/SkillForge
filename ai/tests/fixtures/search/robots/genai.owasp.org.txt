@@ -1,0 +1,13 @@
+Sitemap: https://genai.owasp.org/sitemap.xml
+Sitemap: https://genai.owasp.org/news-sitemap.xml
+User-agent: *
+Disallow: /wp-content/uploads/wpo/wpo-plugins-tables-list.json
+
+# START YOAST BLOCK
+# ---------------------------
+User-agent: *
+Disallow:
+
+Sitemap: https://genai.owasp.org/sitemap_index.xml
+# ---------------------------
+# END YOAST BLOCK

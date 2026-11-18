@@ -1,0 +1,5 @@
+# fetched 2026-10-26 from https://online.nwmissouri.edu/robots.txt (HTTP 200)
+User-agent: *
+Disallow: /wp-admin/
+Disallow: /online/
+Sitemap: https://online.nwmissouri.edu/sitemap_index.xml

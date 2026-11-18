@@ -1,0 +1,779 @@
+# fetched 2026-10-26 from https://hr.fullerton.edu/robots.txt (HTTP 200)
+<!DOCTYPE html><html lang="en">
+   <head>
+      <meta charset="UTF-8"/>
+      <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+      <meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1"/>
+      <meta http-equiv="cache-control" content="no-cache, max-age:120"/>
+      <meta http-equiv="clear-site-data" content="cache"/>
+      <meta http-equiv="expires" content="0"/>
+      <meta property="og:title" content="404 - Page Not Found"/>
+      <meta property="og:description" content=""/>
+      <meta property="og:type" content="website"/>
+      <meta property="og:url" content="https://hr.fullerton.edu/_errors/404.html"/>
+      <meta property="og:image" content=""/>
+      <meta property="og:image:alt" content=""/>
+      <meta name="twitter:title" content="404 - Page Not Found"/>
+      <meta name="twitter:description" content=""/>
+      <meta name="twitter:image" content=""/>
+      <meta name="twitter:image:alt" content=""/>
+      <meta name="twitter:card" content=""/>
+      <link href="https://www.fullerton.edu/web/core/images/v5/favicon-16.png"
+             rel="shortcut icon"/>
+      <link href="https://www.fullerton.edu/web/core/images/v5/favicon-32.png"
+             rel="apple-touch-icon"/>
+      <meta name="robots" content="index, follow"/>
+      <title>404 - Page Not Found | CSUF - Human Resources and Inclusive Excellence</title>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/_variables.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/stock-photos.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/media-layouts.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/layout-basics.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/base-style.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/modifiers.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/navigation.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/dark-mode.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/printing.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="https://use.typekit.net/dvr4dpq.css"/>
+      <noscript>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/_variables.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/media-layouts.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/layout-basics.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/base-style.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/modifiers.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/navigation.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/stock-photos.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/dark-mode.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="https://use.typekit.net/dvr4dpq.css"/>
+      </noscript>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/theme-1.css"/>
+      <noscript>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/theme-1.css"/>
+      </noscript>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/cards.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/lists.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/iframe.css"/>
+      <noscript>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/cards.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/lists.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/iframe.css"/>
+      </noscript>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/accordion-v5.css"/>
+      <link rel="preload"
+             as="style"
+             onload="this.onload=null; this.rel='stylesheet'"
+             href="../_resources/css-standard/motion.css"/>
+      <noscript>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/accordion-v5.css"/>
+         <link rel="stylesheet"
+                type="text/css"
+                href="../_resources/css-standard/motion.css"/>
+      </noscript>
+      <script src="https://kit.fontawesome.com/bccf2151fa.js" crossorigin="anonymous"> </script>
+      <link rel="preconnect" href="https://fonts.googleapis.com" defer=""/>
+      <link rel="preconnect"
+             href="https://fonts.gstatic.com"
+             crossorigin="anonymous"
+             defer=""/>
+      <link rel="stylesheet"
+             href="https://fonts.googleapis.com/css2?family=Libre+Franklin:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&amp;family=Lora:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&amp;family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&amp;display=swap"/>
+      <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100;0,200;0,300;0,400;0,500;0,700;0,800;1,100;1,400;1,500&amp;display=swap"
+             rel="stylesheet"/>
+			<script language="javascript">
+				var relativePath = "../";
+				var randoME = (Math.random() + 1).toString(36).substring(7);
+			</script>
+		
+			<script language="javascript" async type="text/javascript" src="../_resources/js-standard/page-features-v5.js">
+			//page setup
+		</script>
+			<script language="javascript" async type="text/javascript" src="../_resources/js-standard/navigation.js">
+			//page setup
+		</script><script type="text/javascript" src="../_resources/js-standard/hours.js">		
+		//hours functions
+	</script>
+      <script type="text/javascript"
+               src="../_resources/js-standard/events-multi-source.js"
+               defer="">
+		//events builder
+	</script>
+      <link type="text/css"
+             href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/themes/smoothness/jquery-ui.css"/>
+      <script language="javascript"
+               src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+               type="text/javascript">//jquery</script>
+      <script language="javascript"
+               src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.14.1/jquery-ui.min.js"
+               type="text/javascript">//jquery-ui</script>
+      <script type="text/javascript"
+               src="https://itwebstg.fullerton.edu/hr-v5/_resources/js-standard/error-check.js">//staging site</script>
+      <script type="text/javascript"
+               src="//hr.fullerton.edu/_resources/js-standard/error-check.js">//production site</script>
+      <noscript>		
+		This page uses javascript to help render elements, if you have problems please enable javascript.
+	</noscript>
+      <style>	
+	.header-top{
+		min-height:44px;
+		display:flex;
+		align-items: center;
+    	justify-content: space-between;
+		}
+		
+	#top:not(.mobile) #main-nav {
+    width: 100%;
+    font-size: initial;
+    z-index: 10;
+    position: relative;
+    min-height: 44px;
+    /*max-height: 44px;
+    height: 44px;*/
+}
+		
+	
+		#top:not(.mobile) #navigation .container{
+    		min-height: 44px;
+		}		
+	
+		
+	:not(.mobile) .container {
+    margin: 0px;
+    padding: 0px;
+    width: clamp(300px, 100%, var(--container-max-width));
+    margin: auto;
+    display: grid;
+    position: relative;
+    z-index: 0;
+	}
+		
+	#top:not(.mobile) #website-info{
+		min-height:40px
+	}
+		
+		
+/*---- BREAKOUT BOXES ----*/
+.breakout-box .MaxGutter{
+    max-width: 100% !important;
+    width: 100% !important;
+}
+
+.grid-row {
+    position: relative;
+    max-width: 100%;
+    width: 100%;
+}
+		
+	
+@media (width >= 1040px) {
+    
+    #search-quicklinks-desktop > * {
+        flex-basis: auto;
+        max-width: unset;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+		
+	#site-wide-content-header.active{
+	  min-height:44px;	
+	}
+}
+
+@media (875px < width < 1040px) {
+
+    #search-quicklinks-desktop > * {
+        flex-basis: auto;
+        max-width: 220px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+    }
+		
+	.header-hours-date{
+		width:100%;
+		}
+	
+	#site-wide-content-header.active{
+	  min-height:44px;
+		height:44px;
+	}		
+}
+
+@media (500px < width < 875px) {
+ 
+    :not(.mobile) #search-quicklinks-desktop > * {
+        flex-basis: auto;
+        max-width: unset;
+        flex-direction: row;
+        flex-wrap: nowrap ;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        line-height:30px;
+    }
+}
+		</style>
+   </head>
+		
+			
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-PJQ8K8QEBZ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-PJQ8K8QEBZ');
+</script>
+	<body id="top" name="top" class="theme-1 no-division ">
+      <div id="test-width"> </div>
+      <header id="header" class="">
+         <div id="skip-nav-holder">
+            <a id="a-skip-nav" class="sr-only" href="#H1-0">Skip to main content</a>
+         </div>
+         <div id="emergency-alert" class="emergency-message"> </div>
+         <div id="campus-alert" class="campus-message"> </div>
+         <div id="site-alert" class="site-message "> </div>
+         <div id="test-info"> </div>
+         <div id="divAjaxTools">
+            <input type="hidden" id="hdnDirectory" value="/_errors"/>
+            <input type="hidden" id="hdnLastScrollLocation"/>
+            <input type="hidden" id="hdnOUUser" value="mblyleven"/>
+            <input type="hidden"
+                    id="hdnOUPageID"
+                    value="f4df3a3e-f0c5-4be5-98f8-eaea48ace7ad"/>
+            <input type="hidden" id="hdnInterfaceNavTime" value="0"/>
+            <input type="hidden" id="hdnIsDev" value="1"/>
+            <input type="hidden"
+                    id="hdnServerBase"
+                    value="https://itwebstg.fullerton.edu/hr-v5"/>
+            <input type="hidden" id="hdnSiteURL" value="//hr.fullerton.edu"/>
+            <input type="hidden" id="hdnSiteURLAlt1" value=""/>
+            <input type="hidden" id="hdnSiteURLAlt2" value=""/>
+            <input type="hidden"
+                    id="hdnStgURL"
+                    value="https://itwebstg.fullerton.edu/hr-v5"/>
+            <input type="hidden" id="hdnPageName" value="404.html"/>
+            <input type="hidden" id="hdnPageBreadcrumbs" value="0"/>
+            <input type="hidden"
+                    id="hdnHoursFileURL"
+                    value="https://itwebstg.fullerton.edu/hr-v5/_setup/hours.xml"/>
+            <input type="hidden"
+                    id="hdnEventsFileURL"
+                    value="https://itwebstg.fullerton.edu/hr-v5/_setup/events.xml"/>
+            <input type="hidden"
+                    id="hdnGoLiveFileURL"
+                    value="https://itwebstg.fullerton.edu/hr-v5/_setup/sitemap_golive.xml"/>
+            <input type="hidden"
+                    id="hdnTagManagerFileURL"
+                    value="https://itwebstg.fullerton.edu/hr-v5/_setup/tagmanager.xml"/>
+            <input type="hidden"
+                    id="hdnCategoryManagerFileURL"
+                    value="https://itwebstg.fullerton.edu/hr-v5/_setup/categorymanager.xml"/>
+            <input type="hidden" id="hdnHeaderSize" value="0px"/>
+            <input type="hidden" id="hdnHeaderSetup" value=""/>
+            <input type="hidden" id="hdnGoogleFilter" value=""/>
+            <input type="hidden" id="hdnForceSSL" value="1"/>
+            <input type="hidden" id="hdnRelativePath" value="../"/>
+            <input type="hidden" id="hdnUsePath" value="../"/>
+            <input type="hidden" id="hdnSlashCount" value="2"/>
+            <input type="hidden" id="hdnUseLeftNav" value="1"/>
+            <input type="hidden" id="hdnPageSetupComplete" value="0"/>
+            <input type="hidden"
+                    id="hdnLayoutCSS"
+                    value="b1-2-1-9 b2-0 b3-0 b4-0 b5-0"/>
+            <input type="hidden" id="hdnEventsDates"/>
+            <input type="hidden" id="hdnVersion" value="Version 5.32"/>
+            <p id="hdnLoginLink" style="display:none"><a id="direct-edit"  href="https://a.cms.omniupdate.com/11/?skin=csufullerton&amp;account=IT_HR&amp;site=HR-v5&amp;action=de&amp;path=/_errors/404.pcf">Last Published 8/25/26</a></p>
+            <input type="hidden" id="hdnEditMode" value="0"/>
+            <input type="hidden" id="hdnAuthStarted" value="0"/>
+            <input type="hidden" id="hdnAuthReq" value="0"/>
+            <input type="hidden" id="hdnDirAuth" value="unchecked"/>
+            <input type="hidden" id="hdnSiteAuth" value="unchecked"/>
+            <input type="hidden" id="hdnEmergencySiteSetupJson" value=""/>
+            <input type="hidden" id="hdnPoliceSiteSetupJson" value=""/>
+            <input type="hidden" id="hdnPageErrors" value=""/>
+            <input type="hidden" id="hdnPageDetails" value=""/>
+            <script id="srpSiteSetupXML" type="text/xml"> </script>
+            <script id="srpSiteSetupJSON" type="text/json"> </script>
+            <script id="srpTabNavigationJson" type="text/json"> </script>
+            <script id="srpSiteWideContent" type="text/xml"> </script>
+            <script id="srpLeftNav" type="text/xml"> </script>
+            <script id="srpMediaLayoutCatalog" type="text/json"> </script>
+            <script id="srpEventsDataCampus" type="text/json"> </script>
+            <script id="srpEventsDataLocal" type="text/xml"> </script>
+         </div>
+         <div class="header-data">
+            <div class="container">
+               <div class="header-top">
+                  <div id="website-csuflogo">
+                     <div class="CSUF-header-logo">
+                        <a href="https://www.fullerton.edu/"
+                            role="button"
+                            onmouseover="CloseNavigation()"
+                            onfocus="CloseNavigation()">
+                           <span class="dark-mode">
+                              <img src="https://www.fullerton.edu/web/core/images/v5/csuf-wordmark-reversed.svg"
+                                    alt="California State University, Fullerton"
+                                    id="csuf_emblem"
+                                    height="30"
+                                    width="180"/>
+                           </span>
+                           <span class="light-mode">
+                              <img src="https://www.fullerton.edu/web/core/images/v5/csuf-wordmark.svg"
+                                    alt="California State University, Fullerton"
+                                    id="csuf_emblem"
+                                    height="30"
+                                    width="180"/>
+                           </span>
+                        </a>
+                     </div>
+                  </div>
+                  <div id="search-quicklinks-desktop">
+                     <div class="website-hours">
+                        <button id="lnkmobile-hours"
+                                 onclick="MobileHours()"
+                                 aria-label="show or hide hours">
+                           <i class="fa-solid fa-clock">
+                              <span class="visually-hidden">Hours</span>
+                           </i>
+                        </button>
+                        <div id="divMobileSocialHours">Hours Go Here</div>
+                     </div>
+                     <div class="campus-portal-link">
+                        <a href="https://my.fullerton.edu/">
+                           <i class="fa-solid fa-lock">
+                              <span class="visually-hidden">Lock Icon - login required</span>
+                           </i>
+                           <span class="span-portal">Portal</span>
+                           <span class="span-login">Login</span>
+                        </a>
+                     </div>
+                     <div class="campus-quicklinks">
+                        <button id="lnkquicklinks" onclick="CampusResources()" class="quicklinks">
+                           <span class="span-resources">Resources</span>
+                        </button>
+                     </div>
+                     <div class="search-button">
+                        <button id="lnksearch"
+                                 onclick="Search()"
+                                 class="search"
+                                 arial-label="Search">
+                           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"> </i>
+                           <span>Search</span>
+                        </button>
+                     </div>
+                     <div class="ask-ituffy-button">
+                        <button onclick="iTuffyOpenClose()" id="btnAskiTuffy">Ask iTuffy</button>
+                     </div>
+                     <div id="sec-display-mode" class="dark-toggle">
+                        <button onclick="displayModeToggle()" id="display-mode">
+                           <i class="fa-solid fa-moon">
+                              <span class="sr-only">Dark Mode icon</span>
+                           </i>
+                           <span id="spn-display-mode-text" class="sr-only">Switch to dark mode</span>
+                        </button>
+                     </div>
+                  </div>
+               </div>
+               <div id="website-info" class="sitename-only">
+                  <section id="website-name">
+                     <div id="branding">
+                        <span class="empty"> </span>
+                        <p id="sitename" class="mobile-single">
+                           <a id="sitename-a">
+                              <span id="site-full" class="site-fullname">Human Resources and Inclusive Excellence</span>
+                              <span class="site-shortname mobile-single">HRIE</span>
+                           </a>
+                        </p>
+                     </div>
+                     <div id="lowerscrollNavHolder">
+                        <span class="empty"> </span>
+                     </div>
+                  </section>
+                  <section id="website-unit">
+                     <span class="empty"> </span>
+                  </section>
+               </div>
+            </div>
+         </div>
+         <nav id="navigation"
+               aria-label="site-wide navigation"
+               onresize="CheckPageSetup()">
+            <div class="container">
+               <div id="navigation-links"
+                     style="opacity:0"
+                     aria-label="site main navigation"
+                     class=""> </div>
+               <div class="table-of-contents">
+                  <button id="lnk-toc"
+                           onclick="OnThisPage()"
+                           class="quicklinks"
+                           aria-label="Headings on this page">
+                     <i class="fa-duotone fa-compass">
+                        <span class="visually-hidden">on this page</span>
+                     </i>
+                     <span class="span-resources">Page Topics</span>
+                  </button>
+               </div>
+               <div id="tab-social" class="header-social"> </div>
+            </div>
+         </nav>
+         <div class="breadcrumbs&#xA;&#x9;&#x9;">
+            <div class="crumbs-gutter">
+               <div class="container"> </div>
+            </div>
+         </div>
+      </header>
+      <section id="social-quicklinks-search">
+         <section id="campus-resources"> </section>
+         <section id="website-search"> 	</section>
+      </section>
+      <main id="main-content" class="&#xA;&#x9;&#x9;&#x9;&#x9;&#x9;has-breadcrumbs&#xA;&#x9;&#x9;&#x9;&#x9;">
+         <div class="sr-only" tabindex="-1" id="inside-main-content">You are now inside the main content area</div>
+         <div class="container">
+            <section id="main-content-shell" class="main-content-gutter ">
+               <div id="left-compartment" class="empty">
+                  <div id="left-compartment-shell">
+                     <div id="left-nav-extend">
+                        <button id="btn-left-nav-show-hide"
+                                 onclick="LeftNavExtend()"
+                                 aria-label="Show / Hide Left Navigation Menu">
+                           <i class="fa-light fa-sidebar">
+                              <span class="visually-hidden">Show / Hide Left Navigation Menu</span>
+                           </i>
+                           <span class="span-left-nav-close">Close</span>
+                        </button>
+                     </div>
+                     <div id="left-nav"> </div>
+                     <section id="site-wide-content-left"> </section>
+                  </div>
+               </div>
+               <div id="page-content">
+                  <div class=" container ">
+                     <div id="box1"
+                           desktop=""
+                           desktop-tracks=""
+                           mobile=""
+                           mobile-tracks=""
+                           css=" box-padding"
+                           class=" box-padding"
+                           style=""
+                           stage="publish">
+                        <div class="MaxGutter">
+                           <div class="grid-row">
+                              <div class="grid-backgrounds grid-layout-2-1-9">
+                                 <div class="empty">
+                                    <span class="empty"> </span>
+                                 </div>
+                                 <div class="empty">
+                                    <span class="empty"> </span>
+                                 </div>
+                              </div>
+                              <div class="grid-container">
+                                 <div class="left-col">
+                                    <span class="empty">left col</span>
+                                 </div>
+                                 <div class="grid-content grid-layout-2-1-9">
+                                    <div id="div-1"
+                                          class="grid-item div1  middle left has-content "
+                                          desktop=""
+                                          mobile=""
+                                          css="grid-item div1  middle left has-content ">
+                                       <div class="overlay-content">
+                                          
+                                          <h1 xmlns:ouc="http://omniupdate.com/">The file you're looking for is no longer here.</h1>
+                                          <p xmlns:ouc="http://omniupdate.com/" class="larger">Websites grow, change, so this isn't always a bad thing.</p>
+                                          <p xmlns:ouc="http://omniupdate.com/">The file you are looking for was not found.  This can be caused by the page being deleted, renamed, or moved to a new url.  Use the search box above to search this site for the content you are looking for.  If you still can't find it please contact the webmaster for better assistance.</p>
+                                          <p xmlns:ouc="http://omniupdate.com/" class="smaller">Sorry for the inconvenience.</p>
+                                       </div>
+                                       <input type="hidden" id="hdnFilter-section1" value=""/>
+                                    </div>
+                                    <div id="div-2"
+                                          class="grid-item div2  card middle has-content "
+                                          desktop=""
+                                          mobile=""
+                                          css="grid-item div2  card middle has-content ">
+                                       <div class="overlay-content">
+                                          
+                                          <p xmlns:ouc="http://omniupdate.com/" style="padding: 1px;">
+                                             <span style="color: #cc3333; font-size: 5em;">404</span>
+                                          </p>
+                                          <p xmlns:ouc="http://omniupdate.com/" style="padding: 1px;">
+                                             <span style="color: #555; font-size: 2em;">file not found</span>
+                                          </p>
+                                       </div>
+                                       <input type="hidden" id="hdnFilter-section2" value=""/>
+                                    </div>
+                                 </div>
+                                 <div class="right-col">
+                                    <span class="empty">right col</span>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                     <div id="box2"
+                           desktop=""
+                           desktop-tracks=""
+                           mobile=""
+                           mobile-tracks=""
+                           css=" no-box-padding"
+                           class=" no-box-padding"
+                           style="display:none"
+                           stage="publish">
+                        <div class="MaxGutter">
+                           <comment>This section is unused</comment>
+                        </div>
+                     </div>
+                     <div id="box3"
+                           desktop=""
+                           desktop-tracks=""
+                           mobile=""
+                           mobile-tracks=""
+                           css=" no-box-padding"
+                           class=" no-box-padding"
+                           style="display:none"
+                           stage="publish">
+                        <div class="MaxGutter">
+                           <comment>This section is unused</comment>
+                        </div>
+                     </div>
+                     <div id="box4"
+                           desktop=""
+                           desktop-tracks=""
+                           mobile=""
+                           mobile-tracks=""
+                           css=" no-box-padding"
+                           class=" no-box-padding"
+                           style="display:none"
+                           stage="publish">
+                        <div class="MaxGutter">
+                           <comment>This section is unused</comment>
+                        </div>
+                     </div>
+                     <div id="box5"
+                           desktop=""
+                           desktop-tracks=""
+                           mobile=""
+                           mobile-tracks=""
+                           css=" no-box-padding"
+                           class=" no-box-padding"
+                           style="display:none"
+                           stage="publish">
+                        <div class="MaxGutter">
+                           <comment>This section is unused</comment>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+               <div id="right-compartment" class="empty">
+                  <div id="page-nav"> </div>
+                  <section id="site-wide-content-right"> </section>
+               </div>
+            </section>
+         </div>
+      </main>
+      <div id="back-to-top" class="btt-off">
+         <button id="lnkBTT" onclick="BackToTop()"><i title="back to top" class="fa-solid fa-up-to-line"></i><span class="visually-hidden">Back To Page Top</span>
+         </button>
+      </div>
+      <footer id="footer"> </footer>
+      <section id="mobile-options">
+         <article class="mobile-main-nav">
+            <button id="btn-mobile-menu"
+                     onclick="MobileMenu()"
+                     aria-label="open main menu">
+               <i id="iMobileMenuIcon" class="fa-regular fa-bars">
+                  <span class="visually-hidden">mobile menu</span>
+               </i>
+               <span class="span-mobile-menu">Menu</span>
+            </button>
+         </article>
+         <article class="campus-portal-link">
+            <button onclick="OpenPortal()"
+                     id="btn-portal-mobile"
+                     class="quicklinks"
+                     aria-label="Campus Portal">
+               <i class="fa-solid fa-lock">
+                  <span class="visually-hidden">Lock Icon - login required</span>
+               </i>
+               <span class="span-portal">Portal</span>
+            </button>
+         </article>
+         <article class="campus-quicklinks">
+            <button id="lnk-mobile-quicklinks"
+                     onclick="CampusResources()"
+                     class="quicklinks"
+                     aria-label="Campus Wide Resources">
+               <i class="fa-solid fa-list-dropdown">
+                  <span class="visually-hidden">Campus Wide</span>
+               </i>
+               <span class="span-resources">Resources</span>
+            </button>
+         </article>
+         <article class="table-of-contents">
+            <button id="lnktoc"
+                     onclick="OnThisPage()"
+                     class="quicklinks"
+                     aria-label="On this page">
+               <i class="fa-duotone fa-compass">
+                  <span class="visually-hidden">on this page</span>
+               </i>
+               <span class="span-resources">Page Topics</span>
+            </button>
+         </article>
+         <article class="search-button">
+            <button id="lnksearch-mobile"
+                     onclick="Search()"
+                     class="search"
+                     aria-label="Search">
+               <i class="fa-light fa-magnifying-glass" aria-hidden="true">
+                  <span class="visually-hidden">Search Icon</span>
+               </i>
+               <span>Search</span>
+            </button>
+         </article>
+         <article id="art-mobile-display-mode" class="dark-toggle">
+            <button onclick="displayModeToggle()"
+                     id="mobile-display-mode"
+                     aria-label="switch to dark or light mode">
+               <i class="fa-solid fa-moon">
+                  <span class="visually-hidden">switch to light mode</span>
+               </i>
+               <span id="mobile-spn-display-mode-text" class="visually-hidden">Dark Mode</span>
+            </button>
+         </article>
+      </section><div id="lightbox" class=""></div><div id="blackout" class="blackout-off"></div><script type="text/javascript">
+	
+////////////////////////////////////////
+function setDisplayMode() {
+    let themeVal = getTheme();
+    let btnMode = document.getElementById("display-mode");
+    let btnModeText = document.getElementById("spn-display-mode-text");
+    let btnMobileMode = document.getElementById("mobile-display-mode");
+    let btnMobileModeText = document.getElementById("mobile-spn-display-mode-text");
+
+    if (themeVal == "dark") {
+        //we set to dark
+        document.body.setAttribute("style", "color-scheme:dark");
+        document.body.classList.add("dark-mode");
+        document.body.classList.remove("light-mode");
+        //set the button to be light mode
+        btnMode.querySelector("i").className = "fa-solid fa-moon";
+        btnMode.setAttribute("mode", "dark");
+        btnMode.setAttribute("title", "switch to light mode");
+        btnModeText.innerHTML = "Switch to light mode";
+
+        btnMobileMode.querySelector("i").className = "fa-solid fa-moon";
+        btnMobileMode.setAttribute("mode", "dark");
+        btnMobileMode.setAttribute("title", "switch to light mode");
+        btnMobileModeText.innerHTML = "Switch to light mode";
+    } else {
+        //we set to light
+        document.body.setAttribute("style", "color-scheme:light");
+        document.body.classList.remove("dark-mode");
+        document.body.classList.add("light-mode");
+        //set the button to be dark mode
+        btnMode.querySelector("i").className = "fa-solid fa-sun";
+        btnMode.setAttribute("mode", "light");
+        btnMode.setAttribute("title", "switch to dark mode");
+        btnModeText.innerHTML = "Switch to dark mode";
+
+        btnMobileMode.querySelector("i").className = "fa-solid fa-sun";
+        btnMobileMode.setAttribute("mode", "light");
+        btnMobileMode.setAttribute("title", "switch to dark mode");
+        btnMobileModeText.innerHTML = "Switch to dark mode";
+    }
+}
+	////////////////////////////////////////////////////////
+		function getTheme() {
+    return localStorage.getItem('theme') || 'light';
+}	
+	setTimeout(function(){setDisplayMode();}, 50);	
+	</script>
+      <script type="text/javascript">
+		//sets the light/dark mode
+		setTimeout(function(){PageHasLoaded();}, 400);
+		setTimeout(function(){PageHasLoaded();}, 800);
+		setTimeout(function(){PageHasLoaded();}, 1200);
+	</script>
+   <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/vce701823e78c4301a35b7e07294d87301792088814092" integrity="sha512-UKNk8GbxkABxKcXYuLkO16EleLGUkcvJWtpSNmExE0Too3ZaFAxTscNWEc1OdAv5/BikHawapSCaiD2XCmp+Bw==" data-cf-beacon='{"version":"2024.11.0","token":"82ab003755dd4d39afb16411fd752b71","spa":2}' crossorigin="anonymous"></script>
+</body>
+</html>

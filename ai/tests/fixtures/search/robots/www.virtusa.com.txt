@@ -1,0 +1,21 @@
+#Any search crawler can crawl our site
+User-agent: *
+
+#Allow only below mentioned paths
+Allow: /
+
+#Disallow everything else
+Disallow:/content/virtusa/language-masters/
+Disallow:/content/virtusa/en/forms/
+Disallow:/content/virtusa/de/forms/
+Disallow:/forms/
+Disallow:/fragments/
+Disallow:/sitecore/
+Disallow:/*/Data/
+Disallow:/sitecore/content/
+Disallow:/virtusa/english/Home/
+
+
+#Crawl all sitemaps mentioned below
+Sitemap: https://www.virtusa.com/sitemap-prod-english-en.xml
+Sitemap: https://www.virtusa.com/sitemap-prod-english-belgium-en-BE.xml

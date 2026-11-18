@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+	 <link rel="profile" href="https://gmpg.org/xfn/11"> 
+	 
+<!-- Author Meta Tags by Molongui Authorship, visit: https://wordpress.org/plugins/molongui-authorship/ -->
+<meta name="author" content="OWASPGenAIProject Editor">
+<!-- /Molongui Authorship -->
+
+<style id="jetpack-boost-critical-css"></style><meta name='robots' content='index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' />
+<script id="cookieyes" type="text/javascript" src="https://cdn-cookieyes.com/client_data/8c23b5ad24558ef0ce77938e/script.js"></script><meta name="dlm-version" content="5.3.5"><script>Object.defineProperty(window,"angiePlugin",{value:{"schemaVersion":1,"available":true,"version":"1.1.17"},writable:false,configurable:false});</script>		<script>
+		(function(){
+			window.ecsSchemeConfig={systemAuto:false,darkLogoUrl:""};
+			var m=document.cookie.match(/(?:^|;\s*)ecs_color_scheme=([^;]+)/);
+			if(m&&m[1]==='alt'){
+				document.documentElement.setAttribute('data-ecs-scheme','alt');
+			}else if(!m&&false){
+				if(window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches){
+					document.documentElement.setAttribute('data-ecs-scheme','alt');
+				}
+			}
+		})();
+		</script>
+		
+	<!-- This site is optimized with the Yoast SEO Premium plugin v24.9 (Yoast SEO v28.7) - https://yoast.com/product/yoast-seo-premium-wordpress/ -->
+	<title>LLM01:2025 Prompt Injection - OWASP Gen AI Security Project</title>
+	<meta name="description" content="Learn about LLM01: Prompt Injection—understand how attackers exploit inputs to manipulate model behavior and discover strategies to defend against this threat." />
+	<link rel="canonical" href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content="LLM01:2025 Prompt Injection" />
+	<meta property="og:description" content="Learn about LLM01: Prompt Injection—understand how attackers exploit inputs to manipulate model behavior and discover strategies to defend against this threat." />
+	<meta property="og:url" content="https://genai.owasp.org/llmrisk/llm01-prompt-injection/" />
+	<meta property="og:site_name" content="OWASP Gen AI Security Project" />
+	<meta property="article:modified_time" content="2025-04-17T14:45:39+00:00" />
+	<meta property="og:image" content="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" />
+	<meta property="og:image:width" content="1024" />
+	<meta property="og:image:height" content="524" />
+	<meta property="og:image:type" content="image/png" />
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:site" content="@LLM_Top10" />
+	<meta name="twitter:label1" content="Est. reading time" />
+	<meta name="twitter:data1" content="6 minutes" />
+	<script type="application/ld+json" class="yoast-schema-graph">{"@context":"https:\/\/schema.org","@graph":[{"@type":"WebPage","@id":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/","url":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/","name":"LLM01:2025 Prompt Injection - OWASP Gen AI Security Project","isPartOf":{"@id":"https:\/\/genai.owasp.org\/#website"},"primaryImageOfPage":{"@id":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/#primaryimage"},"image":{"@id":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/#primaryimage"},"thumbnailUrl":"https:\/\/genai.owasp.org\/wp-content\/uploads\/2024\/04\/LLM01.25.png","datePublished":"2024-04-10T16:21:49+00:00","dateModified":"2025-04-17T14:45:39+00:00","description":"Learn about LLM01: Prompt Injection—understand how attackers exploit inputs to manipulate model behavior and discover strategies to defend against this threat.","breadcrumb":{"@id":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/#breadcrumb"},"inLanguage":"en-US","potentialAction":[{"@type":"ReadAction","target":["https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/"]}]},{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/#primaryimage","url":"https:\/\/genai.owasp.org\/wp-content\/uploads\/2024\/04\/LLM01.25.png","contentUrl":"https:\/\/genai.owasp.org\/wp-content\/uploads\/2024\/04\/LLM01.25.png","width":1024,"height":524},{"@type":"BreadcrumbList","@id":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https:\/\/genai.owasp.org\/"},{"@type":"ListItem","position":2,"name":"LLMRisks","item":"https:\/\/genai.owasp.org\/llm-top-10\/"},{"@type":"ListItem","position":3,"name":"LLM01:2025 Prompt Injection"}]},{"@type":"WebSite","@id":"https:\/\/genai.owasp.org\/#website","url":"https:\/\/genai.owasp.org\/","name":"OWASP Top 10 for LLM & Generative AI Security","description":"Identifying the Top Security Risks Associated with Generative AI","publisher":{"@id":"https:\/\/genai.owasp.org\/#organization"},"potentialAction":[{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https:\/\/genai.owasp.org\/?s={search_term_string}"},"query-input":{"@type":"PropertyValueSpecification","valueRequired":true,"valueName":"search_term_string"}}],"inLanguage":"en-US"},{"@type":"Organization","@id":"https:\/\/genai.owasp.org\/#organization","name":"OWASP Top 10 for LLM & Generative AI Security","url":"https:\/\/genai.owasp.org\/","logo":{"@type":"ImageObject","inLanguage":"en-US","@id":"https:\/\/genai.owasp.org\/#\/schema\/logo\/image\/","url":"https:\/\/genai.owasp.org\/wp-content\/uploads\/2024\/04\/logo-light.webp","contentUrl":"https:\/\/genai.owasp.org\/wp-content\/uploads\/2024\/04\/logo-light.webp","width":848,"height":300,"caption":"OWASP Top 10 for LLM & Generative AI Security"},"image":{"@id":"https:\/\/genai.owasp.org\/#\/schema\/logo\/image\/"},"sameAs":["https:\/\/x.com\/LLM_Top10"]}]}</script>
+	<!-- / Yoast SEO Premium plugin. -->
+
+
+<link rel="alternate" type="application/rss+xml" title="OWASP Gen AI Security Project &raquo; Feed" href="https://genai.owasp.org/feed/" />
+<link rel="alternate" type="application/rss+xml" title="OWASP Gen AI Security Project &raquo; Comments Feed" href="https://genai.owasp.org/comments/feed/" />
+		<!-- This site uses the Google Analytics by MonsterInsights plugin v11.3.0 - Using Analytics tracking - https://www.monsterinsights.com/ -->
+							<script src="//www.googletagmanager.com/gtag/js?id=G-SNBMRV1M84"  data-cfasync="false" data-wpfc-render="false" async></script>
+			<script data-cfasync="false" data-wpfc-render="false">
+				var mi_version = '11.3.0';
+				var mi_track_user = true;
+				var mi_no_track_reason = '';
+								var MonsterInsightsDefaultLocations = {"page_location":"https:\/\/genai.owasp.org\/llmrisk\/llm01-prompt-injection\/"};
+								if ( typeof MonsterInsightsPrivacyGuardFilter === 'function' ) {
+					var MonsterInsightsLocations = (typeof MonsterInsightsExcludeQuery === 'object') ? MonsterInsightsPrivacyGuardFilter( MonsterInsightsExcludeQuery ) : MonsterInsightsPrivacyGuardFilter( MonsterInsightsDefaultLocations );
+				} else {
+					var MonsterInsightsLocations = (typeof MonsterInsightsExcludeQuery === 'object') ? MonsterInsightsExcludeQuery : MonsterInsightsDefaultLocations;
+				}
+
+								var disableStrs = [
+										'ga-disable-G-SNBMRV1M84',
+									];
+
+				/* Function to detect opted out users */
+				function __gtagTrackerIsOptedOut() {
+					for (var index = 0; index < disableStrs.length; index++) {
+						if (document.cookie.indexOf(disableStrs[index] + '=true') > -1) {
+							return true;
+						}
+					}
+
+					return false;
+				}
+
+				/* Disable tracking if the opt-out cookie exists. */
+				if (__gtagTrackerIsOptedOut()) {
+					for (var index = 0; index < disableStrs.length; index++) {
+						window[disableStrs[index]] = true;
+					}
+				}
+
+				/* Opt-out function */
+				function __gtagTrackerOptout() {
+					for (var index = 0; index < disableStrs.length; index++) {
+						document.cookie = disableStrs[index] + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+						window[disableStrs[index]] = true;
+					}
+				}
+
+				if ('undefined' === typeof gaOptout) {
+					function gaOptout() {
+						__gtagTrackerOptout();
+					}
+				}
+								window.dataLayer = window.dataLayer || [];
+
+				window.MonsterInsightsDualTracker = {
+					helpers: {},
+					trackers: {},
+				};
+				if (mi_track_user) {
+					function __gtagDataLayer() {
+						dataLayer.push(arguments);
+					}
+
+					function __gtagTracker(type, name, parameters) {
+						if (!parameters) {
+							parameters = {};
+						}
+
+						if (parameters.send_to) {
+							__gtagDataLayer.apply(null, arguments);
+							return;
+						}
+
+						if (type === 'event') {
+														parameters.send_to = monsterinsights_frontend.v4_id;
+							var hookName = name;
+							if (typeof parameters['event_category'] !== 'undefined') {
+								hookName = parameters['event_category'] + ':' + name;
+							}
+
+							if (typeof MonsterInsightsDualTracker.trackers[hookName] !== 'undefined') {
+								MonsterInsightsDualTracker.trackers[hookName](parameters);
+							} else {
+								__gtagDataLayer('event', name, parameters);
+							}
+							
+						} else {
+							__gtagDataLayer.apply(null, arguments);
+						}
+					}
+
+					__gtagTracker('js', new Date());
+					__gtagTracker('set', {
+						'developer_id.dZGIzZG': true,
+											});
+					if ( MonsterInsightsLocations.page_location ) {
+						__gtagTracker('set', MonsterInsightsLocations);
+					}
+										__gtagTracker('config', 'G-SNBMRV1M84', {"forceSSL":"true","link_attribution":"true"} );
+										window.gtag = __gtagTracker;										(function () {
+						/* https://developers.google.com/analytics/devguides/collection/analyticsjs/ */
+						/* ga and __gaTracker compatibility shim. */
+						var noopfn = function () {
+							return null;
+						};
+						var newtracker = function () {
+							return new Tracker();
+						};
+						var Tracker = function () {
+							return null;
+						};
+						var p = Tracker.prototype;
+						p.get = noopfn;
+						p.set = noopfn;
+						p.send = function () {
+							var args = Array.prototype.slice.call(arguments);
+							args.unshift('send');
+							__gaTracker.apply(null, args);
+						};
+						var __gaTracker = function () {
+							var len = arguments.length;
+							if (len === 0) {
+								return;
+							}
+							var f = arguments[len - 1];
+							if (typeof f !== 'object' || f === null || typeof f.hitCallback !== 'function') {
+								if ('send' === arguments[0]) {
+									var hitConverted, hitObject = false, action;
+									if ('event' === arguments[1]) {
+										if ('undefined' !== typeof arguments[3]) {
+											hitObject = {
+												'eventAction': arguments[3],
+												'eventCategory': arguments[2],
+												'eventLabel': arguments[4],
+												'value': arguments[5] ? arguments[5] : 1,
+											}
+										}
+									}
+									if ('pageview' === arguments[1]) {
+										if ('undefined' !== typeof arguments[2]) {
+											hitObject = {
+												'eventAction': 'page_view',
+												'page_path': arguments[2],
+											}
+										}
+									}
+									if (typeof arguments[2] === 'object') {
+										hitObject = arguments[2];
+									}
+									if (typeof arguments[5] === 'object') {
+										Object.assign(hitObject, arguments[5]);
+									}
+									if ('undefined' !== typeof arguments[1].hitType) {
+										hitObject = arguments[1];
+										if ('pageview' === hitObject.hitType) {
+											hitObject.eventAction = 'page_view';
+										}
+									}
+									if (hitObject) {
+										action = 'timing' === arguments[1].hitType ? 'timing_complete' : hitObject.eventAction;
+										hitConverted = mapArgs(hitObject);
+										__gtagTracker('event', action, hitConverted);
+									}
+								}
+								return;
+							}
+
+							function mapArgs(args) {
+								var arg, hit = {};
+								var gaMap = {
+									'eventCategory': 'event_category',
+									'eventAction': 'event_action',
+									'eventLabel': 'event_label',
+									'eventValue': 'event_value',
+									'nonInteraction': 'non_interaction',
+									'timingCategory': 'event_category',
+									'timingVar': 'name',
+									'timingValue': 'value',
+									'timingLabel': 'event_label',
+									'page': 'page_path',
+									'location': 'page_location',
+									'title': 'page_title',
+									'referrer' : 'page_referrer',
+								};
+								for (arg in args) {
+																		if (!(!args.hasOwnProperty(arg) || !gaMap.hasOwnProperty(arg))) {
+										hit[gaMap[arg]] = args[arg];
+									} else {
+										hit[arg] = args[arg];
+									}
+								}
+								return hit;
+							}
+
+							try {
+								f.hitCallback();
+							} catch (ex) {
+							}
+						};
+						__gaTracker.create = newtracker;
+						__gaTracker.getByName = newtracker;
+						__gaTracker.getAll = function () {
+							return [];
+						};
+						__gaTracker.remove = noopfn;
+						__gaTracker.loaded = true;
+						window['__gaTracker'] = __gaTracker;
+					})();
+									} else {
+										console.log("");
+					(function () {
+						function __gtagTracker() {
+							return null;
+						}
+
+						window['__gtagTracker'] = __gtagTracker;
+						window['gtag'] = __gtagTracker;
+					})();
+									}
+			</script>
+							<!-- / Google Analytics by MonsterInsights -->
+		<noscript><link rel='stylesheet' id='all-css-6b701d05c99496b083f933e9ed1804aa' href='https://genai.owasp.org/_jb_static/??4fb883980a' type='text/css' media='all' /></noscript><link data-media="all" onload="this.media=this.dataset.media; delete this.dataset.media; this.removeAttribute( &apos;onload&apos; );" rel='stylesheet' id='all-css-6b701d05c99496b083f933e9ed1804aa' href='https://genai.owasp.org/_jb_static/??4fb883980a' type='text/css' media="not all" />
+<style id="astra-theme-css-inline-css"></style>
+<style id="content-control-block-styles-inline-css">
+@media (max-width: 640px) {
+	.cc-hide-on-mobile {
+		display: none !important;
+	}
+}
+@media (min-width: 641px) and (max-width: 920px) {
+	.cc-hide-on-tablet {
+		display: none !important;
+	}
+}
+@media (min-width: 921px) and (max-width: 1440px) {
+	.cc-hide-on-desktop {
+		display: none !important;
+	}
+}
+/*# sourceURL=content-control-block-styles-inline-css */
+</style>
+<style id="elementor-frontend-inline-css"></style>
+<noscript><link rel='stylesheet' id='max-width767px-css-64c6a4290840fc89c335b8d53f22aeef' href='https://genai.owasp.org/_jb_static/??d504b3e486' type='text/css' media='(max-width:767px)' /></noscript><link data-media="(max-width:767px)" onload="this.media=this.dataset.media; delete this.dataset.media; this.removeAttribute( &apos;onload&apos; );" rel='stylesheet' id='max-width767px-css-64c6a4290840fc89c335b8d53f22aeef' href='https://genai.owasp.org/_jb_static/??d504b3e486' type='text/css' media="not all" />
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<noscript><link rel='stylesheet' id='dashicons-css' href='https://genai.owasp.org/wp-includes/css/dashicons.min.css?ver=7.1.3' media='all' />
+</noscript><link data-media="all" onload="this.media=this.dataset.media; delete this.dataset.media; this.removeAttribute( &apos;onload&apos; );" rel='stylesheet' id='dashicons-css' href='https://genai.owasp.org/wp-includes/css/dashicons.min.css?ver=7.1.3' media="not all" />
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<noscript><link rel='stylesheet' id='jetpack-forms-layout-css' href='https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-forms/src/../dist/contact-form/css/jetpack-forms-layout.css?ver=16.4-a.3' media='all' />
+</noscript><link data-media="all" onload="this.media=this.dataset.media; delete this.dataset.media; this.removeAttribute( &apos;onload&apos; );" rel='stylesheet' id='jetpack-forms-layout-css' href='https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-forms/src/../dist/contact-form/css/jetpack-forms-layout.css?ver=16.4-a.3' media="not all" />
+<style id="jetpack-search-active-filters-style-inline-css"></style>
+<style id="jetpack-search-ai-answer-style-inline-css"></style>
+<style id="jetpack-search-clear-filters-style-inline-css">
+.jetpack-search-clear-filters[hidden]{display:none}.jetpack-search-clear-filters__button{cursor:pointer}.jetpack-search-clear-filters.is-style-compact .jetpack-search-clear-filters__button{font-size:.8125rem;line-height:1.5;min-width:0;padding:.25em .75em;width:auto}
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-search/build/search-blocks/clear-filters.css */
+</style>
+<style id="jetpack-search-filter-checkbox-style-inline-css"></style>
+<style id="jetpack-search-filter-date-style-inline-css"></style>
+<style id="jetpack-search-filters-style-inline-css">
+.jetpack-search-filters{display:flex;flex-direction:column;gap:var(--wp--style--block-gap,1rem)}.jetpack-search-filters__editor-canvas{border:1px dashed color-mix(in srgb,currentcolor 40%,#0000);border-radius:2px;padding:.5rem}.jetpack-search-filters__editor-label{display:block;font-size:.6875rem;font-weight:600;letter-spacing:.04em;margin-bottom:.5rem;opacity:.6;text-transform:uppercase}.jetpack-search-filters__empty{font-size:.875rem;line-height:1.5;margin:0;opacity:.6}.jetpack-search-filters__empty[hidden]{display:none}
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-search/build/search-blocks/filters.css */
+</style>
+<style id="jetpack-search-filters-popover-style-inline-css"></style>
+<style id="jetpack-search-no-results-style-inline-css">
+.jetpack-search-no-results{margin:0}.jetpack-search-no-results[data-wp-bind--hidden]:not(:has(>:not([hidden]))),.jetpack-search-no-results[hidden]{display:none}.jetpack-search-no-results__variant{margin:0}.jetpack-search-no-results__variant[hidden]{display:none}.jetpack-search-no-results--default{align-items:center;display:flex;flex-direction:column;gap:.25rem;justify-content:center;min-block-size:12rem;opacity:.6;padding-block:2rem;padding-inline:1rem;text-align:center}.jetpack-search-no-results--default p{font-size:.875rem;line-height:1.5;margin:0;max-width:36ch}.jetpack-search-no-results--default p[hidden]{display:none}
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-search/build/search-blocks/no-results.css */
+</style>
+<style id="jetpack-search-powered-by-style-inline-css">
+.wp-block-jetpack-search-powered-by{margin-block:var(--wp--style--block-gap,1.5em);text-align:center}.jetpack-search-powered-by__link{align-items:center;color:inherit;display:inline-flex;font-size:var(--wp--preset--font-size--small,.7em);gap:.5em;line-height:1;text-decoration:none}.jetpack-search-powered-by__logo{display:inline-flex;flex:0 0 auto;height:1em;width:1em}.jetpack-search-powered-by__logo svg{display:block;height:100%;width:100%}.jetpack-search-powered-by__text{font-weight:500}
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-search/build/search-blocks/powered-by.css */
+</style>
+<style id="jetpack-search-results-count-style-inline-css">
+.wp-block-jetpack-search-results-count{color:inherit;font-size:.85rem;margin:0;opacity:.7}
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-search/build/search-blocks/results-count.css */
+</style>
+<style id="jetpack-search-results-list-style-inline-css"></style>
+<style id="jetpack-search-results-load-more-style-inline-css">
+.wp-block-jetpack-search-results-load-more{padding-block:var(--wp--style--block-gap,1rem);text-align:center}.wp-block-jetpack-search-results-load-more[hidden]{display:none}.wp-block-jetpack-search-results-load-more .jetpack-search-load-more__button{cursor:pointer}.wp-block-jetpack-search-results-load-more .jetpack-search-load-more__button[hidden]{display:none}.wp-block-jetpack-search-results-load-more .jetpack-search-load-more__button:disabled{cursor:not-allowed;opacity:.5}.wp-block-jetpack-search-results-load-more.is-style-compact .jetpack-search-load-more__button{font-size:.8125rem;line-height:1.5;min-width:0;padding:.25em .75em;width:auto}.wp-block-jetpack-search-results-load-more .jetpack-search-load-more__spinner{color:inherit;display:block;margin-block:var(--wp--style--block-gap,.5rem);margin-inline:auto;opacity:.7}.wp-block-jetpack-search-results-load-more .jetpack-search-load-more__spinner[hidden]{display:none}.wp-block-jetpack-search-results-load-more .jetpack-search-load-more__sentinel{display:block;height:1px;width:100%}
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-search/build/search-blocks/results-load-more.css */
+</style>
+<style id="jetpack-search-results-sort-style-inline-css"></style>
+<style id="jetpack-search-search-input-style-inline-css"></style>
+<style id="jetpack-search-search-results-style-inline-css">
+.jetpack-search-search-results{display:flex;flex-direction:column;gap:var(--wp--style--block-gap,1.5rem)}
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/jetpack/jetpack_vendor/automattic/jetpack-search/build/search-blocks/search-results.css */
+</style>
+<style id="dlm-pro-download-button-style-inline-css"></style>
+<style id="filebird-block-filebird-gallery-style-inline-css">
+ul.filebird-block-filebird-gallery{margin:auto!important;padding:0!important;width:100%}ul.filebird-block-filebird-gallery.layout-grid{display:grid;grid-gap:20px;align-items:stretch;grid-template-columns:repeat(var(--columns),1fr);justify-items:stretch}ul.filebird-block-filebird-gallery.layout-grid li img{border:1px solid #ccc;box-shadow:2px 2px 6px 0 rgba(0,0,0,.3);height:100%;max-width:100%;-o-object-fit:cover;object-fit:cover;width:100%}ul.filebird-block-filebird-gallery.layout-masonry{-moz-column-count:var(--columns);column-count:var(--columns);-moz-column-gap:var(--space);column-gap:var(--space);display:block;overflow:auto}ul.filebird-block-filebird-gallery.layout-masonry li{margin-bottom:var(--space)}ul.filebird-block-filebird-gallery li{list-style:none}ul.filebird-block-filebird-gallery li figure{height:100%;margin:0;padding:0;position:relative;width:100%}ul.filebird-block-filebird-gallery li figure figcaption{background:linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,.3) 70%,transparent);bottom:0;box-sizing:border-box;color:#fff;font-size:.8em;margin:0;max-height:100%;overflow:auto;padding:3em .77em .7em;position:absolute;text-align:center;width:100%;z-index:2}ul.filebird-block-filebird-gallery li figure figcaption a{color:inherit}
+
+/*# sourceURL=https://genai.owasp.org/wp-content/plugins/filebird/blocks/filebird-gallery/build/style-index.css */
+</style>
+<style id="global-styles-inline-css"></style>
+<style id="wpgb-head-inline-css">
+.wp-grid-builder:not(.wpgb-template),.wpgb-facet{opacity:0.01}.wpgb-facet fieldset{margin:0;padding:0;border:none;outline:none;box-shadow:none}.wpgb-facet fieldset:last-child{margin-bottom:40px;}.wpgb-facet fieldset legend.wpgb-sr-only{height:1px;width:1px}
+/*# sourceURL=wpgb-head-inline-css */
+</style>
+<style id="jetpack-stats-inline-css">
+img#wpstats{display:none}
+/*# sourceURL=jetpack-stats-inline-css */
+</style>
+<style id="jetpack-global-styles-frontend-style-inline-css">
+:root { --font-headings: unset; --font-base: unset; --font-headings-default: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif; --font-base-default: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;}
+/*# sourceURL=jetpack-global-styles-frontend-style-inline-css */
+</style>
+<script id="jquery-core-js" src="https://genai.owasp.org/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>
+<script type='text/javascript' src='https://genai.owasp.org/wp-includes/js/jquery/jquery-migrate.min.js?m=1686289764'></script>
+<script async data-wp-strategy="async" id="monsterinsights-frontend-script-js" src="https://genai.owasp.org/wp-content/plugins/google-analytics-for-wordpress/assets/js/frontend-gtag.min.js?ver=11.3.0"></script>
+<script data-cfasync="false" data-wpfc-render="false" id='monsterinsights-frontend-script-js-extra'>var monsterinsights_frontend = {"js_events_tracking":"true","download_extensions":"doc,pdf,ppt,zip,xls,docx,pptx,xlsx","inbound_paths":"[{\"path\":\"\\\/go\\\/\",\"label\":\"affiliate\"},{\"path\":\"\\\/recommend\\\/\",\"label\":\"affiliate\"},{\"path\":\"\\\/sponsor\\\/\",\"label\":\"affilliate\"}]","home_url":"https:\/\/genai.owasp.org","hash_tracking":"false","v4_id":"G-SNBMRV1M84"};</script>
+<script id="jetpack-mu-wpcom-settings-js-before">
+var JETPACK_MU_WPCOM_SETTINGS = {"assetsUrl":"https://genai.owasp.org/wp-content/mu-plugins/wpcomsh/jetpack_vendor/automattic/jetpack-mu-wpcom/src/build/"};
+//# sourceURL=jetpack-mu-wpcom-settings-js-before
+</script>
+<script id="ecs_ajax_load-js-extra">
+var ecs_ajax_params = {"ajaxurl":"https://genai.owasp.org/wp-admin/admin-ajax.php","posts":"{\"page\":0,\"llmrisk\":\"llm01-prompt-injection\",\"post_type\":\"llmrisk\",\"name\":\"llm01-prompt-injection\",\"error\":\"\",\"m\":\"\",\"p\":0,\"post_parent\":\"\",\"subpost\":\"\",\"subpost_id\":\"\",\"attachment\":\"\",\"attachment_id\":0,\"pagename\":\"\",\"page_id\":0,\"second\":\"\",\"minute\":\"\",\"hour\":\"\",\"day\":0,\"monthnum\":0,\"year\":0,\"w\":0,\"category_name\":\"\",\"tag\":\"\",\"cat\":\"\",\"tag_id\":\"\",\"author\":\"\",\"author_name\":\"\",\"feed\":\"\",\"tb\":\"\",\"paged\":0,\"meta_key\":\"\",\"meta_value\":\"\",\"preview\":\"\",\"s\":\"\",\"sentence\":\"\",\"title\":\"\",\"fields\":\"all\",\"menu_order\":\"\",\"embed\":\"\",\"category__in\":[],\"category__not_in\":[],\"category__and\":[],\"post__in\":[],\"post__not_in\":[],\"post_name__in\":[],\"tag__in\":[],\"tag__not_in\":[],\"tag__and\":[],\"tag_slug__in\":[],\"tag_slug__and\":[],\"post_parent__in\":[],\"post_parent__not_in\":[],\"author__in\":[],\"author__not_in\":[],\"search_columns\":[],\"ignore_sticky_posts\":false,\"suppress_filters\":false,\"cache_results\":true,\"update_post_term_cache\":true,\"update_menu_item_cache\":false,\"lazy_load_term_meta\":true,\"update_post_meta_cache\":true,\"posts_per_page\":10,\"nopaging\":false,\"comments_per_page\":\"50\",\"no_found_rows\":false,\"order\":\"DESC\"}","nonce":"9f7749c31e"};
+//# sourceURL=ecs_ajax_load-js-extra
+</script>
+<script type='text/javascript' src='https://genai.owasp.org/_jb_static/??5332cf4651'></script>
+<link rel="https://api.w.org/" href="https://genai.owasp.org/wp-json/" /><link rel="alternate" title="JSON" type="application/json" href="https://genai.owasp.org/wp-json/wp/v2/llmrisk/244" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://genai.owasp.org/xmlrpc.php?rsd" />
+
+<noscript><style>.wp-grid-builder .wpgb-card.wpgb-card-hidden .wpgb-card-wrapper{opacity:1!important;visibility:visible!important;transform:none!important}.wpgb-facet {opacity:1!important;pointer-events:auto!important}.wpgb-facet *:not(.wpgb-pagination-facet){display:none}</style></noscript>            <style>
+                .molongui-disabled-link
+                {
+                    border-bottom: none !important;
+                    text-decoration: none !important;
+                    color: inherit !important;
+                    cursor: inherit !important;
+                }
+                .molongui-disabled-link:hover,
+                .molongui-disabled-link:hover span
+                {
+                    border-bottom: none !important;
+                    text-decoration: none !important;
+                    color: inherit !important;
+                    cursor: inherit !important;
+                }
+            </style>
+            <meta name="generator" content="Elementor 4.3.5; features: e_font_icon_svg, additional_custom_breakpoints; settings: css_print_method-internal, google_font-enabled, font_display-swap">
+
+<!-- Hotjar Tracking Code for GenAI  -->
+<script>
+    (function(h,o,t,j,a,r){
+        h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+        h._hjSettings={hjid:6468470,hjsv:6};
+        a=o.getElementsByTagName('head')[0];
+        r=o.createElement('script');r.async=1;
+        r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+        a.appendChild(r);
+    })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+</script>
+			<style>
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload),
+				.e-con.e-parent:nth-of-type(n+4):not(.e-lazyloaded):not(.e-no-lazyload) * {
+					background-image: none !important;
+				}
+				@media screen and (max-height: 1024px) {
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+3):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+				@media screen and (max-height: 640px) {
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload),
+					.e-con.e-parent:nth-of-type(n+2):not(.e-lazyloaded):not(.e-no-lazyload) * {
+						background-image: none !important;
+					}
+				}
+			</style>
+			<link rel="icon" href="https://genai.owasp.org/wp-content/uploads/2024/04/favicon-150x150.png?crop=1" sizes="32x32" />
+<link rel="icon" href="https://genai.owasp.org/wp-content/uploads/2024/04/favicon-200x200.png?crop=1" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://genai.owasp.org/wp-content/uploads/2024/04/favicon-200x200.png?crop=1" />
+<meta name="msapplication-TileImage" content="https://genai.owasp.org/wp-content/uploads/2024/04/favicon-300x300.png" />
+<link rel="stylesheet" type="text/css" id="wp-custom-css" href="https://genai.owasp.org/?custom-css=17fd5a6c74" /></head>
+
+<body itemtype='https://schema.org/Blog' itemscope='itemscope' class="wp-singular llmrisk-template-default single single-llmrisk postid-244 single-format-standard wp-custom-logo wp-theme-astra eio-default angie-default ast-desktop ast-page-builder-template ast-no-sidebar astra-4.6.14 group-blog ast-blog-single-style-1 ast-custom-post-type ast-single-post ast-inherit-site-logo-transparent ast-hfb-header exclusive-addons-elementor elementor-page-44900 ast-normal-title-enabled elementor-default elementor-kit-5 elementor-page elementor-page-244">
+
+<a
+	class="skip-link screen-reader-text"
+	href="#content"
+	role="link"
+	title="Skip to content">
+		Skip to content</a>
+
+<div
+class="hfeed site" id="page">
+			<header data-elementor-type="header" data-elementor-id="49659" class="elementor elementor-49659 elementor-location-header" data-elementor-post-type="elementor_library">
+			<div class="elementor-element elementor-element-4e0804db e-con-full e-ecs-flex e-flex e-con e-parent" data-id="4e0804db" data-element_type="container" data-e-type="container" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+		<div class="elementor-element elementor-element-1076011 e-con-full e-ecs-flex e-flex e-con e-child" data-id="1076011" data-element_type="container" data-e-type="container" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-4094cfa elementor-hidden-mobile elementor-view-default exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon" data-id="4094cfa" data-element_type="widget" data-e-type="widget" data-widget_type="icon.default">
+				<div class="elementor-widget-container">
+							<div class="elementor-icon-wrapper">
+			<div class="elementor-icon">
+			<svg xmlns="http://www.w3.org/2000/svg" width="33" height="16" viewBox="0 0 33 16" fill="none"><path d="M32.1471 13.9803L28.5577 7.92498L32.1104 2.11666C32.1948 1.97825 32.2408 1.81993 32.2438 1.65792C32.2468 1.4959 32.2067 1.336 32.1275 1.19456C32.0483 1.05313 31.933 0.935248 31.7932 0.852975C31.6535 0.770702 31.4943 0.726993 31.3321 0.726318H2.74537C2.25968 0.726318 1.79388 0.919058 1.45044 1.26214C1.107 1.60521 0.914063 2.07053 0.914062 2.55571L0.914063 13.5321C0.914063 14.0173 1.107 14.4826 1.45044 14.8256C1.79388 15.1687 2.25968 15.3615 2.74537 15.3615H31.3596C31.5212 15.3614 31.6799 15.3187 31.8197 15.2375C31.9594 15.1564 32.0751 15.0397 32.1551 14.8995C32.2351 14.7592 32.2765 14.6002 32.2751 14.4388C32.2736 14.2773 32.2295 14.1191 32.1471 13.9803ZM10.5376 10.9526H9.51206L6.52703 6.98284V10.9618H5.49234V5.2998H6.52703L9.52122 9.27873V5.2998H10.5468L10.5376 10.9526ZM16.3337 6.2145H13.1014V7.5774H16.0315V8.49209H13.1014V9.96476H16.3337V10.8795H12.0667V5.2998H16.3245L16.3337 6.2145ZM23.9245 10.9343H22.8898L21.4705 6.73588L20.0513 10.9526H19.0257L17.1944 5.2998H18.3115L19.5202 9.35191L20.912 5.2998H22.0291L23.3659 9.35191L24.5837 5.2998H25.71L23.9245 10.9343Z" fill="white"></path></svg>			</div>
+		</div>
+						</div>
+				</div>
+				<div class="elementor-element elementor-element-95164f9 elementor-grid-1 elementor-grid-tablet-2 elementor-grid-mobile-1 exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-loop-grid" data-id="95164f9" data-element_type="widget" data-e-type="widget" data-settings="{&quot;template_id&quot;:&quot;50620&quot;,&quot;columns&quot;:1,&quot;_skin&quot;:&quot;post&quot;,&quot;columns_tablet&quot;:&quot;2&quot;,&quot;columns_mobile&quot;:&quot;1&quot;,&quot;edit_handle_selector&quot;:&quot;[data-elementor-type=\&quot;loop-item\&quot;]&quot;,&quot;row_gap&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]},&quot;row_gap_tablet&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]},&quot;row_gap_mobile&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]}}" data-widget_type="loop-grid.post">
+				<div class="elementor-widget-container">
+							<div class="elementor-loop-container elementor-grid" role="list">
+		<style id="loop-50620"></style><style id="elementor-post-50620"></style>		<div data-elementor-type="loop-item" data-elementor-id="50620" class="elementor elementor-50620 e-loop-item e-loop-item-54496 post-54496 notice type-notice status-publish hentry ast-article-single" data-elementor-post-type="elementor_library" data-custom-edit-handle="1">
+			<div class="elementor-element elementor-element-81fbcef e-con-full e-ecs-flex e-flex e-con e-parent" data-id="81fbcef" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-a30b777 exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-theme-post-title elementor-page-title elementor-widget-heading" data-id="a30b777" data-element_type="widget" data-e-type="widget" data-widget_type="theme-post-title.default">
+				<div class="elementor-widget-container">
+					<h1 class="elementor-heading-title elementor-size-default"><a href="https://genai.owasp.org/event/infosecworld/">Join us in Orlando, FL 10/11 &#8211; 10/15 @ InfoSec World 2026</a></h1>				</div>
+				</div>
+				<div class="elementor-element elementor-element-a00f352 elementor-hidden-mobile exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-heading" data-id="a00f352" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default">|</h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-3243dae elementor-hidden-mobile exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-button" data-id="3243dae" data-element_type="widget" data-e-type="widget" data-widget_type="button.default">
+				<div class="elementor-widget-container">
+									<div class="elementor-button-wrapper">
+					<a class="elementor-button elementor-button-link elementor-size-sm" href="https://genai.owasp.org/event/infosecworld/">
+						<span class="elementor-button-content-wrapper">
+						<span class="elementor-button-icon">
+				<svg aria-hidden="true" class="e-font-icon-svg e-fas-arrow-right" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M190.5 66.9l22.2-22.2c9.4-9.4 24.6-9.4 33.9 0L441 239c9.4 9.4 9.4 24.6 0 33.9L246.6 467.3c-9.4 9.4-24.6 9.4-33.9 0l-22.2-22.2c-9.5-9.5-9.3-25 .4-34.3L311.4 296H24c-13.3 0-24-10.7-24-24v-32c0-13.3 10.7-24 24-24h287.4L190.9 101.2c-9.8-9.3-10-24.8-.4-34.3z"></path></svg>			</span>
+									<span class="elementor-button-text">Register Now!</span>
+					</span>
+					</a>
+				</div>
+								</div>
+				</div>
+				</div>
+				</div>
+				</div>
+		
+						</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-7ac4322e e-con-full e-ecs-flex e-flex e-con e-child" data-id="7ac4322e" data-element_type="container" data-e-type="container" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;sticky&quot;:&quot;top&quot;,&quot;ecs_container_type&quot;:&quot;flex&quot;,&quot;sticky_on&quot;:[&quot;desktop&quot;,&quot;tablet&quot;,&quot;mobile&quot;],&quot;sticky_offset&quot;:0,&quot;sticky_effects_offset&quot;:0,&quot;sticky_anchor_link_offset&quot;:0}">
+		<div data-xpro-element-link="{&quot;url&quot;:&quot;https:\/\/genai.owasp.org&quot;,&quot;is_external&quot;:&quot;&quot;,&quot;nofollow&quot;:&quot;&quot;,&quot;custom_attributes&quot;:&quot;&quot;}" style="cursor: pointer" class="elementor-element elementor-element-24cdbb91 e-con-full e-ecs-flex e-flex e-con e-child" data-id="24cdbb91" data-element_type="container" data-e-type="container" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-5b54e48e exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-spacer" data-id="5b54e48e" data-element_type="widget" data-e-type="widget" data-widget_type="spacer.default">
+				<div class="elementor-widget-container">
+							<div class="elementor-spacer">
+			<div class="elementor-spacer-inner"></div>
+		</div>
+						</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-68241065 e-con-full e-ecs-flex e-flex e-con e-child" data-id="68241065" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-da9afa1 elementor-align-center exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-xpro-horizontal-menu" data-id="da9afa1" data-element_type="widget" data-e-type="widget" data-settings="{&quot;responsive_show&quot;:&quot;tablet&quot;}" data-widget_type="xpro-horizontal-menu.default">
+				<div class="elementor-widget-container">
+					<div class="xpro-elementor-horizontal-navbar-wrapper xpro-elementor-horizontal-menu-responsive-tablet xpro-push-right">
+
+		<button type="button" class="xpro-elementor-horizontal-menu-close">
+		<i aria-hidden="true" class="fas fa-times"></i>	</button>
+	
+	<div class="xpro-elementor-horizontal-navbar xpro-elementor-horizontal-menu-style-fade"><ul id="menu-homemenu" class="xpro-elementor-horizontal-navbar-nav"><li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-476" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children dropdown menu-item-476 nav-item"><a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-toggle nav-link menu-link" id="menu-item-dropdown-476">GETTING STARTED<span role="application" class="dropdown-menu-toggle ast-header-navigation-arrow" tabindex="0" aria-expanded="false" aria-label="Menu Toggle" ></span><span class="xpro-dropdown-menu-toggle"></span></a>
+<ul class="xpro-elementor-dropdown-menu" aria-labelledby="menu-item-dropdown-476" role="menu">
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-46099" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-46099 nav-item"><a href="https://genai.owasp.org/introduction-genai-security-project/" class="xpro-elementor-dropdown-item menu-link">Introduction</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-1917" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-1917 nav-item"><a href="https://genai.owasp.org/meetings/" class="xpro-elementor-dropdown-item menu-link">MEETINGS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-51954" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-51954 nav-item"><a href="https://genai.owasp.org/contributing/" class="xpro-elementor-dropdown-item menu-link">CONTRIBUTING</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-2246" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-2246 nav-item"><a href="/events/" class="xpro-elementor-dropdown-item menu-link">EVENTS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-58082" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-58082 nav-item"><a href="https://genai.owasp.org/glossary/" class="xpro-elementor-dropdown-item menu-link">GLOSSARY</a></li>
+</ul>
+</li>
+<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-763" class="menu-item menu-item-type-post_type_archive menu-item-object-resource menu-item-has-children dropdown menu-item-763 nav-item"><a href="https://genai.owasp.org/resources/" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-toggle nav-link menu-link" id="menu-item-dropdown-763">RESOURCES<span role="application" class="dropdown-menu-toggle ast-header-navigation-arrow" tabindex="0" aria-expanded="false" aria-label="Menu Toggle" ></span><span class="xpro-dropdown-menu-toggle"></span></a>
+<ul class="xpro-elementor-dropdown-menu" aria-labelledby="menu-item-dropdown-763" role="menu">
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-48938" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-48938 nav-item"><a href="/resources/" class="xpro-elementor-dropdown-item menu-link">All</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-764" class="menu-item menu-item-type-post_type_archive menu-item-object-llmrisk menu-item-has-children dropdown menu-item-764 nav-item"><a href="https://genai.owasp.org/llm-top-10/" class="xpro-elementor-dropdown-item menu-link">LLM TOP 10<span role="application" class="dropdown-menu-toggle ast-header-navigation-arrow" tabindex="0" aria-expanded="false" aria-label="Menu Toggle" ></span><span class="xpro-dropdown-menu-toggle"></span></a>
+	<ul class="xpro-elementor-dropdown-menu" aria-labelledby="menu-item-dropdown-763" role="menu">
+		<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-43123" class="menu-item menu-item-type-post_type_archive menu-item-object-llmrisk menu-item-43123 nav-item"><a href="https://genai.owasp.org/llm-top-10/" class="xpro-elementor-dropdown-item menu-link">LLM TOP 10 FOR 2025</a></li>
+		<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-43122" class="menu-item menu-item-type-post_type_archive menu-item-object-llmrisk2023-24 menu-item-43122 nav-item"><a href="https://genai.owasp.org/llm-top-10-2023-24/" class="xpro-elementor-dropdown-item menu-link">LLM TOP 10 FOR 2023/24</a></li>
+	</ul>
+</li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-49065" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-49065 nav-item"><a href="https://genai.owasp.org/resources/?e-filter-3b7adda-resource-item=cheat-sheets" class="xpro-elementor-dropdown-item menu-link">CHEAT SHEETS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-49066" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-49066 nav-item"><a href="https://genai.owasp.org/resources/?e-filter-3b7adda-resource-item=whitepaper" class="xpro-elementor-dropdown-item menu-link">WHITEPAPERS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-52354" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-52354 nav-item"><a href="https://genai.owasp.org/resources/?e-filter-3b7adda-resource-item=tools" class="xpro-elementor-dropdown-item menu-link">TOOLS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-46465" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-46465 nav-item"><a href="/learning/" class="xpro-elementor-dropdown-item menu-link">LEARNING VIDEOS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-48939" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-48939 nav-item"><a href="/ai-security-solutions-landscape/" class="xpro-elementor-dropdown-item menu-link">SOLUTIONS DIRECTORY</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-43986" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-43986 nav-item"><a href="https://genai.owasp.org/roadmap/" class="xpro-elementor-dropdown-item menu-link">ROADMAP</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-47092" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-47092 nav-item"><a href="https://genai.owasp.org/newsletter/" class="xpro-elementor-dropdown-item menu-link">NEWSLETTER</a></li>
+</ul>
+</li>
+<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-56440" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-has-children dropdown menu-item-56440 nav-item"><a href="https://genai.owasp.org/initiatives/" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-toggle nav-link menu-link" id="menu-item-dropdown-56440">PROJECT INITIATIVES<span role="application" class="dropdown-menu-toggle ast-header-navigation-arrow" tabindex="0" aria-expanded="false" aria-label="Menu Toggle" ></span><span class="xpro-dropdown-menu-toggle"></span></a>
+<ul class="xpro-elementor-dropdown-menu" aria-labelledby="menu-item-dropdown-56440" role="menu">
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-56340" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-56340 nav-item"><a href="https://genai.owasp.org/initiatives/top-10-for-llm-and-genai/" class="xpro-elementor-dropdown-item menu-link">Top 10 for LLM and GenAI</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-44344" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-44344 nav-item"><a href="https://genai.owasp.org/initiatives/agentic-security-initiative/" class="xpro-elementor-dropdown-item menu-link">AGENTIC SECURITY</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-52353" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-52353 nav-item"><a href="https://genai.owasp.org/initiatives/ai-sbom-initiative/" class="xpro-elementor-dropdown-item menu-link">AI Bill of Materials</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-42592" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-42592 nav-item"><a href="/initiatives/ai-data-security-initiative/" class="xpro-elementor-dropdown-item menu-link">Ai Data Security</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-56328" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-56328 nav-item"><a href="https://genai.owasp.org/initiatives/ai-security-governance-and-adoption/" class="xpro-elementor-dropdown-item menu-link">AI Security Governance</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-56408" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-56408 nav-item"><a href="https://genai.owasp.org/initiatives/ai-security-solutions/" class="xpro-elementor-dropdown-item menu-link">AI Security Solutions</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-42589" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-42589 nav-item"><a href="/initiatives/ai-threat-intelligence/" class="xpro-elementor-dropdown-item menu-link">AI Threat Intel &#038; Resp</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-42591" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-42591 nav-item"><a href="/initiatives/ai-red-teaming/" class="xpro-elementor-dropdown-item menu-link">AI Red Teaming</a></li>
+</ul>
+</li>
+<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-760" class="menu-item menu-item-type-post_type menu-item-object-page current_page_parent menu-item-760 nav-item"><a href="https://genai.owasp.org/blog/" class="xpro-elementor-nav-link menu-link">BLOG</a></li>
+<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-477" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children dropdown menu-item-477 nav-item"><a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" class="dropdown-toggle nav-link menu-link" id="menu-item-dropdown-477">ABOUT<span role="application" class="dropdown-menu-toggle ast-header-navigation-arrow" tabindex="0" aria-expanded="false" aria-label="Menu Toggle" ></span><span class="xpro-dropdown-menu-toggle"></span></a>
+<ul class="xpro-elementor-dropdown-menu" aria-labelledby="menu-item-dropdown-477" role="menu">
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-46098" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-46098 nav-item"><a href="https://genai.owasp.org/project-mission-and-charter/" class="xpro-elementor-dropdown-item menu-link">Mission and Charter</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-46097" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-46097 nav-item"><a href="https://genai.owasp.org/project-governance/" class="xpro-elementor-dropdown-item menu-link">Governance</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-2256" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-2256 nav-item"><a href="/contributors/" class="xpro-elementor-dropdown-item menu-link">LEADERSHIP</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-43378" class="menu-item menu-item-type-post_type_archive menu-item-object-quote menu-item-43378 nav-item"><a href="https://genai.owasp.org/quotes/" class="xpro-elementor-dropdown-item menu-link">INDUSTRY RECOGNITION</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-2245" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-2245 nav-item"><a href="/contributors/#allcontributors" class="xpro-elementor-dropdown-item menu-link">CONTRIBUTORS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-46206" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-46206 nav-item"><a href="/supporters/" class="xpro-elementor-dropdown-item menu-link">SPONSORS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-46207" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-46207 nav-item"><a href="/supporters/" class="xpro-elementor-dropdown-item menu-link">SUPPORTERS</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-886" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-886 nav-item"><a href="https://genai.owasp.org/sponsorship/" class="xpro-elementor-dropdown-item menu-link">SPONSORSHIP</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-827" class="menu-item menu-item-type-post_type_archive menu-item-object-news menu-item-827 nav-item"><a href="https://genai.owasp.org/news/" class="xpro-elementor-dropdown-item menu-link">NEWSROOM</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-2240" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-2240 nav-item"><a href="https://genai.owasp.org/contact/" class="xpro-elementor-dropdown-item menu-link">CONTACT</a></li>
+	<li itemscope="itemscope" itemtype="https://www.schema.org/SiteNavigationElement" id="menu-item-40626" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-40626 nav-item"><a href="https://genai.owasp.org/branding/" class="xpro-elementor-dropdown-item menu-link">BRANDING</a></li>
+</ul>
+</li>
+</ul></div></div>
+
+<div class="xpro-elementor-horizontal-menu-overlay"></div>
+
+<div class="xpro-elementor-horizontal-menu-toggler-wrapper">
+	<button type="button" class="xpro-elementor-horizontal-menu-toggler">
+		<i aria-hidden="true" class="fas fa-bars"></i>	</button>
+</div>
+				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-5452d413 e-con-full elementor-hidden-tablet elementor-hidden-mobile e-ecs-flex e-flex e-con e-child" data-id="5452d413" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-226dcd7a elementor-icon-list--layout-inline elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="226dcd7a" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items elementor-inline-items">
+							<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://x.com/OWASPGenAISec">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-x-twitter" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://www.linkedin.com/company/owasp-top-10-for-large-language-model-applications/">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-linkedin" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://github.com/genai-security-project/">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-github" viewBox="0 0 496 512" xmlns="http://www.w3.org/2000/svg"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://owasp.org/slack/invite">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-slack" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M94.12 315.1c0 25.9-21.16 47.06-47.06 47.06S0 341 0 315.1c0-25.9 21.16-47.06 47.06-47.06h47.06v47.06zm23.72 0c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06v117.84c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06V315.1zm47.06-188.98c-25.9 0-47.06-21.16-47.06-47.06S139 32 164.9 32s47.06 21.16 47.06 47.06v47.06H164.9zm0 23.72c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06H47.06C21.16 243.96 0 222.8 0 196.9s21.16-47.06 47.06-47.06H164.9zm188.98 47.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06h-47.06V196.9zm-23.72 0c0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06V79.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06V196.9zM283.1 385.88c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06v-47.06h47.06zm0-23.72c-25.9 0-47.06-21.16-47.06-47.06 0-25.9 21.16-47.06 47.06-47.06h117.84c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06H283.1z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://www.youtube.com/@GenAISecurityProject">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-youtube" viewBox="0 0 576 512" xmlns="http://www.w3.org/2000/svg"><path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+		<!-- dce invisible element 3d009e43 --><!-- dce invisible element 718db5c7 -->		</div>
+				</div>
+				</div>
+				</header>
+			<div id="content" class="site-content">
+		<div class="ast-container">
+		
+
+	<div id="primary" class="content-area primary">
+
+		
+					<main id="main" class="site-main">
+						<div data-elementor-type="single-post" data-elementor-id="44900" class="elementor elementor-44900 elementor-location-single post-244 llmrisk type-llmrisk status-publish format-standard has-post-thumbnail hentry ast-article-single" data-elementor-post-type="elementor_library">
+			<div class="elementor-element elementor-element-9766bbb e-ecs-flex e-flex e-con-boxed e-con e-parent" data-id="9766bbb" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+					<div class="e-con-inner">
+				<div class="elementor-element elementor-element-217b3ff exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-xpro-featured-image" data-id="217b3ff" data-element_type="widget" data-e-type="widget" data-widget_type="xpro-featured-image.default">
+				<div class="elementor-widget-container">
+					<div class="xpro-featured-image">
+<img fetchpriority="high" width="1024" height="524" src="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" class="attachment-large size-large" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png 1024w, https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25-768x393.png 768w" sizes="(max-width: 1024px) 100vw, 1024px" data-attachment-id="43144" data-permalink="https://genai.owasp.org/llmrisk/llm01-prompt-injection/llm01-25/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="LLM01.25" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" /></div>
+				</div>
+				</div>
+					</div>
+				</div>
+		<div class="elementor-element elementor-element-dbb5a21 e-ecs-flex e-flex e-con-boxed e-con e-parent" data-id="dbb5a21" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+					<div class="e-con-inner">
+		<div class="elementor-element elementor-element-9122ed7 e-con-full e-ecs-flex e-flex e-con e-child" data-id="9122ed7" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-8582db9 exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-xpro-post-title" data-id="8582db9" data-element_type="widget" data-e-type="widget" data-widget_type="xpro-post-title.default">
+				<div class="elementor-widget-container">
+					<h2 class="xpro-post-title">
+<span class="xpro-post-title-text">
+		LLM01:2025 Prompt Injection	</span>
+</h2>
+
+				</div>
+				</div>
+				<div class="elementor-element elementor-element-67f706e exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-xpro-post-content" data-id="67f706e" data-element_type="widget" data-e-type="widget" data-widget_type="xpro-post-content.default">
+				<div class="elementor-widget-container">
+					
+<div class="xpro-elementor-content">
+		<div class="markdown-heading" dir="auto">
+<p><span style="font-size: 16px;">A Prompt Injection Vulnerability occurs when user prompts alter the LLM’s behavior or output in unintended ways. These inputs can affect the model even if they are imperceptible to humans, therefore prompt injections do not need to be human-visible/readable, as long as the content is parsed by the model.</span></p>
+</div>
+<p dir="auto">Prompt Injection vulnerabilities exist in how models process prompts, and how input may force the model to incorrectly pass prompt data to other parts of the model, potentially causing them to violate guidelines, generate harmful content, enable unauthorized access, or influence critical decisions. While techniques like Retrieval Augmented Generation (RAG) and fine-tuning aim to make LLM outputs more relevant and accurate, research shows that they do not fully mitigate prompt injection vulnerabilities.</p>
+<p dir="auto">While prompt injection and jailbreaking are related concepts in LLM security, they are often used interchangeably. Prompt injection involves manipulating model responses through specific inputs to alter its behavior, which can include bypassing safety measures. Jailbreaking is a form of prompt injection where the attacker provides inputs that cause the model to disregard its safety protocols entirely. Developers can build safeguards into system prompts and input handling to help mitigate prompt injection attacks, but effective prevention of jailbreaking requires ongoing updates to the model&#8217;s training and safety mechanisms.</p>
+<div class="markdown-heading" dir="auto">
+<h3 class="heading-element" dir="auto" tabindex="-1">Types of Prompt Injection Vulnerabilities</h3>
+<p>&nbsp;</p>
+</div>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Direct Prompt Injections</h4>
+</div>
+<p dir="auto">Direct prompt injections occur when a user&#8217;s prompt input directly alters the behavior of the model in unintended or unexpected ways. The input can be either intentional (i.e., a malicious actor deliberately crafting a prompt to exploit the model) or unintentional (i.e., a user inadvertently providing input that triggers unexpected behavior).</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Indirect Prompt Injections</h4>
+</div>
+<p dir="auto">Indirect prompt injections occur when an LLM accepts input from external sources, such as websites or files. The content may have in the external content data that when interpreted by the model, alters the behavior of the model in unintended or unexpected ways. Like direct injections, indirect injections can be either intentional or unintentional.</p>
+<p dir="auto">The severity and nature of the impact of a successful prompt injection attack can vary greatly and are largely dependent on both the business context the model operates in, and the agency with which the model is architected. Generally, however, prompt injection can lead to unintended outcomes, including but not limited to:</p>
+<ul dir="auto">
+<li>Disclosure of sensitive information</li>
+<li>Revealing sensitive information about AI system infrastructure or system prompts</li>
+<li>Content manipulation leading to incorrect or biased outputs</li>
+<li>Providing unauthorized access to functions available to the LLM</li>
+<li>Executing arbitrary commands in connected systems</li>
+<li>Manipulating critical decision-making processes</li>
+</ul>
+<p dir="auto">The rise of multimodal AI, which processes multiple data types simultaneously, introduces unique prompt injection risks. Malicious actors could exploit interactions between modalities, such as hiding instructions in images that accompany benign text. The complexity of these systems expands the attack surface. Multimodal models may also be susceptible to novel cross-modal attacks that are difficult to detect and mitigate with current techniques. Robust multimodal-specific defenses are an important area for further research and development.</p>
+<div class="markdown-heading" dir="auto">
+<h3 class="heading-element" dir="auto" tabindex="-1">Prevention and Mitigation Strategies</h3>
+</div>
+<p dir="auto">Prompt injection vulnerabilities are possible due to the nature of generative AI. Given the stochastic influence at the heart of the way models work, it is unclear if there are fool-proof methods of prevention for prompt injection. However, the following measures can mitigate the impact of prompt injections:</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">1. Constrain model behavior</h4>
+</div>
+<p dir="auto">Provide specific instructions about the model&#8217;s role, capabilities, and limitations within the system prompt. Enforce strict context adherence, limit responses to specific tasks or topics, and instruct the model to ignore attempts to modify core instructions.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">2. Define and validate expected output formats</h4>
+</div>
+<p dir="auto">Specify clear output formats, request detailed reasoning and source citations, and use deterministic code to validate adherence to these formats.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">3. Implement input and output filtering</h4>
+</div>
+<p dir="auto">Define sensitive categories and construct rules for identifying and handling such content. Apply semantic filters and use string-checking to scan for non-allowed content. Evaluate responses using the RAG Triad: Assess context relevance, groundedness, and question/answer relevance to identify potentially malicious outputs.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">4. Enforce privilege control and least privilege access</h4>
+</div>
+<p dir="auto">Provide the application with its own API tokens for extensible functionality, and handle these functions in code rather than providing them to the model. Restrict the model&#8217;s access privileges to the minimum necessary for its intended operations.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">5. Require human approval for high-risk actions</h4>
+</div>
+<p dir="auto">Implement human-in-the-loop controls for privileged operations to prevent unauthorized actions.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">6. Segregate and identify external content</h4>
+</div>
+<p dir="auto">Separate and clearly denote untrusted content to limit its influence on user prompts.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">7. Conduct adversarial testing and attack simulations\</h4>
+</div>
+<p dir="auto">Perform regular penetration testing and breach simulations, treating the model as an untrusted user to test the effectiveness of trust boundaries and access controls.</p>
+<div class="markdown-heading" dir="auto">
+<h3 class="heading-element" dir="auto" tabindex="-1">Example Attack Scenarios</h3>
+</div>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #1: Direct Injection</h4>
+</div>
+<p dir="auto">An attacker injects a prompt into a customer support chatbot, instructing it to ignore previous guidelines, query private data stores, and send emails, leading to unauthorized access and privilege escalation.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #2: Indirect Injection</h4>
+</div>
+<p dir="auto">A user employs an LLM to summarize a webpage containing hidden instructions that cause the LLM to insert an image linking to a URL, leading to exfiltration of the the private conversation.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #3: Unintentional Injection</h4>
+</div>
+<p dir="auto">A company includes an instruction in a job description to identify AI-generated applications. An applicant, unaware of this instruction, uses an LLM to optimize their resume, inadvertently triggering the AI detection.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #4: Intentional Model Influence</h4>
+</div>
+<p dir="auto">An attacker modifies a document in a repository used by a Retrieval-Augmented Generation (RAG) application. When a user&#8217;s query returns the modified content, the malicious instructions alter the LLM&#8217;s output, generating misleading results.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #5: Code Injection</h4>
+</div>
+<p dir="auto">An attacker exploits a vulnerability (CVE-2024-5184) in an LLM-powered email assistant to inject malicious prompts, allowing access to sensitive information and manipulation of email content.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #6: Payload Splitting</h4>
+<p><span style="font-size: 16px;">An attacker uploads a resume with split malicious prompts. When an LLM is used to evaluate the candidate, the combined prompts manipulate the model&#8217;s response, resulting in a positive recommendation despite the actual resume contents.</span></p>
+</div>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #7: Multimodal Injection</h4>
+</div>
+<p dir="auto">An attacker embeds a malicious prompt within an image that accompanies benign text. When a multimodal AI processes the image and text concurrently, the hidden prompt alters the model&#8217;s behavior, potentially leading to unauthorized actions or disclosure of sensitive information.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #8: Adversarial Suffix</h4>
+</div>
+<p dir="auto">An attacker appends a seemingly meaningless string of characters to a prompt, which influences the LLM&#8217;s output in a malicious way, bypassing safety measures.</p>
+<div class="markdown-heading" dir="auto">
+<h4 class="heading-element" dir="auto" tabindex="-1">Scenario #9: Multilingual/Obfuscated Attack</h4>
+</div>
+<p dir="auto">An attacker uses multiple languages or encodes malicious instructions (e.g., using Base64 or emojis) to evade filters and manipulate the LLM&#8217;s behavior.</p>
+<div class="markdown-heading" dir="auto">
+<h3 class="heading-element" dir="auto" tabindex="-1">Reference Links</h3>
+</div>
+<ol dir="auto">
+<li><a href="https://embracethered.com/blog/posts/2023/chatgpt-plugin-vulns-chat-with-code/" rel="nofollow">ChatGPT Plugin Vulnerabilities &#8211; Chat with Code</a> <strong>Embrace the Red</strong></li>
+<li><a href="https://embracethered.com/blog/posts/2023/chatgpt-cross-plugin-request-forgery-and-prompt-injection./" rel="nofollow">ChatGPT Cross Plugin Request Forgery and Prompt Injection</a> <strong>Embrace the Red</strong></li>
+<li><a href="https://arxiv.org/pdf/2302.12173.pdf" rel="nofollow">Not what you’ve signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection</a> <strong>Arxiv</strong></li>
+<li><a href="https://www.researchsquare.com/article/rs-2873090/v1" rel="nofollow">Defending ChatGPT against Jailbreak Attack via Self-Reminder</a> <strong>Research Square</strong></li>
+<li><a href="https://arxiv.org/abs/2306.05499" rel="nofollow">Prompt Injection attack against LLM-integrated Applications</a> <strong>Cornell University</strong></li>
+<li><a href="https://kai-greshake.de/posts/inject-my-pdf" rel="nofollow">Inject My PDF: Prompt Injection for your Resume</a> <strong>Kai Greshake</strong></li>
+<li><a href="https://arxiv.org/pdf/2302.12173.pdf" rel="nofollow">Not what you’ve signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection</a> <strong>Cornell University</strong></li>
+<li><a href="https://aivillage.org/large%20language%20models/threat-modeling-llm/" rel="nofollow">Threat Modeling LLM Applications</a> <strong>AI Village</strong></li>
+<li><a href="https://research.kudelskisecurity.com/2023/05/25/reducing-the-impact-of-prompt-injection-attacks-through-design/" rel="nofollow">Reducing The Impact of Prompt Injection Attacks Through Design</a> <strong>Kudelski Security</strong></li>
+<li><a href="https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.100-2e2023.pdf" rel="nofollow">Adversarial Machine Learning: A Taxonomy and Terminology of Attacks and Mitigations (nist.gov)</a></li>
+<li><a href="https://arxiv.org/abs/2407.07403" rel="nofollow">2407.07403 A Survey of Attacks on Large Vision-Language Models: Resources, Advances, and Future Trends (arxiv.org)</a></li>
+<li><a href="https://ieeexplore.ieee.org/document/10579515" rel="nofollow">Exploiting Programmatic Behavior of LLMs: Dual-Use Through Standard Security Attacks</a></li>
+<li><a href="https://arxiv.org/abs/2307.15043" rel="nofollow">Universal and Transferable Adversarial Attacks on Aligned Language Models (arxiv.org)</a></li>
+<li><a href="https://arxiv.org/abs/2307.00691" rel="nofollow">From ChatGPT to ThreatGPT: Impact of Generative AI in Cybersecurity and Privacy (arxiv.org)</a></li>
+</ol>
+<div class="markdown-heading" dir="auto">
+<h3 class="heading-element" dir="auto" tabindex="-1">Related Frameworks and Taxonomies</h3>
+</div>
+<p dir="auto">Refer to this section for comprehensive information, scenarios strategies relating to infrastructure deployment, applied environment controls and other best practices.</p>
+<ul dir="auto">
+<li><a href="https://atlas.mitre.org/techniques/AML.T0051.000" rel="nofollow">AML.T0051.000 &#8211; LLM Prompt Injection: Direct</a> <strong>MITRE ATLAS</strong></li>
+<li><a href="https://atlas.mitre.org/techniques/AML.T0051.001" rel="nofollow">AML.T0051.001 &#8211; LLM Prompt Injection: Indirect</a> <strong>MITRE ATLAS</strong></li>
+<li><a href="https://atlas.mitre.org/techniques/AML.T0054" rel="nofollow">AML.T0054 &#8211; LLM Jailbreak Injection: Direct</a> <strong>MITRE ATLAS</strong></li>
+</ul>
+<div class="gsp_post_data" 
+	            data-post_type="llmrisk" 
+	            data-cat="" 
+	            data-modified="120"
+	            data-created="1712740909"
+	            data-title="LLM01:2025 Prompt Injection" 
+	            data-home="https://genai.owasp.org"></div><div class="sharedaddy sd-sharing-enabled"><div class="robots-nocontent sd-block sd-social sd-social-icon sd-sharing"><h3 class="sd-title">Share this:</h3><div class="sd-content"><ul><li class="share-twitter"><a rel="nofollow noopener noreferrer"
+				data-shared="sharing-twitter-244"
+				class="share-twitter sd-button share-icon no-text"
+				href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/?share=twitter"
+				target="_blank"
+				aria-labelledby="sharing-twitter-244"
+				>
+				<span id="sharing-twitter-244" hidden>Share on X (Opens in new window)</span>
+				<span>X</span>
+			</a></li><li class="share-facebook"><a rel="nofollow noopener noreferrer"
+				data-shared="sharing-facebook-244"
+				class="share-facebook sd-button share-icon no-text"
+				href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/?share=facebook"
+				target="_blank"
+				aria-labelledby="sharing-facebook-244"
+				>
+				<span id="sharing-facebook-244" hidden>Share on Facebook (Opens in new window)</span>
+				<span>Facebook</span>
+			</a></li><li><a href="#" class="sharing-anchor sd-button share-more"><span>More</span></a></li><li class="share-end"></li></ul><div class="sharing-hidden"><div class="inner" style="display: none;"><ul><li class="share-print"><a rel="nofollow noopener noreferrer"
+				data-shared="sharing-print-244"
+				class="share-print sd-button share-icon no-text"
+				href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/#print?share=print"
+				target="_blank"
+				aria-labelledby="sharing-print-244"
+				>
+				<span id="sharing-print-244" hidden>Print (Opens in new window)</span>
+				<span>Print</span>
+			</a></li><li class="share-email"><a rel="nofollow noopener noreferrer"
+				data-shared="sharing-email-244"
+				class="share-email sd-button share-icon no-text"
+				href="mailto:?subject=%5BShared%20Post%5D%20LLM01%3A2025%20Prompt%20Injection&#038;body=https%3A%2F%2Fgenai.owasp.org%2Fllmrisk%2Fllm01-prompt-injection%2F&#038;share=email"
+				target="_blank"
+				aria-labelledby="sharing-email-244"
+				data-email-share-error-title="Do you have email set up?" data-email-share-error-text="If you&#039;re having problems sharing via email, you might not have email set up for your browser. You may need to create a new email yourself." data-email-share-nonce="060f25c520" data-email-share-track-url="https://genai.owasp.org/llmrisk/llm01-prompt-injection/?share=email">
+				<span id="sharing-email-244" hidden>Email a link to a friend (Opens in new window)</span>
+				<span>Email</span>
+			</a></li><li class="share-x"><a rel="nofollow noopener noreferrer"
+				data-shared="sharing-x-244"
+				class="share-x sd-button share-icon no-text"
+				href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/?share=x"
+				target="_blank"
+				aria-labelledby="sharing-x-244"
+				>
+				<span id="sharing-x-244" hidden>Share on X (Opens in new window)</span>
+				<span>X</span>
+			</a></li><li class="share-end"></li></ul></div></div></div></div></div></div>
+
+				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-2167518 e-con-full e-ecs-flex e-flex e-con e-child" data-id="2167518" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-8088118 exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-heading" data-id="8088118" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default">LLM Top 10</h2>				</div>
+				</div>
+				<div class="elementor-element elementor-element-58b13df xpro-post-grid-align-center exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-xpro-post-grid" data-id="58b13df" data-element_type="widget" data-e-type="widget" data-settings="{&quot;column_grid&quot;:&quot;1&quot;,&quot;image_height&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:168,&quot;sizes&quot;:[]},&quot;column_grid_tablet&quot;:&quot;1&quot;,&quot;column_grid_mobile&quot;:&quot;1&quot;,&quot;image_height_tablet&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]},&quot;image_height_mobile&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]},&quot;space_between&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:15,&quot;sizes&quot;:[]},&quot;space_between_tablet&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:15,&quot;sizes&quot;:[]},&quot;space_between_mobile&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:15,&quot;sizes&quot;:[]},&quot;content_height&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]},&quot;content_height_tablet&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]},&quot;content_height_mobile&quot;:{&quot;unit&quot;:&quot;px&quot;,&quot;size&quot;:&quot;&quot;,&quot;sizes&quot;:[]}}" data-widget_type="xpro-post-grid.default">
+				<div class="elementor-widget-container">
+					
+		<div class="xpro-post-grid-wrapper xpro-post-grid-layout-7">
+
+			
+				<div class="xpro-post-grid-main cbp">
+
+					
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43144" data-permalink="https://genai.owasp.org/llmrisk/llm01-prompt-injection/llm01-25/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="LLM01.25" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/">
+			<h2 class="xpro-post-grid-title">LLM01:2025 Prompt Injection</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">A Prompt Injection Vulnerability occurs when user prompts alter the LLM’s behavior or output in unintended ways. These inputs...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm01-prompt-injection/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide02-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide02-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide02-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide02.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43145" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide02/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide02.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide02" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide02.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/">
+			<h2 class="xpro-post-grid-title">LLM02:2025 Sensitive Information Disclosure</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">Sensitive information can affect both the LLM and its application context. This includes personal identifiable information (PII), financial details,...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide03-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide03-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide03-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide03.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43153" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide03/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide03.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide03" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide03.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm032025-supply-chain/">
+			<h2 class="xpro-post-grid-title">LLM03:2025 Supply Chain</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">LLM supply chains are susceptible to various vulnerabilities, which can affect the integrity of training data, models, and deployment...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm032025-supply-chain/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide04-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide04-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide04-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide04.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43152" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide04/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide04.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide04" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide04.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/">
+			<h2 class="xpro-post-grid-title">LLM04:2025 Data and Model Poisoning</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">Data poisoning occurs when pre-training, fine-tuning, or embedding data is manipulated to introduce vulnerabilities, backdoors, or biases. This manipulation...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm042025-data-and-model-poisoning/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide05-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide05-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide05-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide05.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43151" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide05/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide05.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide05" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide05.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/">
+			<h2 class="xpro-post-grid-title">LLM05:2025 Improper Output Handling</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">Improper Output Handling refers specifically to insufficient validation, sanitization, and handling of the outputs generated by large language models...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm052025-improper-output-handling/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide06-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide06-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide06-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide06.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43150" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide06/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide06.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide06" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide06.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm062025-excessive-agency/">
+			<h2 class="xpro-post-grid-title">LLM06:2025 Excessive Agency</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">An LLM-based system is often granted a degree of agency by its developer &#8211; the ability to call functions...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm062025-excessive-agency/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide07-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide07-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide07-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide07.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43149" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide07/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide07.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide07" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide07.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm072025-system-prompt-leakage/">
+			<h2 class="xpro-post-grid-title">LLM07:2025 System Prompt Leakage</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">The system prompt leakage vulnerability in LLMs refers to the risk that the system prompts or instructions used to...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm072025-system-prompt-leakage/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide08-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide08-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide08-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide08.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43148" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide08/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide08.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide08" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide08.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/">
+			<h2 class="xpro-post-grid-title">LLM08:2025 Vector and Embedding Weaknesses</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">Vectors and embeddings vulnerabilities present significant security risks in systems utilizing Retrieval Augmented Generation (RAG) with Large Language Models...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm082025-vector-and-embedding-weaknesses/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide09-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide09-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide09-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide09.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43147" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide09/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide09.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide09" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide09.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm092025-misinformation/">
+			<h2 class="xpro-post-grid-title">LLM09:2025 Misinformation</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">Misinformation from LLMs poses a core vulnerability for applications relying on these models. Misinformation occurs when LLMs produce false...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm092025-misinformation/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+<div class="cbp-item xpro-post-grid-item">
+			<div class="xpro-post-grid-image">
+			<img loading="lazy" width="300" height="154" src="https://genai.owasp.org/wp-content/uploads/2024/04/Slide10-300x154.png" class="attachment-medium size-medium" alt="" decoding="async" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/Slide10-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide10-768x393.png 768w, https://genai.owasp.org/wp-content/uploads/2024/04/Slide10.png 1024w" sizes="(max-width: 300px) 100vw, 300px" data-attachment-id="43146" data-permalink="https://genai.owasp.org/llmrisk/llm022025-sensitive-information-disclosure/slide10/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide10.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="Slide10" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/Slide10.png" />					</div>
+	
+	<div class="xpro-post-grid-content">
+
+		
+		
+		<a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/">
+			<h2 class="xpro-post-grid-title">LLM10:2025 Unbounded Consumption</h2>
+		</a>
+
+		
+					<p class="xpro-post-grid-excerpt">Unbounded Consumption refers to the process where a Large Language Model (LLM) generates outputs based on input queries or...</p>
+							<a href="https://genai.owasp.org/llmrisk/llm102025-unbounded-consumption/" class="xpro-post-grid-btn"></a>
+				
+		
+	</div>
+</div>
+
+				</div>
+
+				
+		</div>
+
+						</div>
+				</div>
+				</div>
+					</div>
+				</div>
+				</div>
+					</main><!-- #main -->
+			
+		
+	</div><!-- #primary -->
+
+
+	</div> <!-- ast-container -->
+	</div><!-- #content -->
+		<footer data-elementor-type="footer" data-elementor-id="45653" class="elementor elementor-45653 elementor-location-footer" data-elementor-post-type="elementor_library">
+			<div class="elementor-element elementor-element-036e291 e-con-full e-ecs-flex e-flex e-con e-parent" data-id="036e291" data-element_type="container" data-e-type="container" data-settings="{&quot;background_background&quot;:&quot;classic&quot;,&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+		<div class="elementor-element elementor-element-5ddfe9e e-con-full e-ecs-flex e-flex e-con e-child" data-id="5ddfe9e" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-5377801 exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-image" data-id="5377801" data-element_type="widget" data-e-type="widget" data-widget_type="image.default">
+				<div class="elementor-widget-container">
+																<a href="https://genai.owasp.org">
+							<img loading="lazy" width="768" height="102" src="https://genai.owasp.org/wp-content/uploads/2025/02/weblogo-plain-768x102-1.png" class="attachment-newspack-article-block-square-medium size-newspack-article-block-square-medium wp-image-52819" alt="" srcset="https://genai.owasp.org/wp-content/uploads/2025/02/weblogo-plain-768x102-1.png 768w, https://genai.owasp.org/wp-content/uploads/2025/02/weblogo-plain-768x102-1-300x40.png 300w" sizes="(max-width: 768px) 100vw, 768px" data-attachment-id="52819" data-permalink="https://genai.owasp.org/?attachment_id=52819" data-orig-file="https://genai.owasp.org/wp-content/uploads/2025/02/weblogo-plain-768x102-1.png" data-orig-size="768,102" data-comments-opened="1" data-image-title="weblogo-plain-768&amp;#215;102" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2025/02/weblogo-plain-768x102-1.png" />								</a>
+															</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-8908ef0 e-con-full e-ecs-flex e-flex e-con e-child" data-id="8908ef0" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-c67d229 elementor-icon-list--layout-inline elementor-align-center elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="c67d229" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items elementor-inline-items">
+							<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://owasp.org/www-policy/operational/privacy">
+
+											<span class="elementor-icon-list-text">PRIVACY</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://genaisecurity.beehiiv.com/">
+
+											<span class="elementor-icon-list-text">NEWSLETTER</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://genai.owasp.org/home_page/contact/">
+
+											<span class="elementor-icon-list-text">CONTACT</span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+		<div class="elementor-element elementor-element-bfd18cb e-con-full elementor-hidden-desktop elementor-hidden-tablet elementor-hidden-mobile e-ecs-flex e-flex e-con e-child" data-id="bfd18cb" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-9c76167 elementor-align-center elementor-icon-list--layout-traditional elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="9c76167" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items">
+							<li class="elementor-icon-list-item">
+											<a href="/introduction/">
+
+											<span class="elementor-icon-list-text">Overview</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/llm-top-10/">
+
+											<span class="elementor-icon-list-text">LLM Top 10</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/initiatives/">
+
+											<span class="elementor-icon-list-text">Initiatives</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/ai-security-solutions-landscape/">
+
+											<span class="elementor-icon-list-text">Landscape</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/glossary/">
+
+											<span class="elementor-icon-list-text">Glossary</span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+				<div class="elementor-element elementor-element-d263cc2 elementor-align-center elementor-icon-list--layout-traditional elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="d263cc2" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items">
+							<li class="elementor-icon-list-item">
+											<a href="/roadmap/">
+
+											<span class="elementor-icon-list-text">Roadmaps</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/resources/">
+
+											<span class="elementor-icon-list-text">Resources</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/supporters/">
+
+											<span class="elementor-icon-list-text">Sponsors</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/sponsorship/">
+
+											<span class="elementor-icon-list-text">Sponsorship</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/contribute/">
+
+											<span class="elementor-icon-list-text">Contribute</span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+				<div class="elementor-element elementor-element-785d90b elementor-align-center elementor-icon-list--layout-traditional elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="785d90b" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items">
+							<li class="elementor-icon-list-item">
+											<a href="/news/">
+
+											<span class="elementor-icon-list-text">Newsroom</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/events/">
+
+											<span class="elementor-icon-list-text">Events</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/meetings/">
+
+											<span class="elementor-icon-list-text">Meetings</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/contributors/">
+
+											<span class="elementor-icon-list-text">Leadership</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/jobs/">
+
+											<span class="elementor-icon-list-text">Volunteer Jobs</span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-e99e156 e-con-full e-ecs-flex e-flex e-con e-child" data-id="e99e156" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-3f7977c elementor-align-center elementor-widget__width-initial elementor-widget-mobile__width-inherit elementor-icon-list--layout-traditional elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="3f7977c" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items">
+							<li class="elementor-icon-list-item">
+											<a href="/introduction/">
+
+											<span class="elementor-icon-list-text">Overview</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/llm-top-10/">
+
+											<span class="elementor-icon-list-text">LLM Top 10</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/initiatives/">
+
+											<span class="elementor-icon-list-text">Initiatives</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/ai-security-solutions-landscape/">
+
+											<span class="elementor-icon-list-text">Landscape</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/glossary/">
+
+											<span class="elementor-icon-list-text">Glossary</span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+				<div class="elementor-element elementor-element-a04575f elementor-align-center elementor-widget__width-initial elementor-widget-mobile__width-inherit elementor-icon-list--layout-traditional elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="a04575f" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items">
+							<li class="elementor-icon-list-item">
+											<a href="/roadmap/">
+
+											<span class="elementor-icon-list-text">Roadmaps</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/resources/">
+
+											<span class="elementor-icon-list-text">Resources</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/supporters/">
+
+											<span class="elementor-icon-list-text">Sponsors</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/sponsorship/">
+
+											<span class="elementor-icon-list-text">Sponsorship</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/contribute/">
+
+											<span class="elementor-icon-list-text">Contribute</span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+				<div class="elementor-element elementor-element-392914b elementor-align-center elementor-widget__width-initial elementor-widget-mobile__width-inherit elementor-icon-list--layout-traditional elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="392914b" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items">
+							<li class="elementor-icon-list-item">
+											<a href="/news/">
+
+											<span class="elementor-icon-list-text">Newsroom</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/events/">
+
+											<span class="elementor-icon-list-text">Events</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/meetings/">
+
+											<span class="elementor-icon-list-text">Meetings</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/contributors/">
+
+											<span class="elementor-icon-list-text">Leadership</span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item">
+											<a href="/jobs/">
+
+											<span class="elementor-icon-list-text">Volunteer Jobs</span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-6939ef5 e-con-full e-ecs-flex e-flex e-con e-child" data-id="6939ef5" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-82375e5 elementor-icon-list--layout-inline elementor-align-center elementor-list-item-link-full_width exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-icon-list" data-id="82375e5" data-element_type="widget" data-e-type="widget" data-widget_type="icon-list.default">
+				<div class="elementor-widget-container">
+							<ul class="elementor-icon-list-items elementor-inline-items">
+							<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://twitter.com/LLM_Top10">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-x-twitter" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://www.linkedin.com/company/owasp-top-10-for-large-language-model-applications/">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-linkedin" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://github.com/genai-security-project">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-github" viewBox="0 0 496 512" xmlns="http://www.w3.org/2000/svg"><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://owasp.org/slack/invite">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-slack" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M94.12 315.1c0 25.9-21.16 47.06-47.06 47.06S0 341 0 315.1c0-25.9 21.16-47.06 47.06-47.06h47.06v47.06zm23.72 0c0-25.9 21.16-47.06 47.06-47.06s47.06 21.16 47.06 47.06v117.84c0 25.9-21.16 47.06-47.06 47.06s-47.06-21.16-47.06-47.06V315.1zm47.06-188.98c-25.9 0-47.06-21.16-47.06-47.06S139 32 164.9 32s47.06 21.16 47.06 47.06v47.06H164.9zm0 23.72c25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06H47.06C21.16 243.96 0 222.8 0 196.9s21.16-47.06 47.06-47.06H164.9zm188.98 47.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06s-21.16 47.06-47.06 47.06h-47.06V196.9zm-23.72 0c0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06V79.06c0-25.9 21.16-47.06 47.06-47.06 25.9 0 47.06 21.16 47.06 47.06V196.9zM283.1 385.88c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06-25.9 0-47.06-21.16-47.06-47.06v-47.06h47.06zm0-23.72c-25.9 0-47.06-21.16-47.06-47.06 0-25.9 21.16-47.06 47.06-47.06h117.84c25.9 0 47.06 21.16 47.06 47.06 0 25.9-21.16 47.06-47.06 47.06H283.1z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+								<li class="elementor-icon-list-item elementor-inline-item">
+											<a href="https://www.youtube.com/@GenAISecurityProject">
+
+												<span class="elementor-icon-list-icon">
+							<svg aria-hidden="true" class="e-font-icon-svg e-fab-youtube" viewBox="0 0 576 512" xmlns="http://www.w3.org/2000/svg"><path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64S117.22 64 74.629 75.486c-23.497 6.322-42.003 24.947-48.284 48.597-11.412 42.867-11.412 132.305-11.412 132.305s0 89.438 11.412 132.305c6.281 23.65 24.787 41.5 48.284 47.821C117.22 448 288 448 288 448s170.78 0 213.371-11.486c23.497-6.321 42.003-24.171 48.284-47.821 11.412-42.867 11.412-132.305 11.412-132.305s0-89.438-11.412-132.305zm-317.51 213.508V175.185l142.739 81.205-142.739 81.201z"></path></svg>						</span>
+										<span class="elementor-icon-list-text"></span>
+											</a>
+									</li>
+						</ul>
+						</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-83d85ed e-con-full e-ecs-flex e-flex e-con e-child" data-id="83d85ed" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-68f582d exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-heading" data-id="68f582d" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<div class="elementor-heading-title elementor-size-default">OWASP and the OWASP logo are trademarks of the OWASP Foundation, Inc. Unless otherwise specified, all content on the site is Creative Commons Attribution-ShareAlike v4.0 and provided without</div>				</div>
+				</div>
+				<div class="elementor-element elementor-element-944de2f exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-text-editor" data-id="944de2f" data-element_type="widget" data-e-type="widget" data-widget_type="text-editor.default">
+				<div class="elementor-widget-container">
+									<p>warranty of service or accuracy. For more information, please refer to our <span style="color: #ccffcc;"><strong><a style="color: #ccffcc;" href="https://owasp.org/www-policy/operational/general-disclaimer.html">General Disclaimer</a>.</strong> </span> &#8211; Copyright © <span class="update-year">2025 </span>OWASP Foundation, Inc.</p>								</div>
+				</div>
+				</div>
+				</div>
+				</footer>
+			</div><!-- #page -->
+<div id="gsp_data_html" data-g_version="3.23.1" data-w_id="cce670af775eff56eb35f7cb6626b878" data-s_enc="" data-h_enc="" data-hh_enc="" data-lazy_load="1" data-reload_session="0" data-gt-w="gsp_clgtranslate_wrapper" data-vv_index="2" data-ref=""></div>
+<!--  -->
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/astra/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+<meta id="bilmur" property="bilmur:data" content="" data-customproperties="{&quot;woo_active&quot;:&quot;0&quot;,&quot;logged_in&quot;:&quot;0&quot;,&quot;wptheme&quot;:&quot;astra&quot;,&quot;wptheme_is_block&quot;:&quot;0&quot;}" data-provider="wordpress.com" data-service="atomic"  data-site-tz="America/Los_Angeles"  >
+<script defer src="https://s0.wp.com/wp-content/js/bilmur.min.js?m=202643"></script>
+				<div class="umc-widget"
+			data-mode="floating"
+			data-connection="genai-security-advisor"
+			data-greeting="Hello! I am Sage (Security Advisor for Generative AI Environments). I&#039;m currently in testing mode so I&#039;ll do my best. I have access to the latest corpus of GenAI Security Project resources. How can I help you with AI security today?"
+			data-position="right"
+			style="--umc-accent: #0798FF; --umc-panel-bg: #ffffff; --umc-response-bg: #f1f4f9; --umc-response-text: #1a1a1a; --umc-prompt-bg: #ffffff; --umc-prompt-text: #1a1a1a; --umc-sent-bg: #0798FF; --umc-sent-text: #ffffff; --umc-panel-width: 380px; --umc-panel-height: 520px; --umc-radius: 14px; --umc-font-size: 14px; --umc-launcher-bg: #0798FF; --umc-launcher-icon-color: #ffffff;">
+							<button type="button" class="umc-launcher" aria-label="Open chat">
+					<span class="umc-launcher-icon-emoji">💬</span>				</button>
+						<div class="umc-panel">
+				<div class="umc-header umc-toggle" role="button" tabindex="0">
+					<span class="umc-title">Ask Sage, GenAI Security Advisor</span>
+											<button type="button" class="umc-close" aria-label="Close">&times;</button>
+									</div>
+				<div class="umc-body">
+					<div class="umc-messages"></div>
+					<div class="umc-input-row">
+						<textarea class="umc-input" rows="1" placeholder="Type your question…"></textarea>
+						<button type="button" class="umc-send">Send</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+<div id="ast-scroll-top" tabindex="0" class="ast-scroll-top-icon ast-scroll-to-top-right" data-on-devices="both">
+	<span class="ast-icon icon-arrow"><svg class="ast-arrow-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="26px" height="16.043px" viewBox="57 35.171 26 16.043" enable-background="new 57 35.171 26 16.043" xml:space="preserve">
+                <path d="M57.5,38.193l12.5,12.5l12.5-12.5l-2.5-2.5l-10,10l-10-10L57.5,38.193z"/>
+                </svg></span>	<span class="screen-reader-text">Scroll to Top</span>
+</div>
+		<div data-elementor-type="popup" data-elementor-id="54781" class="elementor elementor-54781 elementor-location-popup" data-elementor-settings="{&quot;a11y_navigation&quot;:&quot;yes&quot;,&quot;triggers&quot;:[],&quot;timing&quot;:[]}" data-elementor-post-type="elementor_library">
+			<div class="elementor-element elementor-element-1e35632f e-ecs-flex e-flex e-con-boxed e-con e-parent" data-id="1e35632f" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+					<div class="e-con-inner">
+		<div class="elementor-element elementor-element-40f55bc1 e-con-full e-ecs-flex e-flex e-con e-child" data-id="40f55bc1" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-2517ca0e exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-image" data-id="2517ca0e" data-element_type="widget" data-e-type="widget" data-widget_type="image.default">
+				<div class="elementor-widget-container">
+															<img loading="lazy" width="1024" height="524" src="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" class="attachment-large size-large wp-image-43144" alt="" srcset="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png 1024w, https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25-300x154.png 300w, https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25-768x393.png 768w" sizes="(max-width: 1024px) 100vw, 1024px" data-attachment-id="43144" data-permalink="https://genai.owasp.org/llmrisk/llm01-prompt-injection/llm01-25/" data-orig-file="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" data-orig-size="1024,524" data-comments-opened="1" data-image-title="LLM01.25" data-image-description="" data-image-caption="" data-large-file="https://genai.owasp.org/wp-content/uploads/2024/04/LLM01.25.png" />															</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-72234ad4 e-con-full e-ecs-flex e-flex e-con e-child" data-id="72234ad4" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				<div class="elementor-element elementor-element-6c1aa771 exad-sticky-section-no exad-glass-effect-no elementor-widget elementor-widget-heading" data-id="6c1aa771" data-element_type="widget" data-e-type="widget" data-widget_type="heading.default">
+				<div class="elementor-widget-container">
+					<h2 class="elementor-heading-title elementor-size-default">LLM01:2025 Prompt Injection</h2>				</div>
+				</div>
+				</div>
+		<div class="elementor-element elementor-element-204ac4c8 e-con-full e-ecs-flex e-flex e-con e-child" data-id="204ac4c8" data-element_type="container" data-e-type="container" data-settings="{&quot;ecs_container_type&quot;:&quot;flex&quot;}">
+				</div>
+					</div>
+				</div>
+				</div>
+					<script>
+				( () => {
+					const lazyloadRunObserver = () => {
+						const lazyloadBackgrounds = document.querySelectorAll( `.e-con.e-parent:not(.e-lazyloaded)` );
+						const lazyloadBackgroundObserver = new IntersectionObserver( ( entries ) => {
+							entries.forEach( ( entry ) => {
+								if ( entry.isIntersecting ) {
+									let lazyloadBackground = entry.target;
+									if( lazyloadBackground ) {
+										lazyloadBackground.classList.add( 'e-lazyloaded' );
+									}
+									lazyloadBackgroundObserver.unobserve( entry.target );
+								}
+							});
+						}, { rootMargin: '200px 0px 200px 0px' } );
+						lazyloadBackgrounds.forEach( ( lazyloadBackground ) => {
+							lazyloadBackgroundObserver.observe( lazyloadBackground );
+						} );
+					};
+					const events = [
+						'DOMContentLoaded',
+						'elementor/lazyload/observe',
+					];
+					events.forEach( ( event ) => {
+						document.addEventListener( event, lazyloadRunObserver );
+					} );
+				} )();
+			</script>
+					<script>window.addEventListener( 'load', function() {
+				document.querySelectorAll( 'link' ).forEach( function( e ) {'not all' === e.media && e.dataset.media && ( e.media = e.dataset.media, delete e.dataset.media );} );
+				var e = document.getElementById( 'jetpack-boost-critical-css' );
+				e && ( e.media = 'not all' );
+			} );</script>
+		
+	<script type="text/javascript">
+		window.WPCOM_sharing_counts = {"https://genai.owasp.org/llmrisk/llm01-prompt-injection/":244};
+	</script>
+				<noscript><link rel='stylesheet' id='all-css-6d21e1cc444ada74aaaae03d2f6c1886' href='https://genai.owasp.org/_jb_static/??95baf2eb38' type='text/css' media='all' /></noscript><link data-media="all" onload="this.media=this.dataset.media; delete this.dataset.media; this.removeAttribute( &apos;onload&apos; );" rel='stylesheet' id='all-css-6d21e1cc444ada74aaaae03d2f6c1886' href='https://genai.owasp.org/_jb_static/??95baf2eb38' type='text/css' media="not all" />
+<script data-no-defer="1" data-no-optimize="1" data-no-minify="1" data-cfasync="false" nowprocket id="wpgs-script776-js" src="https://genai.owasp.org/wp-content/plugins/gspeech/includes/js/gspeech_front_inline.js?ver=3.23.1"></script>
+<script data-no-defer="1" data-no-optimize="1" data-no-minify="1" data-cfasync="false" nowprocket id="wpgs-script776-js-after">
+!function(){var d=document,e=d.getElementById('gsp_data_html');if(!e){e=d.createElement('div'),e.id='gsp_data_html',e.setAttribute('data-g_version','3.23.1'),e.setAttribute('data-w_id','cce670af775eff56eb35f7cb6626b878'),e.setAttribute('data-lazy_load','1'),e.setAttribute('data-reload_session','0'),e.setAttribute('data-gt-w','gsp_clgtranslate_wrapper'),e.setAttribute('data-vv_index','2'),e.setAttribute('data-ref',encodeURI('')),e.setAttribute('data-s_enc',''),e.setAttribute('data-h_enc',''),e.setAttribute('data-hh_enc',''),(d.body||d.documentElement).appendChild(e)}}();
+//# sourceURL=wpgs-script776-js-after
+</script>
+<script id="wpgs-script777-js-extra">
+var gsp_ajax_obj = {"ajax_url":"https://genai.owasp.org/wp-admin/admin-ajax.php","nonce":"e55904b30d"};
+//# sourceURL=wpgs-script777-js-extra
+</script>
+<script id="wpgs-script777-js" data-no-defer="1" data-no-optimize="1" data-no-minify="1" data-cfasync="false" nowprocket type='text/javascript' src='https://genai.owasp.org/wp-content/plugins/gspeech/includes/js/gspeech_front.js?m=1791404111'></script>
+<script id="astra-theme-js-js-extra">
+var astra = {"break_point":"921","isRtl":"","is_scroll_to_id":"1","is_scroll_to_top":"1","is_header_footer_builder_active":"1"};
+//# sourceURL=astra-theme-js-js-extra
+</script>
+<script id="fluentform-elementor-js-extra">
+var fluentformElementor = {"adminUrl":"https://genai.owasp.org/wp-admin/admin.php"};
+//# sourceURL=fluentform-elementor-js-extra
+</script>
+<script id="xpro-elementor-addons-widgets-js-extra">
+var XproElementorAddons = {"ajax_url":"https://genai.owasp.org/wp-admin/admin-ajax.php","nonce":"a7ea85405e"};
+//# sourceURL=xpro-elementor-addons-widgets-js-extra
+</script>
+<script type='text/javascript' src='https://genai.owasp.org/_jb_static/??d7fb8eae30'></script>
+<script id="angie-canvas-template-js-before">
+angieCanvasTemplateData = {"templateSlug":"angie-canvas"};
+//# sourceURL=angie-canvas-template-js-before
+</script>
+<script id="dlm-xhr-js-extra">
+var dlmXHRtranslations = {"error":"An error occurred while trying to download the file. Please try again.","not_found":"Download does not exist.","no_file_path":"No file path defined.","no_file_paths":"No file paths defined.","filetype":"Download is not allowed for this file type.","file_access_denied":"Access denied to this file.","access_denied":"Access denied. You do not have permission to download this file.","security_error":"Something is wrong with the file path.","file_not_found":"File not found."};
+//# sourceURL=dlm-xhr-js-extra
+</script>
+<script id="dlm-xhr-js-before">
+const dlmXHR = {"xhr_links":{"class":["download-link","download-button","a[class^=\"dlm-buttons-button\"]","dlm-buttons-button"]},"prevent_duplicates":true,"ajaxUrl":"https:\/\/genai.owasp.org\/wp-admin\/admin-ajax.php","countExcluded":false}; dlmXHRinstance = {}; const dlmXHRGlobalLinks = "https://genai.owasp.org/download/"; const dlmNonXHRGlobalLinks = []; dlmXHRgif = "https://genai.owasp.org/wp-content/plugins/download-monitor/assets/images/dlm-spinner.svg"; const dlmXHRProgress = "1"; const dlmXHRInlineSpinner = true
+//# sourceURL=dlm-xhr-js-before
+</script>
+<script id="dlm-xhr-js" src="https://genai.owasp.org/wp-content/plugins/download-monitor/assets/js/dlm-xhr.min.js?ver=5.3.5"></script>
+<script id="molongui-authorship-byline-js-extra">
+var molongui_authorship_byline_params = {"byline_modifiers_enabled":"","byline_prefix":"","byline_suffix":"","byline_separator":",\u00a0","byline_last_separator":"\u00a0and\u00a0","byline_link_title":"View all posts by","byline_link_class":"","byline_dom_tree":"","byline_dom_prepend":"","byline_dom_append":"","byline_decoder":"v3","byline_data_url":"https://genai.owasp.org/wp-json/molongui-authorship/v1/bylines","byline_rest_nonce":""};
+//# sourceURL=molongui-authorship-byline-js-extra
+</script>
+<script id="umc-widget-js-extra">
+var UMC_CONFIG = {"restUrl":"https://genai.owasp.org/wp-json/umc/v1/chat","nonce":"017f1963af"};
+//# sourceURL=umc-widget-js-extra
+</script>
+<script type='text/javascript' src='https://genai.owasp.org/_jb_static/??7afb25add8'></script>
+<script id="elementor-frontend-modules-js" src="https://genai.owasp.org/wp-content/plugins/elementor/assets/js/frontend-modules.min.js?ver=4.3.5"></script>
+<script id="jquery-ui-core-js-before">
+jQuery.uiBackCompat = true;
+//# sourceURL=jquery-ui-core-js-before
+</script>
+<script id="jquery-ui-core-js" src="https://genai.owasp.org/wp-includes/js/jquery/ui/core.min.js?ver=1.14.2"></script>
+<script id="elementor-frontend-js-extra">
+var EAELImageMaskingConfig = {"svg_dir_url":"https://genai.owasp.org/wp-content/plugins/essential-addons-for-elementor-lite/assets/front-end/img/image-masking/svg-shapes/"};
+//# sourceURL=elementor-frontend-js-extra
+</script>
+<script id="elementor-frontend-js-before">
+var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false,"isScriptDebug":false},"i18n":{"shareOnFacebook":"Share on Facebook","shareOnX":"Share on X","pinIt":"Pin it","download":"Download","downloadImage":"Download image","fullscreen":"Fullscreen","zoom":"Zoom","share":"Share","playVideo":"Play Video","previous":"Previous","next":"Next","close":"Close","a11yCarouselPrevSlideMessage":"Previous slide","a11yCarouselNextSlideMessage":"Next slide","a11yCarouselFirstSlideMessage":"This is the first slide","a11yCarouselLastSlideMessage":"This is the last slide","a11yCarouselPaginationBulletMessage":"Go to slide"},"is_rtl":false,"breakpoints":{"xs":0,"sm":480,"md":768,"lg":1025,"xl":1440,"xxl":1600},"responsive":{"breakpoints":{"mobile":{"label":"Mobile Portrait","value":767,"default_value":767,"direction":"max","is_enabled":true},"mobile_extra":{"label":"Mobile Landscape","value":880,"default_value":880,"direction":"max","is_enabled":false},"tablet":{"label":"Tablet Portrait","value":1024,"default_value":1024,"direction":"max","is_enabled":true},"tablet_extra":{"label":"Tablet Landscape","value":1200,"default_value":1200,"direction":"max","is_enabled":false},"laptop":{"label":"Laptop","value":1366,"default_value":1366,"direction":"max","is_enabled":false},"widescreen":{"label":"Widescreen","value":2400,"default_value":2400,"direction":"min","is_enabled":false}},"hasCustomBreakpoints":false},"version":"4.3.5","is_static":false,"experimentalFeatures":{"e_font_icon_svg":true,"additional_custom_breakpoints":true,"container":true,"theme_builder_v2":true,"nested-elements":true,"e_atomic_elements":true,"e_opt_in_v4":true,"import-export-customization":true,"e_pro_atomic_form":true,"mega-menu":true,"e_pro_variables":true,"e_pro_interactions":true},"urls":{"assets":"https:\/\/genai.owasp.org\/wp-content\/plugins\/elementor\/assets\/","ajaxurl":"https:\/\/genai.owasp.org\/wp-admin\/admin-ajax.php","uploadUrl":"https:\/\/genai.owasp.org\/wp-content\/uploads"},"nonces":{"floatingButtonsClickTracking":"50eda339d6","atomicFormsSendForm":"ffdf28037e"},"swiperClass":"swiper","settings":{"page":[],"editorPreferences":[]},"kit":{"active_breakpoints":["viewport_mobile","viewport_tablet"],"global_image_lightbox":"yes","lightbox_enable_counter":"yes","lightbox_enable_fullscreen":"yes","lightbox_enable_zoom":"yes","lightbox_enable_share":"yes","lightbox_title_src":"title","lightbox_description_src":"description"},"post":{"id":244,"title":"LLM01%3A2025%20Prompt%20Injection%20-%20OWASP%20Gen%20AI%20Security%20Project","excerpt":"","featuredImage":"https:\/\/genai.owasp.org\/wp-content\/uploads\/2024\/04\/LLM01.25.png"}};
+//# sourceURL=elementor-frontend-js-before
+</script>
+<script id="elementor-frontend-js" src="https://genai.owasp.org/wp-content/plugins/elementor/assets/js/frontend.min.js?ver=4.3.5"></script>
+<script id="exad-main-script-js-extra">
+var exad_ajax_object = {"ajax_url":"https://genai.owasp.org/wp-admin/admin-ajax.php","nonce":"67093286b1"};
+//# sourceURL=exad-main-script-js-extra
+</script>
+<script id="eael-general-js-extra">
+var localize = {"ajaxurl":"https://genai.owasp.org/wp-admin/admin-ajax.php","nonce":"16c33d0d71","i18n":{"added":"Added ","compare":"Compare","loading":"Loading..."},"eael_translate_text":{"required_text":"is a required field","invalid_text":"Invalid","billing_text":"Billing","shipping_text":"Shipping","fg_mfp_counter_text":"of"},"page_permalink":"https://genai.owasp.org/llmrisk/llm01-prompt-injection/","cart_redirectition":"","cart_page_url":"","el_breakpoints":{"mobile":{"label":"Mobile Portrait","value":767,"default_value":767,"direction":"max","is_enabled":true},"mobile_extra":{"label":"Mobile Landscape","value":880,"default_value":880,"direction":"max","is_enabled":false},"tablet":{"label":"Tablet Portrait","value":1024,"default_value":1024,"direction":"max","is_enabled":true},"tablet_extra":{"label":"Tablet Landscape","value":1200,"default_value":1200,"direction":"max","is_enabled":false},"laptop":{"label":"Laptop","value":1366,"default_value":1366,"direction":"max","is_enabled":false},"widescreen":{"label":"Widescreen","value":2400,"default_value":2400,"direction":"min","is_enabled":false}}};
+//# sourceURL=eael-general-js-extra
+</script>
+<script type='text/javascript' src='https://genai.owasp.org/_jb_static/??1ce918dafb'></script>
+<script id="jetpack-stats-js-before">
+_stq = window._stq || [];
+_stq.push([ "view", {"v":"ext","blog":"231568448","post":"244","tz":"-7","srv":"genai.owasp.org","hp":"atomic","ac":"2","amp":"0","j":"1:16.4-a.3"} ]);
+_stq.push([ "clickTrackerInit", "231568448", "244" ]);
+//# sourceURL=jetpack-stats-js-before
+</script>
+<script data-wp-strategy="defer" defer fetchpriority="low" id="jetpack-stats-js" src="https://stats.wp.com/e-202643.js"></script>
+<script type='text/javascript' src='https://genai.owasp.org/wp-content/plugins/elementor-pro/assets/js/webpack-pro.runtime.min.js?m=1779320238'></script>
+<script id="wp-hooks-js" src="https://genai.owasp.org/wp-content/plugins/gutenberg/build/scripts/hooks/index.min.js?ver=f0f188028580e8dc1255"></script>
+<script id="wp-i18n-js" src="https://genai.owasp.org/wp-content/plugins/gutenberg/build/scripts/i18n/index.min.js?ver=1dfe7db3940c23ea9216"></script>
+<script id="wp-i18n-js-after">
+wp.i18n.setLocaleData( { 'text direction\u0004ltr': [ 'ltr' ] } );
+//# sourceURL=wp-i18n-js-after
+</script>
+<script id="elementor-pro-frontend-js-before">
+var ElementorProFrontendConfig = {"ajaxurl":"https:\/\/genai.owasp.org\/wp-admin\/admin-ajax.php","nonce":"5b987f82e7","urls":{"assets":"https:\/\/genai.owasp.org\/wp-content\/plugins\/elementor-pro\/assets\/","rest":"https:\/\/genai.owasp.org\/wp-json\/"},"settings":{"lazy_load_background_images":true},"popup":{"hasPopUps":true},"shareButtonsNetworks":{"facebook":{"title":"Facebook","has_counter":true},"twitter":{"title":"Twitter"},"linkedin":{"title":"LinkedIn","has_counter":true},"pinterest":{"title":"Pinterest","has_counter":true},"reddit":{"title":"Reddit","has_counter":true},"vk":{"title":"VK","has_counter":true},"odnoklassniki":{"title":"OK","has_counter":true},"tumblr":{"title":"Tumblr"},"digg":{"title":"Digg"},"skype":{"title":"Skype"},"stumbleupon":{"title":"StumbleUpon","has_counter":true},"mix":{"title":"Mix"},"telegram":{"title":"Telegram"},"pocket":{"title":"Pocket","has_counter":true},"xing":{"title":"XING","has_counter":true},"whatsapp":{"title":"WhatsApp"},"email":{"title":"Email"},"print":{"title":"Print"},"x-twitter":{"title":"X"},"threads":{"title":"Threads"}},"facebook_sdk":{"lang":"en_US","app_id":""},"lottie":{"defaultAnimationUrl":"https:\/\/genai.owasp.org\/wp-content\/plugins\/elementor-pro\/modules\/lottie\/assets\/animations\/default.json"}};
+//# sourceURL=elementor-pro-frontend-js-before
+</script>
+<script id="elementor-pro-frontend-js" src="https://genai.owasp.org/wp-content/plugins/elementor-pro/assets/js/frontend.min.js?ver=4.0.4"></script>
+<script id="pro-elements-handlers-js" src="https://genai.owasp.org/wp-content/plugins/elementor-pro/assets/js/elements-handlers.min.js?ver=4.0.4"></script>
+<script id="xpro-elementor-widgetarea-editor-js-extra">
+var XproWidgetAreaEditorParams = {"rest_api_url":"https://genai.owasp.org/wp-json/","nonce":"017f1963af"};
+//# sourceURL=xpro-elementor-widgetarea-editor-js-extra
+</script>
+<script type='text/javascript' src='https://genai.owasp.org/_jb_static/??868b963e79'></script>
+<script id="sharing-js-js-extra">
+var sharing_js_options = {"lang":"en","counts":"1","is_stats_active":"1"};
+//# sourceURL=sharing-js-js-extra
+</script>
+<script id="sharing-js-js" src="https://genai.owasp.org/wp-content/plugins/jetpack/_inc/build/sharedaddy/sharing.min.js?ver=16.4-a.3"></script>
+<script id="sharing-js-js-after">
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "twitter" ] = "menubar=1,resizable=1,width=600,height=350";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "facebook" ] = "menubar=1,resizable=1,width=600,height=400";
+window.WPCOM_sharing_popups = window.WPCOM_sharing_popups || {};
+window.WPCOM_sharing_popups[ "x" ] = "menubar=1,resizable=1,width=600,height=350";
+//# sourceURL=sharing-js-js-after
+</script>
+		<style>
+			.unlimited-elements-background-overlay{
+				position:absolute;
+				top:0px;
+				left:0px;
+				width:100%;
+				height:100%;
+				z-index:0;
+			}
+
+			.unlimited-elements-background-overlay.uc-bg-front{
+				z-index:999;
+			}
+		</style>
+
+		<script type='text/javascript'>
+
+			jQuery(document).ready(function(){
+					
+				function ucBackgroundOverlayPutStart(){
+				
+					var objBG = jQuery(".unlimited-elements-background-overlay").not(".uc-bg-attached");
+
+					if(objBG.length == 0)
+						return(false);
+
+					objBG.each(function(index, bgElement){
+
+						var objBgElement = jQuery(bgElement);
+
+						var targetID = objBgElement.data("forid");
+
+						var location = objBgElement.data("location");
+
+						switch(location){
+							case "body":
+							case "body_front":
+								var objTarget = jQuery("body");
+							break;
+							case "layout":
+							case "layout_front":
+								var objLayout = jQuery("*[data-id=\""+targetID+"\"]");
+								var objTarget = objLayout.parents(".elementor");
+								if(objTarget.length > 1)
+									objTarget = jQuery(objTarget[0]);
+							break;
+							default:
+								var objTarget = jQuery("*[data-id=\""+targetID+"\"]");
+							break;
+						}
+
+
+						if(objTarget.length == 0)
+							return(true);
+
+						var objVideoContainer = objTarget.children(".elementor-background-video-container");
+
+						if(objVideoContainer.length == 1)
+							objBgElement.detach().insertAfter(objVideoContainer).show();
+						else
+							objBgElement.detach().prependTo(objTarget).show();
+
+
+						var objTemplate = objBgElement.children("template");
+
+						if(objTemplate.length){
+							
+					        var clonedContent = objTemplate[0].content.cloneNode(true);
+
+					    	var objScripts = jQuery(clonedContent).find("script");
+					    	if(objScripts.length)
+					    		objScripts.attr("type","text/javascript");
+					        
+					        objBgElement.append(clonedContent);
+							
+							objTemplate.remove();
+						}
+
+						objBgElement.trigger("bg_attached");
+						objBgElement.addClass("uc-bg-attached");
+
+					});
+				}
+
+				ucBackgroundOverlayPutStart();
+
+				jQuery( document ).on( 'elementor/popup/show', ucBackgroundOverlayPutStart);
+				jQuery( "body" ).on( 'uc_dom_updated', ucBackgroundOverlayPutStart);
+
+			});
+
+
+		</script>
+					<script>
+			/(trident|msie)/i.test(navigator.userAgent)&&document.getElementById&&window.addEventListener&&window.addEventListener("hashchange",function(){var t,e=location.hash.substring(1);/^[A-z0-9_-]+$/.test(e)&&(t=document.getElementById(e))&&(/^(?:a|select|input|button|textarea)$/i.test(t.tagName)||(t.tabIndex=-1),t.focus())},!1);
+			</script>
+			<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://genai.owasp.org/wp-includes/js/wp-emoji-release.min.js?ver=7.1.3"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+var e="script#wp-emoji-settings",t=document.querySelector(e);if(!(t instanceof HTMLScriptElement))throw new Error("Element missing: "+e);const r=JSON.parse(t.text),s=(window._wpemojiSettings=r,"wpEmojiSettingsSupports"),o=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(s,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const r=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===r[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,r){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!r(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,r){let a;const s=(a="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),o=(s.textBaseline="top",s.font="600 32px Arial",{});return e.forEach(e=>{o[e]=t(s,e,n,r)}),o}function a(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}r.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(s));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(o),u.toString(),c.toString(),p.toString()].join(",")+"));",r=new Blob([e],{type:"text/javascript"});const a=new Worker(URL.createObjectURL(r),{name:"wpTestEmojiSupports"});return void(a.onmessage=e=>{i(n=e.data),a.terminate(),t(n)})}catch(e){}i(n=f(o,u,c,p))}t(n)}).then(e=>{for(const n in e)r.supports[n]=e[n],r.supports.everything=r.supports.everything&&r.supports[n],"flag"!==n&&(r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&r.supports[n]);var t;r.supports.everythingExceptFlag=r.supports.everythingExceptFlag&&!r.supports.flag,r.supports.everything||((t=r.source||{}).concatemoji?a(t.concatemoji):t.wpemoji&&t.twemoji&&(a(t.twemoji),a(t.wpemoji)))});
+//# sourceURL=https://genai.owasp.org/wp-includes/js/wp-emoji-loader.min.js
+</script>
+    <script type="text/javascript" id="wpgs-script777-js-extra-fallback" data-no-defer="1" data-no-optimize="1" data-no-minify="1" data-cfasync="false" nowprocket>var gsp_ajax_obj = {"ajax_url": "https:\/\/genai.owasp.org\/wp-admin\/admin-ajax.php", "nonce": "e55904b30d"};if (!window.gsp_ajax_obj) { window.gsp_ajax_obj = gsp_ajax_obj; }</script>
+    <script id="wpgs-fallback-init" data-no-defer="1" data-no-optimize="1" data-no-minify="1" data-cfasync="false" nowprocket>(function(){try{if(window.gspeechFront){console.log("[GSpeech.io] gspeech_front already initialized");return;}function waitFor(e,n,t,o,a){var r=Date.now(),i=setInterval(function(){if(e()){clearInterval(i);n&&n();return}if(Date.now()-r>(o||1500)){clearInterval(i);t&&t()}},a||50)}function ensureDataDiv(){if(!document.getElementById("gsp_data_html")){var e=document.createElement("div");e.id="gsp_data_html";e.setAttribute("data-g_version","3.23.1");e.setAttribute("data-w_id","cce670af775eff56eb35f7cb6626b878");e.setAttribute("data-s_enc","");e.setAttribute("data-h_enc","");e.setAttribute("data-hh_enc","");e.setAttribute("data-lazy_load",1);e.setAttribute("data-reload_session",0);e.setAttribute("data-gt-w","gsp_clgtranslate_wrapper");e.setAttribute("data-vv_index",2);e.setAttribute("data-ref",encodeURI(""));(document.body||document.documentElement).appendChild(e)}}"loading"===document.readyState?document.addEventListener("DOMContentLoaded",ensureDataDiv):ensureDataDiv();function loadScript(e,n,t,o){var a=document.createElement("script");if(n)a.id=n;a.setAttribute("data-no-defer","");a.setAttribute("data-no-optimize","");a.setAttribute("data-cfasync","false");a.src=e;a.onload=function(){t&&t()};a.onerror=function(){o&&o()};(document.head||document.documentElement).appendChild(a)}function loadFrontWithFallback(){var e="https:\/\/genai.owasp.org\/wp-content\/plugins\/gspeech\/includes\/js\/gspeech_front.js?v=3.23.1",n="https:\/\/genai.owasp.org\/wp-admin\/admin-ajax.php?action=wpgsp_front_js&v=3.23.1";if(window.gspeechFront)return;loadScript(e,"wpgs-script777-js",null,function(){console.warn("[GSpeech.io] primary JS failed, switching to AJAX proxy");loadScript(n,"wpgs-script777-js",null,function(){console.error("[GSpeech.io] both primary and AJAX fallback failed")})})}var jqUrl="https:\/\/genai.owasp.org\/wp-includes\/js\/jquery\/jquery.min.js?v=3.23.1";function start(){window.jQuery?loadFrontWithFallback():loadScript(jqUrl,"wpgs-jquery-fallback",loadFrontWithFallback,loadFrontWithFallback)}waitFor(function(){return!!window.gspeechFront},function(){console.log("[GSpeech.io] initialized by external loader")},start,1500,50)}catch(e){console.error("[GSpeech.io] fallback error:",e)}})();</script>
+
+    	</body>
+</html>
+<!--
+	generated 14 seconds ago
+	generated in 3.467 seconds
+	served from batcache in 0.004 seconds
+	expires in 286 seconds
+-->

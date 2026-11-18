@@ -1,0 +1,19 @@
+# fetched 2026-10-26 from https://www.icaew.com/robots.txt (HTTP 200)
+Sitemap: https://www.icaew.com/sitemap_corporate.xml
+User-agent: *
+Disallow: /careers/home/
+Disallow: /corporate/home/
+Disallow: /economia/home/
+Disallow: /economia-test/
+Disallow: /en/
+Disallow: /search
+Disallow: /search$
+Disallow: /search*
+Disallow: /sitecore/content/
+Disallow: /sprint-test-pages/
+Disallow: /test-pages/
+Disallow: /about-icaew/Regulation-and-the-public-interest/public-hearings/search
+Disallow: /about-icaew/Regulation-and-the-public-interest/public-hearings/firms/
+Disallow: /about-icaew/regulation-and-the-public-interest/public-hearings/individuals/
+Disallow: /-/media/corporate/ddb/
+Disallow: /-/media/corporate/files/about-icaew/what-we-do/protecting-the-public/disciplinary-orders

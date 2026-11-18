@@ -1,0 +1,482 @@
+{
+  "date": "2026-10-28",
+  "split": "test",
+  "labels": {
+    "status": "reviewed",
+    "reviewer": "Ziad Abdullah",
+    "date": "2026-10-27"
+  },
+  "model": "local/BAAI/bge-small-en-v1.5",
+  "settings": {
+    "version": "2026-10-28",
+    "request_text": "structured",
+    "query_prefix": false,
+    "same_area_for_exists": false,
+    "exists": 0.8584,
+    "similar": 0.7664,
+    "tuned_on": "evaluation/gap/reports/gap-dev-2026-10-28.md"
+  },
+  "exists": {
+    "tp": 24,
+    "fp": 2,
+    "fn": 10
+  },
+  "related": {
+    "tp": 61,
+    "fp": 16,
+    "fn": 25
+  },
+  "requests_correct": 43,
+  "requests": 61,
+  "top1_match": [
+    33,
+    34
+  ],
+  "confusion": {
+    "exists": {
+      "exists": 24,
+      "similar": 10,
+      "new": 0
+    },
+    "similar": {
+      "exists": 2,
+      "similar": 8,
+      "new": 4
+    },
+    "new": {
+      "exists": 0,
+      "similar": 2,
+      "new": 11
+    }
+  },
+  "mean_ms": 9.0,
+  "outcomes": [
+    {
+      "id": "gt-01",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:ai-engineer",
+      "score": 0.8964599967002869
+    },
+    {
+      "id": "gt-02",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "registry:code-reviewer",
+      "score": 0.8113660216331482
+    },
+    {
+      "id": "gt-03",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "registry:code-reviewer",
+      "score": 0.8487169742584229
+    },
+    {
+      "id": "gt-04",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:data-analyst",
+      "score": 0.9081990122795105
+    },
+    {
+      "id": "gt-05",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:explain-medical-results",
+      "score": 0.8363659977912903
+    },
+    {
+      "id": "gt-06",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:explain-medical-results",
+      "score": 0.8783969879150391
+    },
+    {
+      "id": "gt-07",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "registry:hr-recruiter",
+      "score": 0.8447070121765137
+    },
+    {
+      "id": "gt-08",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:hr-recruiter",
+      "score": 0.9397850036621094
+    },
+    {
+      "id": "gt-09",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:incident-postmortem",
+      "score": 0.8982740044593811
+    },
+    {
+      "id": "gt-10",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "corpus:live-incident-commander",
+      "score": 0.832988977432251
+    },
+    {
+      "id": "gt-11",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "registry:marketing-strategist",
+      "score": 0.8564180135726929
+    },
+    {
+      "id": "gt-12",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:marketing-strategist",
+      "score": 0.8342490196228027
+    },
+    {
+      "id": "gt-13",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "registry:review-nda",
+      "score": 0.8543189764022827
+    },
+    {
+      "id": "gt-14",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:small-business-budgeting",
+      "score": 0.9175750017166138
+    },
+    {
+      "id": "gt-15",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:small-business-budgeting",
+      "score": 0.8509439826011658
+    },
+    {
+      "id": "gt-16",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:write-press-release",
+      "score": 0.942924976348877
+    },
+    {
+      "id": "gt-17",
+      "gold": "similar",
+      "verdict": "exists",
+      "top": "registry:write-press-release",
+      "score": 0.8829399943351746
+    },
+    {
+      "id": "gt-18",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:ux-researcher",
+      "score": 0.882552981376648
+    },
+    {
+      "id": "gt-19",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:support-reply-writer",
+      "score": 0.9167479872703552
+    },
+    {
+      "id": "gt-20",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:sales-outreach-writer",
+      "score": 0.9458780288696289
+    },
+    {
+      "id": "gt-21",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:api-docs-writer",
+      "score": 0.92295902967453
+    },
+    {
+      "id": "gt-22",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:brand-style-guide",
+      "score": 0.8955420255661011
+    },
+    {
+      "id": "gt-23",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:literature-review-assistant",
+      "score": 0.8785430192947388
+    },
+    {
+      "id": "gt-24",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "corpus:travel-itinerary-planner",
+      "score": 0.8192870020866394
+    },
+    {
+      "id": "gt-25",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:kubernetes-deploy-helper",
+      "score": 0.8602859973907471
+    },
+    {
+      "id": "gt-26",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:accessibility-auditor",
+      "score": 0.9077039957046509
+    },
+    {
+      "id": "gt-27",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:employment-contract-drafter",
+      "score": 0.8864560127258301
+    },
+    {
+      "id": "gt-28",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:sql-query-helper",
+      "score": 0.886381983757019
+    },
+    {
+      "id": "gt-29",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:live-incident-commander",
+      "score": 0.8779339790344238
+    },
+    {
+      "id": "gt-30",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "registry:dashboard-builder",
+      "score": 0.8448830246925354
+    },
+    {
+      "id": "gt-31",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:contract-dispute-prep",
+      "score": 0.9049299955368042
+    },
+    {
+      "id": "gt-32",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "registry:supplier-contract-reviewer",
+      "score": 0.8297979831695557
+    },
+    {
+      "id": "gt-33",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:candidate-interview-coach",
+      "score": 0.9118930101394653
+    },
+    {
+      "id": "gt-34",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:medication-information",
+      "score": 0.9107490181922913
+    },
+    {
+      "id": "gt-35",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:media-pitch-writer",
+      "score": 0.9191420078277588
+    },
+    {
+      "id": "gt-36",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:explain-medical-results",
+      "score": 0.8286579847335815
+    },
+    {
+      "id": "gt-37",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:code-reviewer",
+      "score": 0.7683320045471191
+    },
+    {
+      "id": "gt-38",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:small-business-budgeting",
+      "score": 0.7970349788665771
+    },
+    {
+      "id": "gt-39",
+      "gold": "similar",
+      "verdict": "exists",
+      "top": "registry:write-press-release",
+      "score": 0.8812029957771301
+    },
+    {
+      "id": "gt-40",
+      "gold": "similar",
+      "verdict": "new",
+      "top": "registry:supplier-contract-reviewer",
+      "score": 0.7356079816818237
+    },
+    {
+      "id": "gt-41",
+      "gold": "similar",
+      "verdict": "new",
+      "top": "registry:small-business-budgeting",
+      "score": 0.7560120224952698
+    },
+    {
+      "id": "gt-42",
+      "gold": "similar",
+      "verdict": "new",
+      "top": "corpus:seo-content-writer",
+      "score": 0.7649639844894409
+    },
+    {
+      "id": "gt-43",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "corpus:internal-announcement-writer",
+      "score": 0.8964530229568481
+    },
+    {
+      "id": "gt-44",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:explain-medical-results",
+      "score": 0.7682160139083862
+    },
+    {
+      "id": "gt-45",
+      "gold": "similar",
+      "verdict": "similar",
+      "top": "registry:code-reviewer",
+      "score": 0.7767400145530701
+    },
+    {
+      "id": "gt-46",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:meal-planner",
+      "score": 0.7469859719276428
+    },
+    {
+      "id": "gt-47",
+      "gold": "new",
+      "verdict": "new",
+      "top": "corpus:sales-outreach-writer",
+      "score": 0.7479299902915955
+    },
+    {
+      "id": "gt-48",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:prd-writer",
+      "score": 0.6952769756317139
+    },
+    {
+      "id": "gt-49",
+      "gold": "new",
+      "verdict": "new",
+      "top": "corpus:medication-information",
+      "score": 0.6955040097236633
+    },
+    {
+      "id": "gt-50",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:candidate-interview-coach",
+      "score": 0.7538160085678101
+    },
+    {
+      "id": "gt-51",
+      "gold": "new",
+      "verdict": "new",
+      "top": "corpus:sales-outreach-writer",
+      "score": 0.7069240212440491
+    },
+    {
+      "id": "gt-52",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:meeting-minutes-writer",
+      "score": 0.7257819771766663
+    },
+    {
+      "id": "gt-53",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:supplier-contract-reviewer",
+      "score": 0.6885640025138855
+    },
+    {
+      "id": "gt-54",
+      "gold": "new",
+      "verdict": "similar",
+      "top": "corpus:seo-content-writer",
+      "score": 0.7863379716873169
+    },
+    {
+      "id": "gt-55",
+      "gold": "new",
+      "verdict": "similar",
+      "top": "registry:meal-planner",
+      "score": 0.7817699909210205
+    },
+    {
+      "id": "gt-56",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:meeting-minutes-writer",
+      "score": 0.7458400130271912
+    },
+    {
+      "id": "gt-57",
+      "gold": "similar",
+      "verdict": "new",
+      "top": "registry:lesson-plan-designer",
+      "score": 0.7350990176200867
+    },
+    {
+      "id": "gt-58",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:meal-planner",
+      "score": 0.7557830214500427
+    },
+    {
+      "id": "gt-59",
+      "gold": "exists",
+      "verdict": "exists",
+      "top": "registry:write-press-release",
+      "score": 0.9333879947662354
+    },
+    {
+      "id": "gt-60",
+      "gold": "exists",
+      "verdict": "similar",
+      "top": "corpus:travel-itinerary-planner",
+      "score": 0.8333899974822998
+    },
+    {
+      "id": "gt-61",
+      "gold": "new",
+      "verdict": "new",
+      "top": "registry:llm-prompt-engineer",
+      "score": 0.6706539988517761
+    }
+  ]
+}

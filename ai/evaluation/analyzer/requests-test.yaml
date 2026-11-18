@@ -1,0 +1,685 @@
+# Gate set, part 2: 70 English requests. Together with the 30 seed-benchmark requests they make
+# the 100 labelled requests that AI-05 must classify with >= 90% accuracy (per field).
+# Never use these for prompt tuning or few-shot examples (use requests-dev.yaml).
+name: analyzer-requests-test
+version: 0.2.0
+split: test
+requests:
+  # ---------------------------------------------------------------- design
+  - id: t-01
+    text: I need a skill that acts as a senior UX designer and critiques our app screens.
+    style: clear
+    kind: role
+    domain: design/ux
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-02
+    text: Make a skill that checks web pages against accessibility guidelines and lists the fixes.
+    style: clear
+    kind: task
+    domain: design/accessibility
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-03
+    text: design help
+    style: vague
+    kind: role
+    domain: design/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-04
+    text: >-
+      We are a small brand studio. Every new client goes through the same steps: discovery
+      workshop, mood boards, two logo rounds, a style guide and final file hand-off. I want a
+      Claude Code skill that runs this branding process stage by stage and keeps the client
+      decisions in one document.
+    style: detailed
+    kind: workflow
+    domain: design/branding
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [claude]
+  - id: t-05
+    text: A skill that writes design system documentation for each new component we add.
+    style: clear
+    kind: task
+    domain: design/design-systems
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- product
+  - id: t-06
+    text: Create a product manager skill that helps me prioritise our roadmap.
+    style: clear
+    kind: role
+    domain: product/product-management
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-07
+    text: >-
+      Customers send feedback through email, app reviews and support tickets, and it ends up
+      nowhere. I want a skill that groups the feedback each week into themes, counts how often
+      each comes up, links to examples and suggests which themes deserve a product discussion.
+    style: detailed
+    kind: task
+    domain: product/customer-feedback
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-08
+    text: product stuff
+    style: vague
+    kind: role
+    domain: product/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-09
+    text: >-
+      Our launches always miss something. Build a skill that runs a product launch from
+      beta to general availability: readiness review, pricing sign-off, documentation, sales
+      training, launch day checks and a review two weeks later. It should work as a ChatGPT
+      custom GPT for our product team.
+    style: detailed
+    kind: workflow
+    domain: product/launch
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [chatgpt]
+  - id: t-10
+    text: A skill that writes user stories with acceptance criteria from a feature idea.
+    style: clear
+    kind: task
+    domain: product/requirements
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- sales
+  - id: t-11
+    text: I want a skill that writes personalised cold emails to potential B2B customers.
+    style: clear
+    kind: task
+    domain: sales/outreach
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-12
+    text: >-
+      I am the only salesperson at a software startup. I want a skill that acts like an
+      experienced account executive: prepares me for discovery calls, writes follow-ups,
+      handles objections about price and keeps the deal notes tidy.
+    style: detailed
+    kind: role
+    domain: sales/account-management
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-13
+    text: sell more
+    style: vague
+    kind: role
+    domain: sales/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-14
+    text: >-
+      Build a skill that finds decision makers at target companies, collects their names,
+      roles, emails and phone numbers into a spreadsheet, and drafts a first message to each.
+    style: detailed
+    kind: task
+    domain: sales/prospecting
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Medium because the core work collects personal contact data about specific people.
+  - id: t-15
+    text: A skill that writes sales proposals from our call notes, for Codex.
+    style: clear
+    kind: task
+    domain: sales/proposals
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [codex]
+
+  # ---------------------------------------------------------------- customer-support
+  - id: t-16
+    text: Make a skill that writes calm, kind replies to angry customer complaints.
+    style: clear
+    kind: task
+    domain: customer-support/complaints
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-17
+    text: >-
+      Our support agents need help with refund requests. The skill should read the customer's
+      name, address, order history and payment details that the agent pastes in, decide
+      whether the refund policy applies, and draft the reply.
+    style: detailed
+    kind: task
+    domain: customer-support/refunds
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-18
+    text: support thing
+    style: vague
+    kind: role
+    domain: customer-support/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-19
+    text: >-
+      When a ticket cannot be solved by the first line, it bounces between teams for days. I
+      want a skill that runs our escalation process: classify the ticket, collect the facts,
+      hand it to the right team with a summary, follow up after 24 hours and close the loop
+      with the customer.
+    style: detailed
+    kind: workflow
+    domain: customer-support/escalation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-20
+    text: >-
+      Help the front desk staff at our hospital write polite emails to patients about moving
+      their appointment times.
+    style: clear
+    kind: task
+    domain: customer-support/patient-communication
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Boundary. The expertise is customer communication, not medicine; medium for patient data.
+
+  # ---------------------------------------------------------------- operations
+  - id: t-21
+    text: A Codex skill that turns how we actually work into clear standard operating procedures.
+    style: clear
+    kind: task
+    domain: operations/process-documentation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [codex]
+  - id: t-22
+    text: >-
+      We run a small online shop from a warehouse. I want an operations manager skill that
+      plans stock reorders, spots slow-moving items, and improves how we pick, pack and ship
+      orders.
+    style: detailed
+    kind: role
+    domain: operations/inventory
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-23
+    text: make things run smoother
+    style: vague
+    kind: role
+    domain: operations/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-24
+    text: >-
+      Choosing a new supplier takes us months. Build a skill that runs vendor selection from
+      start to end: write the requirements, shortlist vendors, send questionnaires, score the
+      answers, check references and prepare the final recommendation.
+    style: detailed
+    kind: workflow
+    domain: operations/procurement
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-25
+    text: A skill that plans delivery routes for our five vans each morning.
+    style: clear
+    kind: task
+    domain: operations/logistics
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- education
+  - id: t-26
+    text: I want a skill that plans weekly lessons for a secondary school history teacher.
+    style: clear
+    kind: task
+    domain: education/lesson-planning
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Medium because the lessons are for minors (secondary school students).
+  - id: t-27
+    text: >-
+      My children are 8 and 10. I want a patient maths tutor skill that explains homework step
+      by step, never just gives the answer, and adapts to how each child is doing.
+    style: detailed
+    kind: role
+    domain: education/tutoring
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Medium because it works with minors.
+  - id: t-28
+    text: school help
+    style: vague
+    kind: role
+    domain: education/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-29
+    text: >-
+      Build a skill that grades student essays with our rubric, gives each student written
+      feedback and suggests a mark for the teacher to confirm.
+    style: clear
+    kind: task
+    domain: education/assessment
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Medium because it supports decisions about specific students.
+  - id: t-30
+    text: >-
+      We are turning a two-day workshop into a six-week online course. I want a skill that
+      runs the course design process: learning objectives, module outline, activities,
+      quizzes, a pilot with five learners and a revision round.
+    style: detailed
+    kind: workflow
+    domain: education/course-design
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- research
+  - id: t-31
+    text: A skill that does a structured literature review on a topic and summarises the evidence.
+    style: clear
+    kind: task
+    domain: research/literature-review
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-32
+    text: >-
+      I want a skill that acts as a market researcher: sizes markets, compares competitors,
+      designs short surveys and says how reliable each estimate is.
+    style: clear
+    kind: role
+    domain: research/market-research
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-33
+    text: research assistant
+    style: vague
+    kind: role
+    domain: research/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-34
+    text: >-
+      Our user research team interviews about 20 customers per study. Build a Claude skill
+      that runs a study from plan to report: write the interview guide, recruit participants
+      from our customer list, store the consent forms, synthesise the notes into findings and
+      present them.
+    style: detailed
+    kind: workflow
+    domain: research/user-research
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: [claude]
+    notes: Medium because it handles participants' personal data and consent.
+  - id: t-35
+    text: Make a skill that checks survey questions for bias and leading wording.
+    style: clear
+    kind: task
+    domain: research/survey-design
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- general
+  - id: t-36
+    text: Plan my wedding for 80 guests in eight months, with a checklist and budget split.
+    style: clear
+    kind: task
+    domain: general/event-planning
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-37
+    text: >-
+      I keep losing track of my personal projects. I want a productivity coach skill that runs
+      a weekly review with me every Sunday: collect open loops, choose three priorities,
+      schedule them and check how last week went.
+    style: detailed
+    kind: workflow
+    domain: general/personal-productivity
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-38
+    text: life admin
+    style: vague
+    kind: role
+    domain: general/personal-assistant
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-39
+    text: A skill that suggests thoughtful gift ideas based on what I tell it about a person.
+    style: clear
+    kind: task
+    domain: general/gift-ideas
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-40
+    text: >-
+      We are moving house with two kids and a cat next month. Make a skill that builds our
+      moving plan week by week: what to sort, who to notify, what to pack first and what to do
+      on moving day.
+    style: detailed
+    kind: workflow
+    domain: general/moving
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Workflow because it runs ordered stages over several weeks, not one job.
+
+  # ---------------------------------------------------------------- technology and data
+  - id: t-41
+    text: >-
+      Build a skill that onboards new developers to our codebase over their first two weeks:
+      set up the environment, walk through the architecture, pick a starter ticket, pair on
+      the first review and collect feedback at the end.
+    style: detailed
+    kind: workflow
+    domain: technology/developer-onboarding
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-42
+    text: A skill that writes API reference documentation from our OpenAPI file, for Codex.
+    style: clear
+    kind: task
+    domain: technology/documentation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [codex]
+  - id: t-43
+    text: >-
+      We are moving our reporting database from MySQL to Postgres. I want a skill that plans
+      and runs the migration in phases: inventory the tables, map the types, test with a copy,
+      run both in parallel, switch over and keep a rollback plan.
+    style: detailed
+    kind: workflow
+    domain: data/data-engineering
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-44
+    text: Build a Power BI dashboard of our monthly revenue and expenses.
+    style: clear
+    kind: task
+    domain: data/business-intelligence
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Boundary. Building dashboards is data work, even when the numbers are financial.
+  - id: t-45
+    text: I want a security engineer skill that threat-models our new features before we build them.
+    style: clear
+    kind: role
+    domain: technology/security
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+    notes: "boundary case: names a profession (role) but describes one main activity"
+  - id: t-46
+    text: tech help
+    style: vague
+    kind: role
+    domain: technology/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- marketing and writing
+  - id: t-47
+    text: >-
+      Each month we send a newsletter to 20,000 subscribers. Build a skill that runs the
+      process: pick topics, draft the issue, segment the list by purchase history, send a test,
+      schedule it and report the results.
+    style: detailed
+    kind: workflow
+    domain: marketing/email-marketing
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Medium because it segments personal customer data.
+  - id: t-48
+    text: Schedule social media posts about our law firm's community events.
+    style: clear
+    kind: task
+    domain: marketing/social-media
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Boundary. A law firm is the client, but the expertise is marketing.
+  - id: t-49
+    text: A skill that writes grant proposals for small arts charities.
+    style: clear
+    kind: task
+    domain: writing/grant-writing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-50
+    text: >-
+      I am finishing my first novel. I want an editor skill that works through the manuscript
+      in rounds: structure first, then chapters, then line edits, and keeps a list of changes
+      for me to approve.
+    style: detailed
+    kind: workflow
+    domain: writing/editing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-51
+    text: writing help
+    style: vague
+    kind: role
+    domain: writing/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-52
+    text: Make a skill that writes SEO blog posts for our garden centre, for any agent that reads AGENTS.md.
+    style: clear
+    kind: task
+    domain: marketing/content-marketing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: [generic]
+
+  # ---------------------------------------------------------------- hr
+  - id: t-53
+    text: A skill that helps managers write fair annual performance reviews for their team.
+    style: clear
+    kind: task
+    domain: hr/performance-management
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-54
+    text: >-
+      New hires at our clinic chain go through a 30-day onboarding: contracts, IT accounts,
+      training modules, a buddy, and check-ins after one and four weeks. Build a skill that
+      runs this onboarding for each new person.
+    style: detailed
+    kind: workflow
+    domain: hr/onboarding
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-55
+    text: people stuff
+    style: vague
+    kind: role
+    domain: hr/general
+    risk: medium
+    needs_clarification: true
+    mentioned_targets: []
+    notes: HR work handles personal data about employees, so medium even when vague.
+
+  # ---------------------------------------------------------------- legal
+  - id: t-56
+    text: I need a skill that answers managers' questions about US employment law, like overtime and leave.
+    style: clear
+    kind: role
+    domain: legal/employment-law
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-57
+    text: >-
+      Before each new product feature we must check GDPR. Build a skill that runs a data
+      protection impact assessment step by step: describe the processing, check necessity,
+      list risks to people, plan mitigations and record the sign-off from our DPO.
+    style: detailed
+    kind: workflow
+    domain: legal/data-protection
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-58
+    text: legal stuff for my company
+    style: vague
+    kind: role
+    domain: legal/general
+    risk: high
+    needs_clarification: true
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- medical
+  - id: t-59
+    text: Make a skill that builds a daily medication schedule for my elderly mother from her prescriptions.
+    style: clear
+    kind: task
+    domain: medical/medication-management
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-60
+    text: >-
+      I have type 2 diabetes. I want a nutrition skill that plans my weekly meals around my
+      blood sugar targets and explains how each meal affects them. It should work in Claude.
+    style: detailed
+    kind: task
+    domain: medical/nutrition
+    risk: high
+    needs_clarification: false
+    mentioned_targets: [claude]
+  - id: t-61
+    text: health questions
+    style: vague
+    kind: role
+    domain: medical/general
+    risk: high
+    needs_clarification: true
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- finance
+  - id: t-62
+    text: A skill that prepares my freelance tax return each year and tells me what I can deduct.
+    style: clear
+    kind: task
+    domain: finance/tax
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-63
+    text: >-
+      Our small insurance brokerage handles claims for 300 clients. Build a skill that runs a
+      claim from start to finish: collect the documents, check the policy cover, file with the
+      insurer, follow up and explain the decision to the client.
+    style: detailed
+    kind: workflow
+    domain: finance/insurance
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: t-64
+    text: Write blog posts that explain tax deadlines and rules to freelancers.
+    style: clear
+    kind: task
+    domain: finance/tax
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+    notes: Boundary. A writing task, but the expertise applied is tax, so finance/high.
+  - id: t-65
+    text: I want a financial adviser skill that suggests how to invest my savings, for ChatGPT.
+    style: clear
+    kind: role
+    domain: finance/investing
+    risk: high
+    needs_clarification: false
+    mentioned_targets: [chatgpt]
+  - id: t-66
+    text: money things
+    style: vague
+    kind: role
+    domain: finance/general
+    risk: high
+    needs_clarification: true
+    mentioned_targets: []
+
+  # ---------------------------------------------------------------- more vague and mixed
+  - id: t-67
+    text: an assistant for my team
+    style: vague
+    kind: role
+    domain: general/team-assistant
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-68
+    text: help with reports
+    style: vague
+    kind: task
+    domain: writing/reports
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: t-69
+    text: something for our marketing team in Claude Code and Codex
+    style: vague
+    kind: role
+    domain: marketing/general
+    risk: low
+    needs_clarification: true
+    mentioned_targets: [claude, codex]
+  - id: t-70
+    text: >-
+      Our data team gets the same ad-hoc questions from managers every week. I want a skill
+      that answers them: write the SQL against our warehouse, check the numbers, make a chart
+      and explain the result in two sentences.
+    style: detailed
+    kind: task
+    domain: data/analytics
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []

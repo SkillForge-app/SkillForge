@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /search
+Disallow: /ruca
+
+Sitemap: https://www.ruralhealthinfo.org/sitemap.xml
+

@@ -1,0 +1,7 @@
+User-Agent: *
+Allow: /
+Disallow: /studio
+Disallow: /api/
+
+Host: https://igentify.com
+Sitemap: https://igentify.com/sitemap.xml

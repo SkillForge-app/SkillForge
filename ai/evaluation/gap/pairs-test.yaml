@@ -1,0 +1,461 @@
+# Gap Checker labelled requests, TEST split: run ONCE after tuning on dev; never used to tune.
+# Labels follow evaluation/gap/LABELLING.md. Every (request, card) pair not listed is no_match.
+name: gap-pairs-test
+version: 0.1.0
+split: test
+review: {status: reviewed, reviewer: Ziad Abdullah, date: 2026-10-27}
+requests:
+  # ------------------------------------------------------------- seed skill requests
+  - id: gt-01
+    text: >-
+      We are a 6-person startup building a support chatbot on top of an LLM. I want a skill that
+      acts like a senior AI engineer for Codex: it should help us pick models and embeddings,
+      design retrieval over our help-centre articles, write evaluation sets, and warn us about cost
+      and prompt-injection risks before we ship.
+    style: detailed
+    language: en
+    analysis: {kind: role, domain: technology/ai, skill_name: support-bot-ai-engineer, summary: "A senior AI engineer role that helps a startup build an LLM support chatbot: models, retrieval, evaluation and risks.", expected_outputs: [model choice, retrieval design, evaluation set]}
+    match: [registry:ai-engineer]
+    near_miss: [registry:llm-prompt-engineer]
+  - id: gt-02
+    text: can you make something that checks my code
+    style: vague
+    language: en
+    analysis: {kind: task, domain: technology/software-engineering, skill_name: code-checker, summary: "A skill that checks the user's code for problems.", expected_outputs: []}
+    match: [registry:code-reviewer]
+    near_miss: [corpus:secure-code-auditor, registry:unit-test-writer]
+  - id: gt-03
+    text: >-
+      I want a Codex skill that reviews diffs the way our senior engineers do: first understand
+      what the change is for, then look for real bugs and security holes, then maintainability.
+      Comments must be ranked (blocking, should fix, nit), point to exact lines and suggest a fix.
+      It must not nitpick formatting that our linter already handles.
+    style: detailed
+    language: en
+    analysis: {kind: task, domain: technology/software-engineering, skill_name: diff-reviewer, summary: "A skill that reviews diffs for bugs, security and maintainability with ranked, line-level comments.", expected_outputs: [ranked review comments]}
+    match: [registry:code-reviewer]
+    near_miss: [corpus:secure-code-auditor, registry:unit-test-writer]
+  - id: gt-04
+    text: >-
+      Our sales team exports CSVs from the CRM every week and nobody trusts the numbers. I want a
+      skill that behaves like an experienced data analyst: it should check the data for problems
+      first, write the pandas or SQL code, pick the right chart, and explain what the result means
+      and how sure we can be, in plain language for the sales director.
+    style: detailed
+    language: en
+    analysis: {kind: role, domain: data/analytics, skill_name: sales-data-analyst, summary: "A data analyst role that checks CRM exports, writes pandas or SQL, charts results and explains confidence.", expected_outputs: [data quality check, analysis code, chart]}
+    match: [registry:data-analyst]
+    near_miss: [corpus:sql-query-helper, registry:dashboard-builder]
+  - id: gt-05
+    text: something to understand my health papers
+    style: vague
+    language: en
+    analysis: {kind: task, domain: medical/patient-education, skill_name: health-papers-explainer, summary: "A skill that explains a patient's health documents in plain language.", expected_outputs: []}
+    match: []
+    near_miss: [registry:explain-medical-results, corpus:medication-information]
+  - id: gt-06
+    text: >-
+      Patients at our clinic get their lab results online days before they see a doctor and call
+      us worried. I want a skill that explains what each value measures and what the reference
+      range means, in plain language, helps them write questions for their appointment, and always
+      tells them to talk to their clinician and to seek urgent care for warning signs.
+    style: detailed
+    language: en
+    analysis: {kind: task, domain: medical/patient-education, skill_name: lab-results-explainer, summary: "A skill that explains lab values and reference ranges to patients and helps them prepare questions for the clinician.", expected_outputs: [plain-language explanation, questions for the doctor]}
+    match: [registry:explain-medical-results]
+    near_miss: [corpus:medication-information]
+  - id: gt-07
+    text: help me hire people
+    style: vague
+    language: en
+    analysis: {kind: role, domain: hr/recruiting, skill_name: hiring-helper, summary: "A skill that helps the user hire people.", expected_outputs: []}
+    match: [registry:hr-recruiter]
+    near_miss: [registry:employee-onboarding-planner]
+  - id: gt-08
+    text: >-
+      We are a 40-person company hiring 15 people this year with no HR team. I want a skill that
+      acts like an experienced recruiter: write inclusive job ads, define must-have versus
+      nice-to-have criteria, build structured interviews with scoring guides, and help us give
+      fair feedback, without ever storing or judging candidates on personal characteristics.
+    style: detailed
+    language: en
+    analysis: {kind: role, domain: hr/recruiting, skill_name: recruiter, summary: "An experienced recruiter role that writes inclusive job ads, criteria and structured interviews for a company without HR.", expected_outputs: [job ad, hiring criteria, interview plan]}
+    match: [registry:hr-recruiter]
+    near_miss: [registry:candidate-interview-coach, registry:employee-onboarding-planner]
+  - id: gt-09
+    text: I want a skill that runs blameless postmortems after production incidents.
+    style: clear
+    language: en
+    analysis: {kind: workflow, domain: technology/incident-response, skill_name: postmortem-runner, summary: "A workflow that runs blameless postmortems after production incidents.", expected_outputs: [postmortem document]}
+    match: [registry:incident-postmortem]
+    near_miss: [registry:on-call-runbook-writer, corpus:live-incident-commander]
+  - id: gt-10
+    text: help us learn from outages
+    style: vague
+    language: en
+    analysis: {kind: workflow, domain: technology/incident-response, skill_name: outage-learning, summary: "A skill that helps a team learn from outages.", expected_outputs: []}
+    match: [registry:incident-postmortem]
+    near_miss: [corpus:live-incident-commander, registry:on-call-runbook-writer]
+  - id: gt-11
+    text: I need a marketing strategist skill for B2B SaaS launches.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: marketing/strategy, skill_name: saas-launch-strategist, summary: "A marketing strategist role for B2B SaaS product launches.", expected_outputs: [launch plan, positioning]}
+    match: [registry:marketing-strategist]
+    near_miss: [corpus:seo-content-writer, registry:social-media-copywriter]
+  - id: gt-12
+    text: a skill to get more customers
+    style: vague
+    language: en
+    analysis: {kind: role, domain: marketing/strategy, skill_name: customer-growth, summary: "A skill that helps a business get more customers.", expected_outputs: []}
+    match: []
+    near_miss: [registry:marketing-strategist, corpus:sales-outreach-writer]
+  - id: gt-13
+    text: Build a skill that reviews NDAs before I sign them and flags risky clauses.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/contracts, skill_name: review-nda, summary: "A skill that reviews NDAs before signing and flags risky clauses.", expected_outputs: [clause risk list]}
+    match: [registry:review-nda]
+    near_miss: [registry:supplier-contract-reviewer, corpus:draft-nda-template]
+  - id: gt-14
+    text: I want a skill that helps small business owners build monthly budgets and cash-flow plans.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: finance/small-business, skill_name: small-business-budget, summary: "A skill that helps small business owners build monthly budgets and cash-flow plans.", expected_outputs: [monthly budget, cash-flow plan]}
+    match: [registry:small-business-budgeting]
+    near_miss: [registry:personal-budget-planner]
+  - id: gt-15
+    text: money help for my shop
+    style: vague
+    language: en
+    analysis: {kind: task, domain: finance/small-business, skill_name: shop-money-helper, summary: "A skill that helps a small shop owner manage money.", expected_outputs: []}
+    match: []
+    near_miss: [registry:small-business-budgeting, registry:period-close-guide]
+  - id: gt-16
+    text: Make a skill that writes press releases for product launches and company news.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/public-relations, skill_name: press-release-writer, summary: "A skill that writes press releases for product launches and company news.", expected_outputs: [press release]}
+    match: [registry:write-press-release]
+    near_miss: [registry:media-pitch-writer]
+  - id: gt-17
+    text: I need something for announcements
+    style: vague
+    language: en
+    analysis: {kind: task, domain: writing/public-relations, skill_name: announcement-writer, summary: "A skill that writes announcements.", expected_outputs: []}
+    match: []
+    near_miss: [registry:write-press-release, corpus:internal-announcement-writer]
+
+  # ------------------------------------------------------------- requests another existing skill matches
+  - id: gt-18
+    text: A skill that acts as a senior UX researcher for our mobile app team.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: research/user-research, skill_name: ux-researcher, summary: "A senior UX researcher role for a mobile app team.", expected_outputs: [research plan, findings]}
+    match: [corpus:ux-researcher]
+    near_miss: []
+  - id: gt-19
+    text: We need a skill that drafts replies to our customer support tickets using our help centre.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: customer-support/email, skill_name: support-replies, summary: "A skill that drafts replies to customer support tickets using the help centre.", expected_outputs: [ticket reply]}
+    match: [corpus:support-reply-writer]
+    near_miss: []
+  - id: gt-20
+    text: I want a skill that writes cold emails and follow-ups to potential B2B customers.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: sales/outreach, skill_name: b2b-cold-email, summary: "A skill that writes B2B cold emails and follow-ups to potential customers.", expected_outputs: [cold email, follow-up sequence]}
+    match: [corpus:sales-outreach-writer]
+    near_miss: []
+  - id: gt-21
+    text: A skill that documents our REST API from the OpenAPI file for outside developers.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/documentation, skill_name: rest-api-docs, summary: "A skill that writes REST API documentation for outside developers from an OpenAPI file.", expected_outputs: [API reference docs]}
+    match: [corpus:api-docs-writer]
+    near_miss: []
+  - id: gt-22
+    text: "Make a brand style guide skill for my new bakery: colours, fonts, logo rules and tone."
+    style: clear
+    language: en
+    analysis: {kind: task, domain: design/branding, skill_name: bakery-brand-guide, summary: "A skill that builds a brand style guide with colours, fonts, logo rules and tone for a new bakery.", expected_outputs: [brand style guide]}
+    match: [corpus:brand-style-guide]
+    near_miss: []
+  - id: gt-23
+    text: A skill that helps me write the literature review chapter of my master's thesis.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: research/literature-review, skill_name: thesis-literature-review, summary: "A skill that helps write the literature review chapter of a master's thesis.", expected_outputs: [literature review]}
+    match: [corpus:literature-review-assistant]
+    near_miss: []
+  - id: gt-24
+    text: skill to plan a 5 day trip to Japan with trains and a budget
+    style: clear
+    language: en
+    analysis: {kind: task, domain: general/travel, skill_name: japan-trip-planner, summary: "A skill that plans a 5-day trip to Japan with trains and a budget.", expected_outputs: [itinerary, budget]}
+    match: [corpus:travel-itinerary-planner]
+    near_miss: []
+  - id: gt-25
+    text: Help our team deploy and debug our services on Kubernetes with Helm.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/devops, skill_name: k8s-helm-helper, summary: "A skill that helps deploy and debug services on Kubernetes with Helm.", expected_outputs: [manifests, Helm chart]}
+    match: [registry:kubernetes-deploy-helper]
+    near_miss: []
+  - id: gt-26
+    text: A skill that checks our website for WCAG accessibility problems.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: design/accessibility, skill_name: wcag-checker, summary: "A skill that checks a website for WCAG accessibility problems.", expected_outputs: [accessibility report]}
+    match: [corpus:accessibility-auditor]
+    near_miss: []
+  - id: gt-27
+    text: I need a skill that drafts employment contracts for our new hires.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/employment, skill_name: employment-contracts, summary: "A skill that drafts employment contracts for new hires.", expected_outputs: [employment contract]}
+    match: [corpus:employment-contract-drafter]
+    near_miss: []
+  - id: gt-28
+    text: I want a skill that writes SQL queries for me from plain English questions.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: data/sql, skill_name: sql-writer, summary: "A skill that writes SQL queries from plain English questions.", expected_outputs: [SQL query]}
+    match: [corpus:sql-query-helper]
+    near_miss: [registry:data-analyst]
+  - id: gt-29
+    text: A skill that coordinates our team while an outage is happening and sends status updates.
+    style: clear
+    language: en
+    analysis: {kind: workflow, domain: technology/incident-response, skill_name: incident-coordinator, summary: "A workflow that coordinates the team during an ongoing outage and sends status updates.", expected_outputs: [status updates, incident log]}
+    match: [corpus:live-incident-commander]
+    near_miss: [registry:incident-postmortem, registry:on-call-runbook-writer]
+  - id: gt-30
+    text: A skill that builds Power BI dashboards for our sales managers.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: data/visualization, skill_name: powerbi-dashboards, summary: "A skill that builds Power BI dashboards for sales managers.", expected_outputs: [dashboard design]}
+    match: [registry:dashboard-builder]
+    near_miss: [registry:data-analyst]
+  - id: gt-31
+    text: A skill that helps us prepare for a lawsuit over a contract the other side says we broke.
+    style: clear
+    language: en
+    analysis: {kind: workflow, domain: legal/litigation, skill_name: breach-claim-prep, summary: "A workflow that helps a business prepare for a breach-of-contract lawsuit.", expected_outputs: [timeline, document list]}
+    match: [corpus:contract-dispute-prep]
+    near_miss: []
+  - id: gt-32
+    text: A skill that reviews our vendor and SaaS contracts before we sign.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/contracts, skill_name: vendor-contract-review, summary: "A skill that reviews vendor and SaaS contracts before signing.", expected_outputs: [clause risk list]}
+    match: [registry:supplier-contract-reviewer]
+    near_miss: [registry:review-nda]
+  - id: gt-33
+    text: Help job seekers prepare for interviews and negotiate their salary.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: hr/careers, skill_name: interview-coach, summary: "A coach role that helps job seekers prepare for interviews and negotiate salary.", expected_outputs: [practice questions, feedback]}
+    match: [registry:candidate-interview-coach]
+    near_miss: [registry:hr-recruiter]
+  - id: gt-34
+    text: A skill that explains what my medicines are for and their side effects.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: medical/pharmacy, skill_name: medicine-explainer, summary: "A skill that explains what prescribed medicines are for and their side effects.", expected_outputs: [plain-language explanation]}
+    match: [corpus:medication-information]
+    near_miss: [registry:explain-medical-results]
+  - id: gt-35
+    text: A skill that writes pitch emails to journalists about our startup news.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/public-relations, skill_name: journalist-pitches, summary: "A skill that writes pitch emails to journalists about startup news.", expected_outputs: [pitch email]}
+    match: [registry:media-pitch-writer]
+    near_miss: [registry:write-press-release]
+
+  # ------------------------------------------------------------- only a related skill exists
+  - id: gt-36
+    text: A skill that explains MRI and CT scan reports to patients in plain language.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: medical/patient-education, skill_name: imaging-report-explainer, summary: "A skill that explains MRI and CT scan reports to patients in plain language.", expected_outputs: [plain-language explanation]}
+    match: []
+    near_miss: [registry:explain-medical-results]
+  - id: gt-37
+    text: Review Terraform and infrastructure-as-code changes before they are applied.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/devops, skill_name: terraform-reviewer, summary: "A skill that reviews Terraform and infrastructure-as-code changes before they are applied.", expected_outputs: [review comments]}
+    match: []
+    near_miss: [registry:code-reviewer, registry:kubernetes-deploy-helper]
+  - id: gt-38
+    text: Make a budget for our nonprofit's annual fundraising gala.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: finance/nonprofit, skill_name: gala-budget, summary: "A skill that makes a budget for a nonprofit's annual fundraising gala.", expected_outputs: [event budget]}
+    match: []
+    near_miss: [registry:small-business-budgeting]
+  - id: gt-39
+    text: A skill that writes our statement to the press after a data breach.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/public-relations, skill_name: breach-statement, summary: "A skill that writes a crisis statement to the press after a data breach.", expected_outputs: [press statement]}
+    match: []
+    near_miss: [registry:write-press-release, registry:media-pitch-writer]
+  - id: gt-40
+    text: Review commercial lease agreements for our shop.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: legal/real-estate, skill_name: lease-reviewer, summary: "A skill that reviews commercial lease agreements for a shop.", expected_outputs: [clause risk list]}
+    match: []
+    near_miss: [registry:supplier-contract-reviewer, registry:review-nda]
+  - id: gt-41
+    text: Forecast the cash flow of a 2,000-person company with several subsidiaries.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: finance/corporate, skill_name: group-cash-flow, summary: "A skill that forecasts cash flow for a 2,000-person company with several subsidiaries.", expected_outputs: [cash-flow forecast]}
+    match: []
+    near_miss: [registry:small-business-budgeting]
+  - id: gt-42
+    text: A skill that writes product descriptions for our online shop.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: marketing/ecommerce, skill_name: product-descriptions, summary: "A skill that writes product descriptions for an online shop.", expected_outputs: [product descriptions]}
+    match: []
+    near_miss: [corpus:seo-content-writer]
+  - id: gt-43
+    text: A skill that writes the email to all staff explaining a security incident and what we learned from it.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/internal-communications, skill_name: incident-staff-email, summary: "A skill that writes an all-staff email explaining a security incident and its lessons.", expected_outputs: [staff email]}
+    match: [corpus:internal-announcement-writer]
+    near_miss: [registry:incident-postmortem]
+  - id: gt-44
+    text: Translate lab reports from English into Arabic for our patients.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: medical/translation, skill_name: lab-report-translator, summary: "A skill that translates lab reports from English into Arabic for patients.", expected_outputs: [translated report]}
+    match: []
+    near_miss: [registry:explain-medical-results]
+  - id: gt-45
+    text: A skill that reviews our C++ game engine code for performance problems.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/game-development, skill_name: cpp-performance-review, summary: "A skill that reviews C++ game engine code for performance problems.", expected_outputs: [review comments]}
+    match: []
+    near_miss: [registry:code-reviewer]
+
+  # ------------------------------------------------------------- nothing related exists
+  - id: gt-46
+    text: Plan what to plant in my vegetable garden each month.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: general/gardening, skill_name: garden-planner, summary: "A skill that plans what to plant in a vegetable garden each month.", expected_outputs: [planting calendar]}
+    match: []
+    near_miss: []
+  - id: gt-47
+    text: Write listing descriptions for the apartments we sell.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: sales/real-estate, skill_name: listing-writer, summary: "A skill that writes real estate listing descriptions for apartments.", expected_outputs: [listing description]}
+    match: []
+    near_miss: []
+  - id: gt-48
+    text: Help me fix the problems with my 3D printer.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: technology/hardware, skill_name: 3d-printer-troubleshooter, summary: "A skill that troubleshoots 3D printer problems.", expected_outputs: [troubleshooting steps]}
+    match: []
+    near_miss: []
+  - id: gt-49
+    text: Design home exercise plans for patients after knee surgery.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: medical/physiotherapy, skill_name: knee-rehab-plans, summary: "A skill that designs home exercise plans for patients after knee surgery.", expected_outputs: [exercise plan]}
+    match: []
+    near_miss: []
+  - id: gt-50
+    text: Write the annual performance reviews for my team.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: hr/performance, skill_name: performance-reviews, summary: "A skill that writes annual performance reviews for a manager's team.", expected_outputs: [performance review]}
+    match: []
+    near_miss: []
+  - id: gt-51
+    text: Make a pitch deck for our seed investors.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: product/fundraising, skill_name: pitch-deck, summary: "A skill that makes a pitch deck for seed investors.", expected_outputs: [pitch deck]}
+    match: []
+    near_miss: []
+  - id: gt-52
+    text: Write bedtime stories for my children.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/fiction, skill_name: bedtime-stories, summary: "A skill that writes bedtime stories for children.", expected_outputs: [story]}
+    match: []
+    near_miss: []
+  - id: gt-53
+    text: Recommend a laptop for software development under 1,500 dollars.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: general/shopping, skill_name: laptop-advisor, summary: "A skill that recommends a laptop for software development under 1,500 dollars.", expected_outputs: [recommendation]}
+    match: []
+    near_miss: []
+  - id: gt-54
+    text: A skill for translating our marketing website into French.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/translation, skill_name: website-translator, summary: "A skill that translates a marketing website into French.", expected_outputs: [translated pages]}
+    match: []
+    near_miss: []
+  - id: gt-55
+    text: Make the weekly shift schedule for our restaurant staff.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: operations/scheduling, skill_name: restaurant-shifts, summary: "A skill that makes the weekly shift schedule for restaurant staff.", expected_outputs: [shift schedule]}
+    match: []
+    near_miss: []
+  - id: gt-56
+    text: Create podcast episode outlines and show notes.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: writing/podcasts, skill_name: podcast-notes, summary: "A skill that creates podcast episode outlines and show notes.", expected_outputs: [outline, show notes]}
+    match: []
+    near_miss: []
+  - id: gt-57
+    text: Train me on chess openings with puzzles.
+    style: clear
+    language: en
+    analysis: {kind: role, domain: education/chess, skill_name: chess-openings-coach, summary: "A coach role that trains chess openings with puzzles.", expected_outputs: [puzzles]}
+    match: []
+    near_miss: [registry:lesson-plan-designer]
+  - id: gt-58
+    text: Count my calories and suggest workouts for the week.
+    style: clear
+    language: en
+    analysis: {kind: task, domain: general/fitness, skill_name: calorie-workout-planner, summary: "A skill that counts calories and suggests weekly workouts.", expected_outputs: [calorie log, workout plan]}
+    match: []
+    near_miss: []
+  - id: gt-59
+    text: مهارة تكتب بيانات صحفية لإطلاق منتجاتنا الجديدة
+    style: clear
+    language: ar
+    analysis: {kind: task, domain: writing/public-relations, skill_name: product-launch-press-release, summary: "A skill that writes press releases for new product launches.", expected_outputs: [press release]}
+    match: [registry:write-press-release]
+    near_miss: [registry:media-pitch-writer]
+  - id: gt-60
+    text: أريد مهارة تخطط رحلات عائلية إلى تركيا يوما بيوم
+    style: clear
+    language: ar
+    analysis: {kind: task, domain: general/travel, skill_name: turkey-family-trip, summary: "A skill that plans day-by-day family trips to Turkey.", expected_outputs: [itinerary]}
+    match: [corpus:travel-itinerary-planner]
+    near_miss: []
+  - id: gt-61
+    text: مهارة تساعد المزارعين في اختيار الأسمدة المناسبة لمحاصيلهم
+    style: clear
+    language: ar
+    analysis: {kind: task, domain: general/agriculture, skill_name: fertiliser-advisor, summary: "A skill that helps farmers choose the right fertilisers for their crops.", expected_outputs: [fertiliser recommendation]}
+    match: []
+    near_miss: []

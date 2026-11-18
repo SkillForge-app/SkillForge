@@ -1,0 +1,11 @@
+# fetched 2026-10-26 from https://www.mheducation.com/robots.txt (HTTP 200)
+Host: www.mheducation.com
+Sitemap: https://www.mheducation.com/index-sitemap.xml
+User-agent: *
+Disallow: /sharpen/*?utm_source
+Disallow: /highered/custom/product/*
+
+
+# Disallowing Google Bard and Vertex AI web crawlers
+User-agent: Google-Extended
+Disallow: /

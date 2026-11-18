@@ -1,0 +1,2971 @@
+{
+  "date": "2026-10-26",
+  "pass_rule": {
+    "top": 10,
+    "good_needed": 7,
+    "junk_free_top": 5
+  },
+  "checks": {
+    "every domain has 10 sources": true,
+    "no blocked source in any list": true,
+    "at most 2 pages per site": true,
+    "nothing with excluded terms is set to crawl": true,
+    "nothing robots.txt disallows is set to crawl": true,
+    "high-risk domains crawl only official or academic sources": true
+  },
+  "domains": [
+    {
+      "domain": "technology/ai",
+      "queries": [
+        "AI engineer guide",
+        "machine learning engineering best practices",
+        "large language model evaluation guide",
+        "AI official documentation",
+        "AI best practices",
+        "AI guidelines site:.gov",
+        "AI guide site:.edu",
+        "AI standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://www.nist.gov/itl/ai/ai-standards-and-guidelines-group",
+          "host": "nist.gov",
+          "title": "ai standards and guidelines group",
+          "snippet": "",
+          "tier": "official",
+          "score": 140,
+          "reasons": [
+            "US standards body (NIST)",
+            "matched 1 of 1 words of \"AI\"",
+            "search rank 1",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://www.nist.gov/nist-organizations/nist-headquarters/laboratory-programs/information-technology-laboratory/ai-1",
+          "host": "nist.gov",
+          "title": "ai 1",
+          "snippet": "",
+          "tier": "official",
+          "score": 139,
+          "reasons": [
+            "US standards body (NIST)",
+            "matched 1 of 1 words of \"AI\"",
+            "search rank 2",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://arxiv.org/pdf/2504.13979",
+          "host": "arxiv.org",
+          "title": "Framework, Standards, Applications and Best practices of Responsible AI : A Comprehensive Survey",
+          "snippet": "",
+          "tier": "academic",
+          "score": 120,
+          "reasons": [
+            "preprint server (arXiv)",
+            "matched 1 of 1 words of \"AI\"",
+            "search rank 1",
+            "an authority for technology"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://ar5iv.arxiv.org/html/2007.14130",
+          "host": "ar5iv.arxiv.org",
+          "title": "Adoption and Effects of Software Engineering Best Practices in Machine Learning",
+          "snippet": "",
+          "tier": "academic",
+          "score": 119,
+          "reasons": [
+            "preprint server (arXiv)",
+            "matched 2 of 2 words of \"machine learning\"",
+            "search rank 2",
+            "an authority for technology"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://resource.clas.uiowa.edu/node/7516",
+          "host": "resource.clas.uiowa.edu",
+          "title": "New AI website to support learning, teaching, research, and innovation",
+          "snippet": "",
+          "tier": "academic",
+          "score": 110,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"AI\"",
+            "search rank 1"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://its.idaho.gov/?p=11145",
+          "host": "its.idaho.gov",
+          "title": "Idaho Official Government Website",
+          "snippet": "",
+          "tier": "official",
+          "score": 106,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"AI\"",
+            "search rank 5"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://watech.wa.gov/node/1816",
+          "host": "watech.wa.gov",
+          "title": "watech.wa.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 104,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"AI\"",
+            "search rank 7"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://ai.berkeley.edu/node/16",
+          "host": "ai.berkeley.edu",
+          "title": "ai.berkeley.edu",
+          "snippet": "",
+          "tier": "academic",
+          "score": 102,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"AI\"",
+            "search rank 9"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        },
+        {
+          "url": "https://ojs.aaai.org/index.php/AIES/article/download/43252/50812/47358",
+          "host": "ojs.aaai.org",
+          "title": "ojs.aaai.org",
+          "snippet": "",
+          "tier": "academic",
+          "score": 94,
+          "reasons": [
+            "AI society (AAAI)",
+            "matched 0 of 1 words of \"AI\"",
+            "search rank 7",
+            "an authority for technology"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://roadmap.sh/ai-engineer",
+          "host": "roadmap.sh",
+          "title": "AI Engineer",
+          "snippet": "",
+          "tier": "reference",
+          "score": 92,
+          "reasons": [
+            "community learning roadmap",
+            "matched 1 of 1 words of \"AI\"",
+            "search rank 9",
+            "an authority for technology"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://www.labellerr.com/blog/evaluating-large-language-models/amp/",
+          "reason": "duplicate of https://www.labellerr.com/blog/evaluating-large-language-models/"
+        },
+        {
+          "url": "https://www.bestblogs.dev/en/article/a1bf0f",
+          "reason": "blocked: aggregator of other sites' articles"
+        },
+        {
+          "url": "https://www.thriftbooks.com/w/practical-guide-for-ai-engineers/57178271/",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://payhip.com/b/wUFWD",
+          "reason": "blocked: digital product shop"
+        },
+        {
+          "url": "https://home.mlops.community/public/videos/engineering-best-practices-for-machine-learning",
+          "reason": "blocked: video page"
+        },
+        {
+          "url": "https://cs.ru.nl/~aserban/talks/pdf/engineering_ML.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.sourcepulse.org/projects/1827794",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://theartofservice.com/glossary/ai-documentation",
+          "reason": "blocked: glossary content farm"
+        },
+        {
+          "url": "https://www.cryengine.com/docs/static/engines/cryengine-3/categories/1638401/pages/1605731",
+          "reason": "blocked: tag or category listing page"
+        },
+        {
+          "url": "https://github.com/Neumron/docs",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://github.com/eazuka/deepstack-docs",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://libraries.io/pypi/ai",
+          "reason": "blocked: package index, not an article"
+        },
+        {
+          "url": "https://quizzly.ai/play/documentation-and-runbook-standards-for-ai",
+          "reason": "blocked: quiz content farm"
+        },
+        {
+          "url": "https://br.tradingview.com/charting-library-docs/latest/getting_started/llm-context",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://auralis.ai/blog/tag/best-practices-in-ai",
+          "reason": "blocked: tag or category listing page"
+        },
+        {
+          "url": "https://opencourser.com/topic/ry8xpt/ai-best-practices",
+          "reason": "blocked: course aggregator"
+        },
+        {
+          "url": "https://uidl.naswa.org/handle/20.500.11941/5036",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.nist.gov/document/nist-ai-rfi-ctr-data-innovation-001pdf",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/1855021",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/caissi/guidelines",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://arxiv.org/pdf/2503.02675",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://arxiv.org/abs/2306.13662v1",
+          "reason": "already 2 pages from this site"
+        }
+      ]
+    },
+    {
+      "domain": "technology/software-engineering",
+      "queries": [
+        "code reviewer software engineering guide",
+        "software engineering official documentation",
+        "software engineering best practices",
+        "software engineering guidelines site:.gov",
+        "software engineering guide site:.edu",
+        "software engineering standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://www.nist.gov/publications/report-planning-session-software-engineering-handbook",
+          "host": "nist.gov",
+          "title": "report planning session software engineering handbook",
+          "snippet": "",
+          "tier": "official",
+          "score": 132,
+          "reasons": [
+            "US standards body (NIST)",
+            "matched 2 of 2 words of \"software engineering\"",
+            "search rank 9",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        },
+        {
+          "url": "https://voyager.gsfc.nasa.gov/Library/Software_Guide_HSTX.pdf",
+          "host": "voyager.gsfc.nasa.gov",
+          "title": "Software Guide HSTX",
+          "snippet": "",
+          "tier": "official",
+          "score": 131,
+          "reasons": [
+            "US government agency (NASA)",
+            "matched 1 of 2 words of \"software engineering\"",
+            "search rank 5",
+            "found by 2 queries",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 2
+        },
+        {
+          "url": "https://technav.ieee.org/topic/software-standards/",
+          "host": "technav.ieee.org",
+          "title": "Software standards",
+          "snippet": "",
+          "tier": "official",
+          "score": 130,
+          "reasons": [
+            "engineering standards body (IEEE)",
+            "matched 1 of 2 words of \"software engineering\"",
+            "search rank 1",
+            "an authority for technology"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://www.nist.gov/publications/management-guide-software-documentation",
+          "host": "nist.gov",
+          "title": "management guide software documentation",
+          "snippet": "",
+          "tier": "official",
+          "score": 130,
+          "reasons": [
+            "US standards body (NIST)",
+            "matched 1 of 2 words of \"software engineering\"",
+            "search rank 1",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://swehb.nasa.gov/x/F4EIAw",
+          "host": "swehb.nasa.gov",
+          "title": "1. Requirements",
+          "snippet": "",
+          "tier": "official",
+          "score": 117,
+          "reasons": [
+            "US government agency (NASA)",
+            "matched 0 of 2 words of \"software engineering\"",
+            "search rank 4",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://softwareoutlook.ac.uk/?p=33824",
+          "host": "softwareoutlook.ac.uk",
+          "title": "Best Practices in Software Engineering",
+          "snippet": "",
+          "tier": "academic",
+          "score": 102,
+          "reasons": [
+            "UK university (.ac.uk)",
+            "matched 2 of 2 words of \"software engineering\"",
+            "search rank 9"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        },
+        {
+          "url": "https://en.wikipedia.org/wiki/Outline_of_software_engineering",
+          "host": "en.wikipedia.org",
+          "title": "Outline of software engineering",
+          "snippet": "",
+          "tier": "reference",
+          "score": 90,
+          "reasons": [
+            "encyclopedia (Wikipedia)",
+            "matched 2 of 2 words of \"software engineering\"",
+            "search rank 1"
+          ],
+          "licence": "cc-by-sa-4.0",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://sceweb.uhcl.edu/helm/SWEBOK_IEEE/SWEBOK_Guide_2004.pdf",
+          "host": "sceweb.uhcl.edu",
+          "title": "SWEBOK Guide 2004",
+          "snippet": "",
+          "tier": "academic",
+          "score": 89,
+          "reasons": [
+            "US university (.edu)",
+            "matched 0 of 2 words of \"software engineering\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://www.inf.ed.ac.uk/teaching/courses/seoc/2004_2005/resources/SWEBOK_2004.pdf",
+          "host": "inf.ed.ac.uk",
+          "title": "SWEBOK 2004",
+          "snippet": "",
+          "tier": "academic",
+          "score": 88,
+          "reasons": [
+            "UK university (.ac.uk)",
+            "matched 0 of 2 words of \"software engineering\"",
+            "search rank 3"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://sceweb.uhcl.edu/helm/SWEBOK_IEEE/papers/11%20reprint%206.pdf",
+          "host": "sceweb.uhcl.edu",
+          "title": "sceweb.uhcl.edu",
+          "snippet": "",
+          "tier": "academic",
+          "score": 82,
+          "reasons": [
+            "US university (.edu)",
+            "matched 0 of 2 words of \"software engineering\"",
+            "search rank 9"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://redmine.iasfbo.inaf.it/projects/sw_eng-standards/wiki",
+          "reason": "duplicate of https://redmine.oas.inaf.it/projects/sw_eng-standards/wiki"
+        },
+        {
+          "url": "https://github.com/google/eng-practices/blob/master/review/index.md",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://korahome.substack.com/p/effective-code-review-practices-a",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://docs.pullrequest.com/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://slab.com/library/code-review-guidelines/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://emg.nysbc.org/projects/appion/wiki/Code_Review_Guide/2/annotate",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://redstamp.com/employee-resources/efficient-code-review-developer-guide",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://emg.nysbc.org/projects/appion/wiki/Code_Review_Guide/3/annotate",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://emg.nysbc.org/projects/appion/wiki/Code_Review_Guide/10/diff",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.scribd.com/document/866987973/Software-Engineering-Final",
+          "reason": "blocked: user-uploaded documents (rights unknown)"
+        },
+        {
+          "url": "https://mail.norml.org/software-engineering-documentation-examples.html",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://redmine.oas.inaf.it/projects/sw_eng-standards/wiki",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://search.worldcat.org/oclc/471500462",
+          "reason": "blocked: library catalogue entry"
+        },
+        {
+          "url": "https://search.worldcat.org/title/Software-engineering-best-practices-:-lessons-from-successful-projects-in-the-top-companies/oclc/471500462",
+          "reason": "blocked: library catalogue entry"
+        },
+        {
+          "url": "https://dev.to/ankansaha/software-engineering-best-practices-16ml",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://lb-140-82-114-3-iad.github.com/18F/development-guide",
+          "reason": "blocked: mirror of another site on a load-balancer host: use the original"
+        },
+        {
+          "url": "https://www.librarything.com/work/3487982",
+          "reason": "blocked: book catalogue"
+        },
+        {
+          "url": "https://bibsonomy.org/bibtex/71f2a73744854489fa230b28723bbf1f",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://goodreads.com/book/show/34696764",
+          "reason": "blocked: book review site"
+        },
+        {
+          "url": "https://campusstore.miamioh.edu/road-map-software-engineering/bk/9780471683629",
+          "reason": "blocked: shop listing"
+        },
+        {
+          "url": "https://www.math.unipd.it/~tullio/IS-1/2009/Dispense/L03.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.math.unipd.it/~tullio/IS-1/2008/Dispense/L03.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.nist.gov/node/665226",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/644981",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/709416",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/1758651",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/656991",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/707626",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/1796326",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/1751676",
+          "reason": "already 2 pages from this site"
+        }
+      ]
+    },
+    {
+      "domain": "data/analytics",
+      "queries": [
+        "data analyst analytics guide",
+        "data analysis statistics guide site:.gov",
+        "data visualization guidelines",
+        "data analytics guide",
+        "data analytics best practices",
+        "data analytics guidelines site:.gov",
+        "data analytics guide site:.edu",
+        "data analytics standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://portal.ct.gov/-/media/ct-data/data-visualization-guidelines.pdf",
+          "host": "portal.ct.gov",
+          "title": "data visualization guidelines",
+          "snippet": "",
+          "tier": "official",
+          "score": 130,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"data visualization\"",
+            "search rank 1"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://epa.gov/tsca-screening-tools/guidelines-statistical-analysis-occupational-exposure-data",
+          "host": "epa.gov",
+          "title": "Guidelines for Statistical Analysis of Occupational Exposure Data",
+          "snippet": "",
+          "tier": "official",
+          "score": 129,
+          "reasons": [
+            "US Environmental Protection Agency",
+            "matched 2 of 2 words of \"data analysis\"",
+            "search rank 2"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://www.alexandriava.gov/sites/default/files/2023-08/Data Analytics Service Guidelines.pdf",
+          "host": "alexandriava.gov",
+          "title": "Data Analytics Service Guidelines",
+          "snippet": "",
+          "tier": "official",
+          "score": 129,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"data analytics\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://www.slq.qld.gov.au/blog/hbr-guide-data-analytics-basics-managers-hbr-guide-series-ebook",
+          "host": "slq.qld.gov.au",
+          "title": "hbr guide data analytics basics managers hbr guide series ebook",
+          "snippet": "",
+          "tier": "official",
+          "score": 127,
+          "reasons": [
+            "Australian government site",
+            "matched 2 of 2 words of \"data analytics\"",
+            "search rank 4"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://docs.data-community.publishing.service.gov.uk/analysis/",
+          "host": "docs.data-community.publishing.service.gov.uk",
+          "title": "docs.data-community.publishing.service.gov.uk",
+          "snippet": "",
+          "tier": "official",
+          "score": 126,
+          "reasons": [
+            "UK government site",
+            "matched 2 of 2 words of \"data analysis\"",
+            "search rank 5"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://www.stlouis-mo.gov/government/departments/information-technology/web-development/style/content/data-visualizations",
+          "host": "stlouis-mo.gov",
+          "title": "Data Visualization Style Guide",
+          "snippet": "",
+          "tier": "official",
+          "score": 123,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"data visualization\"",
+            "search rank 8"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 8,
+          "queries": 1
+        },
+        {
+          "url": "https://gss.civilservice.gov.uk/policy-store/using-administrative-data-good-practice-guidance-for-statisticians-2",
+          "host": "gss.civilservice.gov.uk",
+          "title": "using administrative data good practice guidance for statisticians 2",
+          "snippet": "",
+          "tier": "official",
+          "score": 116,
+          "reasons": [
+            "UK government site",
+            "matched 1 of 2 words of \"data analytics\"",
+            "search rank 5"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://handbook.tts.gsa.gov/tools/analytics",
+          "host": "handbook.tts.gsa.gov",
+          "title": "handbook.tts.gsa.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 114,
+          "reasons": [
+            "US government agency (GSA)",
+            "matched 1 of 2 words of \"data analytics\"",
+            "search rank 7"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://www.brookings.edu/articles/using-standards-to-make-big-data-analytics-that-work",
+          "host": "brookings.edu",
+          "title": "using standards to make big data analytics that work",
+          "snippet": "",
+          "tier": "academic",
+          "score": 108,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"data analytics\"",
+            "search rank 3"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://www.census.gov/topics/research/guidance.html",
+          "host": "census.gov",
+          "title": "www.census.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 105,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"statistics\"",
+            "search rank 6"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://dev.to/kadenge75/data-analyst-guide-2023-2148",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://chaindesk.ai/tools/youtube-summarizer/what-is-data-analytics-an-introduction-full-guide-yZvFH7B6gKI",
+          "reason": "blocked: AI summary of someone else's content"
+        },
+        {
+          "url": "https://selar.com/69l1dl9ze4",
+          "reason": "blocked: digital product shop"
+        },
+        {
+          "url": "https://lists.norml.org/wlg/data-analyst-guide-pdf.html",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://www.scribd.com/document/918574503/Roadmap-to-Data-Analyst",
+          "reason": "blocked: user-uploaded documents (rights unknown)"
+        },
+        {
+          "url": "https://sanandres.uep.edu.py/default.aspx/TXz4OR/702291/Data Analysis Study Guide.pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://dev.to/s-jt/the-ultimate-guide-to-data-analytics-16ha",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://pgcc.libguides.com/stats/home",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://dev.to/gekika/the-ultimate-guide-to-data-analytics-410f",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://dev.to/octavia_wellsi_5a738282dc/the-ultimate-guide-to-data-analytics-3bkk",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://www.scribd.com/document/1015045188/Data-Analytics-Guide",
+          "reason": "blocked: user-uploaded documents (rights unknown)"
+        },
+        {
+          "url": "https://www.vonmatt.ch/detail/ISBN-2244061220757/Shiva/Data-Analytics",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://jhnomondi.gumroad.com/l/qzsbv",
+          "reason": "blocked: digital product shop"
+        },
+        {
+          "url": "https://solutionsreview.com/business-intelligence/?p=7572",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.ebay.com/itm/156946215473",
+          "reason": "blocked: shop listing"
+        },
+        {
+          "url": "https://saiindia.gov.in/uploads/journal/journal-en-january-2018/compliance-audit1.html",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://enflomaplata.uep.edu.py/Download_PDFS/TFurS0/706840/Guide To Business Data Analytics.pdf",
+          "reason": "blocked: SEO spam (fake PDF download pages)"
+        },
+        {
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10995743/",
+          "reason": "robots.txt disallows SkillForgeBot"
+        }
+      ]
+    },
+    {
+      "domain": "medical/patient-education",
+      "queries": [
+        "explain medical results patient education guide",
+        "patient education clinical guidance",
+        "patient education best practices",
+        "patient education guidelines site:.gov",
+        "patient education guide site:.edu",
+        "patient education standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://ihs.gov/forproviders/patiented",
+          "host": "ihs.gov",
+          "title": "Patient Education",
+          "snippet": "",
+          "tier": "official",
+          "score": 138,
+          "reasons": [
+            "US Indian Health Service",
+            "matched 2 of 2 words of \"patient education\"",
+            "search rank 3",
+            "an authority for medical"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://effectivehealthcare.ahrq.gov/sites/default/files/nt_docs/topic-brief-patient-education.pdf",
+          "host": "effectivehealthcare.ahrq.gov",
+          "title": "topic brief patient education",
+          "snippet": "",
+          "tier": "official",
+          "score": 133,
+          "reasons": [
+            "US health care research agency (AHRQ)",
+            "matched 2 of 2 words of \"patient education\"",
+            "search rank 8",
+            "an authority for medical"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 8,
+          "queries": 1
+        },
+        {
+          "url": "https://www.dac.nc.gov/documents/files/patient-education-october-2014-pe-2/open",
+          "host": "dac.nc.gov",
+          "title": "www.dac.nc.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 125,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"patient education\"",
+            "search rank 6"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://medlineplus.gov/ency/patientinstructions/000455.htm",
+          "host": "medlineplus.gov",
+          "title": "medlineplus.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 120,
+          "reasons": [
+            "US National Library of Medicine (MedlinePlus)",
+            "matched 0 of 2 words of \"patient education\"",
+            "search rank 1",
+            "an authority for medical"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://profiles.nlm.nih.gov/101584666X450",
+          "host": "profiles.nlm.nih.gov",
+          "title": "profiles.nlm.nih.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 119,
+          "reasons": [
+            "US National Institutes of Health",
+            "matched 0 of 2 words of \"patient education\"",
+            "search rank 2",
+            "an authority for medical"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://profiles.nlm.nih.gov/catalog/nlm:nlmuid-101584666X450-doc",
+          "host": "profiles.nlm.nih.gov",
+          "title": "nlm:nlmuid 101584666X450 doc",
+          "snippet": "",
+          "tier": "official",
+          "score": 116,
+          "reasons": [
+            "US National Institutes of Health",
+            "matched 0 of 2 words of \"patient education\"",
+            "search rank 5",
+            "an authority for medical"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://www.ihs.gov/healthed/resources",
+          "host": "ihs.gov",
+          "title": "www.ihs.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 114,
+          "reasons": [
+            "US Indian Health Service",
+            "matched 0 of 2 words of \"patient education\"",
+            "search rank 7",
+            "an authority for medical"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://www.ttuhsc.edu/pharmacy/documents/current/students/patient_education_resources_brochure.pdf",
+          "host": "ttuhsc.edu",
+          "title": "patient education resources brochure",
+          "snippet": "",
+          "tier": "academic",
+          "score": 107,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"patient education\"",
+            "search rank 4"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://oalib-perpustakaan.upi.edu/Record/doaj_26cbb475ddfe44178b7ff90496042f0a/Description",
+          "host": "oalib-perpustakaan.upi.edu",
+          "title": "The development of practice standards for patient education in nurse-led clinics: a mixed-method study",
+          "snippet": "",
+          "tier": "academic",
+          "score": 104,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"patient education\"",
+            "search rank 7"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://ce.mayo.edu/node/180293",
+          "host": "ce.mayo.edu",
+          "title": "Patient Education Best Practices: Highlighting Clinician All-Stars - Live (in-person)",
+          "snippet": "",
+          "tier": "academic",
+          "score": 103,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"patient education\"",
+            "search rank 8"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 8,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://www.wolterskluwer.com/hu-hu/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery",
+          "reason": "duplicate of https://www.wolterskluwer.com/cs-cz/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery"
+        },
+        {
+          "url": "https://www.wolterskluwer.com/fr-ca/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery",
+          "reason": "duplicate of https://www.wolterskluwer.com/cs-cz/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery"
+        },
+        {
+          "url": "https://www.wolterskluwer.com/fr-fr/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery",
+          "reason": "duplicate of https://www.wolterskluwer.com/cs-cz/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery"
+        },
+        {
+          "url": "https://www.wolterskluwer.com/pt-br/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery",
+          "reason": "duplicate of https://www.wolterskluwer.com/cs-cz/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery"
+        },
+        {
+          "url": "https://www.wolterskluwer.com/pl-pl/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery",
+          "reason": "duplicate of https://www.wolterskluwer.com/cs-cz/expert-insights/from-information-to-impact-evolving-patient-education-in-modern-care-delivery"
+        },
+        {
+          "url": "https://www.heidihealth.com/en-au/blog/patient-education",
+          "reason": "duplicate of https://www.heidihealth.com/blog/patient-education"
+        },
+        {
+          "url": "https://www.mypathologyreport.ca/our-team/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.cockburnlibraries.com.au/elibrary/pathology-tests-explained/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://elearning.rcgp.org.uk/pluginfile.php/179161/mod_book/chapter/764/Introducing%20Online%20Test%20Results%20v2.0.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://therapyinsights.com/relevance_identifier/test-scores/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://dalspace.library.dal.ca/handle/10222/15014",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://dalspace.library.dal.ca/items/d57a9487-56b7-4a9e-b416-397c0cfc5efe",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://dalspaceb.library.dal.ca/server/api/core/bitstreams/dceca691-ffc4-4732-aa93-30c76612fbfc/content",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.reliasmedia.com/articles/61190-discover-the-8216-best-8217-practices-for-comparison",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://archive2023.aarc.org/an21-best-practices-for-bedside-teaching",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.slideshare.net/slideshow/patient-education-in-nursing-foundationpptx/266533377",
+          "reason": "blocked: user-uploaded slides (rights unknown)"
+        },
+        {
+          "url": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC10464384/",
+          "reason": "robots.txt disallows SkillForgeBot"
+        }
+      ]
+    },
+    {
+      "domain": "hr/recruiting",
+      "queries": [
+        "HR recruiter recruiting guide",
+        "recruiting employer guidance",
+        "recruiting best practices",
+        "recruiting guidelines site:.gov",
+        "recruiting guide site:.edu",
+        "recruiting standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://www.opm.gov/policy-data-oversight/hiring-information/federal-attorney-recruiting-and-hiring/",
+          "host": "opm.gov",
+          "title": "federal attorney recruiting and hiring",
+          "snippet": "",
+          "tier": "official",
+          "score": 137,
+          "reasons": [
+            "US Office of Personnel Management",
+            "matched 1 of 1 words of \"recruiting\"",
+            "search rank 4",
+            "an authority for hr"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://stockton.edu/career-education-development/employer-recruiting-guidelines.html",
+          "host": "stockton.edu",
+          "title": "Employer Recruiting Guidelines",
+          "snippet": "",
+          "tier": "academic",
+          "score": 110,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"recruiting\"",
+            "search rank 1"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://www.oregon.gov/das/HR/Pages/recruit.aspx",
+          "host": "oregon.gov",
+          "title": "www.oregon.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 110,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"recruiting\"",
+            "search rank 1"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://hr.umn.edu/Employee-Support/Supervisors/Recruiting-and-Hiring",
+          "host": "hr.umn.edu",
+          "title": "Recruiting and Hiring",
+          "snippet": "",
+          "tier": "academic",
+          "score": 109,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"recruiting\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://cdo.mit.edu/mit-sloan-recruiting-guidelines/",
+          "host": "cdo.mit.edu",
+          "title": "mit sloan recruiting guidelines",
+          "snippet": "",
+          "tier": "academic",
+          "score": 108,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"recruiting\"",
+            "search rank 3"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://career-advising.ndsu.edu/resources/ndsu-employer-recruiting-guide/",
+          "host": "career-advising.ndsu.edu",
+          "title": "NDSU Employer Recruiting Guide",
+          "snippet": "",
+          "tier": "academic",
+          "score": 106,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"recruiting\"",
+            "search rank 5"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://www.in.gov/isp/files/Recruitment-for-Trooper-Trainee.pdf",
+          "host": "in.gov",
+          "title": "Recruitment for Trooper Trainee",
+          "snippet": "",
+          "tier": "official",
+          "score": 106,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"recruiting\"",
+            "search rank 5"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://team.georgia.gov/?p=9600",
+          "host": "team.georgia.gov",
+          "title": "Recruiter Resource Guide:",
+          "snippet": "",
+          "tier": "official",
+          "score": 105,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"recruiting\"",
+            "search rank 6"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://cdn.prod.web.uta.edu/-/media/project/website/engineering/documents-and-forms/office-of-the-dean/employer-recruiting-guidelines-policies.pdf",
+          "host": "cdn.prod.web.uta.edu",
+          "title": "employer recruiting guidelines policies",
+          "snippet": "",
+          "tier": "academic",
+          "score": 104,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"recruiting\"",
+            "search rank 7"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://codes.ohio.gov/assets/laws/administrative-code/authenticated/3337/0/40/3337-40-121_20260908.pdf",
+          "host": "codes.ohio.gov",
+          "title": "codes.ohio.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 102,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"recruiting\"",
+            "search rank 9"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://oudev.stockton.edu/career-education-development/employer-recruiting-guidelines.html",
+          "reason": "duplicate of https://stockton.edu/career-education-development/employer-recruiting-guidelines.html"
+        },
+        {
+          "url": "https://www.oregon.gov/das/HR/Pages/Recruit.aspx",
+          "reason": "duplicate of https://www.oregon.gov/das/HR/Pages/recruit.aspx"
+        },
+        {
+          "url": "https://www.oregon.gov/das/hr/pages/recruit.aspx",
+          "reason": "duplicate of https://www.oregon.gov/das/HR/Pages/recruit.aspx"
+        },
+        {
+          "url": "https://www.nbcbayarea.com/news/local/army-raises-bar-on-recruitment-standards/1966731/",
+          "reason": "duplicate of https://www.nbcbayarea.com/news/local/army-raises-bar-on-recruitment-standards/1966731"
+        },
+        {
+          "url": "https://www.koganpage.com/hr-learning-development/the-recruiter-s-handbook-9781586444655",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.skillsoft.com/book/the-recruiters-handbook-a-complete-guide-for-sourcing-selecting-and-engaging-the-best-talent-d799e205-c99e-43c3-96a5-c73072877ebd",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.koganpage.com/product/the-recruiter-s-handbook-9781586444655",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://store.shrm.org/The-Recruiters-Handbook-A-Complete-Guide-for-Sourcing-Selecting-and-Engaging-the-Best",
+          "reason": "blocked: shop listing"
+        },
+        {
+          "url": "https://www.ebay.com.au/itm/204986259516",
+          "reason": "blocked: shop listing"
+        },
+        {
+          "url": "https://xobin.com/job-descriptions/hr-recruiter/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://web2.hays.com/hiring-guide",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://ebook.yourcloudlibrary.com/library/oclc/detail/r1aph89",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.shortform.com/best-books/book/the-recruiters-handbook-book-reviews-sharlyn-lauby",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://uk.indeed.com/hire/resource-library-editorial-guidelines",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.computing.co.uk/news/1836481/easy-fres-promises",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.thehrdirector.com/legal-updates/legal-updates-2015/acas-publish-guides-to-help-employers-manage-recruitment-and-induction",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://textexpander.com/?p=11214",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://textexpander.com/tag/inspiration/feed/",
+          "reason": "blocked: tag or category listing page"
+        },
+        {
+          "url": "https://corpora.tika.apache.org/base/docs/govdocs1/709/709224.pdf",
+          "reason": "blocked: test corpus copy of other sites' files: use the original"
+        },
+        {
+          "url": "https://www.academia.edu/8313813/Recruiting_system_user_guide",
+          "reason": "blocked: user-uploaded papers (rights unknown)"
+        },
+        {
+          "url": "https://www.scribd.com/document/129274310/Recruiting-Guide",
+          "reason": "blocked: user-uploaded documents (rights unknown)"
+        },
+        {
+          "url": "https://topechelon.com/blog/setting-managing-standards-recruiters/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://topechelon.com/?p=238969",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://abcnews.go.com/WNT/story?id=2828686",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.everycrsreport.com/files/2026-01-13_R48793_381b81079fde823d88c9639ada84e2eab9748ac4.html",
+          "reason": "unknown site and weak topic match"
+        }
+      ]
+    },
+    {
+      "domain": "technology/incident-response",
+      "queries": [
+        "incident postmortem response guide",
+        "blameless postmortem guide",
+        "site reliability engineering incident management",
+        "incident response official documentation",
+        "incident response best practices",
+        "incident response guidelines site:.gov",
+        "incident response guide site:.edu",
+        "incident response standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://www.ed.gov/media/document/2025-incident-response-standard-signed-109739.pdf",
+          "host": "ed.gov",
+          "title": "2025 incident response standard signed 109739",
+          "snippet": "",
+          "tier": "official",
+          "score": 135,
+          "reasons": [
+            "US Department of Education",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 6",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://www.fbi.gov/file-repository/incident-response-policy.pdf",
+          "host": "fbi.gov",
+          "title": "incident response policy",
+          "snippet": "",
+          "tier": "official",
+          "score": 132,
+          "reasons": [
+            "US Federal Bureau of Investigation",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 9",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        },
+        {
+          "url": "https://www2.ed.gov/fund/contract/about/acs/2023-ir-incident-response-standard-1.pdf",
+          "host": "www2.ed.gov",
+          "title": "2023 ir incident response standard 1",
+          "snippet": "",
+          "tier": "official",
+          "score": 132,
+          "reasons": [
+            "US Department of Education",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 9",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 9,
+          "queries": 1
+        },
+        {
+          "url": "https://www.nist.gov/publications/computer-security-incident-handling-guide",
+          "host": "nist.gov",
+          "title": "computer security incident handling guide",
+          "snippet": "",
+          "tier": "official",
+          "score": 129,
+          "reasons": [
+            "US standards body (NIST)",
+            "matched 1 of 2 words of \"incident response\"",
+            "search rank 2",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://nist.gov/publications/computer-security-incident-handling-guide-1",
+          "host": "nist.gov",
+          "title": "computer security incident handling guide 1",
+          "snippet": "",
+          "tier": "official",
+          "score": 128,
+          "reasons": [
+            "US standards body (NIST)",
+            "matched 1 of 2 words of \"incident response\"",
+            "search rank 3",
+            "an authority for technology"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://doit.maryland.gov/policies/ci/Documents/MD-STD-308-IR-01-Incident-Response-Standard.pdf",
+          "host": "doit.maryland.gov",
+          "title": "MD STD 308 IR 01 Incident Response Standard",
+          "snippet": "",
+          "tier": "official",
+          "score": 123,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 8"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 8,
+          "queries": 1
+        },
+        {
+          "url": "https://security.psu.edu/incident-response/",
+          "host": "security.psu.edu",
+          "title": "Incident Response",
+          "snippet": "",
+          "tier": "academic",
+          "score": 107,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 4"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://informationsecurity.iu.edu/doc/incident-response-template-2025.pdf",
+          "host": "informationsecurity.iu.edu",
+          "title": "incident response template 2025",
+          "snippet": "",
+          "tier": "academic",
+          "score": 106,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 5"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://security.gatech.edu/incident-response-1",
+          "host": "security.gatech.edu",
+          "title": "Incident Response",
+          "snippet": "",
+          "tier": "academic",
+          "score": 105,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 6"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://usnh.edu/it/departments/cybersecurity/cybersecurity-policies-standards/incident-response-standard-cybersecurity",
+          "host": "usnh.edu",
+          "title": "incident response standard cybersecurity",
+          "snippet": "",
+          "tier": "academic",
+          "score": 104,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"incident response\"",
+            "search rank 7"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://docs.n8n.io/privacy-and-security/incident-response",
+          "reason": "duplicate of https://docs.n8n.io/privacy-and-security/incident-response.md"
+        },
+        {
+          "url": "https://www.upguard.com/compliance/nist-sp-800-53/ir/ir-1.md",
+          "reason": "duplicate of https://www.upguard.com/compliance/nist-sp-800-53/ir/ir-1"
+        },
+        {
+          "url": "https://www.pagerduty.com/?p=51736",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://my-test.valpo.edu/incident-post-mortem-template-90957",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://my-test.valpo.edu/blameless-post-mortem-template-82119",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://www.upguard.com/compliance/nist-sp-800-53/ir/ir-1",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://simeononsecurity-com.onrender.com/articles/the-art-of-incident-response/",
+          "reason": "blocked: app-hosting subdomain (often a mirror): use the original"
+        },
+        {
+          "url": "https://security.utoronto.ca/?p=1165",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.nist.gov/node/392186",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/617971",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/1310141",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/563301",
+          "reason": "already 2 pages from this site"
+        },
+        {
+          "url": "https://www.nist.gov/node/401906",
+          "reason": "already 2 pages from this site"
+        }
+      ]
+    },
+    {
+      "domain": "marketing/strategy",
+      "queries": [
+        "marketing strategist strategy guide",
+        "small business marketing plan site:.gov",
+        "truth in advertising business guidance",
+        "marketing strategy guide",
+        "marketing strategy best practices",
+        "marketing strategy guidelines site:.gov",
+        "marketing strategy guide site:.edu",
+        "marketing strategy standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://dslbd.dc.gov/service/marketing-plan-assistance",
+          "host": "dslbd.dc.gov",
+          "title": "marketing plan assistance",
+          "snippet": "",
+          "tier": "official",
+          "score": 129,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"marketing plan\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://www.franklincountyohio.gov/Business-Development/Food-Business-Portal/Create-a-Business-Plan/Marketing-Sales",
+          "host": "franklincountyohio.gov",
+          "title": "Marketing & Sales",
+          "snippet": "",
+          "tier": "official",
+          "score": 128,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"marketing plan\"",
+            "search rank 3"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://www.franklincountyohio.gov/Business-Development/Development-Planning/Food-Action-Plan/Food-Business-Portal/Create-a-Business-Plan/Marketing-Sales",
+          "host": "franklincountyohio.gov",
+          "title": "Marketing & Sales",
+          "snippet": "",
+          "tier": "official",
+          "score": 127,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"marketing plan\"",
+            "search rank 4"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://sbdc.illinois.gov/content/dam/soi/en/web/sbdc/documents/il-sbdc-english-marketing-plan-2025-apr.pdf",
+          "host": "sbdc.illinois.gov",
+          "title": "il sbdc english marketing plan 2025 apr",
+          "snippet": "",
+          "tier": "official",
+          "score": 125,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"marketing plan\"",
+            "search rank 6"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://www.epa.gov/sites/default/files/2015-03/documents/volprg_marketing.pdf",
+          "host": "epa.gov",
+          "title": "volprg marketing",
+          "snippet": "",
+          "tier": "official",
+          "score": 120,
+          "reasons": [
+            "US Environmental Protection Agency",
+            "matched 1 of 2 words of \"marketing strategy\"",
+            "search rank 1"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://www.ftc.gov/node/28076",
+          "host": "ftc.gov",
+          "title": "www.ftc.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 117,
+          "reasons": [
+            "US consumer protection regulator (FTC)",
+            "matched 0 of 1 words of \"advertising\"",
+            "search rank 4",
+            "an authority for marketing"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://doe.sd.gov/CTE/documents/Marketing-Strategies.pdf",
+          "host": "doe.sd.gov",
+          "title": "Marketing Strategies",
+          "snippet": "",
+          "tier": "official",
+          "score": 115,
+          "reasons": [
+            "government site (.gov)",
+            "matched 1 of 2 words of \"marketing strategy\"",
+            "search rank 6"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://www.sba.gov/document/support-marketing-plan-example",
+          "host": "sba.gov",
+          "title": "support marketing plan example",
+          "snippet": "",
+          "tier": "official",
+          "score": 115,
+          "reasons": [
+            "US Small Business Administration",
+            "matched 2 of 2 words of \"marketing plan\"",
+            "search rank 1",
+            "an authority for finance, operations, legal, not marketing"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://www.accc.gov.au/node/30098",
+          "host": "accc.gov.au",
+          "title": "www.accc.gov.au",
+          "snippet": "",
+          "tier": "official",
+          "score": 109,
+          "reasons": [
+            "Australian government site",
+            "matched 0 of 1 words of \"advertising\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://www.hhs.gov/guidance/document/medicare-marketing-guidelines-ma-plans-ma-pdps-pdps-and-section-1876-cost-plans",
+          "host": "hhs.gov",
+          "title": "medicare marketing guidelines ma plans ma pdps pdps and section 1876 cost plans",
+          "snippet": "",
+          "tier": "official",
+          "score": 106,
+          "reasons": [
+            "US Department of Health and Human Services",
+            "matched 2 of 2 words of \"marketing plan\"",
+            "search rank 10",
+            "an authority for medical, legal, not marketing"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 10,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://www.storytel.se/se/books/marketing-strategy-7-easy-steps-to-master-marketing-fundamentals-advertising-strategy-marketing-management-research-2531205",
+          "reason": "blocked: audiobook shop"
+        },
+        {
+          "url": "https://prod-01.tunein.com/podcasts/Business--Economics/Marketing-Strategy-7-Easy-Steps-to-Master-Marketing-Fundamentals-Advertising-Strategy-Marketing-Management--Research-p3762138",
+          "reason": "blocked: audio site"
+        },
+        {
+          "url": "https://www.abebooks.co.uk/9781854181398/Marketing-Strategy-Desktop-Guide-S-1854181394/plp",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://www.sanmin.com.tw/product/index/011966863",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://ratings.koha-community.org/en/marketing-strategist-salary-illinois.html",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://monroeuniversity.libguides.com/entrepreneurship",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://members.fredericksburgchamber.org/events/details/govcon-101-13169",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.brokernews.com.au/news/breaking-news/how-to-make-sure-you-dont-mislead-consumers-accc-186669.aspx",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.findlaw.com/?p=42325",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://theweeklyconcepts.gumroad.com/l/marketing-strategy-guide",
+          "reason": "blocked: digital product shop"
+        },
+        {
+          "url": "https://www.betterread.com.au/book/marketing-strategy-book-9798223957447.do",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://www.schweitzer-online.de/buch/Stevens/Marketing-Planning-Guide/9780789001122/A3582175/",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://www.schweitzer-online.de/buch/Stevens/Marketing-Planning-Guide/9781560240846/A15199467/",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://haveignition.com/best-practices",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.af.mil/News/Featured-Videos/dvpTag/busy/dvpmoduleid/5832/videoid/997984/",
+          "reason": "blocked: video page"
+        },
+        {
+          "url": "https://buildstatus.puri.sm/create-marketing-plan",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://lib.hpu.edu.vn/handle/123456789/30163",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://cs.grinnell.edu/^93935300/ycavnsista/bchokom/rquistiong/Marketing+(Quickstudy+Reference+Guides+++Academic).pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://cs.grinnell.edu/^94247421/kbehavev/fresemblet/bdatad/Marketing+(Quickstudy+Reference+Guides+++Academic).pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://www.scribd.com/presentation/498485977/Introduction",
+          "reason": "blocked: user-uploaded documents (rights unknown)"
+        },
+        {
+          "url": "https://yogesh0724.gumroad.com/l/cwcvxx",
+          "reason": "blocked: digital product shop"
+        },
+        {
+          "url": "https://www.cliffsnotes.com/study-notes/26521358",
+          "reason": "blocked: student notes dump"
+        },
+        {
+          "url": "https://hkqf.gov.hk/files/record/insurance-scs/2/EN/105546L5.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://hkqf.gov.hk/files/record/logistics-scs/2/EN/LOCUSM505A.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://lawinsider.com/dictionary/marketing-strategy",
+          "reason": "blocked: clause and definition aggregator"
+        },
+        {
+          "url": "https://www.london.edu/faculty-and-research/academic-research/m/marketing-strategy-a-decisionfocused-approach-6th-eds",
+          "reason": "robots.txt disallows SkillForgeBot"
+        }
+      ]
+    },
+    {
+      "domain": "legal/contracts",
+      "queries": [
+        "review NDA contracts guide",
+        "non-disclosure agreement NDA guide",
+        "confidentiality agreement law site:.gov",
+        "contract law basics site:.edu",
+        "contracts law",
+        "contracts best practices",
+        "contracts guidelines site:.gov",
+        "contracts guide site:.edu"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://www.gov.ie/en/department-of-education/circulars/good-practice-guidelines-in-relation-to-contracts-for-the-provision-of-goods-andor-services-2",
+          "host": "gov.ie",
+          "title": "good practice guidelines in relation to contracts for the provision of goods andor services 2",
+          "snippet": "",
+          "tier": "official",
+          "score": 125,
+          "reasons": [
+            "Irish government site",
+            "matched 1 of 1 words of \"contracts\"",
+            "search rank 6",
+            "jurisdiction: Ireland"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://ccrsstg-acquia.nysed.gov/lawshelf-educational-media/basics-contract-law-con-101",
+          "host": "ccrsstg-acquia.nysed.gov",
+          "title": "basics contract law con 101",
+          "snippet": "",
+          "tier": "official",
+          "score": 124,
+          "reasons": [
+            "government site (.gov)",
+            "matched 1 of 1 words of \"contracts\"",
+            "search rank 7",
+            "jurisdiction: US (state or local)"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://www.nysenate.gov/legislation/laws/PBA/2853",
+          "host": "nysenate.gov",
+          "title": "www.nysenate.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 118,
+          "reasons": [
+            "government site (.gov)",
+            "matched 1 of 2 words of \"contract law\"",
+            "search rank 3",
+            "jurisdiction: US (state or local)"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://www.hhs.gov/guidance/document/contractual-terms-and-conditions-and-their-potential-impact-information-technology-it",
+          "host": "hhs.gov",
+          "title": "contractual terms and conditions and their potential impact information technology it",
+          "snippet": "",
+          "tier": "official",
+          "score": 114,
+          "reasons": [
+            "US Department of Health and Human Services",
+            "matched 0 of 1 words of \"contracts\"",
+            "search rank 7",
+            "an authority for legal",
+            "jurisdiction: US (federal)"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://bcbp.berkeley.edu/sites/default/files/Contracts%20Guide_Final%205-13-15.pdf",
+          "host": "bcbp.berkeley.edu",
+          "title": "Contracts%20Guide Final%205 13 15",
+          "snippet": "",
+          "tier": "academic",
+          "score": 110,
+          "reasons": [
+            "US university (.edu)",
+            "matched 1 of 1 words of \"contracts\"",
+            "search rank 1",
+            "jurisdiction: US"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://comptroller.texas.gov/purchasing/docs/sb20/tmd.pdf",
+          "host": "comptroller.texas.gov",
+          "title": "comptroller.texas.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 110,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"contracts\"",
+            "search rank 1",
+            "jurisdiction: US (state or local)"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://irishplaces.flinders.edu.au/10-contract-law-essentials-for-beginners",
+          "host": "irishplaces.flinders.edu.au",
+          "title": "10 contract law essentials for beginners",
+          "snippet": "",
+          "tier": "academic",
+          "score": 109,
+          "reasons": [
+            "Australian university (.edu.au)",
+            "matched 1 of 1 words of \"contracts\"",
+            "search rank 2",
+            "jurisdiction: Australia"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://occc.texas.gov/sites/default/files/2025-07/2025_ContractManagementHandbook.pdf",
+          "host": "occc.texas.gov",
+          "title": "2025 ContractManagementHandbook",
+          "snippet": "",
+          "tier": "official",
+          "score": 109,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"contracts\"",
+            "search rank 2",
+            "jurisdiction: US (state or local)"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "unknown",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://www.legislature.maine.gov/statutes/33/title33sec2214.pdf",
+          "host": "legislature.maine.gov",
+          "title": "www.legislature.maine.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 109,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"contracts\"",
+            "search rank 2",
+            "jurisdiction: US (state or local)"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://esd.ny.gov/sites/default/files/media/document/JDA-Procurement-Guidelines-2025-2026.pdf",
+          "host": "esd.ny.gov",
+          "title": "JDA Procurement Guidelines 2025 2026",
+          "snippet": "",
+          "tier": "official",
+          "score": 108,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"contracts\"",
+            "search rank 3",
+            "jurisdiction: US (state or local)"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://autodiscover.legislature.maine.gov/statutes/33/title33sec2214.pdf",
+          "reason": "duplicate of https://www.legislature.maine.gov/statutes/33/title33sec2214.pdf"
+        },
+        {
+          "url": "https://www.harvey.ai/en-US/blog/contract-management-best-practices",
+          "reason": "duplicate of https://www.harvey.ai/blog/contract-management-best-practices"
+        },
+        {
+          "url": "https://www.scribd.com/document/670265602/tech-contracts",
+          "reason": "blocked: user-uploaded documents (rights unknown)"
+        },
+        {
+          "url": "https://womenofrubies.com/?p=37324",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://autoconfig.bps.go.id/BOOK/text/pb/3091116B3P260708/the-law_of__contract.pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://saude.arapiraca.al.gov.br/course/PLAY/^33792LE/152904LE99/contracts__law__study-e.pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://saude.arapiraca.al.gov.br/doc/DOC/_O58985M/O69351465M/contracts__law-study-e.pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://lugbs.linux.it/default.aspx/G-bKLn/450429/What Is The Contract Law.pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://analytics-origin.php.net/itourc/iw/IW90866900260702/contracts-law-study__e.pdf",
+          "reason": "blocked: infrastructure subdomain serving articles (often hijacked for SEO spam)"
+        },
+        {
+          "url": "https://demo2.wcbi.com/Download_PDFS/u29EEC/243157/Essentials Of Contract Law.pdf",
+          "reason": "blocked: SEO spam (fake PDF download pages)"
+        },
+        {
+          "url": "https://www.lawinsider.com/resources/blog/best-practices-for-contract-management",
+          "reason": "blocked: clause and definition aggregator"
+        },
+        {
+          "url": "https://tagteam.harvard.edu/hub_feeds/4607/feed_items/15998933",
+          "reason": "blocked: feed aggregator copy of another site: use the original"
+        },
+        {
+          "url": "https://govukdiff.njk.onl/update/2025-05-13T15:30:00+01:00/www.gov.uk/government/publications/procurement-act-2023-guidance-documents-plan-phase",
+          "reason": "blocked: copy of another site: use the original"
+        }
+      ]
+    },
+    {
+      "domain": "finance/small-business",
+      "queries": [
+        "small business budgeting finance guide",
+        "small business budget cash flow site:.gov",
+        "small business financial management guide",
+        "small business finance government guidance",
+        "small business finance best practices",
+        "small business finance guidelines site:.gov",
+        "small business finance guide site:.edu",
+        "small business finance standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://www.icaew.com/technical/corporate-finance/corporate-finance-faculty/corporate-finance-news/the-business-finance-guide",
+          "host": "icaew.com",
+          "title": "the business finance guide",
+          "snippet": "",
+          "tier": "official",
+          "score": 131,
+          "reasons": [
+            "accounting professional body (ICAEW)",
+            "matched 2 of 3 words of \"small business finance\"",
+            "search rank 3",
+            "an authority for finance"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://gov.texas.gov/es/business/event/governors-small-business-webinar-series-optimizing-your-cash-flow",
+          "host": "gov.texas.gov",
+          "title": "governors small business webinar series optimizing your cash flow",
+          "snippet": "",
+          "tier": "official",
+          "score": 130,
+          "reasons": [
+            "government site (.gov)",
+            "matched 2 of 2 words of \"cash flow\"",
+            "search rank 1"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://www.cockburn.wa.gov.au/Business-and-Investment/Business-Financial-Support/Financial-Management-and-Tax-Guidance",
+          "host": "cockburn.wa.gov.au",
+          "title": "Financial Management and Tax Guidance",
+          "snippet": "",
+          "tier": "official",
+          "score": 128,
+          "reasons": [
+            "Australian government site",
+            "matched 2 of 2 words of \"financial management\"",
+            "search rank 3"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://fdic.gov/news/financial-institution-letters/2010/fil10090.html",
+          "host": "fdic.gov",
+          "title": "fdic.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 126,
+          "reasons": [
+            "US banking regulator (FDIC)",
+            "matched 1 of 2 words of \"financial management\"",
+            "search rank 5",
+            "an authority for finance"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://www.guilfordcountync.gov/news/events/financial-litearcy-workshop-budget-management-and-cashflow",
+          "host": "guilfordcountync.gov",
+          "title": "AddToAny share buttons",
+          "snippet": "",
+          "tier": "official",
+          "score": 126,
+          "reasons": [
+            "government site (.gov)",
+            "matched 1 of 1 words of \"budget\"",
+            "search rank 5"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 5,
+          "queries": 1
+        },
+        {
+          "url": "https://davis.house.gov/small-business-resource-guide",
+          "host": "davis.house.gov",
+          "title": "small business resource guide",
+          "snippet": "",
+          "tier": "official",
+          "score": 121,
+          "reasons": [
+            "US House of Representatives",
+            "matched 2 of 3 words of \"small business finance\"",
+            "search rank 3"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://help.sos.iowa.gov/node/52",
+          "host": "help.sos.iowa.gov",
+          "title": "help.sos.iowa.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 120,
+          "reasons": [
+            "government site (.gov)",
+            "matched 0 of 1 words of \"budget\"",
+            "search rank 1",
+            "found by 3 queries"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 3
+        },
+        {
+          "url": "https://www.fdic.gov/consumers/banking/businesslending/index.html",
+          "host": "fdic.gov",
+          "title": "www.fdic.gov",
+          "snippet": "",
+          "tier": "official",
+          "score": 120,
+          "reasons": [
+            "US banking regulator (FDIC)",
+            "matched 0 of 1 words of \"budget\"",
+            "search rank 1",
+            "an authority for finance"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://www.icaew.com/bfg",
+          "host": "icaew.com",
+          "title": "www.icaew.com",
+          "snippet": "",
+          "tier": "official",
+          "score": 119,
+          "reasons": [
+            "accounting professional body (ICAEW)",
+            "matched 0 of 1 words of \"budget\"",
+            "search rank 2",
+            "an authority for finance"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://enterprise.gov.ie/en/Publications/Government-working-with-finance-providers-to-support-SME-financing.html",
+          "host": "enterprise.gov.ie",
+          "title": "Government working with finance providers to support SME financing",
+          "snippet": "",
+          "tier": "official",
+          "score": 116,
+          "reasons": [
+            "Irish government site",
+            "matched 1 of 3 words of \"small business finance\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://www.accaglobal.com/uk/en/technical-activities/technical-resources-search/2016/june/financial-management-and-business-success-.html",
+          "reason": "duplicate of https://www.accaglobal.com/gb/en/technical-activities/technical-resources-search/2016/june/financial-management-and-business-success-.html"
+        },
+        {
+          "url": "https://www.accaglobal.com/pk/en/technical-activities/technical-resources-search/2016/june/financial-management-and-business-success-.html",
+          "reason": "duplicate of https://www.accaglobal.com/gb/en/technical-activities/technical-resources-search/2016/june/financial-management-and-business-success-.html"
+        },
+        {
+          "url": "https://enterprise.gov.ie/en/publications/government-working-with-finance-providers-to-support-sme-financing.html",
+          "reason": "duplicate of https://enterprise.gov.ie/en/Publications/Government-working-with-finance-providers-to-support-SME-financing.html"
+        },
+        {
+          "url": "https://www.sage.com/en-ca/blog/a-guide-to-budgeting-and-goal-setting-for-small-businesses/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://live.ncuscr.org/Download_PDFS/G-NiEX/448325/How To Budget A Small Business.pdf",
+          "reason": "blocked: SEO spam (fake PDF download pages)"
+        },
+        {
+          "url": "https://licm.mcgill.ca/default.aspx/G-NiEX/448325/How To Budget A Small Business.pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://gea.gov.gh/tag/small-business-budgeting-tips/",
+          "reason": "blocked: tag or category listing page"
+        },
+        {
+          "url": "https://www.interest.co.nz/node/60438",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.abebooks.com/9780749452735/Practical-Financial-Management-Guide-Budgets-0749452730/plp",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://www.goodreads.com/book/show/325974",
+          "reason": "blocked: book review site"
+        },
+        {
+          "url": "https://smefinanceforum.org/node/4139",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://smefinanceforum.org/post/uk-sme-access-to-finance-schemes%E2%80%94measures-to-support-sme-growth",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.accountingweb.co.uk/node/113602",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.accountingweb.co.uk/node/105248",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.hvpmag.co.uk/BIS-publishes-finance-schemes-guidance-for-SMEs",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://greensheet.com/emagazine&article_id=4898",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://savearchive.zbw.eu/bitstream/11159/631611/1/1868814793_0.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://sinalite.com/printersuccess/?p=3209",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://webarchive.library.unt.edu/eot2008/20080916024643mp_/http://www.business.gov/guides",
+          "reason": "blocked: web archive copy: use the original"
+        },
+        {
+          "url": "https://books-lib.ndhu.edu.tw/toread/opac/subject/648033?lang=eng",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.easternbank.com/node/13906",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.punchline-gloucester.com/articles/aanews/small-firms-demand-better-lending-standards",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.mortgagesolutions.co.uk/news/2024/02/13/lsb-issues-lender-guidance-on-support-for-smes/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://lendingstandardsboard.org.uk/small-businesses-demand-better-lending-standards-as-fsb-calls-for-all-banks-to-sign-up-to-the-standards-of-lending-practice",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.lendingstandardsboard.org.uk/wp-content/uploads/2023/06/Review-of-the-Standards-of-Lending-Practice-for-business-customers-consultation.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.lendingstandardsboard.org.uk/the-slp/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.regulationtomorrow.com/2024/12/lsb-publishes-summary-report-on-standards-of-lending-practice-for-business-customers/",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://lendingstandardsboard.org.uk/?p=7453",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.regulationtomorrow.com/?p=50275",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.fdic.gov/consumer-resource-center/mssb-m10-pg.pdf",
+          "reason": "already 2 pages from this site"
+        }
+      ]
+    },
+    {
+      "domain": "writing/public-relations",
+      "queries": [
+        "write press release public relations guide",
+        "how to write a press release site:.edu",
+        "news release style guide",
+        "public relations writing guide",
+        "public relations best practices",
+        "public relations guidelines site:.gov",
+        "public relations guide site:.edu",
+        "public relations standards"
+      ],
+      "registry_version": "1.1.0",
+      "sources": [
+        {
+          "url": "https://instituteforpr.org/public-relations-research-standards/about",
+          "host": "instituteforpr.org",
+          "title": "instituteforpr.org",
+          "snippet": "",
+          "tier": "academic",
+          "score": 117,
+          "reasons": [
+            "PR research institute (IPR)",
+            "matched 2 of 2 words of \"public relations\"",
+            "search rank 4",
+            "an authority for writing"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://instituteforpr.org/what-are-standards-for-public-relations-research-and-why-do-we-need-them",
+          "host": "instituteforpr.org",
+          "title": "what are standards for public relations research and why do we need them",
+          "snippet": "",
+          "tier": "academic",
+          "score": 115,
+          "reasons": [
+            "PR research institute (IPR)",
+            "matched 2 of 2 words of \"public relations\"",
+            "search rank 6",
+            "an authority for writing"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 6,
+          "queries": 1
+        },
+        {
+          "url": "https://libcat.mcphs.edu/Record/in00000150077/Description",
+          "host": "libcat.mcphs.edu",
+          "title": "Writing for public relations : a practical guide for professionals /",
+          "snippet": "",
+          "tier": "academic",
+          "score": 110,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"public relations\"",
+            "search rank 1"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://students.washington.edu/san/release.html",
+          "host": "students.washington.edu",
+          "title": "How to write a press release",
+          "snippet": "",
+          "tier": "academic",
+          "score": 110,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"press release\"",
+            "search rank 1"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 1,
+          "queries": 1
+        },
+        {
+          "url": "https://drexel.edu/~/media/Files/dornsife/CPHRC/Covello Video Resources/Writing a Press Release/How to Write a Press Release.ashx?la=en",
+          "host": "drexel.edu",
+          "title": "How to Write a Press Release",
+          "snippet": "",
+          "tier": "academic",
+          "score": 109,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"press release\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://ojp.gov/ncjrs/virtual-library/abstracts/how-do-it-public-relations-corrections",
+          "host": "ojp.gov",
+          "title": "how do it public relations corrections",
+          "snippet": "",
+          "tier": "official",
+          "score": 109,
+          "reasons": [
+            "US Department of Justice (OJP)",
+            "matched 2 of 2 words of \"public relations\"",
+            "search rank 7",
+            "an authority for legal, not writing"
+          ],
+          "licence": "public-domain-us-gov",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 7,
+          "queries": 1
+        },
+        {
+          "url": "https://sk.sagepub.com/ency/edvol/embed/encyclopedia-of-public-relations-2e/chpt/best-practices",
+          "host": "sk.sagepub.com",
+          "title": "best practices",
+          "snippet": "",
+          "tier": "academic",
+          "score": 109,
+          "reasons": [
+            "scholarly publisher (SAGE)",
+            "matched 2 of 2 words of \"public relations\"",
+            "search rank 2"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 2,
+          "queries": 1
+        },
+        {
+          "url": "https://imagine.jhu.edu/classes/how-to-write-a-press-release/",
+          "host": "imagine.jhu.edu",
+          "title": "how to write a press release",
+          "snippet": "",
+          "tier": "academic",
+          "score": 108,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"press release\"",
+            "search rank 3"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 3,
+          "queries": 1
+        },
+        {
+          "url": "https://online.nwmissouri.edu/programs/undergraduate/bachelor-of-science-in-communication-public-relations/practice-for-pr-relations/",
+          "host": "online.nwmissouri.edu",
+          "title": "practice for pr relations",
+          "snippet": "",
+          "tier": "academic",
+          "score": 107,
+          "reasons": [
+            "US university (.edu)",
+            "matched 2 of 2 words of \"public relations\"",
+            "search rank 4"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        },
+        {
+          "url": "https://www.exeter.ac.uk/v8media/research/esi/documents/How_to_Write_a_Press_Release.pdf",
+          "host": "exeter.ac.uk",
+          "title": "How to Write a Press Release",
+          "snippet": "",
+          "tier": "academic",
+          "score": 107,
+          "reasons": [
+            "UK university (.ac.uk)",
+            "matched 2 of 2 words of \"press release\"",
+            "search rank 4"
+          ],
+          "licence": "copyright-summarise-and-cite",
+          "robots": "allowed",
+          "crawl": true,
+          "best_rank": 4,
+          "queries": 1
+        }
+      ],
+      "rejected": [
+        {
+          "url": "https://docs.google.com/presentation/d/187809qNcUzO5HD5PO2vHROau-p-vv4a8/htmlpresent",
+          "reason": "blocked: user documents (authorship unknown)"
+        },
+        {
+          "url": "https://docs.google.com/presentation/d/1GfumHOI4Vem2sJ60DQIKDGiM0vkzvywu/htmlpresent",
+          "reason": "blocked: user documents (authorship unknown)"
+        },
+        {
+          "url": "https://docs.google.com/presentation/d/1JtbFZq7ZWff1BV1qXx7k4tmW5k3oHopy/htmlpresent",
+          "reason": "blocked: user documents (authorship unknown)"
+        },
+        {
+          "url": "https://smallbiztrends.com/?p=956977",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://tedmag.com/?p=6258",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://highered.mheducation.com/sites/0073511935/student_view0/nrw_plus/chapter10/a_dozen_tips.html",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.prestomusic.com/books/products/8574113--public-relations-writing",
+          "reason": "blocked: shop listing"
+        },
+        {
+          "url": "https://www.taylorfrancis.com/books/9781136593383",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://search.worldcat.org/zh-cn/title/1130027831",
+          "reason": "blocked: library catalogue entry"
+        },
+        {
+          "url": "https://www.routledge.com/products/9780815365280",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.lafeltrinelli.it/public-relations-writing-libro-inglese-e-w-brody-dan-lattimore/e/9780275928964",
+          "reason": "blocked: book shop listing"
+        },
+        {
+          "url": "https://myeducationpath.gelembjuk.com/courses/22936/public-relations-best-practices-and-ethics.htm",
+          "reason": "blocked: course aggregator"
+        },
+        {
+          "url": "https://secure.businesswire.com/resources-education/guides/60-communications-tips",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://api.baseballprospectus.com/ProductPdf/u4C58A/245753/Principles And Practice Of Public Relations.pdf",
+          "reason": "blocked: SEO spam (fake document pages)"
+        },
+        {
+          "url": "https://www.slideshare.net/slideshow/best-practices-in-communications-research/1593248",
+          "reason": "blocked: user-uploaded slides (rights unknown)"
+        },
+        {
+          "url": "https://4csl.org/media/RMPartVI.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://salvationarmy.ca/wp-content/uploads/2025/10/0101.-PRD-Standards-and-Review-Procedures.pdf",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://prsj.or.jp/association-en/?p=13275",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://laverne.libguides.com/publicrelations",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://libraryguides.centennialcollege.ca/pr/websites",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://libraryguides.centennialcollege.ca/pr",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://otterbein.libguides.com/publicrelations/overview",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://biopen.bi.no/bi-xmlui/handle/11250/2723858",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://biopen.bi.no/bi-xmlui/handle/11250/2723858?show=full",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://digital.car.chula.ac.th/chulaetd/19541",
+          "reason": "unknown site and weak topic match"
+        },
+        {
+          "url": "https://www.medialibrary.nd.gov/assetbank-nd/assetfile/120057.pdf",
+          "reason": "robots.txt disallows SkillForgeBot"
+        }
+      ]
+    }
+  ],
+  "human_review": {
+    "reviewer": "Ziad Abdullah",
+    "date": "2026-10-26",
+    "passed": false,
+    "domains": {
+      "technology/ai": {
+        "good": "7",
+        "passed": true
+      },
+      "technology/software-engineering": {
+        "good": "8",
+        "passed": true
+      },
+      "data/analytics": {
+        "good": "7",
+        "passed": true
+      },
+      "medical/patient-education": {
+        "good": "6",
+        "passed": false
+      },
+      "hr/recruiting": {
+        "good": "4",
+        "passed": false
+      },
+      "technology/incident-response": {
+        "good": "5",
+        "passed": false
+      },
+      "marketing/strategy": {
+        "good": "6",
+        "passed": false
+      },
+      "legal/contracts": {
+        "good": "1-2",
+        "passed": false
+      },
+      "finance/small-business": {
+        "good": "4-5",
+        "passed": false
+      },
+      "writing/public-relations": {
+        "good": "6",
+        "passed": false
+      }
+    },
+    "notes": [
+      "Main problem: any .gov/.edu page ranks high even when it isn't useful content (catalogue records, event and course pages, program marketing, staging copies).",
+      "The same document hosted twice (SWEBOK 2004 on two sites) and same-title pages on one host count twice.",
+      "The real authorities per domain are missing (e.g. Cornell LII, Nolo and the ABA for legal; EEOC, SHRM and DOL for HR; Google SRE, PagerDuty and Atlassian for incidents).",
+      "github.com/google/eng-practices was wrongly rejected for software-engineering."
+    ]
+  }
+}

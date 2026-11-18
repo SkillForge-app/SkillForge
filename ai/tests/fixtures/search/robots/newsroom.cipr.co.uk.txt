@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Crawl-delay: 5
+Disallow: /*?q=*
+Disallow: /*&q=*
+
+Sitemap: https://newsroom.cipr.co.uk/sitemap.xml
