@@ -40,7 +40,7 @@ Every step **returns** a `StepResult`; it never raises for an expected outcome. 
 | `status` | See below |
 | `value` | The result when `ok`, and also for `needs_input` (the AnalyzedRequest with its questions) |
 | `user_message` | Safe to show the user. Set for `blocked`, `retry_later` and `failed` |
-| `error_code` | For logs and metrics, e.g. `blocked.fraud_scams`, `provider_unavailable`, `invalid_request`, `invalid_spec`, `not_screened` |
+| `error_code` | For logs and metrics, e.g. `blocked.fraud_scams`, `provider_unavailable`, `deadline_exceeded`, `invalid_request`, `invalid_spec`, `not_screened`. Decide what to do from `status`, not from this |
 | `issues` | Validation issues (`path`, `code`, `message`, `severity`). For a failed design they say why; for an ok design they are warnings |
 | `usage` | `calls`, `input_tokens`, `output_tokens`, `cost_usd` for this step |
 | `pipeline_version` | `"0.1"` |
@@ -50,7 +50,7 @@ Every step **returns** a `StepResult`; it never raises for an expected outcome. 
 | `ok` | Continue with `value` |
 | `needs_input` | Show `value.questions` (3 to 5). Then call `clarify` |
 | `blocked` | Show `user_message`. **Start no job, store no skill** (BE-14) |
-| `retry_later` | A provider or the safety screen was down. Retry the job later, and show `user_message` if it keeps failing |
+| `retry_later` | A provider or the safety screen was down (`provider_unavailable`), or the step passed its time limit (`deadline_exceeded`). Retry the job later, and show `user_message` if it keeps failing |
 | `failed` | No usable result, for example no valid spec after 3 attempts, or input that broke a rule above (`invalid_request`). Show `user_message`; `issues` say why |
 
 ## Progress events (BE-08)

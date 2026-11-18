@@ -57,16 +57,16 @@ await pipeline.design(analyzed: AnalyzedRequest, *, existing_names: Collection[s
 | `needs_input` | none (`analyze`, `clarify`) | Store `value` and show `value.questions` (3 to 5). When the user answers, enqueue `clarify` |
 | `needs_input` | `open_questions` (`design`) | `value` is `None`: the request still has open questions. Run `clarify` first |
 | `blocked` | `blocked.<category>`, e.g. `blocked.fraud_scams`; `blocked.other` from `design` | Show `user_message`. **No retry, no package** (BE-14) |
-| `retry_later` | `provider_unavailable` | Re-enqueue the same step later, on purpose (section 3). Show `user_message` if it keeps happening |
+| `retry_later` | `provider_unavailable` or `deadline_exceeded` | Re-enqueue the same step later, on purpose (section 3). Show `user_message` if it keeps happening. Treat both codes the same |
 | `failed` | `budget_exceeded` | The skill used up its model budget. Show `user_message`; don't retry |
 | `failed` | `invalid_spec` (`design`) | No valid spec after 3 attempts; `issues` say why. Show `user_message` |
 | `failed` | `not_screened` (`design`) | The `AnalyzedRequest` has no safety clearance: always pass the one `analyze`/`clarify` returned, from your own database |
 | `failed` | `invalid_request` (`analyze`, `clarify`) | The input broke a rule (see "Input rules" below). No model was called. Show `user_message`; don't retry the same input |
 | `failed` | `analysis_failed.<ErrorType>` | The analysis could not be used. Show `user_message` |
 
-- **A step deadline shows as `retry_later` / `provider_unavailable`** for now.
-  - **The deadlines:** each profile sets one per step (analyze and clarify 120 s, design 600 s). The step's calls are cut off at the deadline.
-  - **Why the same code:** a separate code would need a change to the frozen interface. In the logs the cut-off calls have `error_type: "CancelledError"`.
+- **A step deadline shows as `retry_later` / `deadline_exceeded`.**
+  - **The deadlines:** each profile sets one per step (analyze and clarify 120 s, design 600 s). The step's calls are cut off at the deadline; in the logs they have `error_type: "CancelledError"`.
+  - **Handle it like `provider_unavailable`:** branch on `status`, not on `error_code`. The separate code is for logs and alerts.
 - **`not_screened` is a safety rule.** Only an `AnalyzedRequest` that the pipeline returned to you carries a valid clearance. Never take one back from the browser.
 
 ## 3. The RQ job

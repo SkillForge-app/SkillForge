@@ -10,7 +10,8 @@ store it as JSON (`model_dump_json()`) and decide what to do from `status`:
 - ok           continue with `value`
 - needs_input  show the clarifying questions in `value.questions`, then call clarify()
 - blocked      show `user_message`; start no job (BE-14)
-- retry_later  a provider or the safety screen was unavailable; retry the job later
+- retry_later  a provider or the safety screen was unavailable ("provider_unavailable"), or the
+                 step passed its deadline ("deadline_exceeded"); retry the job later
 - failed       no usable result (e.g. no valid spec after 3 tries); `issues` say why
                  (error_code "budget_exceeded": the skill's model budget is used up, AI-21;
                  "invalid_request": the input broke a rule below, checked before any model call)
@@ -54,6 +55,7 @@ from core.analysis import (
 from core.analysis.types import RequestText
 from core.llm import (
     BudgetExceeded,
+    DeadlineExceeded,
     LLMError,
     LLMUnavailable,
     current_skill_run,
@@ -238,11 +240,11 @@ class RealPipeline:
                 )
             except NotReady:
                 outcome = _result("design", "needs_input", error_code="open_questions")
-            except ArchitectUnavailable:
+            except ArchitectUnavailable as exc:
                 outcome = _result(
                     "design",
                     "retry_later",
-                    error_code="provider_unavailable",
+                    error_code=_retry_code(exc),
                     user_message=RETRY_LATER_MESSAGE,
                 )
             except BudgetExceeded:
@@ -289,9 +291,9 @@ async def _analysis_step(
         )
     except BudgetExceeded:
         return _budget_result(step)
-    except (SafetyUnavailable, LLMUnavailable):
+    except (SafetyUnavailable, LLMUnavailable) as exc:
         return _result(
-            step, "retry_later", error_code="provider_unavailable", user_message=RETRY_LATER_MESSAGE
+            step, "retry_later", error_code=_retry_code(exc), user_message=RETRY_LATER_MESSAGE
         )
     except (LLMError, ValidationError) as exc:
         # ValidationError: a rule the input checks above don't cover. Its message holds the
@@ -304,6 +306,17 @@ async def _analysis_step(
         )
     status: StepStatus = "needs_input" if analyzed.needs_clarification else "ok"
     return _result(step, status, value=analyzed)
+
+
+def _retry_code(exc: BaseException) -> str:
+    """ "deadline_exceeded" when the step passed its deadline (step_timeout_s), anywhere in the
+    exception's cause chain; else "provider_unavailable". Both are `retry_later`."""
+    seen: BaseException | None = exc
+    while seen is not None:
+        if isinstance(seen, DeadlineExceeded):
+            return "deadline_exceeded"
+        seen = seen.__cause__
+    return "provider_unavailable"
 
 
 def _budget_result(step: StepName) -> StepResult[Any]:

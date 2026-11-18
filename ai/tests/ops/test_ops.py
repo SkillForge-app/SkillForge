@@ -256,7 +256,8 @@ async def test_a_step_stops_at_its_deadline(step: str) -> None:
         else:
             result = await pipeline.design(screened())
     assert time.perf_counter() - start < 2
-    assert (result.status, result.error_code) == ("retry_later", "provider_unavailable")
+    # Still retry_later, but told apart from a provider outage (review batch C).
+    assert (result.status, result.error_code) == ("retry_later", "deadline_exceeded")
 
 
 def test_the_profiles_set_step_deadlines_from_the_latency_alerts() -> None:
