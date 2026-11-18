@@ -76,7 +76,7 @@ Safety screening of harmful requests is AI-06 (`safety.py`). It is not part of t
 ```bash
 cd ai
 .venv/Scripts/python -m evaluation.analyzer check-data             # validate the labels and coverage
-.venv/Scripts/python -m evaluation.analyzer run --set all --live   # REAL model: about US$1, needs ANTHROPIC_API_KEY
+.venv/Scripts/python -m evaluation.analyzer run --set all --live   # REAL model: about US$1.30, needs OPENROUTER_API_KEY
 ```
 
 - **The `--live` guard:** without `--live` the tool refuses to call a real model. For a quick end-to-end check without a key, use `SKILLFORGE_LLM_BACKEND=fake ... run --limit 5`. Its numbers are meaningless, because the fake gives every request the same answer.
@@ -85,6 +85,75 @@ cd ai
   - **The raw outputs**, ignored by Git: `ai/evaluation/analyzer/runs/<UTC time>/predictions.jsonl`, one line per request. The report's `run` field names this folder. A fake smoke run keeps its report here too.
 - **The gate:** exactly 100 gate requests, with kind, domain area and risk each at or above 0.90. An analysis that fails with an error counts as wrong. The exit code is 0 when it passes, 1 when it fails.
 - **Before the first measured run:** tune the prompt on the dev set only (`run --set dev --live`). Then run the gate once, and keep the report.
+
+### Results: the first measured run (2026-11-02)
+Prompt `analysis/request` **v1**, model `openrouter/anthropic/claude-sonnet-5.5`. The gate was run **once**. Reports are in `ai/evaluation/analyzer/reports/`.
+
+**Gate (100 requests, `analyzer-gate-2026-11-02.md`): PASSED.** The done-when is met.
+
+| Field | Accuracy | 95% interval (Wilson) | Target |
+|---|---|---|---|
+| kind | **92%** | 85.0–95.9% | ≥ 90% ✅ |
+| domain area | **95%** | 88.8–97.8% | ≥ 90% ✅ |
+| risk | **96%** | 90.2–98.4% | ≥ 90% ✅ |
+| joint (all three right) | 84% | 75.6–89.9% | reported |
+
+- **Also reported:**
+  - needs-clarification accuracy, precision and recall: 100%;
+  - named platforms: exact match on all 70 requests that have them;
+  - 0 failed analyses; latency p50 2.5 s, max 8.1 s.
+- **With n = 100 the intervals are wide.** Kind's lower bound is below 90%, so a re-run could land under the target by chance. Don't re-run the gate to check: that would turn it into a tuning set.
+
+**Confusion matrices (expected → predicted):**
+
+| kind | → role | → task | → workflow |
+|---|---|---|---|
+| role (37) | **35** | 1 | 1 |
+| task (45) | 2 | **39** | 4 |
+| workflow (18) | 0 | 0 | **18** |
+
+| risk | → low | → medium | → high |
+|---|---|---|---|
+| low (66) | **62** | 3 | 1 |
+| medium (14) | 0 | **14** | 0 |
+| high (20) | 0 | 0 | **20** |
+
+- **Domain area:** 95 of 100. Every high-risk area (legal, medical, finance) is 100%. The 5 misses:
+
+  | Id | Expected | Predicted |
+  |---|---|---|
+  | data-analyst/req-2 | data | finance |
+  | t-43 | data | technology |
+  | t-02 | design | technology |
+  | t-23 | operations | general |
+  | t-68 | writing | general |
+
+- **What the misses show:**
+  - The main kind error is a **task read as a workflow** (4 of 45).
+  - Risk errors all go **up**, never down (low → medium 3, low → high 1). That's the safer direction.
+  - The one high-risk miss follows from a domain miss: data-analyst/req-2 was read as finance, and finance is always high risk.
+
+**Tuning on dev (20 requests), before the gate:**
+
+| Run | Prompt | kind | domain area | risk | Report |
+|---|---|---|---|---|---|
+| 1 | v1 | 100% | 95% | 100% | `analyzer-dev-2026-11-02.md` |
+| 2 | trial v2 | 100% | 95% | 100% | `analyzer-dev-2026-11-02-2.md` |
+
+- **Run 1's only miss:** d-04, "a senior UX researcher": labelled research, predicted design.
+- **The v2 trial** added one sentence applying the "expertise, not the subject" rule to research ("a role that studies users, markets or literature is research, even when what it studies is a product's design"). It fixed d-04, but d-18 (research papers → one-page summaries) moved from research to writing. Dev stayed at 95%.
+- **Why we kept v1:**
+  - The trial showed no gain on dev, and with 20 requests, one request moving is within run-to-run noise.
+  - Changing the prompt further would have meant fitting single dev items.
+  - So the prompt and the lock stayed at v1, and the gate measured v1. The dev-2 report is the record of the trial.
+
+**Cost** (gateway call records):
+- **Gate: $0.97** for 113 calls (361,364 input / 25,076 output tokens).
+- **Dev: $0.17 per run.**
+- **13 of the 113 gate calls (11.5%) returned output that failed validation (`LLMOutputInvalid`)** and were retried; every request got a valid answer on retry, with no fallback. Above 10%, `AILLMErrorRateHigh` would fire in production.
+  - **Follow-up, not fixed yet:** find out which validation rules fail.
+  - The gateway already sends the output schema as `response_format`.
+  - The call records hold no reply text, so they don't say which rule failed.
 
 ## Safety screening (AI-06)
 

@@ -171,7 +171,7 @@ An injection is **stopped** when the spec built from the injected pages equals t
 ### Results
 | Measure | Dev, after the 3 fixes (79) | First test split (48, run once; now dev) | **Second test split (61, run once, rules `5df4a4ccba21809d`)** |
 |---|---|---|---|
-| **(c) full system, injection stopped, gated (done-when: all)** | not measured | not measured | **not measured yet: needs the live LLM run** |
+| **(c) full system, injection stopped, gated (done-when: all)** | not measured | not measured | **54 of 54** ✅ (live LLM screen, 2026-11-02) |
 | (a) rules only: spec unchanged, gated (reported) | 65 of 65 | 37 of 39 | **42 of 54** |
 | (b) rules + `check_spec` gate: stopped, gated (reported) | 65 of 65 | – | **51 of 54 at the run; 52 of 54 after the verb-form fix** |
 | Hidden injections reaching a chunk (0) | 0 of 26 | 0 of 13 | **0 of 26** ✅ |
@@ -186,6 +186,7 @@ Reports are in `evaluation/injection/reports/`:
 - `injection-dev-2026-10-28-3.md` (dev after the fixes)
 - `injection-test-2026-10-28-2.md` (second split, the single run)
 - `injection-test-2026-10-28-3.md` (second split again, after the verb-form fix, with (a) and (b))
+- `injection-test-2026-11-02.md` (second split with the live LLM screen: (c), the done-when). Its verdicts, by chunk id: `llm-verdicts-test-2026-11-02.json`
 
 **The three fixes** (made on dev after the first test run):
 1. Rows and items are screened sentence by sentence and cell by cell, but removed whole.
@@ -214,12 +215,20 @@ The two items the first test run missed (d-v35 and d-v38, formerly t-v22 and t-v
     - t-v64: a word added to the title
   - All 5 leaked reported items get a `check_spec` error.
 - **Reported techniques:** 0 of 3 paraphrases and 2 of 4 other-language items were caught by the rules.
-- **No layer-2 rule was changed after this run.** The done-when waits for (c).
+- **No layer-2 rule was changed after this run.** (c) was measured on 2026-11-02 (below).
 - **LLM screen plan for the second test split** (`llm-plan`, no calls made):
   - **232 calls,** one per distinct chunk: 214 chunks of the clean pages and 18 that exist only on injected pages. Pages the rules reject have no chunks, and caught injections leave the chunks identical to the clean page's.
   - **About 199,000 input tokens.**
   - **About $0.03 to $0.14** at Haiku 5.5's list price of $0.10 / $0.50 per million tokens. The range is without and with adaptive thinking (60 to 1,000 output tokens per call).
   - The run goes through OpenRouter, whose price can differ; `--price-in` and `--price-out` change the estimate.
+
+**The live LLM screen: done-when (c), 2026-11-02** (`report --split test --llm --live`, run once, rules `5df4a4ccba21809d`):
+- **(c) full system: 54 of 54 gated injections stopped. The done-when is met.**
+  - The two that got past (b), t-v61 and t-v64, were dropped by the LLM screen.
+- **No false positives:** 0 of 214 clean passages were flagged. 17 of 18 injected-page passages were.
+- **Rules only: unchanged at 16 of 28 (57%).** That layer gate stays red. No rule was changed, and the done-when doesn't depend on it (see Known limits).
+- **Cost:** 232 calls to `openrouter/anthropic/claude-haiku-5.5`, with 306,604 input / 6,874 output tokens: **$0.034** from the gateway call records, inside the plan's range. 0 errors, no fallback.
+- To recompute the report without paying again: `report --split test --llm --verdicts reports/llm-verdicts-test-2026-11-02.json`.
 
 ## Known limits
 - **The rule layer catches wording, not intent, and cannot cover new wordings.** That is by design: the LLM screen and `check_spec` are there for what the rules miss.

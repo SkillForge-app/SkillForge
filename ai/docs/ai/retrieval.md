@@ -74,6 +74,7 @@ The env vars for the real backend:
 | `SKILLFORGE_PGVECTOR_DSN` | (none) | A libpq connection string, for `pgvector`. In production it is a **read-only** database user (DE's `skillforge_ai_reader`) |
 | `SKILLFORGE_PGVECTOR_TABLE` | `knowledge_chunks` | The table or view to read: `name` or `schema.name`, lowercase (production: `knowledge.knowledge_chunks`) |
 | `SKILLFORGE_PGVECTOR_WRITABLE` | (off) | `1` lets AI's code write to the pgvector table. Only for tests and local databases |
+| `SKILLFORGE_PGVECTOR_EF_SEARCH` | `100` | `hnsw.ef_search` for each search, 1 to 1000 (see [Search settings](#search-settings-de-02-benchmark)) |
 | `SKILLFORGE_MODEL_CACHE` | `ai/.data/models` | Where the pinned model files are kept |
 
 **Starting from a fresh clone:**
@@ -112,6 +113,38 @@ Page(html, url, retrieved, ["marketing/strategy", "legal/contracts"])   # a page
 - **`PgVectorStore`:** Install it with `pip install -e ".[pgvector]"`. It applies the same domain rule in SQL.
   - **Read-only by default:** `search` and `info` work on a read-only view, every transaction is `READ ONLY`, and `replace_source` / `create_schema` raise `ConfigError`.
   - **Writing is opt-in:** `PgVectorStore(dsn, writable=True)` or `SKILLFORGE_PGVECTOR_WRITABLE=1`, for tests and local databases only.
+  - **Every search turns on iterative scan** in its own transaction, then re-sorts the rows. See [Search settings](#search-settings-de-02-benchmark).
+
+### Search settings (DE-02 benchmark)
+Every `PgVectorStore.search` runs, in one transaction (a `READ ONLY` transaction allows both):
+
+```sql
+SET LOCAL hnsw.iterative_scan = relaxed_order;
+SET LOCAL hnsw.ef_search = 100;          -- SKILLFORGE_PGVECTOR_EF_SEARCH
+SELECT ... FROM knowledge.knowledge_chunks WHERE <domain filter> ORDER BY embedding <=> $v, chunk_id LIMIT $k;
+```
+
+- **Why:** AI's search always has a domain filter. Without iterative scan, HNSW keeps only its first `ef_search` candidates and the filter drops most of them, so a search returns fewer than `k` rows, with no error.
+- **The re-sort:** `relaxed_order` returns rows only roughly in distance order. The store sorts them again, best score first and ties by `chunk_id`, the same order as `LocalStore`.
+- **Needs pgvector 0.8 or later.** DE runs 0.8.6.
+
+What DE's benchmark measured with AI's own query, on random vectors and a 7.7 GB laptop. Their recall figures aren't an indicator for real embeddings, and 500k was mostly disk reads ([data/docs/de-02-benchmark.md](../../../data/docs/de-02-benchmark.md), PR #17):
+
+| 100k chunks, filter | `iterative_scan` off (ef 40) | `relaxed_order`, ef 100 |
+|---|---|---|
+| broad domain (12% of chunks) | 5.7 of 10 rows, p50 5.9 ms | 10 rows, p50 7.1 ms, p95 10.6 ms |
+| rare domain (0.8%) | 0.5 of 10 rows, p50 4.3 ms | 10 rows, p50 26.8 ms, p95 32.2 ms |
+
+- **At 500k** (cold cache), the rare domain with `relaxed_order` took p50 547 ms at ef 100, 3.2 s at ef 40 (p99 27.5 s), and 274 ms at ef 200. A larger `ef_search` made iterative scans faster, which is why the default is 100, not pgvector's 40.
+- **`hnsw.max_scan_tuples`** (default 20,000) caps how far an iterative scan goes. DE's runs never reached it.
+- **Target:** under 100 ms is met at 100k on DE's laptop, p99 included. 500k and 1M have to be measured again on a server with the index in RAM.
+
+#### Later: an exact GIN path for rare domains (a joint decision with DE)
+For a rare domain, reading the matching rows through the GIN index on `domains` and sorting them by exact distance beat HNSW in DE's runs. It returns 10 rows, exactly (recall 1.000): p50 8.0 ms at 100k and 35.3 ms at 500k for the 0.8% domain, against 26.8 ms and 274 to 3,242 ms with iterative scan. It is not built. It needs:
+- **A threshold:** DE suggests the number of matching chunks (for example under 20,000) rather than a percentage. The two lines cross at about 3% of the chunks at 100k. AI and DE decide it after DE measures again on the real server.
+- **An explicit domain list:** GIN only serves `&&`, not the `LIKE 'x/%'` half of the filter. So the query would take the domain, its parents and all its children as one array, computed from the domain tree.
+- **A query that skips HNSW:** `ORDER BY (embedding <=> $v) + 0, chunk_id`, so the planner sorts the GIN matches exactly.
+- **A count first,** to choose the path: `SELECT count(*) ... WHERE domains && $list`, or a per-domain count DE keeps.
 
 ## For Data Engineering: the knowledge view
 DE owns the database. The DE-05 pipeline writes chunks into DE's own tables and exposes **one read-only view** with the columns below. AI reads only that view, as a read-only user (`SELECT` on the view, nothing else).
@@ -184,10 +217,10 @@ GRANT SELECT ON knowledge.knowledge_chunks TO skillforge_ai_reader;
 - **The HNSW index (`vector_cosine_ops`) must be on the base table.** A view cannot be indexed. A query through a plain view still uses the base table's index. That is not true of a view that aggregates (`GROUP BY`, `DISTINCT`, `array_agg` per chunk) or computes `domains` per row from a join, so keep `domains` as a column on the table that holds the embedding, and check the plan with `EXPLAIN`.
 - **The GIN index on `domains`** serves the `&&` half of the domain filter.
 - **Vectors are unit length,** so cosine distance (`<=>`) ranks the same as inner product. Score = `1 - (embedding <=> query)`.
-- **Filtered HNSW:** with a domain filter, HNSW can return fewer than `k` rows. On pgvector 0.8 or later, set `hnsw.iterative_scan = relaxed_order` for the session (a read-only user may set it).
+- **Filtered HNSW:** with a domain filter, HNSW can return fewer than `k` rows. AI's store sets `hnsw.iterative_scan = relaxed_order` with `SET LOCAL` in each search's transaction, which a read-only user may do. It needs pgvector 0.8 or later; see [Search settings](#search-settings-de-02-benchmark).
 - **`embedding_version`:** store the pinned model files with each vector (see below), so a model change is visible. AI only reads `embedding_model`.
 - **Never run `pg_schema()` against DE's database:** it creates tables and indexes, and AI's user can't. `create_schema` refuses unless the store is writable.
-- **Tests:** the opt-in `pytest -m pgvector` (with `SKILLFORGE_PGVECTOR_DSN` for a database where the user may create tables) writes a base table, creates the view, and reads it through a read-only `PgVectorStore`.
+- **Tests:** the opt-in `pytest -m pgvector` (with `SKILLFORGE_PGVECTOR_DSN` for a database where the user may create tables) writes a base table, creates the view, and reads it through a read-only `PgVectorStore`. A second test checks that a rare domain far from the query still returns `k` rows; it first checks that the same query without iterative scan returns fewer.
 
 ### The pinned embedding model (for `embedding_version`)
 From `core/llm/models.yaml`, role `embedding`:

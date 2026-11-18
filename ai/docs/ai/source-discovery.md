@@ -107,6 +107,23 @@ found.rejected       # [(url, reason)]: blocked, duplicate, robots-disallowed, u
 | `copyright-summarise-and-cite` | The default: use only short summaries and always cite (spec §5) |
 | `excluded-terms` | The terms forbid reuse: never on the crawl list |
 
+- **Pinned pages have no note of their own.** A pin takes its host's rule, like any other page; only `pinned: true` and the reason "pinned in the registry (verified …)" mark it.
+
+### Storing the note: DE's `license` column (agreed with DE, 2026-11-09)
+`crawl_list()` hands DE-04 `(fetch url, licence)`. DE stores an SPDX id, or `unknown`, in `sources.license`:
+
+| AI note | `license` | `license_source` |
+|---|---|---|
+| `public-domain-us-gov` | `LicenseRef-us-gov-public-domain` (SPDX has no id for US government works; `LicenseRef-` is SPDX's form for a custom one) | `manual` |
+| `cc-by-4.0` | `CC-BY-4.0` | `manual` |
+| `cc-by-sa-4.0` | `CC-BY-SA-4.0` | `manual` |
+| `copyright-summarise-and-cite` | `unknown` | `unknown` |
+| `excluded-terms` | never stored: not on the crawl list | |
+
+- **A licence the page declares itself wins.** DE-04 reads it from the page (`rel="license"`, `<meta name="license">`, JSON-LD) and stores it with `license_source = 'page'`. The table applies only when the page declares none.
+- **`manual`** because the registry is checked by people and changed by pull request (AI lead + DE lead).
+- **The SKILL.md corpus (DE-08) has its own, stricter list:** see [gap-checker.md](gap-checker.md#licences-in-the-corpus-de-08).
+
 ## robots.txt
 - **Production (`HttpRobots`):** fetches each site's robots.txt once and follows RFC 9309. A 4xx answer means no rules, so the page is allowed. A 5xx or no answer means assume everything is disallowed.
 - **DE-04 still enforces robots.txt** when it crawls. AI-09 checks ahead and labels.
