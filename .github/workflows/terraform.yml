@@ -1,0 +1,69 @@
+# Terraform check (OPS-04): devops/terraform/ is formatted and valid. It has NO Azure credentials and
+# runs no plan: a pull request's own workflow code could otherwise read the state. Plans and applies
+# happen only in deploy-staging.yml, on main, in the `staging` environment. Not a required check.
+name: terraform
+
+on:
+  pull_request:
+    paths:
+      - devops/terraform/**
+      - .github/workflows/terraform.yml
+  push:
+    branches: [main]
+    paths:
+      - devops/terraform/**
+      - .github/workflows/terraform.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  terraform-check:
+    name: terraform-check
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Terraform
+        env:
+          # The same pin as required_version (two-week rule: 1.17.1 is from 28 Oct 2026). The sha256
+          # is from HashiCorp's signed SHA256SUMS for this release.
+          VERSION: 1.17.1
+          SHA256: 4638628058e71a55212b1c563712eac03b902128f40740f3dc8174df12135061
+        run: |
+          curl -sSfL -o /tmp/terraform.zip \
+            "https://releases.hashicorp.com/terraform/${VERSION}/terraform_${VERSION}_linux_amd64.zip"
+          echo "${SHA256}  /tmp/terraform.zip" | sha256sum -c -
+          mkdir -p "${RUNNER_TEMP}/bin"
+          unzip -q /tmp/terraform.zip terraform -d "${RUNNER_TEMP}/bin"
+          echo "${RUNNER_TEMP}/bin" >> "$GITHUB_PATH"
+          "${RUNNER_TEMP}/bin/terraform" version
+      - name: Formatted
+        run: terraform fmt -check -recursive -diff devops/terraform
+      - name: Valid (bootstrap and every environment, no backend, lock files unchanged)
+        run: |
+          for root in devops/terraform/bootstrap devops/terraform/envs/*/; do
+            echo "::group::${root}"
+            terraform -chdir="${root}" init -backend=false -input=false -lockfile=readonly
+            terraform -chdir="${root}" validate
+            echo "::endgroup::"
+          done
+      - name: backend-config.sh derives the same names as modules/naming
+        run: |
+          set -o pipefail
+          sub=00000000-1111-2222-3333-444444444444
+          from_module="$(echo 'module.naming.state_storage_account' \
+            | terraform -chdir=devops/terraform/bootstrap console \
+                -var "subscription_id=${sub}" -var tenant_id=unused -var location=unused \
+            | tr -d '"')"
+          from_script="$(devops/terraform/backend-config.sh "${sub}" | sed -n 's/^-backend-config=storage_account_name=//p')"
+          echo "module: ${from_module}"
+          echo "script: ${from_script}"
+          [ -n "${from_module}" ] && [ "${from_module}" = "${from_script}" ]
