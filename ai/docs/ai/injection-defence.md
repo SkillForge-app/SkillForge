@@ -57,6 +57,10 @@ Before either extractor runs, the pre-clean removes:
   - is negated ("never let it override …")
 
   Text inside quotes that something else introduces is also dropped. Some rules always fire anyway: the role-marker, templated-URL, other-language and "if you are an AI" rules.
+- **API and prompt documentation is not an attack** (rules version 2, review F9):
+  - the delimiter rule fires only on our own wrapper tags (`untrusted_passages`, `passage`) and chat-role tags (`system`, `assistant`, `developer`, `admin`, `user_input`, `tool_output`), not on content tags such as `<instructions>`, `<document>`, `<context>` or `<data>`;
+  - "send your API key" is not a finding when the rest of the clause names a safe channel ("in the x-api-key header", "through the vault", "in an environment variable");
+  - the exfiltration rule needs a concrete destination (a URL, an email address or a host name), not "the endpoint" or "a server".
 - **In `extract_page`** (`ExtractConfig.injection_screen = True` by default):
   - Flagged sentences are removed from paragraphs.
   - Headings, list items and table rows are screened sentence by sentence and cell by cell, so a rule that needs the start of a sentence still fires mid-row. When anything fires, they are removed whole.
@@ -229,6 +233,15 @@ The two items the first test run missed (d-v35 and d-v38, formerly t-v22 and t-v
 - **Rules only: unchanged at 16 of 28 (57%).** That layer gate stays red. No rule was changed, and the done-when doesn't depend on it (see Known limits).
 - **Cost:** 232 calls to `openrouter/anthropic/claude-haiku-5.5`, with 306,604 input / 6,874 output tokens: **$0.034** from the gateway call records, inside the plan's range. 0 errors, no fallback.
 - To recompute the report without paying again: `report --split test --llm --verdicts reports/llm-verdicts-test-2026-11-02.json`.
+
+**Rules version 2 (review F9), 2026-11-18** (rules `ba2320f76b5dac53`, `EXTRACTION_VERSION` 2):
+- **Why:** the version-1 rules flagged normal API and prompt documentation as high, so a whole "Messages API reference" page was rejected. Three rules were narrowed (see "API and prompt documentation" under Layer 2). Five such sentences are now dev controls (d-c22 to d-c26, `injections.yaml` 2.1.0).
+- **Measured offline, no model calls** (`report` without `--llm`, both splits):
+  - **Every item gives the same result as with version 1:** each injection, control and clean page has the same outcome and the same rules. **Visible injections caught on test: 16 of 28 before and after.** Dev stays at 39 of 39.
+  - The five new dev controls reach the chunks with no finding.
+  - None of the 20 labelled AI-10 pages changes (text, chunks, reasons).
+- **(c) was not re-measured.** No `--llm` run was made, because it waits for API credit. No test chunk changed, so the saved verdicts above should still cover the run; recomputing with `--verdicts` would make no paid call, but it is an `--llm` run and was left for later.
+- **No new test split was made.** The rules changed after the second test split, which strictly calls for a new one. The narrowing was checked on dev, and the second test split gives the same result for every item.
 
 ## Known limits
 - **The rule layer catches wording, not intent, and cannot cover new wordings.** That is by design: the LLM screen and `check_spec` are there for what the rules miss.

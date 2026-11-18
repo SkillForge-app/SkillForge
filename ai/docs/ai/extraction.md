@@ -73,13 +73,14 @@ else:
 `ExtractConfig.fingerprint()` returns 64 hex characters: the sha256 of every extraction setting except `site_boilerplate`, plus AI's `EXTRACTION_VERSION`.
 
 - **Store it** in `chunk_config` (suggested key: `extract_fingerprint`). A new value means a new chunk set.
-- **The default config** gives `f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483`. A test pins this value, so it changes only on purpose, and AI tells DE when it does.
+- **The default config** gives `474bd237fac3dc9db4018f1f0ad2b337cd4d99c4ec33b2b61feaad59c79d79c5` (`EXTRACTION_VERSION` 2). A test pins this value, so it changes only on purpose, and AI tells DE when it does.
+  - **History:** version 1 gave `f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483`. Version 2 (review F9) narrowed three injection rules, so sentences that version 1 removed from API and prompt documentation now stay. **DE re-chunks and re-embeds every current document** under the new fingerprint, then switches `active_config`; documents whose raw HTML has expired (30 days) are re-fetched first.
 - **It changes when:**
   - any hashed setting changes;
   - AI bumps `EXTRACTION_VERSION` (when AI's extraction code changes the chunks a config gives);
   - AI bumps `FINGERPRINT_VERSION` (when the hashed form below changes).
 - **It doesn't change** with `site_boilerplate`: those are per-site sentence hashes, not a pipeline setting. Every host's config gives the same fingerprint, so DE's one-row `active_config` keeps working.
-- **What's hashed:** `{"fingerprint_version": 1, "extraction_version": 1, "config": {…}}` as canonical JSON: sorted keys, no spaces, UTF-8, float settings always as floats (so `1` and `1.0` are one value) in Python's shortest round-trip form, tuples as lists.
+- **What's hashed:** `{"fingerprint_version": 1, "extraction_version": 2, "config": {…}}` as canonical JSON: sorted keys, no spaces, UTF-8, float settings always as floats (so `1` and `1.0` are one value) in Python's shortest round-trip form, tuples as lists.
 - **The hashed settings:**
 
 | Setting | Default | Setting | Default |

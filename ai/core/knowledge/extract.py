@@ -104,7 +104,8 @@ class ExtractionInputError(ValueError):
 
 # ExtractConfig.fingerprint() (for DE's chunk_config). Bump EXTRACTION_VERSION when this module's
 # code changes the chunks a config produces; bump FINGERPRINT_VERSION if the hashed form changes.
-EXTRACTION_VERSION = 1
+# 2 (review F9): narrower injection rules keep sentences version 1 removed, so chunks change.
+EXTRACTION_VERSION = 2
 FINGERPRINT_VERSION = 1
 # Per-site hashes, not a setting of the pipeline: hashing them would give every site its own config.
 FINGERPRINT_EXCLUDED = frozenset({"site_boilerplate"})

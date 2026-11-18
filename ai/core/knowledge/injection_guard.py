@@ -79,6 +79,9 @@ class _Rule:
     # Fire only when the phrase is aimed at the reader, not described ("attackers tell the
     # model to ignore previous instructions" is about injection, not an injection).
     aimed: bool = True
+    # Not a finding when the rest of the clause after the match fits this (review F9: API
+    # docs say how to send a key safely, "in the x-api-key header", "through the vault").
+    unless_after: re.Pattern[str] | None = None
 
 
 def _rx(pattern: str) -> re.Pattern[str]:
@@ -117,11 +120,18 @@ _USER_DATA = (
     r"(?:the )?users?'?s?(?: \w+)?|everything|contents?|context|files?|documents?|transcripts?|"
     r"emails?|memory|the above|this (?:conversation|chat|session))"
 )
-_DESTINATION = (
-    r"(?:https?://\S+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/\S*)?|"
-    r"(?:a |the |this |our )?(?:webhook|endpoint|server|url|address))"
-)
+# A concrete place: a URL, an email address or a host name. A bare "the endpoint" or "a server"
+# is how API docs talk ("send their data to the endpoint over TLS"), so it no longer counts
+# (review F9); every measured exfiltration names a real address.
+_DESTINATION = r"(?:https?://\S+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/\S*)?)"
 _URL = r"(?:https?://\S+|(?:www\.)?(?:[a-z0-9-]+\.)+[a-z]{2,}/\S*)"
+# The safe channel API docs name for a key: "in the x-api-key header", "via the Authorization
+# header", "through the vault", "in an environment variable" (review F9).
+_SAFE_CHANNEL = _rx(
+    r"^[^.!?]{0,40}?\b(?:in|via|through|using|with|from)\s+(?:an?\s+|the\s+|your\s+|their\s+|"
+    r"our\s+)?(?:[\w-]+\s+){0,2}?(?:headers?|authori[sz]ation|requests?|query (?:string|"
+    r"parameters?)|vault|password manager|secrets? manager|key ?vault|environment variables?)\b"
+)
 
 RULES: tuple[_Rule, ...] = (
     # -- override: tries to replace the instructions the model was given
@@ -225,9 +235,12 @@ RULES: tuple[_Rule, ...] = (
         "role-delimiter-tag",
         "role_marker",
         "high",
+        # Our own wrapper tags (wrap_passages: untrusted_passages, passage) and chat-role tags.
+        # Generic content tags (instructions, document, context, data) are left out: prompt and
+        # API docs use them all the time (review F9).
         _rx(
-            r"</?\s*(?:system|untrusted[\w-]*|passages?|instructions?|admin|developer|assistant|"
-            r"user_?input|tool_?output|document|context|data)\s*(?:\s[^<>]*)?>"
+            r"</?\s*(?:system|untrusted[\w-]*|passages?|admin|developer|assistant|"
+            r"user_?input|tool_?output)\s*(?:\s[^<>]*)?>"
         ),
         aimed=False,
     ),
@@ -294,6 +307,7 @@ RULES: tuple[_Rule, ...] = (
             r"exfiltrate|forward|provide|give|display|return|show|list|dump|disclose|repeat)\b"
             rf"[^.!?]{{0,60}}?\b{_SECRETS}"
         ),
+        unless_after=_SAFE_CHANNEL,
     ),
     _Rule(
         "secret-ask-user",
@@ -426,7 +440,7 @@ def screen_text(text: str) -> list[Finding]:
     found: list[Finding] = []
     for rule in RULES:
         for match in rule.pattern.finditer(text):
-            if _described(rule, text, match):
+            if _described(rule, text, match) or _safe_after(rule, text, match):
                 continue
             found.append(
                 Finding(
@@ -454,10 +468,22 @@ def _described(rule: _Rule, text: str, match: re.Match[str]) -> bool:
     return opened and bool(before.strip(" " + _QUOTES))
 
 
+def _safe_after(rule: _Rule, text: str, match: re.Match[str]) -> bool:
+    """The rest of the match's clause names a safe channel (`_Rule.unless_after`)."""
+    if rule.unless_after is None:
+        return False
+    rest = _CLAUSE_END.split(text[match.end() :])[0]
+    return bool(rule.unless_after.search(rest))
+
+
 def rules_fingerprint() -> str:
     """sha256 (first 16 hex) of every rule and context pattern: reports record it, so a
     frozen rule set can be checked later."""
-    parts = [f"{r.code}|{r.severity}|{r.aimed}|{r.pattern.pattern}" for r in RULES]
+    parts = [
+        f"{r.code}|{r.severity}|{r.aimed}|{r.pattern.pattern}"
+        + (f"|unless:{r.unless_after.pattern}" if r.unless_after else "")
+        for r in RULES
+    ]
     parts += [p.pattern for p in (_DESCRIBED_ANYWHERE, _DESCRIBED_END, _DESCRIBED_TO, _NEGATED)]
     return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()[:16]
 
