@@ -1,4 +1,4 @@
-import copy
+﻿import copy
 import tomllib
 import unittest
 
@@ -74,5 +74,33 @@ class TestCodexCompiler(unittest.TestCase):
             self.compiler.compile({})
 
 
+    def test_low_autonomy_requires_approval_and_read_only(self):
+        result = self.compiler.compile(self.valid_spec, autonomy_level="low")
+        config = tomllib.loads(result[".codex/config.toml"])
+        self.assertEqual(config["approval_policy"], "on-request")
+        self.assertEqual(config["sandbox_mode"], "read-only")
+
+    def test_medium_autonomy_uses_on_request(self):
+        result = self.compiler.compile(self.valid_spec, autonomy_level="medium")
+        config = tomllib.loads(result[".codex/config.toml"])
+        self.assertEqual(config["approval_policy"], "on-request")
+
+    def test_high_autonomy_disables_approval_prompts(self):
+        result = self.compiler.compile(self.valid_spec, autonomy_level="high")
+        config = tomllib.loads(result[".codex/config.toml"])
+        self.assertEqual(config["approval_policy"], "never")
+
+    def test_rejects_invalid_autonomy_level(self):
+        with self.assertRaises(ValueError):
+            self.compiler.compile(self.valid_spec, autonomy_level="invalid")
+
+    def test_low_autonomy_blocks_required_filesystem_write(self):
+        spec = copy.deepcopy(self.valid_spec)
+        spec["tools"]["required"] = ["filesystem_write"]
+
+        result = self.compiler.compile(spec, autonomy_level="low")
+        config = tomllib.loads(result[".codex/config.toml"])
+
+        self.assertEqual(config["sandbox_mode"], "read-only")
 if __name__ == "__main__":
     unittest.main()
