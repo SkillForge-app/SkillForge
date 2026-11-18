@@ -160,7 +160,9 @@ def json_schema() -> dict[str, Any]:
         "description": (
             "AnalyzedRequest (contract A3, draft). Per-field rules only; the question/answer "
             "rules are enforced by core.analysis.AnalyzedRequest. Only requests that passed "
-            "safety screening (safety is not null) may be used to generate a skill."
+            "safety screening (safety is not null) may be used to generate a skill. Keep it on "
+            "the server and never accept one back from a client: the safety clearance is not "
+            "tied to the request text, so an edited copy would still look screened."
         ),
     }
 

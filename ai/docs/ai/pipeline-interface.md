@@ -24,6 +24,8 @@ d = await pipeline.design(r.value, existing_names=registry_names, on_progress=se
 | `analyze` | request text, the platforms picked in the UI | `AnalyzedRequest` (A3) | The safety screen and the analysis run at the same time |
 | `clarify` | the AnalyzedRequest, the answers (skipped is allowed; see Input rules) | `AnalyzedRequest` | Screens the request together with the answers, then re-analyzes. It never asks a second round |
 
+**Keep every `AnalyzedRequest` on the server** (review F10). Pass `clarify` and `design` the copy that `analyze`/`clarify` returned and you stored, never one sent back by a client. Its `safety` clearance is not tied to the request text, so an edited copy would still look screened.
+
 ## Input rules
 Both pipelines check these **before any model call**. A broken rule returns `failed` with `error_code` `invalid_request` and a `user_message`; nothing is charged. The same rules are in `backend-integration.md`.
 - **`analyze`:** the request text is 1 to 4000 characters after trimming spaces.

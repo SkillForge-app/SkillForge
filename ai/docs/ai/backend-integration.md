@@ -67,7 +67,9 @@ await pipeline.design(analyzed: AnalyzedRequest, *, existing_names: Collection[s
 - **A step deadline shows as `retry_later` / `deadline_exceeded`.**
   - **The deadlines:** each profile sets one per step (analyze and clarify 120 s, design 600 s). The step's calls are cut off at the deadline; in the logs they have `error_type: "CancelledError"`.
   - **Handle it like `provider_unavailable`:** branch on `status`, not on `error_code`. The separate code is for logs and alerts.
-- **`not_screened` is a safety rule.** Only an `AnalyzedRequest` that the pipeline returned to you carries a valid clearance. Never take one back from the browser.
+- **Keep every `AnalyzedRequest` on the server** (review F10). Store the one `analyze`/`clarify` returned, and pass that stored copy to the next step.
+  - **Never accept one back from the browser,** not even to "save a round trip". Its `safety` clearance is not tied to the request text, so a copy edited after screening would still look screened, and `design` would build it.
+  - The browser sends only the request text and the answers (`question_id`, `text`). `not_screened` catches a missing clearance, not an edited one.
 
 ## 3. The RQ job
 
