@@ -1,6 +1,6 @@
 # Dev set: for prompt tuning and few-shot examples ONLY. Never used to measure the 90% gate.
 name: analyzer-requests-dev
-version: 0.1.0
+version: 0.2.0
 split: dev
 requests:
   - id: d-01
@@ -142,7 +142,7 @@ requests:
   - id: d-16
     text: data stuff for my boss
     style: vague
-    kind: task
+    kind: role
     domain: data/reporting
     risk: low
     needs_clarification: true

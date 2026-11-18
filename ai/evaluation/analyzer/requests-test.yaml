@@ -2,7 +2,7 @@
 # the 100 labelled requests that AI-05 must classify with >= 90% accuracy (per field).
 # Never use these for prompt tuning or few-shot examples (use requests-dev.yaml).
 name: analyzer-requests-test
-version: 0.2.0
+version: 0.3.0
 split: test
 requests:
   # ---------------------------------------------------------------- design
@@ -441,7 +441,7 @@ requests:
   - id: t-45
     text: I want a security engineer skill that threat-models our new features before we build them.
     style: clear
-    kind: role
+    kind: task
     domain: technology/security
     risk: low
     needs_clarification: false
@@ -548,7 +548,7 @@ requests:
   - id: t-56
     text: I need a skill that answers managers' questions about US employment law, like overtime and leave.
     style: clear
-    kind: role
+    kind: task
     domain: legal/employment-law
     risk: high
     needs_clarification: false
@@ -633,7 +633,7 @@ requests:
   - id: t-65
     text: I want a financial adviser skill that suggests how to invest my savings, for ChatGPT.
     style: clear
-    kind: role
+    kind: task
     domain: finance/investing
     risk: high
     needs_clarification: false
@@ -659,7 +659,7 @@ requests:
   - id: t-68
     text: help with reports
     style: vague
-    kind: task
+    kind: role
     domain: writing/reports
     risk: low
     needs_clarification: true
