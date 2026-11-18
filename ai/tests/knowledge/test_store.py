@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import logging
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -23,6 +24,7 @@ from core.knowledge.store import (
     PGVECTOR_EF_SEARCH_ENV,
     PGVECTOR_TABLE_ENV,
     PGVECTOR_WRITABLE_ENV,
+    ROW_SKIPPED_EVENT,
     STORE_ENV,
     ChunkRecord,
     LocalStore,
@@ -385,6 +387,36 @@ def test_pgvector_search_re_sorts_rows_best_first_ties_by_chunk_id(
     # 0.8000001 and 0.8 tie (rounded like LocalStore), so a1 comes before a3 by chunk_id
     assert [r.chunk_id for r, _ in results] == [a2.chunk_id, a1.chunk_id, a3.chunk_id]
     assert [s for _, s in results] == [0.9, 0.8, 0.8000001]
+
+
+def with_domains(row: tuple[Any, ...], domains: list[str]) -> tuple[Any, ...]:
+    i = PG_COLUMNS.index("domains")
+    return (*row[:i], domains, *row[i + 1 :])
+
+
+def test_a_row_ai_cannot_cite_is_skipped_and_logged_without_its_values(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Review F7: DE's tables accept domains AI rejects. Such a row used to fail the whole
+    query; now it is skipped, the others come back, and the log names the row, not its data."""
+    a1, a2, b3, c4 = record(A, 1), record(A, 2), record(B, 3), record(C, 4)
+    underscore = with_domains(pg_row(b3, 0.99), ["marketing/social_media"])  # LIKE 'marketing/%'
+    one_bad = with_domains(pg_row(c4, 0.97), ["marketing", "Marketing/Email"])  # valid + invalid
+    fake_store(monkeypatch, [pg_row(a1, 0.8), underscore, one_bad, pg_row(a2, 0.9)])
+    caplog.set_level(logging.WARNING, logger="skillforge.knowledge")
+
+    results = PgVectorStore("postgresql://u@h/db").search([1.0, 0.0], "marketing", 5)
+
+    assert [r.chunk_id for r, _ in results] == [a2.chunk_id, a1.chunk_id]
+    logged = [json.loads(r.getMessage()) for r in caplog.records]
+    fields = ["domains:value_error"]
+    assert logged == [
+        {"event": ROW_SKIPPED_EVENT, "chunk_id": chunk_id, "invalid_fields": fields}
+        for chunk_id in (b3.chunk_id, c4.chunk_id)
+    ]
+    everything = " ".join(r.getMessage() + repr(r.__dict__) for r in caplog.records)
+    for value in (b3.text, c4.text, "social_media", "Marketing/Email", B, C):
+        assert value not in everything
 
 
 def test_pgvector_ef_search_is_configurable(monkeypatch: pytest.MonkeyPatch) -> None:

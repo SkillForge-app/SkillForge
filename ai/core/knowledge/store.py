@@ -16,9 +16,13 @@
 A chunk serves one or more domains. Both backends use the A4 domain rule on each of them
 (equal, or one a path prefix of the other) and refuse vectors from a different embedding
 model than the index holds: they would not be comparable.
+
+A row PgVectorStore reads that is not a valid ChunkRecord (for example a domain outside the
+SkillSpec rule, which DE's tables allow) is skipped and logged, never fatal for the query.
 """
 
 import json
+import logging
 import os
 import re
 from collections.abc import Sequence
@@ -28,7 +32,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 import numpy as np
-from pydantic import Field, HttpUrl, field_validator
+from pydantic import Field, HttpUrl, ValidationError, field_validator
 
 from core.knowledge.retrieval import RetrievalInputError, check_domain, domains_match
 from core.knowledge.types import ChunkId, Passage, PassageText
@@ -48,6 +52,10 @@ DEFAULT_PG_TABLE = "knowledge_chunks"
 # DE-02 benchmark: with iterative scan, a larger ef_search made filtered searches faster.
 DEFAULT_EF_SEARCH = 100
 DEFAULT_INDEX_PATH = Path(__file__).resolve().parents[2] / ".data" / "index"
+ROW_SKIPPED_EVENT = "knowledge.row_skipped"
+_FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+logger = logging.getLogger("skillforge.knowledge")
 
 
 class ChunkRecord(SpecModel):
@@ -480,9 +488,34 @@ class PgVectorStore:
             data = dict(zip(PG_COLUMNS, row[:-1], strict=True))
             data["retrieved"] = str(data["retrieved"])
             data["content_hash"] = data["content_hash"].strip()
-            results.append((ChunkRecord.model_validate_json(json.dumps(data)), float(row[-1])))
+            try:
+                record = ChunkRecord.model_validate_json(json.dumps(data))
+            except ValidationError as exc:
+                _log_skipped_row(data.get("chunk_id"), exc)  # review F7: one bad row, not all
+                continue
+            results.append((record, float(row[-1])))
         # relaxed_order returns rows only roughly in distance order: the same order as LocalStore
         return sorted(results, key=lambda pair: _best_first(pair[1], pair[0].chunk_id))
+
+
+def _log_skipped_row(chunk_id: object, error: ValidationError) -> None:
+    """One warning per skipped row: its chunk_id and `<field>:<error type>` for each problem.
+    Never the values: a row holds page text, and a bad value can be anything."""
+    fields = sorted(
+        {
+            ".".join(
+                str(p) if isinstance(p, int) or _FIELD_NAME.match(str(p)) else "?" for p in e["loc"]
+            )
+            + f":{e['type']}"
+            for e in error.errors(include_url=False, include_input=False, include_context=False)
+        }
+    )
+    record = {
+        "event": ROW_SKIPPED_EVENT,
+        "chunk_id": str(chunk_id)[:200] if chunk_id is not None else None,
+        "invalid_fields": fields,
+    }
+    logger.warning(json.dumps(record), extra={"knowledge_event": record})
 
 
 def store_from_env() -> VectorStore:
