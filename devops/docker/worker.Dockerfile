@@ -1,7 +1,10 @@
 # The worker image: AI's pipeline code (ai/) for the RQ worker that runs it (this file is
 # DevOps-owned). Build context: the repo root, filtered by worker.Dockerfile.dockerignore (an
-# allow-list next to this file). Used by the `model-init` and `worker` services in compose.yaml:
-#   docker compose --profile worker up -d --build
+# allow-list next to this file). Two targets:
+#   runtime  the `model-init` and `worker` services in compose.yaml (the model in a volume):
+#              docker compose --profile worker up -d --build
+#   baked    staging (devops/terraform/): the model inside the image, read-only (at the end):
+#              docker build -f devops/docker/worker.Dockerfile --target baked .
 #
 # Backend's code is not on main yet (PR #14). When it lands, the worker gets backend/ too (one
 # `!backend/...` line in the dockerignore, a COPY, and its locked dependencies), and the real
@@ -79,4 +82,22 @@ COPY ai /app/ai
 COPY devops/docker/worker_check.py /app/devops/worker_check.py
 USER app
 # Placeholder until Backend's worker exists: checks the model offline, then waits.
+CMD ["python", "/app/devops/worker_check.py"]
+
+# ---------------------------------------------------------------- staging: the model baked in
+# Staging (Azure Container Apps, devops/terraform/) has no `models` volume: the pinned model is
+# downloaded at BUILD time (repo, revision, file and sha256 from ai/core/llm/models.yaml, checked by
+# ensure_model) and copied into a root-owned, read-only /models. Build it with `--target baked`.
+# compose.yaml builds `--target runtime` (above), so local and CI keep the volume and model-init.
+FROM runtime AS model-download
+RUN python -m core.llm.local_embed download
+
+FROM runtime AS baked
+USER root
+# The folder itself too: root-owned and not writable, so the worker cannot change the model.
+RUN chown root:root /models && chmod 0555 /models
+COPY --from=model-download --chown=0:0 --chmod=0555 /models /models
+USER app
+# Never download at runtime: a missing or changed model fails loudly.
+ENV HF_HUB_OFFLINE=1
 CMD ["python", "/app/devops/worker_check.py"]

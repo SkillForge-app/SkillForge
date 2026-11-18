@@ -4,7 +4,8 @@
 # the API image from backend/, runs the migration and checks the API answers (each skipped without
 # its folder). The `worker` job builds the worker image from ai/, fills the model cache with
 # model-init (twice: the second run offline must download nothing) and checks the placeholder
-# worker loads the model with no network, and fails clearly on an empty cache. Run it by hand with
+# worker loads the model with no network, and fails clearly on an empty cache; it also builds the
+# staging target (`baked`: the model inside, read-only) and checks it offline. Run it by hand with
 # `data-ref`, `frontend-ref` or `backend-ref` to test another branch's data/db/ SQL, frontend/ or
 # backend/, e.g. Data-Engineering, Frontend or Backend.
 name: compose
@@ -325,8 +326,10 @@ jobs:
             echo "::error::worker.Dockerfile and api.Dockerfile must use the same PYTHON_IMAGE"
             exit 1
           fi
-          if grep -E '^FROM ' devops/docker/worker.Dockerfile | grep -vE 'FROM \$\{PYTHON_IMAGE\} AS '; then
-            echo "::error::every FROM must use PYTHON_IMAGE"
+          # Every stage starts from PYTHON_IMAGE, or from the `runtime` stage built on it (the
+          # staging `baked` target).
+          if grep -E '^FROM ' devops/docker/worker.Dockerfile | grep -vE 'FROM (\$\{PYTHON_IMAGE\}|runtime) AS '; then
+            echo "::error::every FROM must use PYTHON_IMAGE (or the runtime stage)"
             exit 1
           fi
       - name: Use the example settings
@@ -382,6 +385,28 @@ jobs:
           docker volume rm skillforge_models_empty > /dev/null
           [ "${code}" = 1 ]
           grep -q 'model-init service downloads it' /tmp/empty.log
+      - name: "Staging image (--target baked): the model is inside, read-only, and works offline"
+        if: steps.project.outputs.present == 'true'
+        run: |
+          docker build --file devops/docker/worker.Dockerfile --target baked \
+            --tag skillforge-worker:baked .
+          # No volume and no network: only the model baked into the image can make this pass.
+          docker run --rm --network none skillforge-worker:baked \
+            python /app/devops/worker_check.py --once
+          offline="$(docker run --rm --network none skillforge-worker:baked printenv HF_HUB_OFFLINE)"
+          echo "HF_HUB_OFFLINE=${offline}"
+          [ "${offline}" = 1 ]
+          # The app user cannot change the model: /models and everything in it is root-owned and
+          # read-only.
+          docker run --rm -i --network none skillforge-worker:baked sh -s <<'CHECK'
+          set -eu
+          [ "$(id -u)" != 0 ]
+          [ "$(stat -c %U /models)" = root ]
+          if [ -n "$(find /models ! -user root)" ]; then echo "not root-owned under /models"; exit 1; fi
+          if [ -n "$(find /models -writable)" ]; then echo "writable under /models:"; find /models -writable; exit 1; fi
+          if touch /models/probe 2>/dev/null; then echo "/models is writable"; exit 1; fi
+          echo "model files: $(find /models -type f | wc -l), all root-owned and read-only"
+          CHECK
       - name: Logs
         if: failure() && steps.project.outputs.present == 'true'
         run: docker compose --profile worker logs --no-color model-init worker

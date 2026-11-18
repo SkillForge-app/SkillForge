@@ -182,8 +182,15 @@ docker compose --profile worker run --rm model-init  # check (or fill) the cache
     pgvector` from `ai/uv.lock`, then a hash-checked install with `--no-deps`, then `pip check`.
   - **AI's code:** copied as the `ai/` tree and put on `PYTHONPATH`, the same layout as `pip install -e ai`.
     It finds `prompts/` through that folder, which a wheel wouldn't keep, and nothing has to be built.
-  - **Never in the image:** no `.env`, venv or model is ever copied in. It runs as the non-root user `app`
-    (uid 10001).
+  - **Never in the image:** no `.env`, venv or model is ever copied in from the checkout (the `baked` target
+    below downloads its pinned model at build time). It runs as the non-root user `app` (uid 10001).
+  - **Two targets.** Compose builds `runtime` (`target: runtime` in `compose.yaml`), with the model in the volume
+    as above. Staging (`devops/terraform/`, Azure Container Apps) has no volume and builds **`baked`**:
+    - the pinned model is downloaded at build time (sha256 checked) into a root-owned, read-only `/models`;
+    - `HF_HUB_OFFLINE=1` is set;
+    - the image grows by 67.5 MB.
+    - Don't build `baked` for compose: Docker pre-fills an empty named volume from a non-empty image folder, so
+      `model-init` would no longer be the only writer.
 - **A new model pin** (a new revision or sha256 in `models.yaml`) goes into a new folder in the same volume: run
   `model-init` again. The old folder can go once no worker uses it.
 - **Reset the cache:** `docker compose --profile worker down`, `docker volume rm skillforge_models`, then `up`

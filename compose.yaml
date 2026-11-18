@@ -107,6 +107,8 @@ services:
     build:
       context: .
       dockerfile: devops/docker/worker.Dockerfile
+      # Not `baked` (staging's target, the model inside the image): here the model is in the volume.
+      target: runtime
     image: skillforge-worker:local
     command: ["python", "-m", "core.llm.local_embed", "download"]
     volumes:
