@@ -23,12 +23,14 @@ sources = [to_source(p, f"src-{i}") for i, p in enumerate(passages, 1)]  # Skill
 | Field | Type | Meaning |
 |---|---|---|
 | `chunk_id` | str | A stable id for the chunk, e.g. `mkt-ftc-endorsements-01`. The same chunk always has the same id |
-| `text` | str, at most 2000 chars | A short summary of what the source says there. Cite it; never paste long copied text into a skill (spec §5) |
+| `text` | str, at most 2000 chars | The source's own words: one extracted chunk of the page (review F15; it used to say "a short summary", which real passages never were). Cite it; a skill must summarise it, never paste long parts of it (spec §5) |
 | `source_url` | URL (http or https) | The page the chunk comes from |
 | `title` | str, at most 200 chars | The page's own title |
 | `retrieved` | date | The date the page was retrieved. SkillSpec `sources[].retrieved` requires it |
 
 The model is strict and frozen, and unknown fields are rejected. The list order is the ranking; there is no score field.
+
+**TODO (the task that gives passages to the Architect):** the Skill Architect gets no passages yet (`prompts/architect/generate.md` keeps `knowledge.references` and `sources` empty). When it does, its prompt must say "summarise passages in your own words and cite them; never paste long parts", and that prompt change needs its own re-measure.
 
 ## Rules (every backend behaves the same)
 - **`domain`:** a SkillSpec domain (`technology/ai`) or just its area (`technology`).
