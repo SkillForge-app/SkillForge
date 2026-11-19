@@ -147,6 +147,8 @@ VERIFIED_SOURCES = dict(
             "National Small Business Week: IRS.gov offers A-Z resources for small businesses | "
             "Internal Revenue Service",
         ),
+        ("https://students.washington.edu/san/release.html", "How to write a press release"),
+        ("https://prsa.org/ethics", "PRSA Code of Ethics | PRSA"),
     ]
 )
 # Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
@@ -161,6 +163,7 @@ FIXTURE_DOMAINS = {
     "technology/incident-response": ("inc-", 5),
     "legal/contracts": ("legal-", 5),
     "finance/small-business": ("fin-", 5),
+    "writing/public-relations": ("pr-", 5),
 }
 SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 

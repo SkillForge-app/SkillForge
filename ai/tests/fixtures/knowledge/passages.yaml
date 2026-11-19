@@ -698,3 +698,65 @@ passages:
       crowdfunding and ends with a worksheet for assessing your own needs. SBA-guaranteed loans
       suit creditworthy owners who cannot get conventional financing, and the Lender Match tool
       connects them with participating lenders to compare rates, terms and fees.
+  # ---------------------------------------------------------------- writing/public-relations
+  # Summarised by Claude Code from the live pages on 2026-11-19: AI-09 sources #5 (a student
+  # activist network's press release guide) and #1 (PRSA Code of Ethics).
+  - chunk_id: pr-uw-release-01
+    domain: writing/public-relations
+    source_url: https://students.washington.edu/san/release.html
+    title: "How to write a press release"
+    retrieved: 2026-11-19
+    text: >-
+      Newsrooms receive far more material than they can use, so a press release has to catch an
+      editor's eye, give a reporter something useful and show that the event is genuinely
+      newsworthy. The guide treats the release as a short pitch, not a full article.
+  - chunk_id: pr-uw-release-02
+    domain: writing/public-relations
+    source_url: https://students.washington.edu/san/release.html
+    title: "How to write a press release"
+    retrieved: 2026-11-19
+    text: >-
+      The guide's checklist: mark it for immediate release with the date, write a punchy headline,
+      put the most important fact in the first sentence, cover who, what, where, when and why
+      early, keep it to one page (attach a background briefing if needed), mention good photo
+      opportunities and always give a contact name and phone number.
+  - chunk_id: pr-prsa-ethics-01
+    domain: writing/public-relations
+    source_url: https://prsa.org/ethics
+    title: "PRSA Code of Ethics | PRSA"
+    retrieved: 2026-11-19
+    text: >-
+      The PRSA Code of Ethics, first written in 1950, is the main ethics guide for US public
+      relations. Its core values are advocacy for clients that also serves public debate,
+      honesty and accuracy, expertise, independent and accountable counsel, loyalty balanced
+      with the public interest, and fairness to everyone the work touches.
+  - chunk_id: pr-prsa-ethics-02
+    domain: writing/public-relations
+    source_url: https://prsa.org/ethics
+    title: "PRSA Code of Ethics | PRSA"
+    retrieved: 2026-11-19
+    text: >-
+      Under PRSA's free-flow-of-information provision, members keep communication honest and
+      accurate, correct their own errors promptly and keep gifts to journalists or officials
+      nominal, legal and infrequent. Giving a columnist expensive products to win favourable
+      coverage is an example of improper conduct.
+  - chunk_id: pr-prsa-ethics-03
+    domain: writing/public-relations
+    source_url: https://prsa.org/ethics
+    title: "PRSA Code of Ethics | PRSA"
+    retrieved: 2026-11-19
+    text: >-
+      PRSA's disclosure rules ask members to check that what they release is true, name the
+      sponsors behind causes they promote, disclose their own financial interests in a client and
+      avoid deception. Undisclosed front-group campaigns, paid people posing as volunteers and
+      misleading omissions all break the code.
+  - chunk_id: pr-prsa-ethics-04
+    domain: writing/public-relations
+    source_url: https://prsa.org/ethics
+    title: "PRSA Code of Ethics | PRSA"
+    retrieved: 2026-11-19
+    text: >-
+      The code also requires protecting confidential, private and insider information of clients
+      and employers, past and present, and reporting leaks to the right authority. Members must
+      avoid real, potential or perceived conflicts of interest, and compete fairly without
+      spreading rumours about rivals.
