@@ -645,3 +645,56 @@ passages:
       not generally known, that others cannot properly find out, and that its owner takes
       reasonable steps to keep secret. All three conditions are required; if one lapses, so
       does the protection, which otherwise has no time limit.
+  # ---------------------------------------------------------------- finance/small-business
+  # Summarised by Claude Code from the live pages on 2026-11-19: AI-09 sources #3 and #5 (IRS)
+  # and #4 (SBA). Skipped: #1 and #2 SCORE (403 behind a bot check), #6 SBA (timed out).
+  - chunk_id: fin-irs-sbweek-01
+    domain: finance/small-business
+    source_url: https://www.irs.gov/node/122126
+    title: "National Small Business Week: IRS.gov offers A-Z resources for small businesses | Internal Revenue Service"
+    retrieved: 2026-11-19
+    text: >-
+      The IRS points small businesses, including the self-employed, contractors and gig workers,
+      to its Small Business and Self-Employed Tax Center first. Its pages follow a business's
+      life: a checklist for starting out, and help choosing a business structure, which decides
+      the income tax return forms the business must file.
+  - chunk_id: fin-irs-sbweek-02
+    domain: finance/small-business
+    source_url: https://www.irs.gov/node/122126
+    title: "National Small Business Week: IRS.gov offers A-Z resources for small businesses | Internal Revenue Service"
+    retrieved: 2026-11-19
+    text: >-
+      For running a business, the IRS pages explain getting an Employer Identification Number,
+      keeping good records and filing and paying taxes, and later how to close a business. To
+      keep up with obligations such as withholding deposits and quarterly filing, the IRS offers
+      an online tax calendar of due dates and a free small-business e-newsletter.
+  - chunk_id: fin-irs-sbhand-01
+    domain: finance/small-business
+    source_url: https://www.irs.gov/node/1081
+    title: "IRS Lends a Hand to Small Business | Internal Revenue Service"
+    retrieved: 2026-11-19
+    text: >-
+      An IRS release from 2004 lists free online help for small businesses: how the tax code
+      treats each business structure, applying for an EIN online, e-filing employment taxes and
+      other returns, and paying federal taxes electronically through EFTPS at any hour instead
+      of by check.
+  - chunk_id: fin-sba-finances-01
+    domain: finance/small-business
+    source_url: https://www.sba.gov/blog/2021/2021-04/understand-your-finances-grow-your-business/
+    title: "Understand Your Finances and Grow Your Business - Small Business Administration"
+    retrieved: 2026-11-19
+    text: >-
+      The SBA calls understanding your finances key to small-business success and suggests
+      setting finance goals, such as getting a loan, raising revenue or learning about taxes.
+      Its resource partners help owners prepare loan applications: reviewing the business plan
+      and organising tax returns and bank statements before they go to a lender.
+  - chunk_id: fin-sba-finances-02
+    domain: finance/small-business
+    source_url: https://www.sba.gov/blog/2021/2021-04/understand-your-finances-grow-your-business/
+    title: "Understand Your Finances and Grow Your Business - Small Business Administration"
+    retrieved: 2026-11-19
+    text: >-
+      The SBA's free Financing Your Business course compares loans, grants, venture capital and
+      crowdfunding and ends with a worksheet for assessing your own needs. SBA-guaranteed loans
+      suit creditworthy owners who cannot get conventional financing, and the Lender Match tool
+      connects them with participating lenders to compare rates, terms and fees.

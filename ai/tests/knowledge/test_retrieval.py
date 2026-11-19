@@ -134,6 +134,19 @@ VERIFIED_SOURCES = dict(
             "contract | Wex | US Law | LII / Legal Information Institute",
         ),
         ("https://www.uspto.gov/ip-policy/trade-secret-policy", "Trade secret policy | USPTO"),
+        (
+            "https://www.irs.gov/node/1081",
+            "IRS Lends a Hand to Small Business | Internal Revenue Service",
+        ),
+        (
+            "https://www.sba.gov/blog/2021/2021-04/understand-your-finances-grow-your-business/",
+            "Understand Your Finances and Grow Your Business - Small Business Administration",
+        ),
+        (
+            "https://www.irs.gov/node/122126",
+            "National Small Business Week: IRS.gov offers A-Z resources for small businesses | "
+            "Internal Revenue Service",
+        ),
     ]
 )
 # Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
@@ -147,6 +160,7 @@ FIXTURE_DOMAINS = {
     "hr/recruiting": ("hr-", 5),
     "technology/incident-response": ("inc-", 5),
     "legal/contracts": ("legal-", 5),
+    "finance/small-business": ("fin-", 5),
 }
 SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 
