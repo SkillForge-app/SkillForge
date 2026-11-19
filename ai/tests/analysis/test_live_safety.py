@@ -1,7 +1,7 @@
 """Live smoke test for the safety screen. Opt-in only: `pytest -m live tests/analysis`.
 
-Uses the dev set: allowed items must be allowed. The harmful half of the dev set is still
-INCOMPLETE (to be written by a person), so that part skips until it exists.
+Uses the dev set: allowed items must be allowed and block items blocked. The block half
+skips if it is empty (it has been filled and in `draft` since 2026-11-17).
 """
 
 import os

@@ -7,6 +7,7 @@ from core.llm.config import ModelConfig, ModelRole, load_config
 from core.llm.errors import (
     BudgetExceeded,
     ConfigError,
+    DeadlineExceeded,
     LLMError,
     LLMInputError,
     LLMOutputInvalid,
@@ -26,7 +27,7 @@ from core.llm.gateway import (
     get_gateway,
     set_gateway,
 )
-from core.llm.limits import Limits, RoleLimit, get_limits, set_limits
+from core.llm.limits import Limits, RoleLimit, get_limits, set_limits, step_deadline
 from core.llm.prompts import Prompt, load_prompt
 from core.llm.usage import (
     CallRecord,
@@ -42,6 +43,7 @@ __all__ = [
     "BudgetExceeded",
     "CallRecord",
     "ConfigError",
+    "DeadlineExceeded",
     "FakeGateway",
     "FakeOutputMissing",
     "LLMError",
@@ -73,6 +75,7 @@ __all__ = [
     "set_gateway",
     "set_limits",
     "skill_run",
+    "step_deadline",
     "track_usage",
     "use_fake",
 ]

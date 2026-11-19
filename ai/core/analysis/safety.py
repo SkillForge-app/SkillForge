@@ -31,7 +31,7 @@ from core.analysis.types import (
     SafetyClearance,
     SafetyCondition,
 )
-from core.llm import BudgetExceeded, LLMError, LLMRefused, complete, load_prompt
+from core.llm import BudgetExceeded, LLMError, LLMRefused, complete, load_prompt, step_deadline
 from core.spec import HIGH_RISK_AREAS, Target
 from core.spec.models import Line, SpecModel
 
@@ -157,12 +157,14 @@ async def screen_request(text: str, answers: Sequence[Mapping[str, Any]] = ()) -
 async def screen_and_analyze(
     text: str, *, selected_targets: Iterable[Target] = ()
 ) -> AnalyzedRequest:
-    """Screen and analyze at the same time; release the analysis only if the screen allows."""
-    screen, analysis = await asyncio.gather(
-        screen_request(text),
-        analyze_request(text, selected_targets=selected_targets),
-        return_exceptions=True,
-    )
+    """Screen and analyze at the same time; release the analysis only if the screen allows.
+    Raises DeadlineExceeded when the environment's deadline for `analyze` passes."""
+    async with step_deadline("analyze"):
+        screen, analysis = await asyncio.gather(
+            screen_request(text),
+            analyze_request(text, selected_targets=selected_targets),
+            return_exceptions=True,
+        )
     return _release(screen, analysis)
 
 
@@ -175,11 +177,12 @@ async def answer_questions_safely(
     if unknown:
         raise ValueError(f"answers to questions that were not asked: {unknown}")
     pairs = [{"question": by_id[a.question_id].text, "answer": a.text} for a in answers]
-    screen, analysis = await asyncio.gather(
-        screen_request(analyzed.request, pairs),
-        answer_questions(analyzed, answers),
-        return_exceptions=True,
-    )
+    async with step_deadline("clarify"):
+        screen, analysis = await asyncio.gather(
+            screen_request(analyzed.request, pairs),
+            answer_questions(analyzed, answers),
+            return_exceptions=True,
+        )
     return _release(screen, analysis)
 
 
