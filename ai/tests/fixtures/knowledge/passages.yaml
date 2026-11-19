@@ -10,7 +10,8 @@
 # Every passage in the other 8 domains was summarised by Claude Code from the live page on its
 # `retrieved` date (the page's text read with the AI-10 extractor), from AI-09's reviewed top
 # sources for that domain (evaluation/sources/reports/sources-2026-10-26-5.md); a source whose
-# page had no usable text (a metadata-only page, or a PDF) was skipped for the next one. No
+# page had no usable text or could not be fetched was skipped for the next one. A PDF is read
+# as text (pdftotext); its `title` is the document's own heading. No
 # person wrote them. Human spot-check: Ziad Abdullah will check 5 of them; PENDING until he
 # confirms (record the ids and the date here).
 version: 1.1.0
@@ -323,3 +324,68 @@ passages:
       (planning, reviews, audits and configuration management), IEEE 1012 for verification and
       validation, and IEEE 829 for test documentation. Contracts, especially in defence and
       government IT, often cite them to set a minimum level of engineering discipline.
+  # ---------------------------------------------------------------- data/analytics
+  # Summarised by Claude Code from the live documents on 2026-11-19: AI-09 sources #1 and #3
+  # (PDFs, read as text). Skipped: #2 EPA (one line of text), #4 State Library of Queensland
+  # (404), #5 GOV.UK (a list of links), #6 St Louis (unreachable), #7 GSS (withdrawn), #8 Census
+  # (one sentence), #9 Brookings (about education standards), #10 GSA (unreachable).
+  - chunk_id: data-ct-viz-01
+    domain: data/analytics
+    source_url: https://portal.ct.gov/-/media/ct-data/data-visualization-guidelines.pdf
+    title: Data Visualization Guidelines
+    retrieved: 2026-11-19
+    text: >-
+      Connecticut's open-data guidelines start a chart or dashboard with two questions: what the
+      goal is and who the audience is. Ask which questions the work must answer, whether readers
+      are technical, what they want to learn, and which format suits them, such as an
+      interactive dashboard, a written report or slides.
+  - chunk_id: data-ct-viz-02
+    domain: data/analytics
+    source_url: https://portal.ct.gov/-/media/ct-data/data-visualization-guidelines.pdf
+    title: Data Visualization Guidelines
+    retrieved: 2026-11-19
+    text: >-
+      Pick the points or trends that tell the story, give each chart one clear purpose, then
+      match the chart to the job: lines or bars for change over time, pie or stacked bars for
+      parts of a whole, bars for comparisons, scatterplots or heat maps for correlation,
+      histograms for distributions and choropleths for maps.
+  - chunk_id: data-ct-viz-03
+    domain: data/analytics
+    source_url: https://portal.ct.gov/-/media/ct-data/data-visualization-guidelines.pdf
+    title: Data Visualization Guidelines
+    retrieved: 2026-11-19
+    text: >-
+      For clarity the guidelines advise removing clutter such as borders, gridlines and
+      repeated labels, writing a title a newcomer understands (often the main finding), labelling
+      data directly, using plain words, and testing a draft on someone who does not know the
+      data well.
+  - chunk_id: data-ct-viz-04
+    domain: data/analytics
+    source_url: https://portal.ct.gov/-/media/ct-data/data-visualization-guidelines.pdf
+    title: Data Visualization Guidelines
+    retrieved: 2026-11-19
+    text: >-
+      Give readers context such as trends or comparison groups, publish the underlying data where
+      possible, and add a short text summary of what the chart shows, which also helps screen
+      reader users. Design with equity and accessibility in mind: colour schemes that work for
+      colour-blind readers, and people-first language.
+  - chunk_id: data-alx-analytics-01
+    domain: data/analytics
+    source_url: https://www.alexandriava.gov/sites/default/files/2023-08/Data%20Analytics%20Service%20Guidelines.pdf
+    title: Data Analytics Service Guidelines
+    retrieved: 2026-11-19
+    text: >-
+      The City of Alexandria's analytics office aims to turn data into better policy, investment
+      and services. Its guidelines start from the organisation's priority questions and from what
+      end users need: analysts agree research questions and scope with stakeholders, and treat
+      the user's need, not a chosen tool, as the starting point.
+  - chunk_id: data-alx-analytics-02
+    domain: data/analytics
+    source_url: https://www.alexandriava.gov/sites/default/files/2023-08/Data%20Analytics%20Service%20Guidelines.pdf
+    title: Data Analytics Service Guidelines
+    retrieved: 2026-11-19
+    text: >-
+      Alexandria expects analysis to be objective and rigorous enough to inform decisions, built
+      with the departments that know the topic, compliant with data protection law and city
+      procedures, shared publicly through key indicators where possible, and reviewed over time
+      so the service keeps improving.

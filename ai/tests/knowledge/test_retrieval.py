@@ -91,6 +91,15 @@ VERIFIED_SOURCES = dict(
             "https://technav.ieee.org/topic/software-standards/",
             "Software standards | IEEE Technology Navigator",
         ),
+        (
+            "https://portal.ct.gov/-/media/ct-data/data-visualization-guidelines.pdf",
+            "Data Visualization Guidelines",
+        ),
+        (
+            "https://www.alexandriava.gov/sites/default/files/2023-08/"
+            "Data%20Analytics%20Service%20Guidelines.pdf",
+            "Data Analytics Service Guidelines",
+        ),
     ]
 )
 # Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
@@ -99,6 +108,7 @@ FIXTURE_DOMAINS = {
     "marketing": ("mkt-", 10),
     "technology/ai": ("ai-", 10),
     "technology/software-engineering": ("swe-", 5),
+    "data/analytics": ("data-", 5),
 }
 SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 
