@@ -108,6 +108,15 @@ VERIFIED_SOURCES = dict(
             "https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/",
             "How to Understand Your Lab Results: MedlinePlus Medical Test",
         ),
+        (
+            "https://www.eeoc.gov/prohibited-employment-policiespractices",
+            "Prohibited Employment Policies/Practices | "
+            "U.S. Equal Employment Opportunity Commission",
+        ),
+        (
+            "https://www.shrm.org/topics-tools/tools/interview-questions",
+            "Sample Job Interview Questions | SHRM",
+        ),
     ]
 )
 # Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
@@ -118,6 +127,7 @@ FIXTURE_DOMAINS = {
     "technology/software-engineering": ("swe-", 5),
     "data/analytics": ("data-", 5),
     "medical/patient-education": ("med-", 5),
+    "hr/recruiting": ("hr-", 5),
 }
 SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 

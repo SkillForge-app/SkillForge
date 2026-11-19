@@ -452,3 +452,68 @@ passages:
       inconclusive means it could not tell, which usually leads to a repeat test. No test is
       perfect: false positives and false negatives happen. Food, medicines, supplements, hard
       exercise, menstruation or skipped preparation such as fasting can affect results.
+  # ---------------------------------------------------------------- hr/recruiting
+  # Summarised by Claude Code from the live pages on 2026-11-19: AI-09 sources #1 (EEOC) and #3
+  # (SHRM; its questions are not reproduced, only its advice summarised). Skipped: #2 DOL
+  # (403 Access Denied).
+  - chunk_id: hr-eeoc-practices-01
+    domain: hr/recruiting
+    source_url: https://www.eeoc.gov/prohibited-employment-policiespractices
+    title: "Prohibited Employment Policies/Practices | U.S. Equal Employment Opportunity Commission"
+    retrieved: 2026-11-19
+    text: >-
+      US federal law (EEOC) makes it illegal to publish a job advert that favours or discourages
+      applicants because of race, colour, religion, sex (including pregnancy, sexual orientation
+      and gender identity), national origin, age 40 or over, disability or genetic information.
+      An advert asking for "recent college graduates", for example, may discourage older people.
+  - chunk_id: hr-eeoc-practices-02
+    domain: hr/recruiting
+    source_url: https://www.eeoc.gov/prohibited-employment-policiespractices
+    title: "Prohibited Employment Policies/Practices | U.S. Equal Employment Opportunity Commission"
+    retrieved: 2026-11-19
+    text: >-
+      Recruiting and hiring must not discriminate on those grounds either: word-of-mouth hiring
+      that keeps a workforce of one group can break the law, decisions may not rest on
+      stereotypes, any test must be necessary and related to the job, and an applicant with a
+      disability gets a reasonable accommodation unless it causes significant difficulty or
+      expense.
+  - chunk_id: hr-eeoc-practices-03
+    domain: hr/recruiting
+    source_url: https://www.eeoc.gov/prohibited-employment-policiespractices
+    title: "Prohibited Employment Policies/Practices | U.S. Equal Employment Opportunity Commission"
+    retrieved: 2026-11-19
+    text: >-
+      EEOC's rule for pre-employment questions: ask only what is needed to judge whether someone
+      is qualified. Employers may not ask about disability before an offer, should avoid
+      questions (such as club memberships) that reveal protected traits unless a business need
+      justifies them, and should not ask for a photo until an offer has been accepted.
+  - chunk_id: hr-eeoc-practices-04
+    domain: hr/recruiting
+    source_url: https://www.eeoc.gov/prohibited-employment-policiespractices
+    title: "Prohibited Employment Policies/Practices | U.S. Equal Employment Opportunity Commission"
+    retrieved: 2026-11-19
+    text: >-
+      The same protections cover decisions after hiring: job referrals by employers, agencies or
+      unions, job assignments and promotions, pay and benefits, discipline and layoffs. An
+      employer may also not give a negative or false reference, or refuse one, because of a
+      person's protected traits.
+  - chunk_id: hr-shrm-interview-01
+    domain: hr/recruiting
+    source_url: https://www.shrm.org/topics-tools/tools/interview-questions
+    title: "Sample Job Interview Questions | SHRM"
+    retrieved: 2026-11-19
+    text: >-
+      SHRM suggests building an interview from the few competencies that matter most for the job,
+      with questions of two main kinds: behavioural ones, which ask for real examples from the
+      candidate's past to predict future performance, and situational ones, which ask how the
+      candidate would handle a described scenario.
+  - chunk_id: hr-shrm-interview-02
+    domain: hr/recruiting
+    source_url: https://www.shrm.org/topics-tools/tools/interview-questions
+    title: "Sample Job Interview Questions | SHRM"
+    retrieved: 2026-11-19
+    text: >-
+      To stay fair and avoid legal problems, SHRM advises judging every candidate for a role
+      against the same core criteria, with no favouritism. Most questions have no single right
+      answer, so decide in advance what good answers look like for the role; the candidate's
+      reasoning often matters as much as the answer.
