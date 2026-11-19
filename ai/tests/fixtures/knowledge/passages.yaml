@@ -389,3 +389,66 @@ passages:
       with the departments that know the topic, compliant with data protection law and city
       procedures, shared publicly through key indicators where possible, and reviewed over time
       so the service keeps improving.
+  # ---------------------------------------------------------------- medical/patient-education
+  # Summarised by Claude Code from the live pages on 2026-11-19: AI-09 sources #1 and #2
+  # (MedlinePlus), which cover the explain-medical-results skill directly.
+  - chunk_id: med-mlp-education-01
+    domain: medical/patient-education
+    source_url: https://medlineplus.gov/ency/patientinstructions/000455.htm
+    title: "Choosing effective patient education materials: MedlinePlus Medical Encyclopedia"
+    retrieved: 2026-11-19
+    text: >-
+      MedlinePlus advises clinicians to begin patient education by finding out what the patient
+      already knows and wants to know, how ready they are to learn and what might get in the way.
+      Then make a plan with the patient and their support person, agree realistic learning goals
+      and pick resources that fit the patient.
+  - chunk_id: med-mlp-education-02
+    domain: medical/patient-education
+    source_url: https://medlineplus.gov/ency/patientinstructions/000455.htm
+    title: "Choosing effective patient education materials: MedlinePlus Medical Encyclopedia"
+    retrieved: 2026-11-19
+    text: >-
+      Teach what the patient needs to know before what is nice to know, give only as much as
+      they can take in at once, and organise it. Most teaching should cover what to do and why,
+      when to expect results, which warning signs to watch for, what to do if a problem occurs
+      and whom to contact with questions.
+  - chunk_id: med-mlp-education-03
+    domain: medical/patient-education
+    source_url: https://medlineplus.gov/ency/patientinstructions/000455.htm
+    title: "Choosing effective patient education materials: MedlinePlus Medical Encyclopedia"
+    retrieved: 2026-11-19
+    text: >-
+      When choosing materials, a mix of media often works best, and the patient's literacy,
+      numeracy and culture should shape the plan. MedlinePlus warns against fear tactics, asks
+      clinicians to review every material before sharing it, and says no resource fully
+      replaces one-on-one teaching.
+  - chunk_id: med-mlp-labs-01
+    domain: medical/patient-education
+    source_url: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/
+    title: "How to Understand Your Lab Results: MedlinePlus Medical Test"
+    retrieved: 2026-11-19
+    text: >-
+      A lab test checks a sample of blood, urine or other fluid or tissue. Some tests show
+      clearly whether a person has a condition; others give a general picture of health. Results
+      alone are not a full picture: providers combine them with the exam and health history, so
+      patients should discuss results with their provider even when they can read them online.
+  - chunk_id: med-mlp-labs-02
+    domain: medical/patient-education
+    source_url: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/
+    title: "How to Understand Your Lab Results: MedlinePlus Medical Test"
+    retrieved: 2026-11-19
+    text: >-
+      A reference range is the span of results seen in large groups of healthy people, and it can
+      differ by group and by lab. A result outside it is not always a sign of a problem, and one
+      inside it does not guarantee good health. Compare a result only with the range on that
+      lab's report, and use the same lab to follow a trend.
+  - chunk_id: med-mlp-labs-03
+    domain: medical/patient-education
+    source_url: https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/
+    title: "How to Understand Your Lab Results: MedlinePlus Medical Test"
+    retrieved: 2026-11-19
+    text: >-
+      Negative means the test did not find what it looked for, positive means it did, and
+      inconclusive means it could not tell, which usually leads to a repeat test. No test is
+      perfect: false positives and false negatives happen. Food, medicines, supplements, hard
+      exercise, menstruation or skipped preparation such as fasting can affect results.

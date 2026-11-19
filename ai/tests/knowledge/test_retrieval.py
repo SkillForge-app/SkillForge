@@ -100,6 +100,14 @@ VERIFIED_SOURCES = dict(
             "Data%20Analytics%20Service%20Guidelines.pdf",
             "Data Analytics Service Guidelines",
         ),
+        (
+            "https://medlineplus.gov/ency/patientinstructions/000455.htm",
+            "Choosing effective patient education materials: MedlinePlus Medical Encyclopedia",
+        ),
+        (
+            "https://medlineplus.gov/lab-tests/how-to-understand-your-lab-results/",
+            "How to Understand Your Lab Results: MedlinePlus Medical Test",
+        ),
     ]
 )
 # Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
@@ -109,6 +117,7 @@ FIXTURE_DOMAINS = {
     "technology/ai": ("ai-", 10),
     "technology/software-engineering": ("swe-", 5),
     "data/analytics": ("data-", 5),
+    "medical/patient-education": ("med-", 5),
 }
 SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 
