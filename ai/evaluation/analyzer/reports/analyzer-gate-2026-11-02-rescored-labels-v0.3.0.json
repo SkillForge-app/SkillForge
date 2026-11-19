@@ -1,0 +1,221 @@
+{
+  "kind": "rescore",
+  "title": "rescored against labels v0.3.0, same 2 Nov predictions, no model calls",
+  "created": "2026-11-18T23:17:55Z",
+  "live": false,
+  "model_calls": 0,
+  "rescored_from": {
+    "report": "analyzer-gate-2026-11-02.json",
+    "run": "20261102T182823Z",
+    "predictions_sha256": "5405bfcb502b4f7b290aebabd4868d4c857a91241ab21a30abe9128589f9d3ea",
+    "prompt": {
+      "id": "analysis/request",
+      "version": 1
+    },
+    "model": "openrouter/anthropic/claude-sonnet-5.5",
+    "predicted_at": "2026-11-02T18:27:10Z"
+  },
+  "labels_old": [
+    {
+      "name": "skillforge-seed-benchmark",
+      "version": "0.1.0",
+      "sha256": "f0a92ff2f445ef0e96099d1f2a9cbbc87b2bf598d8b16f13752e3b6a9e4d3337"
+    },
+    {
+      "name": "analyzer-requests-test",
+      "version": "0.2.0",
+      "sha256": "d7e559b372a1b7f82853970a71db87b3c190baccbc80670029e6919586d5b06b"
+    }
+  ],
+  "labels_new": [
+    {
+      "name": "skillforge-seed-benchmark",
+      "version": "0.1.0",
+      "sha256": "f0a92ff2f445ef0e96099d1f2a9cbbc87b2bf598d8b16f13752e3b6a9e4d3337"
+    },
+    {
+      "name": "analyzer-requests-test",
+      "version": "0.3.0",
+      "sha256": "2a96507e736e648a605b608136270347ead5e416d21f5d185ad3fc6e204fdf68"
+    }
+  ],
+  "label_changes": [
+    {
+      "id": "t-45",
+      "field": "kind",
+      "old_label": "role",
+      "new_label": "task",
+      "predicted": "role",
+      "before": "right",
+      "after": "wrong"
+    },
+    {
+      "id": "t-56",
+      "field": "kind",
+      "old_label": "role",
+      "new_label": "task",
+      "predicted": "role",
+      "before": "right",
+      "after": "wrong"
+    },
+    {
+      "id": "t-65",
+      "field": "kind",
+      "old_label": "role",
+      "new_label": "task",
+      "predicted": "role",
+      "before": "right",
+      "after": "wrong"
+    },
+    {
+      "id": "t-68",
+      "field": "kind",
+      "old_label": "task",
+      "new_label": "role",
+      "predicted": "task",
+      "before": "right",
+      "after": "wrong"
+    }
+  ],
+  "carried_over_unchanged": "mentioned_targets, latency_ms and needs_clarification.question_rule_kept come from the 2 Nov report: they need fields the saved predictions do not keep, and no label they depend on changed.",
+  "sets": {
+    "gate": {
+      "n": 100,
+      "fields": {
+        "kind": {
+          "correct": 88,
+          "accuracy": 0.88,
+          "confusion": {
+            "role": {
+              "role": 32,
+              "workflow": 1,
+              "task": 2
+            },
+            "task": {
+              "task": 38,
+              "role": 5,
+              "workflow": 4
+            },
+            "workflow": {
+              "workflow": 18
+            }
+          }
+        },
+        "domain_area": {
+          "correct": 95,
+          "accuracy": 0.95,
+          "confusion": {
+            "customer-support": {
+              "customer-support": 5
+            },
+            "data": {
+              "data": 4,
+              "finance": 1,
+              "technology": 1
+            },
+            "design": {
+              "design": 4,
+              "technology": 1
+            },
+            "education": {
+              "education": 5
+            },
+            "finance": {
+              "finance": 8
+            },
+            "general": {
+              "general": 6
+            },
+            "hr": {
+              "hr": 6
+            },
+            "legal": {
+              "legal": 6
+            },
+            "marketing": {
+              "marketing": 7
+            },
+            "medical": {
+              "medical": 6
+            },
+            "operations": {
+              "operations": 4,
+              "general": 1
+            },
+            "product": {
+              "product": 5
+            },
+            "research": {
+              "research": 5
+            },
+            "sales": {
+              "sales": 5
+            },
+            "technology": {
+              "technology": 13
+            },
+            "writing": {
+              "writing": 6,
+              "general": 1
+            }
+          }
+        },
+        "risk": {
+          "correct": 96,
+          "accuracy": 0.96,
+          "confusion": {
+            "high": {
+              "high": 20
+            },
+            "low": {
+              "low": 62,
+              "high": 1,
+              "medium": 3
+            },
+            "medium": {
+              "medium": 14
+            }
+          }
+        }
+      },
+      "joint_accuracy": 0.81,
+      "needs_clarification": {
+        "accuracy": 1.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "question_rule_kept": 1.0
+      },
+      "errors": {},
+      "mentioned_targets": {
+        "n": 70,
+        "exact_match": 1.0
+      },
+      "latency_ms": {
+        "p50": 2539.3,
+        "max": 8090.7
+      }
+    }
+  },
+  "gate": {
+    "passed": false,
+    "threshold": 0.9,
+    "accuracy": {
+      "kind": 0.88,
+      "domain_area": 0.95,
+      "risk": 0.96
+    },
+    "reasons": [
+      "kind accuracy 0.88 < 0.90"
+    ]
+  },
+  "gate_old": {
+    "passed": true,
+    "threshold": 0.9,
+    "accuracy": {
+      "kind": 0.92,
+      "domain_area": 0.95,
+      "risk": 0.96
+    },
+    "reasons": []
+  }
+}
