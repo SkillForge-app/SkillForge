@@ -3,7 +3,7 @@
 The one call Track B uses to get cited knowledge. It lives in `ai/core/knowledge/`.
 - **Frozen:** 20 Nov 2026 (Week 4). The real retriever (AI-11) is now the default, behind the same call: nothing below changed.
 - **Changes:** need a pull request that both the Track A and Track B leads approve.
-- **Testing:** select `FakeRetriever` (24 fixture passages) with `SKILLFORGE_RETRIEVER=fake`; the test suite does this for every test.
+- **Testing:** select `FakeRetriever` (71 fixture passages, all 10 seed domains) with `SKILLFORGE_RETRIEVER=fake`; the test suite does this for every test.
 
 ```python
 from core.knowledge import retrieve, to_source
@@ -34,7 +34,7 @@ The model is strict and frozen, and unknown fields are rejected. The list order 
 
 ## Rules (every backend behaves the same)
 - **`domain`:** a SkillSpec domain (`technology/ai`) or just its area (`technology`).
-  - A passage matches when the domains are equal, or one is a path prefix of the other. So `marketing/strategy` gets `marketing` passages, and `technology` gets `technology/ai` passages.
+  - A passage matches when the domains are equal, or one is a path prefix of the other. So `marketing/strategy` gets `marketing` passages, and `technology` gets the passages of every `technology/...` domain.
   - In the real index a chunk can serve several domains; it matches when any of them does. It is still returned once.
   - No matching passage returns `[]`. That is not an error, so the Architect can carry on without sources.
   - **The real backend only:** an *empty* index raises `ConfigError` ("the knowledge index is empty; run ingest"), and so does an index built with a different embedding model. Neither is a "no match": both are a setup problem, so they fail loudly.
@@ -49,7 +49,11 @@ The model is strict and frozen, and unknown fields are rejected. The list order 
 - `tests/knowledge/test_retrieval.py` builds a SkillSpec from retrieved passages, and that SkillSpec passes `validate_spec`.
 
 ## The fake
-- **Data:** `tests/fixtures/knowledge/passages.yaml`, 12 passages for `marketing` and 12 for `technology/ai`, from 13 sources we checked by hand. The marketing sources are the FTC, CAN-SPAM, the UK CAP Code, and Google Search Central. The technology/ai sources are the RAG paper, Claude docs, the NIST AI RMF, Lost in the Middle, OWASP LLM01 and Sentence-BERT.
+- **Data:** `tests/fixtures/knowledge/passages.yaml` (version 1.1.0): the 10 seed-benchmark domains.
+  - **1.0.0 (checked by hand):** 12 passages for `marketing` and 12 for `technology/ai`, from 13 sources. The marketing sources are the FTC, CAN-SPAM, the UK CAP Code, and Google Search Central. The technology/ai sources are the RAG paper, Claude docs, the NIST AI RMF, Lost in the Middle, OWASP LLM01 and Sentence-BERT.
+  - **1.1.0 (for AI-12):** 47 passages for the other 8 seed domains, 5 or 6 each, from AI-09's reviewed top sources. They were **summarised by Claude Code from the live pages on 2026-11-19**, not written by a person. A human spot-check of 5 of them is **pending**. The file's header and each domain's comment record the sources used and why others were skipped.
+  - **The rules for every passage:** a summary in our own words, never copied text, of 120–700 characters, with the page's own title (a PDF's own heading) and its URL in `VERIFIED_SOURCES` (`tests/knowledge/test_retrieval.py`).
+  - **The Skill Architect's AI-12 measurement uses these passages** until DE's store holds the seed domains (`docs/ai/skill-architect.md`).
 - **Ranking:** word overlap with the title and text; ties are broken by `chunk_id`. The results are deterministic, so tests can assert exact ids.
 - **Filling k:** passages in the domain that share no words with the query still come after the matching ones, so `k` results come back when the domain has that many, as with vector search.
 - **Recorded calls:** `FakeRetriever().calls` records every call.

@@ -79,7 +79,7 @@ Before either extractor runs, the pre-clean removes:
   - LLM calls are logged with the existing metadata-only `CallRecord`
 
 ## Layer 3: for AI-12 and AI-13: passages in a prompt
-Use the helper; don't paste passage text into a prompt yourself. No Track B prompt was changed for this.
+Use the helper; don't paste passage text into a prompt yourself. The Skill Architect (AI-12) does this in `architect/generate` and `architect/repair` v2, and runs `check_spec` (layer 4) after `validate_spec` on every attempt ([skill-architect.md](skill-architect.md)).
 
 ```python
 from core.knowledge import retrieve, wrap_passages, UNTRUSTED_DATA_RULE

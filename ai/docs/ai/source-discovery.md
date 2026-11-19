@@ -123,6 +123,7 @@ found.rejected       # [(url, reason)]: blocked, duplicate, robots-disallowed, u
 - **A licence the page declares itself wins.** DE-04 reads it from the page (`rel="license"`, `<meta name="license">`, JSON-LD) and stores it with `license_source = 'page'`. The table applies only when the page declares none.
 - **`manual`** because the registry is checked by people and changed by pull request (AI lead + DE lead).
 - **The SKILL.md corpus (DE-08) has its own, stricter list:** see [gap-checker.md](gap-checker.md#licences-in-the-corpus-de-08).
+- **In a SkillSpec (AI-12):** the Skill Architect fills each source's `licence` with the same mapping, from the host rule (`core.knowledge.licence_for_url`); `copyright-summarise-and-cite` leaves it empty. This is interim (review F14): a licence the page declares itself can't reach a passage until A4 gains an optional licence field and DE's view a column for it.
 
 ## robots.txt
 - **Production (`HttpRobots`):** fetches each site's robots.txt once and follows RFC 9309. A 4xx answer means no rules, so the page is allowed. A 5xx or no answer means assume everything is disallowed.
