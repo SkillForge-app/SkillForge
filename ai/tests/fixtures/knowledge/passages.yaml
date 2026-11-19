@@ -517,3 +517,67 @@ passages:
       against the same core criteria, with no favouritism. Most questions have no single right
       answer, so decide in advance what good answers look like for the role; the candidate's
       reasoning often matters as much as the answer.
+  # ---------------------------------------------------------------- technology/incident-response
+  # Summarised by Claude Code from the live pages on 2026-11-19: AI-09 sources #2 (PagerDuty's
+  # postmortem template; the reviewed URL response.pagerduty.com/after/post_mortem_template/ now
+  # redirects to docs.pagerduty.com, the page cited here, whose licence is not in the registry)
+  # and #3 (NIST news on SP 800-61 Rev. 2). #1 (FBI PDF) was not needed.
+  - chunk_id: inc-pd-postmortem-01
+    domain: technology/incident-response
+    source_url: https://docs.pagerduty.com/ops-guides/incident-response-guide/postmortem-template
+    title: "Postmortem Template | PagerDuty Docs"
+    retrieved: 2026-11-19
+    text: >-
+      PagerDuty books the postmortem meeting first, within five business days of the incident,
+      before the write-up is filled in, and expects the page to be complete by the meeting. The
+      page names an owner, the meeting time and a link to the incident call recording.
+  - chunk_id: inc-pd-postmortem-02
+    domain: technology/incident-response
+    source_url: https://docs.pagerduty.com/ops-guides/incident-response-guide/postmortem-template
+    title: "Postmortem Template | PagerDuty Docs"
+    retrieved: 2026-11-19
+    text: >-
+      The template opens with a one- or two-sentence summary of contributing factors, timeline
+      and impact, then describes what happened, the conditions that contributed (including any
+      actions that made things worse, to learn from them) and what resolved it, both the
+      temporary fix and the long-term solution.
+  - chunk_id: inc-pd-postmortem-03
+    domain: technology/incident-response
+    source_url: https://docs.pagerduty.com/ops-guides/incident-response-guide/postmortem-template
+    title: "Postmortem Template | PagerDuty Docs"
+    retrieved: 2026-11-19
+    text: >-
+      Impact is recorded with exact numbers: minutes at each severity level, share of
+      notifications delivered late, events dropped, accounts and users affected and support
+      tickets raised. The template also lists the responders (incident commander, scribe,
+      others) and a UTC timeline of key moments, each linked to the logs or tools behind it.
+  - chunk_id: inc-pd-postmortem-04
+    domain: technology/incident-response
+    source_url: https://docs.pagerduty.com/ops-guides/incident-response-guide/postmortem-template
+    title: "Postmortem Template | PagerDuty Docs"
+    retrieved: 2026-11-19
+    text: >-
+      The review ends with what went well, what did not, and action items filed as tracked
+      tickets: fixes for the contributing factor, preparedness work, remaining communication and
+      process improvements. An internal summary goes out right after the meeting, and the public
+      status-page post explains what happened and includes a genuine apology.
+  - chunk_id: inc-nist-ir-01
+    domain: technology/incident-response
+    source_url: https://www.nist.gov/node/392186
+    title: "Updated NIST Guide is a How-To for Dealing With Computer Security Incidents | NIST"
+    retrieved: 2026-11-19
+    text: >-
+      NIST's Computer Security Incident Handling Guide (SP 800-61 Rev. 2) gives teams steps to
+      build an incident response policy and plan. Each plan should state a mission, strategies
+      and goals, how the organisation is set up to respond, metrics for its response capability
+      and a way to keep the plan updated, and every incident should be reviewed afterwards.
+  - chunk_id: inc-nist-ir-02
+    domain: technology/incident-response
+    source_url: https://www.nist.gov/node/392186
+    title: "Updated NIST Guide is a How-To for Dealing With Computer Security Incidents | NIST"
+    retrieved: 2026-11-19
+    text: >-
+      The guide asks teams to look at an attack by its method (what is happening and what needs
+      fixing), by its impact (downtime, data stolen, resources needed to recover) and through
+      coordination: sharing threat information with trusted organisations before and during an
+      attack, after checking with legal what may be shared.

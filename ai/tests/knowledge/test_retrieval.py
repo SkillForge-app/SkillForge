@@ -117,6 +117,14 @@ VERIFIED_SOURCES = dict(
             "https://www.shrm.org/topics-tools/tools/interview-questions",
             "Sample Job Interview Questions | SHRM",
         ),
+        (
+            "https://docs.pagerduty.com/ops-guides/incident-response-guide/postmortem-template",
+            "Postmortem Template | PagerDuty Docs",
+        ),
+        (
+            "https://www.nist.gov/node/392186",
+            "Updated NIST Guide is a How-To for Dealing With Computer Security Incidents | NIST",
+        ),
     ]
 )
 # Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
@@ -128,6 +136,7 @@ FIXTURE_DOMAINS = {
     "data/analytics": ("data-", 5),
     "medical/patient-education": ("med-", 5),
     "hr/recruiting": ("hr-", 5),
+    "technology/incident-response": ("inc-", 5),
 }
 SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 
