@@ -311,9 +311,9 @@ passages:
     retrieved: 2026-11-19
     text: >-
       Two widely used ISO/IEC standards: 12207 sets out software life-cycle processes from
-      acquisition to disposal without prescribing a development method, and 25010 splits
-      software quality into characteristics such as functional suitability, reliability,
-      usability, maintainability and security, giving teams a common vocabulary for quality.
+      acquisition to disposal without prescribing a development method, and 25010 breaks
+      quality down into named characteristics (reliability, security, usability,
+      maintainability, functional suitability and more), a common vocabulary for quality.
   - chunk_id: swe-ieee-standards-03
     domain: technology/software-engineering
     source_url: https://technav.ieee.org/topic/software-standards/
