@@ -43,6 +43,7 @@ from core.knowledge.search import (
     SourceList,
     discover_sources,
     discover_sources_sync,
+    licence_for_url,
 )
 from core.knowledge.types import Passage, to_source
 from core.knowledge.urls import normalise_url
@@ -72,6 +73,7 @@ __all__ = [
     "wrap_passages",
     "discover_sources",
     "discover_sources_sync",
+    "licence_for_url",
     "extract_page",
     "find_site_boilerplate",
     "get_retriever",

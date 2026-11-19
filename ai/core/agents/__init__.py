@@ -1,4 +1,4 @@
-"""Agents that design and improve skills (Track B). AI-07: the Skill Architect.
+"""Agents that design and improve skills (Track B). AI-07/AI-12: the Skill Architect.
 
     from core.agents import build_spec
 
@@ -13,10 +13,16 @@ from core.agents.architect import (
     ArchitectUnavailable,
     NotReady,
     NotScreened,
+    Research,
     build_graph,
     build_spec,
+    copied_text,
     enforce,
+    knowledge_issues,
+    number_sources,
     required_guardrails,
+    research,
+    research_queries,
 )
 
 __all__ = [
@@ -27,8 +33,14 @@ __all__ = [
     "ArchitectUnavailable",
     "NotReady",
     "NotScreened",
+    "Research",
     "build_graph",
     "build_spec",
+    "copied_text",
     "enforce",
+    "knowledge_issues",
+    "number_sources",
     "required_guardrails",
+    "research",
+    "research_queries",
 ]

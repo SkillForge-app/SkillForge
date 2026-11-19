@@ -2,6 +2,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from core.knowledge import FakeRetriever, set_retriever
 from core.llm import FakeGateway, Limits, load_config, set_gateway, set_limits, use_fake
 from core.llm.prompts import clear_prompt_cache
 from core.ops.events import set_sample_rate
@@ -12,9 +13,12 @@ KEYS = ("OPENROUTER_API_KEY", "ANTHROPIC_API_KEY", "OPENAI_API_KEY", BRAVE_KEY_E
 
 @pytest.fixture(autouse=True)
 def _clean_ops_state(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    """No profile, limits, sample rate, backend variables or keys leak in or out of a test."""
+    """No profile, limits, sample rate, backend variables or keys leak in or out of a test.
+    The backend variables are cleared, so the retriever is set as an object instead: the design
+    step retrieves passages (AI-12), and tests never touch a real index."""
     for var in (ENV_VAR, PGVECTOR_DSN_ENV, *BACKEND_VARS, *KEYS):
         monkeypatch.delenv(var, raising=False)
+    set_retriever(FakeRetriever())
     clear_prompt_cache()
     load_config.cache_clear()
     previous = set_limits(Limits())
@@ -23,6 +27,7 @@ def _clean_ops_state(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     set_limits(previous)
     set_sample_rate(0.0)
     set_gateway(None)
+    set_retriever(None)
     load_config.cache_clear()
 
 

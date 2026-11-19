@@ -128,7 +128,7 @@
         "file": "references/confidentiality-basics.md",
         "title": "Trade secrets and confidentiality basics",
         "sources": [
-          "src-uspto-trade-secrets"
+          "src-1"
         ]
       },
       {
@@ -136,27 +136,27 @@
         "file": "references/whistleblower-carve-outs.md",
         "title": "Required whistleblower carve-outs in US confidentiality agreements",
         "sources": [
-          "src-dtsa-immunity",
-          "src-sec-21f-17"
+          "src-2",
+          "src-3"
         ]
       }
     ]
   },
   "sources": [
     {
-      "id": "src-uspto-trade-secrets",
+      "id": "src-1",
       "url": "https://www.uspto.gov/ip-policy/trade-secret-policy",
       "retrieved": "2026-10-23",
       "title": "Trade secret policy | USPTO"
     },
     {
-      "id": "src-dtsa-immunity",
+      "id": "src-2",
       "url": "https://www.law.cornell.edu/uscode/text/18/1833",
       "retrieved": "2026-10-23",
       "title": "18 U.S. Code § 1833 - Exceptions to prohibitions"
     },
     {
-      "id": "src-sec-21f-17",
+      "id": "src-3",
       "url": "https://www.law.cornell.edu/cfr/text/17/240.21F-17",
       "retrieved": "2026-10-23",
       "title": "17 CFR § 240.21F-17 - Staff communications with individuals reporting possible securities law violations."

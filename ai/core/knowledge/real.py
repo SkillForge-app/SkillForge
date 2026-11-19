@@ -32,6 +32,11 @@ EMPTY_INDEX = (
 INFO_TTL_S = 60.0  # how long a passed index check is trusted
 
 
+class EmptyIndexError(ConfigError):
+    """The knowledge index has no chunks yet. A deployment state, not a misconfiguration: the
+    Architect then designs without web knowledge (AI-12)."""
+
+
 class RealRetriever:
     def __init__(
         self,
@@ -71,6 +76,6 @@ class RealRetriever:
             return
         info = await asyncio.to_thread(store.info)
         if not info.count:
-            raise ConfigError(EMPTY_INDEX)
+            raise EmptyIndexError(EMPTY_INDEX)
         check_model(info, model, dimensions)
         self._checked[key] = self._clock()

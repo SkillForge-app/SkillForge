@@ -551,6 +551,29 @@ def _rule(host: str, registry: Registry, path: str = "/") -> HostRule | None:
     return next((rule for rule in registry.sources if rule.matches(host, path)), None)
 
 
+# The SPDX id DE stores in sources.license for each registry note (docs/ai/source-discovery.md,
+# "Storing the note"). None: no reusable licence, so Source.licence stays empty.
+SPDX_LICENCE: dict[str, str | None] = {
+    "public-domain-us-gov": "LicenseRef-us-gov-public-domain",
+    "cc-by-4.0": "CC-BY-4.0",
+    "cc-by-sa-4.0": "CC-BY-SA-4.0",
+    "copyright-summarise-and-cite": None,
+    "excluded-terms": None,
+}
+
+
+def licence_for_url(url: str, registry: Registry | None = None) -> str | None:
+    """A page's `Source.licence` from its host rule in the registry: an SPDX id, or None.
+
+    Interim until review finding F14: a licence the page declares itself (stored by DE with
+    license_source='page') should win, but it cannot reach a Passage yet.
+    """
+    registry = registry or load_registry()
+    parts = urlsplit(url)
+    rule = _rule((parts.hostname or "").lower(), registry, parts.path or "/")
+    return SPDX_LICENCE[rule.licence if rule else "copyright-summarise-and-cite"]
+
+
 _DOCUMENT = re.compile(r"\.(pdf|docx?|pptx?)$", re.IGNORECASE)
 # Words in a file name that do not tell documents apart ("SWEBOK_Guide_2004.pdf").
 _FILE_FILLER = frozenset({"guide", "final", "draft", "copy", "version", "print", "web"})

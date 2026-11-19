@@ -11,9 +11,18 @@ from core.pipeline import example_request, example_spec
 T = TypeVar("T", bound=BaseModel)
 
 
+# The example's source ids, renamed to the ids the Architect gives the pages it retrieves
+# (src-1, src-2, ...): the fixture passages for technology/ai span more than 3 pages.
+CITED_IDS = {"src-rag-paper": "src-1", "src-claude-evals": "src-2", "src-nist-ai-rmf": "src-3"}
+
+
 def good_spec() -> dict[str, Any]:
-    """A valid SkillSpec (the ai-engineer example) as JSON-ready data."""
+    """A valid SkillSpec (the ai-engineer example) as JSON-ready data, citing src-1 to src-3."""
     data: dict[str, Any] = json.loads(example_spec("ai-engineer").model_dump_json())
+    for ref in data["knowledge"]["references"]:
+        ref["sources"] = [CITED_IDS.get(s, s) for s in ref["sources"]]
+    for source in data["sources"]:
+        source["id"] = CITED_IDS.get(source["id"], source["id"])
     return data
 
 
