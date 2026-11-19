@@ -82,9 +82,25 @@ VERIFIED_SOURCES = dict(
             "https://arxiv.org/abs/1908.10084",
             "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
         ),
+        # 1.1.0 (AI-12): one block per seed domain, from AI-09's reviewed sources.
+        (
+            "https://github.com/google/eng-practices/blob/master/review/index.md",
+            "eng-practices/review/index.md at master · google/eng-practices · GitHub",
+        ),
+        (
+            "https://technav.ieee.org/topic/software-standards/",
+            "Software standards | IEEE Technology Navigator",
+        ),
     ]
 )
-SEED_DOMAINS = ("marketing", "technology/ai")
+# Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
+# domains have at least 10; the seed domains added for AI-12 (1.1.0) at least 5.
+FIXTURE_DOMAINS = {
+    "marketing": ("mkt-", 10),
+    "technology/ai": ("ai-", 10),
+    "technology/software-engineering": ("swe-", 5),
+}
+SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 
 GOOD = {
     "chunk_id": "mkt-example-01",
@@ -181,7 +197,7 @@ def test_fixtures_cover_both_seed_domains(fake: FakeRetriever) -> None:
     counts = Counter(e.domain for e in fake.entries)
     assert len(fake.entries) >= 20
     assert set(counts) == set(SEED_DOMAINS)
-    assert all(counts[d] >= 10 for d in SEED_DOMAINS), counts
+    assert all(counts[d] >= FIXTURE_DOMAINS[d][1] for d in SEED_DOMAINS), counts
 
 
 def test_fixtures_are_unique(fake: FakeRetriever) -> None:
@@ -192,9 +208,8 @@ def test_fixtures_are_unique(fake: FakeRetriever) -> None:
 
 
 def test_fixture_ids_follow_the_domain_prefix(fake: FakeRetriever) -> None:
-    prefix = {"marketing": "mkt-", "technology/ai": "ai-"}
     for e in fake.entries:
-        assert e.passage.chunk_id.startswith(prefix[e.domain]), e.passage.chunk_id
+        assert e.passage.chunk_id.startswith(FIXTURE_DOMAINS[e.domain][0]), e.passage.chunk_id
 
 
 def test_fixtures_cite_only_verified_sources_with_their_own_titles(fake: FakeRetriever) -> None:
@@ -237,26 +252,29 @@ def test_duplicate_chunk_ids_raise_config_error(tmp_path: Path) -> None:
 # ------------------------------------------------------------------ retrieve
 
 
+TECHNOLOGY = {d for d in FIXTURE_DOMAINS if d.startswith("technology/")}
+
+
 @pytest.mark.parametrize(
     ("domain", "expected"),
     [
-        ("marketing", "marketing"),
-        ("marketing/strategy", "marketing"),
-        ("technology", "technology/ai"),
-        ("technology/ai", "technology/ai"),
-        ("technology/ai/rag", "technology/ai"),
+        ("marketing", {"marketing"}),
+        ("marketing/strategy", {"marketing"}),
+        ("technology", TECHNOLOGY),  # an area alone matches every sub-area
+        ("technology/ai", {"technology/ai"}),
+        ("technology/ai/rag", {"technology/ai"}),
     ],
 )
 async def test_retrieve_filters_by_domain_prefix(
-    fake: FakeRetriever, domain: str, expected: str
+    fake: FakeRetriever, domain: str, expected: set[str]
 ) -> None:
     by_id = {e.passage.chunk_id: e.domain for e in fake.entries}
     passages = await fake.retrieve("guidance", domain, k=MAX_K)
     assert passages
-    assert {by_id[p.chunk_id] for p in passages} == {expected}
+    assert {by_id[p.chunk_id] for p in passages} == expected
 
 
-@pytest.mark.parametrize("domain", ["legal/contracts", "technology/web", "medical"])
+@pytest.mark.parametrize("domain", ["design/ux", "technology/web", "sales"])  # no seed skill
 async def test_retrieve_returns_empty_for_domains_without_passages(
     fake: FakeRetriever, domain: str
 ) -> None:

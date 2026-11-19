@@ -26,6 +26,7 @@ from core.agents.architect import (
     _generate_inputs,
     number_sources,
 )
+from core.analysis import AnalyzedRequest
 from core.knowledge import (
     UNTRUSTED_DATA_RULE,
     FakeRetriever,
@@ -43,6 +44,11 @@ def retriever() -> FakeRetriever:
     fake = FakeRetriever()
     set_retriever(fake)
     return fake
+
+
+def no_passages_request() -> AnalyzedRequest:
+    """A request in a domain no seed skill has, so the fixtures have no passages for it."""
+    return screened("ai-engineer", domain="design/ux")
 
 
 def cited(spec: SkillSpec) -> set[str]:
@@ -80,7 +86,7 @@ async def test_research_keeps_distinct_passages_and_numbers_pages(retriever: Fak
 async def test_research_finds_nothing_for_a_domain_without_passages(
     retriever: FakeRetriever,
 ) -> None:
-    found = await research(screened("review-nda"))  # legal/contracts: no fixture passages
+    found = await research(no_passages_request())
     assert found.passages == () and found.sources == () and not found.index_empty
 
 
@@ -188,7 +194,7 @@ async def test_a_foreign_url_from_a_passage_is_stopped(retriever: FakeRetriever)
 
 
 async def test_without_passages_no_source_survives(retriever: FakeRetriever) -> None:
-    analyzed = screened("review-nda")  # no fixture passages for legal/contracts
+    analyzed = no_passages_request()
     gateway = ScriptedGateway({GENERATE: [good_spec()]})  # a reply that cites sources anyway
     with use_fake(gateway):  # type: ignore[arg-type]
         result = await build_spec(analyzed)
