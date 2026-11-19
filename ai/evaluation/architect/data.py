@@ -1,9 +1,14 @@
-"""The 103 test requests for the Skill Architect (AI-07 done-when: >= 90% valid specs).
+"""Test requests for the Skill Architect.
 
+AI-07 (done-when: >= 90% valid specs), the 103 requests of `all`:
 - the 3 example AnalyzedRequests in ai/examples/analyzed-request/
 - the 100 analyzer gate requests, turned into AnalyzedRequests straight from their labels, so
   the score measures the Architect alone (not analyzer mistakes). Vague requests become
   "questions skipped" requests: the Architect must still design something sensible.
+
+AI-12 (done-when: "seed skills generated with sources"), the 10 requests of `seed`: the clear
+request (`req-1`) of each seed-benchmark skill, from the release the analyzer gate uses, built
+from its labels the same way.
 """
 
 import re
@@ -17,6 +22,7 @@ from evaluation.common import AI_ROOT
 
 EXAMPLES_DIR = AI_ROOT / "examples" / "analyzed-request"
 GATE_SIZE = 103
+SEED_SET_SIZE = 10
 LABELS = AnalyzerInfo(prompt_id="labels", prompt_version=1)
 
 
@@ -69,11 +75,22 @@ def gate_items() -> list[ArchitectItem]:
     ]
 
 
+def seed_items() -> list[ArchitectItem]:
+    """One clear request per seed-benchmark skill (its `req-1`)."""
+    return [
+        ArchitectItem(f"seed:{i.id}", "seed", i.text, from_labels(i))
+        for i in analyzer_data.seed_requests()
+        if i.id.endswith("/req-1")
+    ]
+
+
 def load_items(name: str) -> list[ArchitectItem]:
     if name == "examples":
         return example_items()
     if name == "gate":
         return gate_items()
+    if name == "seed":
+        return seed_items()
     return example_items() + gate_items()
 
 
@@ -92,4 +109,12 @@ def _examples_hash() -> str:
     return digest.hexdigest()
 
 
-__all__ = ["GATE_SIZE", "ArchitectItem", "from_labels", "load_items", "sources"]
+__all__ = [
+    "GATE_SIZE",
+    "SEED_SET_SIZE",
+    "ArchitectItem",
+    "from_labels",
+    "load_items",
+    "seed_items",
+    "sources",
+]

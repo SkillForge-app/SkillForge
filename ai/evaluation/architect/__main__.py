@@ -13,7 +13,7 @@ from pathlib import Path
 
 from core.agents.architect import GENERATE, MAX_ATTEMPTS
 from core.llm import load_config
-from evaluation.architect.data import GATE_SIZE, ArchitectItem, load_items
+from evaluation.architect.data import GATE_SIZE, SEED_SET_SIZE, ArchitectItem, load_items
 from evaluation.architect.evaluate import render_markdown, run_eval, write_report
 from evaluation.common import AI_ROOT, live_guard, model_for, output_dirs
 
@@ -25,7 +25,10 @@ TOKENS_PER_CALL = (6000, 8000)  # rough input/output of one Architect call (spec
 def check_data_command() -> int:
     items = load_items("all")
     print(f"{len(items)} test requests ({sum(i.source == 'example' for i in items)} examples)")
+    seed = load_items("seed")
+    print(f"{len(seed)} seed requests (AI-12): {', '.join(i.id for i in seed)}")
     ok = len(items) == GATE_SIZE and all(i.analyzed.safety is not None for i in items)
+    ok = ok and len(seed) == SEED_SET_SIZE and all(i.analyzed.safety is not None for i in seed)
     print("OK" if ok else "FAIL")
     return 0 if ok else 1
 
@@ -70,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("check-data", help="build the 103 test requests and check them")
     run = commands.add_parser("run", help="evaluate the Skill Architect")
-    run.add_argument("--set", choices=["examples", "gate", "all"], default="all")
+    run.add_argument("--set", choices=["examples", "gate", "all", "seed"], default="all")
     run.add_argument("--limit", type=int, default=0)
     run.add_argument("--concurrency", type=int, default=2)
     run.add_argument("--end-to-end", action="store_true", help="run analyzer + screen first")

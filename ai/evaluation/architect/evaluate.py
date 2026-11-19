@@ -1,8 +1,12 @@
-"""Measure the Skill Architect (AI-07 done-when): >= 90% of the 103 test requests get a valid spec.
+"""Measure the Skill Architect.
 
-A spec counts as valid when the Architect returns ok: it passed core.spec.validate_spec (no
-errors) within 3 attempts. Safety-guardrail compliance and identity fidelity are re-checked
-here independently of the Architect's own `enforce` step.
+- AI-07 (the `all` set): >= 90% of the 103 test requests get a valid spec.
+- AI-12 (the `seed` set): every seed skill gets a valid spec with sources: at least one
+  reference and one source, and every source is the page of a passage the Architect retrieved.
+
+A spec counts as valid when the Architect returns ok: it passed core.spec.validate_spec, AI-19's
+check_spec and copied_text (no errors) within 3 attempts. Safety-guardrail compliance, identity
+fidelity and source tracing are re-checked here independently of the Architect.
 """
 
 import json
@@ -17,10 +21,32 @@ from core.agents import ArchitectResult, build_spec, required_guardrails
 from core.agents.architect import GENERATE
 from core.analysis import screen_and_analyze
 from core.llm import load_prompt, track_usage
-from evaluation.architect.data import GATE_SIZE, ArchitectItem, sources
+from evaluation.architect.data import GATE_SIZE, SEED_SET_SIZE, ArchitectItem, sources
 from evaluation.common import Outcome, ReportFiles, model_for, run_all, write_eval_report
 
 THRESHOLD = 0.90
+
+
+def knowledge_source() -> dict[str, str]:
+    """Which retriever gives the Architect its passages: AI-12's 15 Dec done-when is measured on
+    the fixture passages (SKILLFORGE_RETRIEVER=fake) until DE's store holds the seed domains."""
+    import hashlib
+    import os
+
+    import yaml
+
+    from core.knowledge.retrieval import BACKEND_ENV, FIXTURES_PATH
+
+    backend = os.environ.get(BACKEND_ENV, "real").strip().lower()
+    if backend != "fake":
+        return {"backend": backend}
+    raw = FIXTURES_PATH.read_bytes()
+    return {
+        "backend": "fake",
+        "fixtures": f"passages.yaml {yaml.safe_load(raw)['version']}",
+        "sha256": hashlib.sha256(raw).hexdigest(),
+    }
+
 
 Build = Callable[[ArchitectItem], Awaitable[ArchitectResult]]
 Result = Outcome[ArchitectItem, ArchitectResult]
@@ -56,6 +82,32 @@ def _identity_ok(o: Result) -> bool:
     return spec.skill.kind == analyzed.kind and spec.skill.domain == analyzed.domain
 
 
+def _has_sources(o: Result) -> bool:
+    spec = o.result.spec if o.result is not None else None
+    return spec is not None and bool(spec.sources) and bool(spec.knowledge.references)
+
+
+def _sources_traced(o: Result) -> bool:
+    """Every source in the spec is the page of a passage the Architect was given."""
+    if o.result is None or o.result.spec is None:
+        return False
+    pages = {str(p.source_url) for p in o.result.passages}
+    return all(str(s.url) in pages for s in o.result.spec.sources)
+
+
+def knowledge_metrics(outcomes: Sequence[Result]) -> dict[str, Any]:
+    """AI-12: how many valid specs cite retrieved knowledge, and whether it traces back."""
+    valid = [o for o in outcomes if o.result is not None and o.result.ok]
+    cited = [o for o in valid if _has_sources(o)]
+    return {
+        "with_passages": sum(1 for o in outcomes if o.result is not None and o.result.passages),
+        "with_sources": len(cited),
+        "with_sources_rate": _ratio(len(cited), len(outcomes)),
+        "sources_traced": sum(_sources_traced(o) for o in cited),
+        "without_sources": [o.item.id for o in valid if not _has_sources(o)],
+    }
+
+
 def compute_metrics(outcomes: Sequence[Result]) -> dict[str, Any]:
     n = len(outcomes)
     valid = [o for o in outcomes if o.result is not None and o.result.ok]
@@ -75,6 +127,7 @@ def compute_metrics(outcomes: Sequence[Result]) -> dict[str, Any]:
         "safety_guardrails_ok": _ratio(sum(_safety_ok(o) for o in valid), len(valid)),
         "identity_ok": _ratio(sum(_identity_ok(o) for o in valid), len(valid)),
         "errors": dict(Counter(o.error for o in outcomes if o.error)),
+        "knowledge": knowledge_metrics(outcomes),
     }
 
 
@@ -90,6 +143,22 @@ def gate_verdict(metrics: dict[str, Any], *, live: bool = True) -> dict[str, Any
     return {"passed": not reasons, "counts": live, "threshold": THRESHOLD, "reasons": reasons}
 
 
+def seed_verdict(metrics: dict[str, Any], *, live: bool = True) -> dict[str, Any]:
+    """AI-12 done-when: all SEED_SET_SIZE seed skills generated with sources that trace to the
+    retrieved passages. Only a live run counts (the fake answers with one canned spec)."""
+    k = metrics["knowledge"]
+    reasons = []
+    if metrics["n"] != SEED_SET_SIZE:
+        reasons.append(f"the seed set needs exactly {SEED_SET_SIZE} requests, got {metrics['n']}")
+    if metrics["valid"] != metrics["n"]:
+        reasons.append(f"{metrics['n'] - metrics['valid']} seed skills got no valid spec")
+    if k["with_sources"] != metrics["n"]:
+        reasons.append(f"{metrics['n'] - k['with_sources']} seed skills have no cited sources")
+    if k["sources_traced"] != k["with_sources"]:
+        reasons.append(f"{k['with_sources'] - k['sources_traced']} specs cite a page not retrieved")
+    return {"passed": not reasons, "counts": live, "reasons": reasons}
+
+
 @dataclass
 class ArchitectReport:
     created: str
@@ -98,13 +167,16 @@ class ArchitectReport:
     prompts: dict[str, int]
     model: str
     data_sources: list[dict[str, str]]
+    knowledge: dict[str, str] = field(default_factory=dict)  # the retriever used
     sets: dict[str, dict[str, Any]] = field(default_factory=dict)
     gate: dict[str, Any] | None = None
+    seed: dict[str, Any] | None = None  # AI-12's verdict, when the seed set ran
     usage: dict[str, Any] = field(default_factory=dict)
 
     @property
     def passed(self) -> bool | None:
-        return None if self.gate is None else bool(self.gate["passed"])
+        verdicts = [v for v in (self.gate, self.seed) if v is not None]
+        return None if not verdicts else all(bool(v["passed"]) for v in verdicts)
 
 
 async def run_eval(
@@ -123,6 +195,7 @@ async def run_eval(
         prompts={p: load_prompt(p).version for p in ("architect/generate", "architect/repair")},
         model=model_for(GENERATE),
         data_sources=sources(),
+        knowledge=knowledge_source(),
     )
     outcomes: dict[str, list[Result]] = {}
     with track_usage() as usage:
@@ -131,6 +204,8 @@ async def run_eval(
             report.sets[name] = compute_metrics(outcomes[name])
     if "all" in report.sets:
         report.gate = gate_verdict(report.sets["all"], live=live)
+    if "seed" in report.sets:
+        report.seed = seed_verdict(report.sets["seed"], live=live)
     report.usage = {
         "calls": usage.calls,
         "errors": usage.errors,
@@ -195,6 +270,14 @@ def render_markdown(report: ArchitectReport) -> str:
         "",
         f"Mode: {mode}. Prompts {report.prompts}, model `{report.model}`.",
         "",
+        "Knowledge: "
+        + (
+            f"fixture passages ({report.knowledge.get('fixtures')}, FakeRetriever)"
+            if report.knowledge.get("backend") == "fake"
+            else f"retriever `{report.knowledge.get('backend', 'n/a')}`"
+        )
+        + ".",
+        "",
     ]
     if report.gate is not None:
         verdict = "PASSED" if report.gate["passed"] else "FAILED"
@@ -202,12 +285,21 @@ def render_markdown(report: ArchitectReport) -> str:
             verdict += " (fake mode: does NOT count for AI-07)"
         lines += [f"**Gate (>= {THRESHOLD:.0%} valid specs on {GATE_SIZE} requests): {verdict}**"]
         lines += [f"- {r}" for r in report.gate["reasons"]] + [""]
-    lines += ["| Set | n | valid | first try | attempts | safety guardrails | errors |"]
-    lines += ["|---|---|---|---|---|---|---|"]
+    if report.seed is not None:
+        verdict = "PASSED" if report.seed["passed"] else "FAILED"
+        if not report.seed["counts"]:
+            verdict += " (fake mode: does NOT count for AI-12)"
+        lines += [f"**AI-12 (all {SEED_SET_SIZE} seed skills generated with sources): {verdict}**"]
+        lines += [f"- {r}" for r in report.seed["reasons"]] + [""]
+    lines += [
+        "| Set | n | valid | first try | attempts | safety guardrails | with sources | errors |"
+    ]
+    lines += ["|---|---|---|---|---|---|---|---|"]
     for name, m in report.sets.items():
         lines.append(
             f"| {name} | {m['n']} | {_pct(m['valid_rate'])} | {_pct(m['first_try_rate'])} "
-            f"| {m['attempts']} | {_pct(m['safety_guardrails_ok'])} | {sum(m['errors'].values())} |"
+            f"| {m['attempts']} | {_pct(m['safety_guardrails_ok'])} "
+            f"| {_pct(m['knowledge']['with_sources_rate'])} | {sum(m['errors'].values())} |"
         )
     u = report.usage
     lines += ["", f"Usage: {u['calls']} calls, ${u['cost_usd']}.", ""]

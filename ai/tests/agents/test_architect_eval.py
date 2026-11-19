@@ -1,16 +1,27 @@
-"""Skill Architect evaluation: the 103 test requests, the valid-rate math, the gate, the CLI."""
+"""Skill Architect evaluation: the 103 test requests (AI-07), the seed set (AI-12), the math,
+the verdicts and the CLI."""
 
+import json
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from core.agents import ArchitectResult
+from core.knowledge import FakeRetriever, Passage
 from core.llm.gateway import BACKEND_ENV
-from core.spec import HIGH_RISK_AREAS, load_spec
+from core.spec import HIGH_RISK_AREAS, SkillSpec, load_spec
+from core.spec.models import Knowledge
 from evaluation.architect.__main__ import main
-from evaluation.architect.data import GATE_SIZE, ArchitectItem, load_items
-from evaluation.architect.evaluate import compute_metrics, gate_verdict, run_eval, write_report
+from evaluation.architect.data import GATE_SIZE, SEED_SET_SIZE, ArchitectItem, load_items
+from evaluation.architect.evaluate import (
+    compute_metrics,
+    gate_verdict,
+    run_eval,
+    seed_verdict,
+    write_report,
+)
 from evaluation.common import AI_ROOT, Outcome
 
 SPEC = load_spec(AI_ROOT / "examples" / "skillspec" / "ai-engineer.yaml")
@@ -91,3 +102,62 @@ def test_cli_fake_smoke(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None
     assert not (tmp_path / "tracked").exists()  # a fake run is never a tracked result
     assert len(list((tmp_path / "runs").glob("*/specs/*.json"))) == 3
     assert len(list((tmp_path / "runs").glob("*/architect-examples-*.json"))) == 1
+
+
+# ---------------------------------------------------------------- AI-12: the seed set
+
+
+def test_seed_set_is_one_clear_screened_request_per_seed_skill() -> None:
+    items = load_items("seed")
+    assert len(items) == SEED_SET_SIZE == 10
+    assert len({i.id.split(":")[1].split("/")[0] for i in items}) == 10  # one per skill
+    assert all(i.id.endswith("/req-1") and i.source == "seed" for i in items)
+    assert all(i.analyzed.safety is not None and not i.analyzed.needs_clarification for i in items)
+
+
+def _passages_for(spec: SkillSpec) -> tuple[Passage, ...]:
+    """Fixture passages from the pages the example spec cites (it cites fixture pages)."""
+    urls = {str(s.url) for s in spec.sources}
+    return tuple(e.passage for e in FakeRetriever().entries if str(e.passage.source_url) in urls)
+
+
+def seed_outcomes(
+    *, traced: bool = True, cited: bool = True, total: int = 10
+) -> list[Outcome[ArchitectItem, ArchitectResult]]:
+    spec = SPEC if cited else SPEC.model_copy(update={"sources": [], "knowledge": Knowledge()})
+    passages = _passages_for(SPEC) if traced else ()
+    return [
+        Outcome(item, ArchitectResult(True, spec, 1, (), passages=passages), None, 1.0)
+        for item in load_items("seed")[:total]
+    ]
+
+
+def test_seed_verdict_passes_when_every_skill_cites_retrieved_pages() -> None:
+    assert _passages_for(SPEC)  # the example's sources are fixture pages
+    metrics = compute_metrics(seed_outcomes())
+    assert metrics["knowledge"]["with_sources"] == metrics["knowledge"]["sources_traced"] == 10
+    assert seed_verdict(metrics) == {"passed": True, "counts": True, "reasons": []}
+
+
+@pytest.mark.parametrize(
+    ("kwargs", "reason"),
+    [
+        ({"traced": False}, "cite a page not retrieved"),
+        ({"cited": False}, "have no cited sources"),
+        ({"total": 9}, "exactly 10"),
+    ],
+)
+def test_seed_verdict_fails(kwargs: dict[str, Any], reason: str) -> None:
+    verdict = seed_verdict(compute_metrics(seed_outcomes(**kwargs)))
+    assert not verdict["passed"] and any(reason in r for r in verdict["reasons"])
+
+
+def test_cli_fake_seed_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    assert main(["run", "--set", "seed", "--runs", str(tmp_path / "runs")]) == 0
+    [report] = list((tmp_path / "runs").glob("*/architect-seed-*.json"))
+    saved = json.loads(report.read_text(encoding="utf-8"))
+    assert saved["seed"]["counts"] is False  # a fake run never counts for AI-12
+    assert saved["knowledge"]["backend"] == "fake" and saved["knowledge"]["fixtures"]
+    assert saved["sets"]["seed"]["knowledge"]["with_passages"] == 10  # every seed domain
+    assert len(list((tmp_path / "runs").glob("*/specs/*.json"))) == 10
