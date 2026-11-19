@@ -136,8 +136,7 @@
         "file": "references/whistleblower-carve-outs.md",
         "title": "Required whistleblower carve-outs in US confidentiality agreements",
         "sources": [
-          "src-2",
-          "src-3"
+          "src-2"
         ]
       }
     ]
@@ -154,12 +153,6 @@
       "url": "https://www.law.cornell.edu/uscode/text/18/1833",
       "retrieved": "2026-10-23",
       "title": "18 U.S. Code § 1833 - Exceptions to prohibitions"
-    },
-    {
-      "id": "src-3",
-      "url": "https://www.law.cornell.edu/cfr/text/17/240.21F-17",
-      "retrieved": "2026-10-23",
-      "title": "17 CFR § 240.21F-17 - Staff communications with individuals reporting possible securities law violations."
     }
   ],
   "evaluation": {
