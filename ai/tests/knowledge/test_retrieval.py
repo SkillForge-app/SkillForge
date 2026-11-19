@@ -125,6 +125,15 @@ VERIFIED_SOURCES = dict(
             "https://www.nist.gov/node/392186",
             "Updated NIST Guide is a How-To for Dealing With Computer Security Incidents | NIST",
         ),
+        (
+            "https://www.law.cornell.edu/wex/non-disclosure_agreement_(nda)",
+            "non-disclosure agreement (NDA) | Legal Information Institute",
+        ),
+        (
+            "https://www.law.cornell.edu/wex/contract",
+            "contract | Wex | US Law | LII / Legal Information Institute",
+        ),
+        ("https://www.uspto.gov/ip-policy/trade-secret-policy", "Trade secret policy | USPTO"),
     ]
 )
 # Each fixture domain: its chunk id prefix and the fewest passages it may have. The two 1.0.0
@@ -137,6 +146,7 @@ FIXTURE_DOMAINS = {
     "medical/patient-education": ("med-", 5),
     "hr/recruiting": ("hr-", 5),
     "technology/incident-response": ("inc-", 5),
+    "legal/contracts": ("legal-", 5),
 }
 SEED_DOMAINS = tuple(FIXTURE_DOMAINS)
 

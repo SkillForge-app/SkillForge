@@ -581,3 +581,67 @@ passages:
       fixing), by its impact (downtime, data stolen, resources needed to recover) and through
       coordination: sharing threat information with trusted organisations before and during an
       attack, after checking with legal what may be shared.
+  # ---------------------------------------------------------------- legal/contracts
+  # Summarised by Claude Code from the live pages on 2026-11-19: AI-09 sources #1 and #2
+  # (Cornell LII Wex) and #4 (USPTO). US law, general information only.
+  - chunk_id: legal-lii-nda-01
+    domain: legal/contracts
+    source_url: https://www.law.cornell.edu/wex/non-disclosure_agreement_(nda)
+    title: "non-disclosure agreement (NDA) | Legal Information Institute"
+    retrieved: 2026-11-19
+    text: >-
+      Under US contract law, a non-disclosure agreement binds the people who sign it to keep
+      certain information confidential and not share it with anyone the agreement does not
+      authorise. NDAs commonly protect trade secrets, negotiations and client information.
+      Disclosure despite one is a breach of contract; an NDA may run indefinitely or have an end
+      date.
+  - chunk_id: legal-lii-nda-02
+    domain: legal/contracts
+    source_url: https://www.law.cornell.edu/wex/non-disclosure_agreement_(nda)
+    title: "non-disclosure agreement (NDA) | Legal Information Institute"
+    retrieved: 2026-11-19
+    text: >-
+      Courts generally enforce NDAs, but statutes and public policy limit them: they may be void
+      as to criminal acts or unenforceable without required procedures. The Speak Out Act of
+      2022 blocks pre-dispute NDAs from covering later sexual-harassment claims, and the
+      National Labor Relations Act can bar overbroad NDAs about employees.
+  - chunk_id: legal-lii-nda-03
+    domain: legal/contracts
+    source_url: https://www.law.cornell.edu/wex/non-disclosure_agreement_(nda)
+    title: "non-disclosure agreement (NDA) | Legal Information Institute"
+    retrieved: 2026-11-19
+    text: >-
+      Breaching an NDA can lead to substantial damages, and the other party may obtain a
+      preliminary injunction. An NDA can also be breached without revealing secrets if it sets
+      other duties, such as not publicly criticising a former employer. Many NDAs end after a
+      stated period.
+  - chunk_id: legal-lii-contract-01
+    domain: legal/contracts
+    source_url: https://www.law.cornell.edu/wex/contract
+    title: "contract | Wex | US Law | LII / Legal Information Institute"
+    retrieved: 2026-11-19
+    text: >-
+      A contract is an agreement creating mutual obligations that the law will enforce. It needs
+      mutual assent (offer and acceptance), consideration (something of value exchanged),
+      capacity and a lawful purpose. Remedies for breach include general, consequential and
+      reliance damages and, in rare cases, specific performance.
+  - chunk_id: legal-lii-contract-02
+    domain: legal/contracts
+    source_url: https://www.law.cornell.edu/wex/contract
+    title: "contract | Wex | US Law | LII / Legal Information Institute"
+    retrieved: 2026-11-19
+    text: >-
+      US contract law comes mostly from state common law, supplemented by statutes such as the
+      Statute of Frauds, which requires some contracts to be in writing. The Uniform Commercial
+      Code governs sales of goods, and the CISG covers cross-border sales. Even informal
+      agreements can bind when the elements of a contract are present.
+  - chunk_id: legal-uspto-trade-secret-01
+    domain: legal/contracts
+    source_url: https://www.uspto.gov/ip-policy/trade-secret-policy
+    title: "Trade secret policy | USPTO"
+    retrieved: 2026-11-19
+    text: >-
+      The USPTO describes a trade secret as information that has economic value because it is
+      not generally known, that others cannot properly find out, and that its owner takes
+      reasonable steps to keep secret. All three conditions are required; if one lapses, so
+      does the protection, which otherwise has no time limit.
