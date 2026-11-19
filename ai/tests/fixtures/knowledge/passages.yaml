@@ -12,8 +12,10 @@
 # sources for that domain (evaluation/sources/reports/sources-2026-10-26-5.md); a source whose
 # page had no usable text or could not be fetched was skipped for the next one. A PDF is read
 # as text (pdftotext); its `title` is the document's own heading. No
-# person wrote them. Human spot-check: Ziad Abdullah will check 5 of them; PENDING until he
-# confirms (record the ids and the date here).
+# person wrote them. Human spot-check, done by Ziad Abdullah on 2026-11-19: 5 passages picked
+# at random (Python random.Random(20261119), 5 different domains): pr-prsa-ethics-01,
+# inc-pd-postmortem-01, med-mlp-labs-02, swe-ieee-standards-03, fin-sba-finances-01. All 5:
+# faithful to the page, in our own words, title and URL correct.
 version: 1.1.0
 passages:
   # ---------------------------------------------------------------- marketing
