@@ -3,7 +3,7 @@
 Owner: AI department (Track B, contract **B2**). Test prompts: 3 Nov 2026 (release `0.1.0`). Final: 6 Nov 2026 (release `1.0.0`, handed to Data Engineering for DE-10).
 
 The seed benchmark is the fixed test set every SkillForge skill version is measured against:
-- **AI-16 (evaluation harness):** each test prompt is run with and without the skill, and the answer is graded with the skill's rubric.
+- **AI-16 (evaluation harness):** each test prompt is run with and without the skill, and the answer is graded with the skill's rubric. See [evaluation-harness.md](evaluation-harness.md).
 - **AI-17 (trigger accuracy):** test prompts must load the skill, and should-not-trigger prompts must not.
 - **AI-23 (optimizer):** a new version of a skill must beat the old one on the same benchmark version.
 
