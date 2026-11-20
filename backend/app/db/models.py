@@ -245,3 +245,80 @@ class Artifact(Base):
         ),
         Index("idx_artifacts_compilation_id", "compilation_id"),
     )
+
+
+class DesignRun(Base):
+    """One run of the AI pipeline (analyze, clarify, design) for a project.
+
+    A completed run points to the spec version it created. `analyzed` holds the analyzed request
+    while the run waits for answers; it is cleared when the request is blocked.
+    """
+
+    __tablename__ = "design_runs"
+
+    id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    )
+    project_id: Mapped[UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("projects.id", name="fk_design_runs_project"),
+        nullable=False,
+    )
+    request_text: Mapped[str] = mapped_column(Text, nullable=False)
+    selected_targets: Mapped[list[str]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'[]'::jsonb"),
+    )
+    status: Mapped[str] = mapped_column(
+        String(30),
+        nullable=False,
+        server_default=text("'queued'"),
+    )
+    step: Mapped[str | None] = mapped_column(String(30))
+    analyzed: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    progress: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'[]'::jsonb"),
+    )
+    issues: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'[]'::jsonb"),
+    )
+    usage: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+    )
+    user_message: Mapped[str | None] = mapped_column(Text)
+    error_code: Mapped[str | None] = mapped_column(String(100))
+    spec_version_id: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True),
+        ForeignKey("spec_versions.id", name="fk_design_runs_spec_version"),
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=text("CURRENT_TIMESTAMP"),
+    )
+    completed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+    )
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('queued', 'running', 'needs_input', 'completed', "
+            "'blocked', 'retry_later', 'failed')",
+            name="chk_design_run_status",
+        ),
+        Index("idx_design_runs_project_id", "project_id"),
+    )

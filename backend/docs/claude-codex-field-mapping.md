@@ -1,4 +1,4 @@
-﻿# Claude Code and Codex Compiler Field Mapping
+# Claude Code and Codex Compiler Field Mapping
 
 ## 1. Overview
 
@@ -43,6 +43,28 @@ Duplicate tool names are removed and generated lists are sorted. The `deny` list
 ### Autonomy
 
 The Claude compiler does not currently accept or process an autonomy level. Permissions are determined by required and optional capabilities.
+
+### Subagent and slash commands
+
+`ClaudeCompiler` also writes `.claude/agents/<skill-name>.md` and one
+`.claude/commands/<procedure-id>.md` per procedure (`app/compiler/claude_artifacts.py`).
+
+| File | Field | From |
+|---|---|---|
+| agent | `name` | `skill.name` |
+| agent | `description` | `skill.summary` + "Use when:" + `triggers.use_when`; one line, at most 1024 characters, quoted |
+| agent | `tools` | `Read, Glob, Grep` always, plus the tools of every required and optional capability (table above), sorted |
+| agent | body | `skill.title`, `expertise.principles`, `guardrails`, `triggers.avoid_when`, and the `/command` of each procedure |
+| command | `description` | `procedure.title`, `skill.title` and the first step; at most 200 characters |
+| command | body | `procedure.steps` numbered, `$ARGUMENTS` for what the user types, `produces`, and the reference file paths from `uses` |
+
+Commands carry no `allowed-tools`: that setting would grant tools without a prompt and could
+override the `ask` rules in `settings.json`. Codex has no subagent or command equivalent
+(`research.md`), so it gets none.
+
+Not generated yet: `.claude/skills/<name>/SKILL.md` (the Agent Skills package), the output
+templates and reference files that `outputs[].template` and `knowledge.references[].file` name,
+and `evaluation.rubric`.
 
 ## 3. OpenAI Codex
 

@@ -138,3 +138,46 @@ def test_submit_run_result_and_reject_duplicate(client):
     )
 
     assert duplicate.status_code == 409
+
+
+def test_download_is_refused_until_the_run_is_completed(client):
+    run = create_run(client)
+
+    response = client.get(f"/api/v1/runs/{run['id']}/download")
+
+    assert response.status_code == 409
+
+
+def test_download_of_an_unknown_run_is_404(client):
+    assert client.get(f"/api/v1/runs/{uuid4()}/download").status_code == 404
+
+
+def test_download_returns_the_compiled_files_as_a_zip(client, tmp_path, monkeypatch):
+    import hashlib
+    import io
+    import zipfile
+
+    from backend.app.core.config import settings
+    from backend.app.services.compilation_service import compile_job
+    from backend.app.services.job_service import claim_next_job
+    from backend.app.db.session import get_db as real_get_db
+
+    monkeypatch.setattr(settings, "ARTIFACTS_DIR", tmp_path)
+    run = create_run(client)
+
+    db = next(app.dependency_overrides[real_get_db]())
+    job = claim_next_job(db)
+    compile_job(db, job.id)
+
+    response = client.get(f"/api/v1/runs/{run['id']}/download")
+
+    assert response.status_code == 200, response.text
+    assert response.headers["content-type"] == "application/zip"
+    assert response.headers["content-disposition"].endswith('.zip"')
+    with zipfile.ZipFile(io.BytesIO(response.content)) as archive:
+        names = archive.namelist()
+        assert names, "the zip has no files"
+        for name in names:
+            on_disk = (tmp_path / run["id"] / name).read_bytes()
+            assert archive.read(name) == on_disk
+            assert hashlib.sha256(on_disk).hexdigest()

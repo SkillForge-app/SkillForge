@@ -3,22 +3,16 @@ from collections.abc import Mapping
 from typing import Any
 
 from backend.app.compiler.base_compiler import BaseCompiler
+from backend.app.compiler.claude_artifacts import (
+    CAPABILITY_TO_CLAUDE,
+    render_claude_artifacts,
+)
 from backend.app.compiler.platform_schema import CLAUDE_CODE_SCHEMA
 from backend.app.compiler.spec_adapter import get_validated_spec, render_skill
 
 
-CAPABILITY_TO_CLAUDE = {
-    "filesystem_read": ["Read", "Glob", "Grep"],
-    "filesystem_write": ["Write", "Edit"],
-    "terminal": ["Bash"],
-    "code_execution": ["Bash"],
-    "web_search": ["WebSearch"],
-    "web_fetch": ["WebFetch"],
-}
-
-
 class ClaudeCompiler(BaseCompiler):
-    """Compile SkillSpec into Claude Code instruction and permission files."""
+    """Compile SkillSpec into Claude Code files: CLAUDE.md, settings, subagent and commands."""
 
     def compile(self, skill_spec: Mapping[str, Any]) -> dict[str, str]:
         spec = get_validated_spec(skill_spec)
@@ -47,9 +41,11 @@ class ClaudeCompiler(BaseCompiler):
             }
         }
 
-        return {
+        files = {
             CLAUDE_CODE_SCHEMA.instruction_file: content,
             CLAUDE_CODE_SCHEMA.config_file: json.dumps(
                 permissions, indent=2
             ) + "\n",
         }
+        files.update(render_claude_artifacts(spec))
+        return files

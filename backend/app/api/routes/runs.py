@@ -1,12 +1,19 @@
-﻿from datetime import datetime, timezone
+﻿import re
+from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from backend.app.core.config import settings
 from backend.app.db.session import get_db
 from backend.app.db.models import Project, SpecVersion, Compilation, Job, Artifact
 from backend.app.schemas.runs import RunCreate, RunResponse, RunResultCreate
+from backend.app.services.artifact_download import (
+    ArtifactFilesError,
+    build_zip,
+    collect_files,
+)
 
 
 router = APIRouter(prefix="/api/v1/runs", tags=["Runs"])
@@ -133,3 +140,44 @@ def submit_run_result(
     except Exception:
         db.rollback()
         raise
+
+
+@router.get("/{run_id}/download")
+def download_run_files(run_id: UUID, db: Session = Depends(get_db)):
+    """The compiled files of a completed run, as a zip."""
+    compilation = db.query(Compilation).filter(
+        Compilation.id == run_id
+    ).first()
+
+    if compilation is None:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    if compilation.status != "completed":
+        raise HTTPException(
+            status_code=409,
+            detail=f"Run is {compilation.status}; there are no files to download",
+        )
+
+    artifacts = db.query(Artifact).filter(
+        Artifact.compilation_id == compilation.id
+    ).all()
+
+    try:
+        files = collect_files(artifacts, settings.ARTIFACTS_DIR, compilation.id)
+    except ArtifactFilesError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+
+    if not files:
+        raise HTTPException(status_code=404, detail="This run has no downloadable files")
+
+    spec_version = db.get(SpecVersion, compilation.spec_version_id)
+    skill_name = str((spec_version.spec_data or {}).get("skill", {}).get("name", "")) if spec_version else ""
+    if not re.fullmatch(r"[a-z0-9]+(?:-[a-z0-9]+)*", skill_name):
+        skill_name = "skill"
+    filename = f"{skill_name}-{compilation.target_platform}.zip"
+
+    return Response(
+        content=build_zip(files),
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
