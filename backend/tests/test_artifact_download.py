@@ -17,7 +17,7 @@ from backend.app.services.artifact_download import (
 def write_artifact(root: Path, compilation_id, name: str, content: str, **overrides):
     path = root / str(compilation_id) / name
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    path.write_bytes(content.encode("utf-8"))
     values = {
         "file_path": name,
         "storage_url": f"{compilation_id}/{name}",

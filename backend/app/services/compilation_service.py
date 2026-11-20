@@ -78,7 +78,8 @@ def compile_job(db: Session, job_id: UUID) -> None:
 
             output_path = _safe_output_path(compilation_dir, filename)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_path.write_text(content, encoding="utf-8")
+            content_bytes = content.encode("utf-8")
+            output_path.write_bytes(content_bytes)
 
         existing_artifacts = db.execute(
             select(Artifact).where(
@@ -110,9 +111,8 @@ def compile_job(db: Session, job_id: UUID) -> None:
                 mimetypes.guess_type(filename)[0]
                 or "application/octet-stream"
             )
-            artifact.content_hash = hashlib.sha256(
-                content.encode("utf-8")
-            ).hexdigest()
+            content_bytes = content.encode("utf-8")
+            artifact.content_hash = hashlib.sha256(content_bytes).hexdigest()
             artifact.storage_url = relative_path
 
         now = datetime.now(timezone.utc)

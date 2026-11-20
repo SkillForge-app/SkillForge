@@ -95,7 +95,22 @@ def test_compile_job_saves_artifacts(db, tmp_path, monkeypatch, platform):
         )
     ).scalars().all()
 
-    assert len(artifacts) == 2
+    expected_files = {
+        "claude_code": {
+            "CLAUDE.md",
+            ".claude/settings.json",
+            ".claude/agents/ai-engineer.md",
+            ".claude/commands/build-eval-set.md",
+            ".claude/commands/design-rag.md",
+            ".claude/commands/review-ai-risk.md",
+        },
+        "codex": {
+            "AGENTS.md",
+            ".codex/config.toml",
+        },
+    }
+
+    assert {artifact.file_path for artifact in artifacts} == expected_files[platform]
 
     for artifact in artifacts:
         assert artifact.content_hash
