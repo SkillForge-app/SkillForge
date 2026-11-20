@@ -9,6 +9,8 @@ A labelled request is what a user types to **create** a skill, plus the correct 
 
 If a request asks for a person who does one job only ("someone who writes our release notes"), it is a **task**.
 
+A vague request is labelled role.
+
 ## domain: `<area>/<sub-area>`
 - **The area is the expertise the skill applies, not the user's industry.**
   - Budgeting for a bakery is `finance`, not food.
@@ -23,10 +25,12 @@ If a request asks for a person who does one job only ("someone who writes our re
 - **medium**: any other area, when the skill's core work handles personal data about specific people, makes or supports decisions about people (hiring, grading, performance), or works with minors.
 - **low**: everything else.
 
+Personal data means records about identifiable people (customers, employees, patients, students), not a user describing someone's tastes in passing. Decisions about people means judging or ranking them (hiring, grading, performance), not scheduling.
+
 ## style
-- **clear**: one or two sentences that say what the skill does.
+- **clear**: says what the skill does, in one or two sentences, without giving context plus several tasks or constraints.
 - **vague**: a few words that do not say what the skill should do or produce.
-- **detailed**: several sentences with context, tasks and constraints.
+- **detailed**: gives context plus several tasks or constraints, even in two sentences. Length alone doesn't decide.
 
 ## needs_clarification
 This is `true` exactly when the style is `vague`. The analyzer should then ask 3 to 5 questions.
@@ -47,3 +51,6 @@ If no platform is named, use `[]`. Platforms chosen in the website's UI are not 
 - **Synthetic only:** no real people, companies or personal data.
 - **No duplicates:** no text may appear twice across the seed benchmark, test, dev and Arabic sets. The tests check this.
 - **A changed label is a new version:** after changing any label, bump the file's `version`. Bump the MINOR number for added, changed or removed requests.
+
+## Reviews
+- [2026-11-19](reviews/label-review-2026-11-19.md): a full review of the test, dev and Arabic labels. It added the last rule under `kind` and the paragraph under `risk`, and reworded `style`.

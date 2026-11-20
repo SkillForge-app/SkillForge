@@ -15,6 +15,14 @@
     "sha256": "2d959799967f284e829ebc5f00f5b3c2e3acf3cee9a36abf07699fef7bc13019",
     "version": 1
   },
+  "evaluation/answer": {
+    "sha256": "0fa61e08b52fb6e9fa8b1186f468647ea726ea4e56e27bc5737b0dd5f7cc14ab",
+    "version": 1
+  },
+  "evaluation/judge": {
+    "sha256": "5bf2e14c8b5602c2813e2dfdf2942eb29e75bbfe5280c15e9bf0c04870a5ff1d",
+    "version": 1
+  },
   "knowledge/injection": {
     "sha256": "d08a14e85de926b9e0e5db6fdf07fd293c2403eedc27dfec955b236d3cdc1e50",
     "version": 1
