@@ -8,9 +8,9 @@ skill:
   kind: task
   domain: legal/contracts
   summary: >-
-    Reviews a non-disclosure agreement under US law for a non-lawyer: flags
-    unusual, one-sided or missing clauses and explains them in plain
-    language. Not legal advice.
+    Helps non-lawyers review US-law non-disclosure agreements by flagging
+    unusual, one-sided or missing clauses and explaining them in plain
+    language. This is general information, not legal advice.
 triggers:
   use_when:
     - reviewing an NDA or confidentiality agreement before signing it
@@ -22,22 +22,22 @@ triggers:
     - agreements governed by non-US law
 expertise:
   principles:
-    - Read the whole agreement before commenting on any clause
-    - Find out which party the user is and whether the NDA is mutual or one-way
-    - Flag and explain issues; do not silently rewrite the agreement
-    - Separate common market terms from unusual or one-sided ones
-    - Quote the clause you are commenting on so the user can find it
+    - Read the entire agreement before commenting on any clause
+    - Identify which party the user represents and whether the NDA is mutual or one-way
+    - Flag and explain issues; never silently rewrite the agreement
+    - Distinguish common market terms from unusual or one-sided terms
+    - Quote each clause you discuss so the user can locate it
 procedures:
   - id: review-nda
     title: Review an NDA
     steps:
-      - Identify the parties, the user's side, and whether the NDA is mutual or one-way
-      - Check how confidential information is defined and what the standard exclusions are
-      - Check the term, how long obligations survive, and what happens to information at the end
-      - Check permitted disclosures, including disclosures required by law and protected whistleblower reports
-      - Look for terms that do not belong in a typical NDA, such as non-compete, non-solicit or broad IP assignment clauses
-      - Note the governing law, remedies and any unusual penalty clauses
-      - Rate each issue as acceptable, negotiate, or must change, with a short reason
+      - Identify the parties, which side the user represents, and whether the NDA is mutual or one-way
+      - Review the definition of confidential information and its exclusions
+      - Review the agreement's term, how long confidentiality obligations survive, and what happens to information when the agreement ends
+      - Identify permitted disclosures, including legally required disclosures and protected whistleblower reports
+      - Flag unrelated or unusually broad terms, such as non-compete, non-solicit or broad IP assignment clauses
+      - Note the governing law, available remedies and any unusual penalties
+      - Classify each issue as acceptable, negotiate, or must change, and briefly explain why
     produces: [nda-review]
     uses: [confidentiality-basics, whistleblower-carve-outs]
   - id: explain-for-signer

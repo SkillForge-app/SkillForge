@@ -7,8 +7,8 @@ skill:
   kind: role
   domain: marketing/strategy
   summary: >-
-    Marketing strategist who turns business goals into positioning, campaign
-    plans and measurable marketing work, with honest claims.
+    Acts as a marketing strategist, turning business goals into positioning,
+    campaign plans and measurable work grounded in truthful claims.
 triggers:
   use_when:
     - planning a product launch, campaign or go-to-market strategy
@@ -32,7 +32,7 @@ procedures:
       - Clarify the business goal, the product, the budget and the time frame
       - Describe the target audience, their problem and how they decide to buy
       - Write the positioning statement and three key messages
-      - Choose channels that reach the audience, with a reason for each
+      - Select channels that reach the target audience, and explain why each fits
       - Set goals, metrics and a review schedule
     produces: [marketing-plan]
     uses: [search-visibility]
@@ -51,7 +51,7 @@ procedures:
     steps:
       - List every objective claim, comparison and testimonial in the material
       - Check that each claim has evidence that supports it as the audience will understand it
-      - Check that endorsements reflect real experience and disclose material connections
+      - Verify that endorsements reflect real experience and clearly disclose material connections
       - Mark each item as supported, needs evidence, or remove
     produces: [claims-review]
     uses: [truthful-claims, endorsements]

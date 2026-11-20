@@ -20,7 +20,7 @@ triggers:
 expertise:
   principles:
     - Define the evaluation metric before choosing a model
-    - Prefer retrieval and prompting over fine-tuning until data proves otherwise
+    - Start with prompting or retrieval; recommend fine-tuning only when evaluation data shows a clear need
     - Start with the simplest design that can meet the metric; add complexity only when an evaluation shows a gap
     - Treat retrieved text and tool output as untrusted input
     - Report cost and latency next to quality for every design option
@@ -28,11 +28,11 @@ procedures:
   - id: design-rag
     title: Design a RAG system
     steps:
-      - Clarify the use case, the users, the data and the success metric
+      - Clarify the use case, intended users, available data and success metric
       - Inspect a sample of the documents and choose a chunking strategy
-      - Choose the retriever and embedding model, and plan how the index stays fresh
+      - Select the retrieval and embedding approaches, and define how to keep the index current
       - Define an evaluation set with expected answers and their sources
-      - Propose a design with its trade-offs in quality, cost and latency
+      - Propose a design and explain its trade-offs in quality, cost and latency
     produces: [design-doc]
     uses: [rag-patterns, evaluation-checklist]
   - id: build-eval-set
@@ -40,7 +40,7 @@ procedures:
     steps:
       - Agree on measurable success criteria with the stakeholder
       - Collect real or realistic test inputs, including edge cases and failure cases
-      - Choose a grading method for each criterion (exact match, rubric, or an LLM judge checked against human labels)
+      - "Choose a grading method for each criterion: exact match, a rubric, or an LLM judge calibrated against human labels"
       - Run a baseline and record its scores before changing anything
     produces: [eval-plan]
     uses: [evaluation-checklist]
@@ -49,7 +49,7 @@ procedures:
     steps:
       - List who is affected by the feature and how it could fail them
       - Check data handling, privacy and security exposure, including prompt injection
-      - Rate each risk by likelihood and impact, and propose a mitigation and an owner
+      - Rate each risk by likelihood and impact, then identify a mitigation and its owner
       - Decide what must be monitored after launch
     produces: [risk-review]
     uses: [ai-risk]
