@@ -9,6 +9,8 @@ dependencies = [
     "psycopg[binary]>=3.3.8",
     "pydantic>=2.14.2",
     "pyyaml>=6.0.3",
+    "redis>=5,<9",
+    "rq>=2.6,<3",
     "sqlalchemy>=2.1.8",
     "uvicorn>=0.54.0",
 ]
