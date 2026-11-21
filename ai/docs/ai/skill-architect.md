@@ -1,6 +1,6 @@
-# Skill Architect v1 (AI-07, AI-12)
+# Skill Architect v1 and the writers (AI-07, AI-12, AI-13, AI-14)
 
-Owner: the AI Lead (AI-07 to AI-14).
+Owner: the AI Lead (AI-07 to AI-14). The writers are in [Writers (AI-13, AI-14)](#writers-ai-13-ai-14).
 
 ## Done-when, and where each stands
 
@@ -8,6 +8,8 @@ Owner: the AI Lead (AI-07 to AI-14).
 |---|---|---|
 | AI-07 | At least 90% of the 103 test requests produce a valid SkillSpec | **Not measured yet.** It needs one live run (`--set all --live`, about $10–20) |
 | AI-12 | "Seed skills generated with sources" | **Not met yet.** For 15 Dec it is met **on fixture passages with a live model**: the 10 seed requests (`--set seed --live`, with `SKILLFORGE_RETRIEVER=fake`) all get a valid spec that cites retrieved pages. DE's knowledge store does not hold the seed domains yet, so the real-retriever run comes later |
+| AI-13 | "No uncited claims in reference files" | **Not met yet.** Built and tested offline. It needs the live seed run with `--writers`: all 10 specs valid, a file for every reference, 0 uncited claims. The weakly-supported rate is reported, with no gate yet |
+| AI-14 | "Trigger accuracy measured in AI-17" | **Built and tested offline.** Done when AI-17 (Yousef) measures the descriptions against the seed benchmark's trigger prompts |
 
 Offline everything already runs: a fake run of the seed set gives 10 of 10 specs with sources. A fake run never counts: the fake model gives every request the same canned spec.
 
@@ -102,15 +104,53 @@ These rules never depend on the model. They are deterministic and idempotent.
 - **The chain in the spec:** a procedure's `uses` points to `knowledge.references[]`, whose `sources` point to `sources[]` (URL, retrieval date, title, licence). Backend's compiler lists the references and sources in SKILL.md.
 - **The reference files** (`references/*.md`, with claim-by-claim citations) are **AI-13's** job.
 
-## AI-13 and AI-14: how they plug in
-- **AI-13, reference writer:** `write_references(spec, passages, evidence)`.
-  - **Its inputs:** the passages and `evidence` from `ArchitectResult`, so no second retrieval is needed. Each reference's chunks are those of the pages it cites.
-  - **Its output:** one file per reference, with every claim citing a `chunk_id` from that reference's evidence.
-  - **Its checks:** the same wrapping, `copied_text` and `check_spec` on the markdown.
-- **AI-14, trigger writer:** `write_descriptions(spec) -> {target: description}`, each within `PLATFORM_LIMITS`. `draft_description` (the validator) stays the fallback.
-- **One change to the pipeline interface (Backend's contract) for both:** the design step returns a `SkillDraft(spec, reference_files, descriptions)`. It is proposed after AI-12 merges, and needs Backend's approval.
+## Writers (AI-13, AI-14)
+```python
+from core.agents.writers import write_references, describe
 
-**Prompts and model.** The prompts are in `ai/prompts/architect/` (version 2). Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
+files = await write_references(result.spec, result.passages, result.evidence)
+for f in files:
+    f.path, f.markdown, f.claims, f.dropped     # references/<id>.md; claims with support scores
+descriptions = (await describe(result.spec)).by_target   # {target: description}
+```
+
+### AI-13: the reference writer (`core/agents/writers/references.py`)
+- **One model call per reference** (prompt `writers/references` v1, role `architect`).
+  - **Its input:** only the passages behind that reference (the Architect's `evidence`), wrapped as untrusted data.
+  - **Its output:** sections of claims, each citing chunk ids. The model never writes Markdown, URLs or citation markers.
+- **Every claim is checked:**
+  - it cites at least one chunk, and only chunks of its reference's evidence;
+  - it doesn't copy 12+ words of a passage (`copied_fields`);
+  - it contains no URL or domain;
+  - AI-19's `screen_text` finds no override, role-marker, secret or exfiltration text.
+  - A failing claim gets **one repair call**. If it still fails, it is **dropped** and counted by reason.
+- **The code renders the file:** each claim gets `[n]` markers, and a numbered Sources list (title, URL, retrieval date) comes from `spec.sources`. So **a file can't contain an uncited claim**.
+- **No evidence:** no call and no file. **Two invalid replies:** no file. **Provider down:** `WriterUnavailable` (retry later).
+
+### The support check: "cited" isn't "supported"
+- **How it scores:** each kept claim and the chunks it cites are embedded with the local model (bge-small, no API cost). The claim's `support` is its best cosine similarity to those chunks.
+- **What it flags:** below `SUPPORT_THRESHOLD` (**0.67**) the claim is `weak`. It is kept and counted, never dropped, and nothing gates on it yet.
+- **How the threshold was chosen:** `python -m evaluation.architect calibrate-support`, once, on the **fixture passages only**, never on seed results ([report](../../evaluation/architect/reports/support-calibration-2026-11-21.md)).
+  - **Positive pairs:** each passage sentence (6+ words) against its own passage.
+  - **Negative pairs:** the same sentence against the most similar passage of **another page in the same domain**, the near miss.
+  - **The pick:** best F1, ties going to the lower threshold.
+  - **The result:** passages.yaml 1.1.0, 141 + 141 pairs: **0.67**, precision 85.8%, recall 94.3%, F1 0.899.
+  - **The known limit:** a sentence taken from the passage scores higher than a fair paraphrase, so some paraphrased claims may be flagged. The 10-claim human spot-check in each seed report covers that.
+  - **To recalibrate:** run the command again (it needs the local model files: `SKILLFORGE_MODEL_CACHE`, offline), then update the constant. A test checks that it matches the latest committed report.
+
+### AI-14: the trigger writer (`core/agents/writers/triggers.py`)
+- **One call** (prompt `writers/triggers` v1) writes the description from the spec's summary, `use_when` and `avoid_when`.
+- **Checks, per target:** not empty, no XML-like tag, at most `PLATFORM_LIMITS[target].description` characters (1024 today; only Claude's limit is verified).
+- **On failure:** one repair call. If it still fails, that target falls back to `draft_description` (which a valid spec always fits), and `Descriptions.fallback` lists it.
+- **The hand-off to AI-17 (Yousef):** these descriptions, plus the seed benchmark 1.0.0's 80 test prompts and 60 should-not-trigger prompts.
+
+### For Backend: the `SkillDraft` proposal
+**Not implemented. To be proposed after this work merges.**
+- **What changes:** the design step's `StepResult` gains an optional `draft: SkillDraft(spec, reference_files[{path, markdown}], descriptions{target: str})`. `value` stays the SkillSpec, so the change is additive.
+- **What the compiler (BE-09) does with it:** writes the `references/*.md` files, and uses the description. With no draft it uses `draft_description`, as today.
+- **When:** it touches `core/pipeline/interface.py`, so it comes after review batch `-c1` is merged, and needs Backend's approval. Neither done-when depends on it.
+
+**Prompts and model.** The Architect's prompts are in `ai/prompts/architect/` (version 2); the writers' are in `ai/prompts/writers/` (version 1). Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
 
 **Tracing is off.** LangGraph comes with LangSmith tracing, which the Architect switches off by default (`LANGSMITH_TRACING=false`), because traces would contain users' requests.
 
@@ -121,6 +161,8 @@ cd ai
 .venv/Scripts/python -m evaluation.architect run --set all --live    # AI-07, REAL calls: about $10–20
 SKILLFORGE_RETRIEVER=fake .venv/Scripts/python -m evaluation.architect run --set seed --live
                                                                      # AI-12 on fixture passages: about $1–3
+SKILLFORGE_RETRIEVER=fake .venv/Scripts/python -m evaluation.architect run --set seed --writers --live
+                                                                     # AI-12 + AI-13 + AI-14: about $3–6
 ```
 
 **The sets:**
@@ -141,7 +183,11 @@ SKILLFORGE_RETRIEVER=fake .venv/Scripts/python -m evaluation.architect run --set
 **The verdicts:**
 - **AI-07:** exactly 103 requests, at least 90% valid.
 - **AI-12:** all 10 seed requests valid, all with cited sources, and every source a retrieved page.
-- A fake run prints "does NOT count" for both.
+- **AI-13** (with `--writers`): all 10 valid, a file for every reference, 0 uncited claims.
+  - The report also shows dropped and weakly supported claims, the descriptions and their fallbacks.
+  - It lists **10 random claims** (seed 20261119), each with its cited chunk text, for a human check.
+  - The files and descriptions go to the run folder (`references/`, `descriptions.json`).
+- A fake run prints "does NOT count" for each of them.
 
 ## Dependency note
 LangGraph is pinned at `1.2.14`, published on 6 Oct 2026. `pyproject.toml` sets `[tool.uv] exclude-newer = "2026-10-10T00:00:00Z"`, so `uv lock` only picks releases at least two weeks old, for every package, including LangGraph's own dependencies. When you upgrade:
