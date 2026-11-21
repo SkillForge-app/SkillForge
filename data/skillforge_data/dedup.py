@@ -49,6 +49,9 @@ class DedupConfig:
             raise ValueError("num_perm must be a multiple of bands")
 
 
+_DEFAULT_DEDUP_CONFIG = DedupConfig()      # frozen, so sharing one instance as a default argument is safe
+
+
 def shingles(text: str, size: int = 5) -> set[str]:
     """Overlapping groups of `size` words, lower case. A text shorter than `size` words is one shingle."""
     words = [w.lower() for w in _WORD.findall(text)]
@@ -60,7 +63,7 @@ def shingles(text: str, size: int = 5) -> set[str]:
 
 
 class MinHasher:
-    def __init__(self, config: DedupConfig = DedupConfig()) -> None:  # noqa: B008 (frozen, shared on purpose)
+    def __init__(self, config: DedupConfig = _DEFAULT_DEDUP_CONFIG) -> None:
         rng = random.Random(config.seed)
         self.config = config
         self._a = [rng.randrange(1, _PRIME) for _ in range(config.num_perm)]
@@ -92,14 +95,14 @@ def jaccard(sig_a: bytes, sig_b: bytes) -> float:
 class DuplicateFinder:
     """In-memory index of canonical documents' signatures. The database has the last word on every candidate."""
 
-    def __init__(self, config: DedupConfig = DedupConfig()) -> None:  # noqa: B008
+    def __init__(self, config: DedupConfig = _DEFAULT_DEDUP_CONFIG) -> None:
         self.config = config
         self.hasher = MinHasher(config)
         self._signatures: dict[str, bytes] = {}
         self._buckets: dict[tuple[int, bytes], set[str]] = defaultdict(set)
 
     @classmethod
-    def load(cls, conn: psycopg.Connection, config: DedupConfig = DedupConfig()) -> DuplicateFinder:  # noqa: B008
+    def load(cls, conn: psycopg.Connection, config: DedupConfig = _DEFAULT_DEDUP_CONFIG) -> DuplicateFinder:
         """Build the index from the signatures stored in the database (current, canonical, readable documents)."""
         finder = cls(config)
         for doc_id, signature in conn.execute(

@@ -3,6 +3,7 @@
 All requests go to a small HTTP server started inside the test on 127.0.0.1: no network.
 """
 import email.utils
+import re
 import threading
 import time
 from datetime import UTC, datetime, timedelta
@@ -263,7 +264,7 @@ def test_a_robots_redirect_to_another_host_is_followed_and_recorded(caplog):
     with caplog.at_level("WARNING"):
         response = fetcher._fetch_robots("https://example.org")
     assert response.status == 200 and response.redirects == ("https://www.example.org/robots.txt",)
-    assert any("another host" in r.message and "www.example.org" in r.message for r in caplog.records), "the cross-host hop is logged"
+    assert any(re.search(r"\banother host\b", r.message) and re.search(r"\bwww\.example\.org\b", r.message) for r in caplog.records), "the cross-host hop is logged"
     allowed, _ = fetcher._robots.allowed("https://example.org/nope")
     assert allowed is False
     assert fetcher._robots.allowed("https://example.org/fine") == (True, "robots.txt (redirected to host www.example.org)")
