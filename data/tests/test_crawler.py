@@ -2,15 +2,20 @@
 
 All requests go to a small HTTP server started inside the test on 127.0.0.1: no network.
 """
+import email.utils
+import re
 import threading
 import time
+from datetime import UTC, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
+import httpx
 import pytest
-from fakes import FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
+from fakes import FakeEmbed, FakeExtract, fake_config, fake_normalise_url, page_bytes
 
 from skillforge_data.crawler import (
     Crawler,
+    CrawlTarget,
     FetchConfig,
     HttpFetcher,
     Validators,
@@ -19,7 +24,6 @@ from skillforge_data.crawler import (
 from skillforge_data.crawler.license import detect_license, to_spdx
 from skillforge_data.crawler.ratelimit import HostRateLimiter
 from skillforge_data.crawler.robots import RobotsPolicy, RobotsResponse
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import process_document
 
 LICENSED_PAGE = (
@@ -36,6 +40,8 @@ class Site:
         self.headers: list[dict[str, str]] = []
         self.robots = "User-agent: *\nDisallow: /private\n"
         self.robots_status = 200
+        self.robots_chain = 0            # /robots.txt redirects through this many hops (/rc/1 ... /rc/N) before the real answer
+        self.robots_loop = False         # ... or redirects forever between /rc/1 and itself
         self.counters: dict[str, int] = {}
         self.base = ""
 
@@ -57,12 +63,36 @@ def _send(h, status, body=b"", headers=None, content_type="text/html"):
 
 def _routes(site: Site):
     def robots(h):
+        pass
+
+    def robots_hop(i):
+        def handler(h):
+            if site.robots_loop:
+                return _send(h, 302, headers={"Location": "/rc/1"})
+            if i < site.robots_chain:
+                return _send(h, 301, headers={"Location": f"/rc/{i + 1}"})
+            _send(h, 200, site.robots.encode(), content_type="text/plain")
+        return handler
+
+    def robots_entry(h):
+        if site.robots_chain or site.robots_loop:
+            return _send(h, 301, headers={"Location": "/rc/1"})
         _send(h, site.robots_status, site.robots.encode(), content_type="text/plain")
 
     def ok(h):
         if h.headers.get("If-None-Match") == '"v1"':
             return _send(h, 304, headers={"ETag": '"v1"'})
         _send(h, 200, LICENSED_PAGE, {"ETag": '"v1"', "Last-Modified": "Wed, 04 Nov 2026 10:00:00 GMT"})
+
+    def bare_304(h):                                   # 200 with validators, then a 304 that carries NO headers
+        if h.headers.get("If-None-Match") == '"v1"':
+            return _send(h, 304)
+        _send(h, 200, LICENSED_PAGE, {"ETag": '"v1"', "Last-Modified": "Wed, 04 Nov 2026 10:00:00 GMT"})
+
+    def lost_validators(h):                            # 200 with validators, then a 200 without any
+        if site.count("lost") == 1:
+            return _send(h, 200, LICENSED_PAGE, {"ETag": '"v1"', "Last-Modified": "Wed, 04 Nov 2026 10:00:00 GMT"})
+        _send(h, 200, LICENSED_PAGE + b"<!-- changed -->")
 
     def big_declared(h):
         _send(h, 200, b"x" * 3000)                      # Content-Length 3000
@@ -89,12 +119,15 @@ def _routes(site: Site):
         _send(h, 200, b"<p>slow</p>")
 
     return {
-        "/robots.txt": robots,
+        "/robots.txt": robots_entry,
+        **{f"/rc/{i}": robots_hop(i) for i in range(1, 9)},
         "/ok": ok,
         "/private": lambda h: _send(h, 200, b"<p>secret</p>"),
         "/redirect": lambda h: _send(h, 302, headers={"Location": "/ok"}),
         "/redirect-private": lambda h: _send(h, 302, headers={"Location": "/private"}),
         "/loop": lambda h: _send(h, 302, headers={"Location": "/loop"}),
+        "/bare-304": bare_304,
+        "/lost-validators": lost_validators,
         "/big-declared": big_declared,
         "/big-stream": big_stream,
         "/flaky": flaky,
@@ -171,6 +204,82 @@ def test_robots_txt_is_fetched_once_and_cached(site):
     fetcher.fetch(f"{site.base}/ok")
     fetcher.fetch(f"{site.base}/gone")
     assert site.hits.count("/robots.txt") == 1
+
+
+# ---------------------------------------------------------------- robots.txt redirects (RFC 9309, up to 5)
+def _fetch_ok_page(site):
+    fetcher, _ = make_fetcher()
+    return fetcher.fetch(f"{site.base}/ok")
+
+
+def test_one_robots_redirect_is_followed(site):
+    site.robots_chain = 1
+    site.robots = "User-agent: *\nDisallow: /private\n"
+    assert _fetch_ok_page(site).outcome == "ok"
+    fetcher, _ = make_fetcher()
+    assert fetcher.fetch(f"{site.base}/private").outcome == "blocked", "the rules found after the redirect are applied"
+    assert site.hits.count("/robots.txt") == 2 and "/rc/1" in site.hits
+
+
+def test_a_chain_of_five_robots_redirects_is_followed(site):
+    site.robots_chain = 5
+    site.robots = "User-agent: *\nDisallow: /\n"
+    result = _fetch_ok_page(site)
+    assert result.outcome == "blocked" and "disallowed by robots.txt" in result.error, "the rules at the end of the chain apply"
+    assert [h for h in site.hits if h.startswith("/rc/")] == [f"/rc/{i}" for i in range(1, 6)]
+
+
+def test_six_robots_redirects_make_robots_txt_unavailable(site):
+    site.robots_chain = 6
+    site.robots = "User-agent: *\nAllow: /\n"
+    result = _fetch_ok_page(site)
+    assert result.outcome == "blocked" and "robots.txt unavailable" in result.error, "same rule as any other robots.txt error"
+    assert "/ok" not in site.hits and "/rc/6" not in site.hits, "the sixth redirect is not followed and the page is never requested"
+
+
+def test_a_robots_redirect_loop_is_unavailable_and_ends(site):
+    site.robots_loop = True
+    result = _fetch_ok_page(site)
+    assert result.outcome == "blocked" and "robots.txt unavailable" in result.error
+    assert "/ok" not in site.hits and len(site.hits) <= 3
+
+
+def _mock_fetcher(handler, **config):
+    client = httpx.Client(transport=httpx.MockTransport(handler), follow_redirects=False)
+    return HttpFetcher(FetchConfig(min_interval=0.0, **config), client=client, sleep=lambda s: None)
+
+
+def test_a_robots_redirect_to_another_host_is_followed_and_recorded(caplog):
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(str(request.url))
+        if request.url.host == "example.org" and request.url.path == "/robots.txt":
+            return httpx.Response(301, headers={"Location": "https://www.example.org/robots.txt"})
+        if request.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: *\nDisallow: /nope\n")
+        return httpx.Response(200, text="<p>x</p>", headers={"Content-Type": "text/html"})
+
+    fetcher = _mock_fetcher(handler)
+    with caplog.at_level("WARNING"):
+        response = fetcher._fetch_robots("https://example.org")
+    assert response.status == 200 and response.redirects == ("https://www.example.org/robots.txt",)
+    assert any(re.search(r"\banother host\b", r.message) and re.search(r"\bwww\.example\.org\b", r.message) for r in caplog.records), "the cross-host hop is logged"
+    allowed, _ = fetcher._robots.allowed("https://example.org/nope")
+    assert allowed is False
+    assert fetcher._robots.allowed("https://example.org/fine") == (True, "robots.txt (redirected to host www.example.org)")
+
+
+def test_a_robots_redirect_to_a_denied_host_is_not_followed():
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append(request.url.host)
+        return httpx.Response(302, headers={"Location": "https://blocked.example.net/robots.txt"})
+
+    fetcher = _mock_fetcher(handler, denylist=frozenset({"blocked.example.net"}))
+    assert fetcher._fetch_robots("https://example.org").status is None
+    assert seen == ["example.org"]
 
 
 def test_the_request_names_the_bot(site):
@@ -274,10 +383,69 @@ def test_retry_after_is_honoured_but_capped(site):
     fetcher, sleeps = make_fetcher(retries=2)
     assert fetcher.fetch(f"{site.base}/retry-after").outcome == "ok"
     assert sleeps.values == [7.0]
-    site.counters.clear()
-    capped, sleeps2 = make_fetcher(retries=2, max_wait=3.0)
-    capped.fetch(f"{site.base}/retry-after")
-    assert sleeps2.values == [3.0]
+
+
+def test_a_retry_after_longer_than_max_wait_fails_the_page_without_waiting_or_retrying(site):
+    fetcher, sleeps = make_fetcher(retries=2, max_wait=3.0)
+    result = fetcher.fetch(f"{site.base}/retry-after")           # asks for 7 seconds
+    assert result.outcome == "failed" and result.http_status == 429
+    assert "asked to wait 7s" in result.error and "max_wait 3s" in result.error
+    assert sleeps.values == [] and site.hits.count("/retry-after") == 1
+
+
+def _date_header(delta_seconds):
+    return email.utils.format_datetime(datetime.now(UTC) + timedelta(seconds=delta_seconds), usegmt=True)
+
+
+def _server_fetcher(first_status, retry_after, **config):
+    """A fetcher over a mock server that answers `first_status` + Retry-After once, then 200."""
+    calls = []
+
+    def handler(request):
+        if request.url.path == "/robots.txt":
+            return httpx.Response(404)
+        calls.append(request.url.path)
+        if len(calls) == 1:
+            return httpx.Response(first_status, headers={"Retry-After": retry_after})
+        return httpx.Response(200, text="<p>ok</p>", headers={"Content-Type": "text/html"})
+
+    sleeps = Sleeps()
+    fetcher = HttpFetcher(FetchConfig(min_interval=0.0, **config), client=httpx.Client(transport=httpx.MockTransport(handler)),
+                          sleep=sleeps)
+    return fetcher, sleeps, calls
+
+
+def test_a_retry_after_date_in_the_future_is_waited_for():
+    fetcher, sleeps, calls = _server_fetcher(503, _date_header(30), retries=2)
+    assert fetcher.fetch("https://example.org/p").outcome == "ok" and len(calls) == 2
+    assert len(sleeps.values) == 1 and 25 <= sleeps.values[0] <= 30, "HTTP-date, read as seconds from now"
+
+
+def test_a_retry_after_date_beyond_max_wait_fails_the_page():
+    fetcher, sleeps, calls = _server_fetcher(429, _date_header(3600), retries=2, max_wait=60.0)
+    result = fetcher.fetch("https://example.org/p")
+    assert result.outcome == "failed" and "asked to wait" in result.error and len(calls) == 1 and sleeps.values == []
+
+
+def test_a_retry_after_date_in_the_past_means_retry_now():
+    fetcher, sleeps, calls = _server_fetcher(503, _date_header(-3600), retries=2)
+    assert fetcher.fetch("https://example.org/p").outcome == "ok" and len(calls) == 2
+    assert sleeps.values == [0.0]
+
+
+def test_an_unreadable_retry_after_falls_back_to_the_normal_backoff():
+    fetcher, sleeps, _ = _server_fetcher(503, "soon", retries=2, backoff_base=2.0)
+    assert fetcher.fetch("https://example.org/p").outcome == "ok" and sleeps.values == [2.0]
+
+
+def test_a_page_that_asks_for_a_long_wait_is_counted_as_failed_in_the_crawl_run(db, site):
+    fetcher, _ = make_fetcher(retries=2, max_wait=3.0)
+    crawler = Crawler(db, fetcher, fake_normalise_url, config=fetcher.config, pipeline_version="p1")
+    summary = crawler.run([f"{site.base}/retry-after"], domains=["technology/ai"])
+    row = db.execute("SELECT pages_failed, error FROM knowledge.crawl_runs WHERE id = %s", (summary.run_id,)).fetchone()
+    assert row[0] == 1 and "asked to wait" in row[1]
+    assert summary.failed == 1 and summary.fetched == 0
+    assert "asked to wait" in summary.errors[0]
 
 
 def test_a_timeout_is_a_failure_after_the_retries(site):
@@ -384,6 +552,40 @@ def test_a_second_crawl_with_the_same_etag_counts_as_unchanged(db, crawl):
     assert validators.get(f"{site.base}/ok") == Validators('"v1"', "Wed, 04 Nov 2026 10:00:00 GMT")
 
 
+def test_a_304_without_headers_does_not_erase_the_stored_validators(db, crawl):
+    make, site = crawl
+    validators = ValidatorStore()
+    url = f"{site.base}/bare-304"
+    make(validators).run([url], domains=["technology/ai"])
+    stored = validators.get(url)
+    assert stored == Validators('"v1"', "Wed, 04 Nov 2026 10:00:00 GMT")
+    second = make(validators).run([url], domains=["technology/ai"])
+    third = make(validators).run([url], domains=["technology/ai"])
+    assert (second.unchanged, third.unchanged) == (1, 1), "the validators survived the bare 304, so the third request was conditional too"
+    assert validators.get(url) == stored
+
+
+def test_validators_change_only_after_a_successful_200(db, crawl):
+    make, site = crawl
+    validators = ValidatorStore()
+    url = f"{site.base}/lost-validators"
+    make(validators).run([url], domains=["technology/ai"])
+    assert validators.get(url) is not None
+    make(validators).run([url], domains=["technology/ai"])          # a 200 that carries none: the old pair must go
+    assert validators.get(url) is None
+
+
+def test_validator_store_ignores_everything_that_is_not_a_200():
+    store = ValidatorStore()
+    store.replace("u", Validators('"a"', "d1"))
+    store.replace("u", Validators('"b"', None))                      # a later 200 replaces the pair as a whole
+    assert store.get("u") == Validators('"b"', None)
+    store.replace("u", Validators(None, None))
+    assert store.get("u") is None
+    store.replace("other", Validators(None, None))                   # nothing to remember, nothing stored
+    assert store.get("other") is None
+
+
 def test_a_run_where_everything_fails_has_status_failed(db, crawl):
     make, site = crawl
     summary = make().run([f"{site.base}/gone", "ftp://example.org/x"], domains=["technology/ai"])
@@ -394,7 +596,7 @@ def test_a_run_where_everything_fails_has_status_failed(db, crawl):
 def test_a_crawl_feeds_the_pipeline_and_a_second_crawl_changes_nothing(db, crawl):
     make, site = crawl
     extract, embed = FakeExtract(), FakeEmbed()
-    config = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+    config = fake_config()
 
     def handler(page):
         return process_document(db, page, config=config, extract=extract, embed=embed, normalise_url=fake_normalise_url)
@@ -411,3 +613,51 @@ def test_a_crawl_feeds_the_pipeline_and_a_second_crawl_changes_nothing(db, crawl
     assert db.execute("SELECT count(*) FROM knowledge.chunks").fetchone()[0] == 3
     assert embed.calls == 2, "nothing was embedded twice"
     assert db.execute("SELECT pages_unchanged FROM knowledge.crawl_runs WHERE id = %s", (second.run_id,)).fetchone()[0] == 2
+
+
+# ------------------------------------------------------------------ the licence given by the list is kept (DE-04)
+def _source(db, suffix):
+    return db.execute("SELECT license, license_source FROM knowledge.sources WHERE url LIKE %s", (f"%{suffix.rstrip('/')}",)).fetchone()
+
+
+def test_the_licence_from_crawl_list_is_stored_on_the_source_and_the_document(db, crawl):
+    make, site = crawl
+    pages = []
+    make().run([(f"{site.base}/trailing/", "CC-BY-4.0")], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/trailing/") == ("CC-BY-4.0", "manual")
+    assert (pages[0].license, pages[0].license_source) == ("CC-BY-4.0", "manual")
+
+
+def test_a_licence_the_page_declares_wins_over_the_list(db, crawl):
+    make, site = crawl
+    pages = []
+    make().run([CrawlTarget(f"{site.base}/ok", "MIT")], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/ok") == ("CC-BY-4.0", "page")                 # /ok declares CC-BY-4.0
+    assert (pages[0].license, pages[0].license_source) == ("CC-BY-4.0", "page")
+
+
+def test_plain_urls_still_work_and_give_an_unknown_licence(db, crawl):
+    make, site = crawl
+    pages = []
+    make().run([f"{site.base}/trailing/"], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/trailing/") == ("unknown", "unknown") and pages[0].license == "unknown"
+
+
+def test_a_mixed_list_and_an_explicit_licence_source(db, crawl):
+    make, site = crawl
+    make().run([f"{site.base}/trailing/", CrawlTarget(f"{site.base}/doc-a", "LicenseRef-x", "repo")], domains=["technology/ai"])
+    assert _source(db, "/trailing/")[0] == "unknown" and _source(db, "/doc-a") == ("LicenseRef-x", "repo")
+
+
+def test_an_unknown_in_the_list_does_not_erase_a_known_licence(db, crawl):
+    make, site = crawl
+    make().run([(f"{site.base}/trailing/", "CC-BY-4.0")], domains=["technology/ai"])
+    pages = []
+    make().run([(f"{site.base}/trailing/", "unknown")], domains=["technology/ai"], on_page=pages.append)
+    assert _source(db, "/trailing/") == ("CC-BY-4.0", "manual") and pages[0].license == "CC-BY-4.0"
+
+
+def test_a_page_that_was_not_fetched_gets_no_licence_from_the_list(db, crawl):
+    make, site = crawl
+    make().run([(f"{site.base}/private", "CC-BY-4.0")], domains=["technology/ai"])          # robots.txt forbids it
+    assert _source(db, "/private") == ("unknown", "unknown")

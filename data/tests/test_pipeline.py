@@ -7,11 +7,11 @@ from fakes import (
     BrokenEmbed,
     FakeEmbed,
     FakeExtract,
+    fake_config,
     fake_normalise_url,
     page_bytes,
 )
 
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import RawPage, process_document
 from skillforge_data.storage import BUCKET_CLEAN, BUCKET_RAW, MemoryStorage, clean_key
 from skillforge_data.storage.base import ObjectNotFound
@@ -19,7 +19,7 @@ from skillforge_data.store import start_crawl_run
 
 URL = "https://Docs.Example.org/guide/#intro"
 CANONICAL = "https://docs.example.org/guide"
-CONFIG = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+CONFIG = fake_config()
 
 
 class Env:
@@ -149,7 +149,7 @@ def test_a_b_a_processes_the_returning_version_again(env):
     assert len(env.chunk_ids()) == 3 and all(c.count("-") >= 2 for c in env.chunk_ids())
     assert env.one("SELECT status FROM knowledge.documents WHERE id = %s", first.document_id) == "embedded"
     key = env.one("SELECT clean_object_key FROM knowledge.documents WHERE id = %s", first.document_id)
-    assert key == clean_key(first.document_id, None) and env.storage.exists(BUCKET_CLEAN, key)
+    assert key == clean_key(first.document_id, CONFIG.extract_fingerprint) and env.storage.exists(BUCKET_CLEAN, key)
     # B was superseded: no chunks left for it
     assert env.one("SELECT count(*) FROM knowledge.chunks") == 3
     assert env.one("SELECT count(*) FROM knowledge.embeddings") == 3
@@ -202,13 +202,13 @@ def test_a_page_needs_at_least_one_skill_domain(env):
 
 def test_a_new_extraction_fingerprint_is_a_new_chunk_set_beside_the_old_one(env):
     env.run(A)
-    fingerprint = "f" * 64
-    newer = PipelineConfig(pipeline_version="p1", embedding_version="rev-1", extract_fingerprint=fingerprint)
-    assert newer.chunk_config_hash() != CONFIG.chunk_config_hash()
+    newer = fake_config(version="2")                      # AI changed an extraction setting or bumped EXTRACTION_VERSION
+    fingerprint = newer.extract_fingerprint
+    assert fingerprint != CONFIG.extract_fingerprint and newer.chunk_config_hash() != CONFIG.chunk_config_hash()
     result = env.run(A, at=T0 + timedelta(days=1), config=newer)
     assert result.status == "processed" and not result.active, "stored, but active_config still points to the old set"
     assert env.one("SELECT count(*) FROM knowledge.chunks") == 6
-    assert env.one("SELECT count(*) FROM knowledge.chunks WHERE chunk_config ? 'extract_fingerprint'") == 3
+    assert env.one("SELECT count(*) FROM knowledge.chunks WHERE chunk_config ->> 'extract_fingerprint' = %s", fingerprint) == 3
     assert len(env.chunk_ids()) == 3, "the view still shows one set"
     assert env.one("SELECT clean_object_key FROM knowledge.documents") .endswith(f"/{fingerprint}.txt")
 
@@ -247,3 +247,41 @@ def test_a_url_that_is_not_http_is_a_failure(env):
     result = env.run(A, url="ftp://example.org/file")
     assert result.status == "failed"
     assert env.one("SELECT count(*) FROM knowledge.sources") == 0
+
+
+# ------------------------------------------------------------- chunk_config comes from AI's ExtractConfig (DE-05)
+def test_chunk_config_takes_size_overlap_and_fingerprint_from_the_extract_config(env):
+    env.run(A)
+    stored = {tuple(sorted(r[0].items())) for r in env.db.execute("SELECT chunk_config FROM knowledge.chunks")}
+    assert len(stored) == 1
+    config = dict(next(iter(stored)))
+    assert config == {
+        "size": 123, "overlap": 17, "splitter": "sentence", "pipeline_version": "p1",
+        "extract_fingerprint": CONFIG.extract_config.fingerprint(),
+    }, "123 and 17 are the fake config's values; the old hard-coded 500/50 are gone"
+
+
+def test_other_chunking_values_give_another_chunk_set(env):
+    env.run(A)
+    other = fake_config(target_words=200, overlap_words=30)
+    assert other.chunk_config()["size"] == 200 and other.chunk_config()["overlap"] == 30
+    assert other.chunk_config_hash() != CONFIG.chunk_config_hash()
+    assert env.run(A, at=T0 + timedelta(days=1), config=other).status == "processed"
+    assert sorted(r[0] for r in env.db.execute("SELECT DISTINCT chunk_config ->> 'size' FROM knowledge.chunks")) == ["123", "200"]
+
+
+def test_the_clean_text_key_uses_the_fingerprint_of_the_config(env):
+    env.run(A)
+    assert env.one("SELECT clean_object_key FROM knowledge.documents").endswith(f"/{CONFIG.extract_config.fingerprint()}.txt")
+
+
+def test_a_config_without_a_valid_fingerprint_is_refused():
+    class Bad:
+        chunking = None
+
+        def fingerprint(self):
+            return "not-a-fingerprint"
+
+    from skillforge_data.pipeline.config import PipelineConfig
+    with pytest.raises(ValueError, match="64"):
+        PipelineConfig(pipeline_version="p1", embedding_version="rev-1", extract_config=Bad())

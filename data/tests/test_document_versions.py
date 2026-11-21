@@ -15,7 +15,10 @@ HASH_B = "b" * 64
 T1 = datetime(2026, 11, 1, tzinfo=UTC)
 T2 = T1 + timedelta(days=1)
 T3 = T1 + timedelta(days=2)
-CHUNK_CONFIG = '{"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "p1"}'
+FINGERPRINT = "f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483"  # AI's default ExtractConfig
+CHUNK_CONFIG = (
+    '{"size": 180, "overlap": 40, "splitter": "sentence", "pipeline_version": "p1", "extract_fingerprint": "' + FINGERPRINT + '"}'
+)
 
 
 @pytest.fixture
@@ -218,27 +221,25 @@ def test_quality_reasons_are_not_a_closed_list_but_may_not_be_blank(db, source_i
         db.execute("UPDATE knowledge.documents SET quality_reasons = '{}' WHERE id = %s", (a,))
 
 
-FINGERPRINT = "f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483"  # AI's default ExtractConfig
-
-
-def test_chunk_config_accepts_the_optional_fifth_key_extract_fingerprint(db, source_id):
+def test_chunk_config_needs_all_five_keys_including_extract_fingerprint(db, source_id):
     a = record(db, source_id, HASH_A, T1)
-    five_keys = Jsonb(
-        {"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "p1", "extract_fingerprint": FINGERPRINT}
-    )
+    five_keys = {"size": 180, "overlap": 40, "splitter": "sentence", "pipeline_version": "p1", "extract_fingerprint": FINGERPRINT}
     sql = (
         "INSERT INTO knowledge.chunks (chunk_id, document_id, chunk_index, text, content_hash, chunk_config, "
-        "chunk_config_hash) VALUES ('host-aaaaaaaa-bbbbbbbb', %s, 0, 'text', %s, %s, 'cfg')"
+        "chunk_config_hash) VALUES (%s, %s, 0, 'text', %s, %s, 'cfg')"
     )
-    db.execute(sql, (a, "c" * 64, five_keys))
-    # the four-key form still works, and anything else is still refused
-    add_chunk(db, a, "host-aaaaaaaa-cccccccc", "other text", index=1)
-    base = {"size": 500, "overlap": 50, "splitter": "sentence", "pipeline_version": "p1"}
-    for bad in (
+    db.execute(sql, ("host-aaaaaaaa-bbbbbbbb", a, "c" * 64, Jsonb(five_keys)))
+    base = {k: v for k, v in five_keys.items() if k != "extract_fingerprint"}
+    for n, bad in enumerate((
+        base,                                                       # the old four-key form: the fifth key is missing
+        {**base, "extract_fingerprint": None},
         {**base, "extract_fingerprint": "not-a-hash"},
+        {**base, "extract_fingerprint": FINGERPRINT.upper()},       # 64 hex, but not lower case
+        {**base, "extract_fingerprint": FINGERPRINT[:-1]},          # 63 characters
         {**base, "extract_fingerprint": 123},
-        {**base, "fingerprint": FINGERPRINT},  # any other name is a sixth key
-        {**base, "extract_fingerprint": FINGERPRINT, "extra": 1},
-    ):
+        {**base, "fingerprint": FINGERPRINT},                       # another name: the required key is still missing
+        {**five_keys, "extra": 1},                                  # a sixth key
+        {k: v for k, v in five_keys.items() if k != "size"},        # any other key missing
+    )):
         with pytest.raises(psycopg.errors.CheckViolation), db.transaction():
-            db.execute(sql.replace("'host-aaaaaaaa-bbbbbbbb'", "'host-aaaaaaaa-dddddddd'"), (a, "c" * 64, Jsonb(bad)))
+            db.execute(sql, (f"host-aaaaaaaa-{n:08d}", a, "c" * 64, Jsonb(bad)))

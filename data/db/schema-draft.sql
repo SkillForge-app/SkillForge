@@ -32,22 +32,21 @@ LANGUAGE sql IMMUTABLE AS $$
        AND NOT EXISTS (SELECT 1 FROM unnest(v) AS x WHERE x IS NULL OR btrim(x) = '')
 $$;
 
--- chunk_config: these four keys, plus an optional fifth, `extract_fingerprint`. size, overlap and splitter are
--- AI-owned values; pipeline_version is ours. Every key present is part of the config hash.
--- extract_fingerprint = ExtractConfig.fingerprint() from AI: 64 hex characters, the sha256 of the extraction
--- settings without site_boilerplate. TODO: AI (Ziad) is still finishing that function; the key is optional
--- until it is final, then it should become required (see docs/data-architecture.md, `active_config`).
+-- chunk_config: exactly five keys, all required. size and overlap come from AI's chunking settings (ExtractConfig.chunking:
+-- target_words, overlap_words), splitter is the name of the splitting method, pipeline_version is ours. Every key is part of the
+-- config hash. extract_fingerprint = ExtractConfig.fingerprint() from AI (final since 1 November 2026): 64 hex characters, the sha256
+-- of the extraction settings without site_boilerplate (see docs/data-architecture.md, `active_config`).
 CREATE FUNCTION knowledge.is_valid_chunk_config(c jsonb) RETURNS boolean
 LANGUAGE sql IMMUTABLE AS $$
     SELECT jsonb_typeof(c) = 'object'
-       AND c ?& ARRAY['size', 'overlap', 'splitter', 'pipeline_version']
-       AND (SELECT count(*) FROM jsonb_object_keys(c)) = 4 + (c ? 'extract_fingerprint')::int
+       AND c ?& ARRAY['size', 'overlap', 'splitter', 'pipeline_version', 'extract_fingerprint']
+       AND (SELECT count(*) FROM jsonb_object_keys(c)) = 5
        AND jsonb_typeof(c -> 'size') = 'number'
        AND jsonb_typeof(c -> 'overlap') = 'number'
        AND jsonb_typeof(c -> 'splitter') = 'string'
        AND jsonb_typeof(c -> 'pipeline_version') = 'string'
-       AND (NOT c ? 'extract_fingerprint'
-            OR (jsonb_typeof(c -> 'extract_fingerprint') = 'string' AND c ->> 'extract_fingerprint' ~ '^[0-9a-f]{64}$'))
+       AND jsonb_typeof(c -> 'extract_fingerprint') = 'string'
+       AND c ->> 'extract_fingerprint' ~ '^[0-9a-f]{64}$'
 $$;
 
 -- ---------------------------------------------------------------------------

@@ -39,6 +39,29 @@ class ExtractedPage:
     chunks: tuple[ExtractedChunk, ...] = field(default_factory=tuple)   # empty unless quality_ok
 
 
+class ChunkingSettings(Protocol):
+    """The part of AI's `ExtractConfig.chunking` (`ChunkSettings`) that DE records in `chunk_config`."""
+
+    @property
+    def target_words(self) -> int: ...
+
+    @property
+    def overlap_words(self) -> int: ...
+
+
+class ExtractConfigLike(Protocol):
+    """AI's `ExtractConfig`, as far as DE needs it: its chunking settings and its fingerprint (64 hex characters).
+
+    The pipeline never builds or changes it; it is injected (`PipelineConfig(extract_config=...)`). The adapter passes AI's real
+    `ExtractConfig()` (with `site_boilerplate` already set per host: the fingerprint does not depend on it).
+    """
+
+    @property
+    def chunking(self) -> ChunkingSettings: ...
+
+    def fingerprint(self) -> str: ...
+
+
 class ExtractPage(Protocol):
     """AI's `extract_page(html, url=..., retrieved=..., config=...)`, with the config already bound."""
 

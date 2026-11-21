@@ -30,5 +30,5 @@ def raw_key(host: str, content_hash: str, content_type: str | None = None) -> st
 
 
 def clean_key(document_id: uuid.UUID | str, fingerprint: str | None) -> str:
-    """`v0` stands for the fingerprint until AI finishes ExtractConfig.fingerprint()."""
+    """The pipeline always passes the extraction fingerprint; `v0` is only the fallback for a caller that has none."""
     return f"{document_id}/{fingerprint or 'v0'}.txt"
