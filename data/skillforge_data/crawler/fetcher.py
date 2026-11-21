@@ -28,6 +28,7 @@ MAX_BYTES = 20 * 1024 * 1024            # 20 MB, the limit proposed in docs/obje
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
 REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
 ROBOTS_MAX_REDIRECTS = 5                 # RFC 9309: follow at least five consecutive redirects
+ROBOTS_MAX_BYTES = 512 * 1024            # a bigger robots.txt is "unavailable": the origin is not crawled (RFC 9309 asks for 500 KiB at least)
 
 Outcome = Literal["ok", "not_modified", "blocked", "too_large", "failed"]
 
@@ -116,13 +117,15 @@ class HttpFetcher:
         while True:
             self._limiter.wait(host_key(current))
             try:
-                response = self._client.get(current, headers={"Accept": "text/plain"})
+                request = self._client.build_request("GET", current, headers={"Accept": "text/plain"})
+                response = self._client.send(request, stream=True)
             except httpx.HTTPError as exc:
                 logger.warning("robots.txt of %s not reachable (%s): %s", origin, current, exc)
                 return RobotsResponse(None, redirects=tuple(followed))
             if response.status_code not in REDIRECT_STATUSES:
                 break
             location = response.headers.get("location")
+            response.close()
             target = urljoin(current, location) if location else None
             parts = urlsplit(target) if target else None
             try:
@@ -144,8 +147,18 @@ class HttpFetcher:
             followed.append(target)
             seen.add(target)
             current = target
-        text = response.text if response.status_code == 200 and len(response.content) <= 512 * 1024 else ""
-        return RobotsResponse(response.status_code, text, tuple(followed))
+        try:
+            if response.status_code != 200:
+                return RobotsResponse(response.status_code, "", tuple(followed))
+            body = _read_limited(response, ROBOTS_MAX_BYTES)
+            if body is None:
+                # We cannot read the whole file, so we do not know the rules: not "no rules". The origin is not crawled for a while.
+                logger.warning("robots.txt of %s is larger than %d bytes: treated as unavailable, the origin is not crawled",
+                               origin, ROBOTS_MAX_BYTES)
+                return RobotsResponse(None, redirects=tuple(followed), note="too large")
+            return RobotsResponse(200, _decode(body, response.encoding), tuple(followed))
+        finally:
+            response.close()
 
     # --- one URL --------------------------------------------------------------------------------------------
     def fetch(self, url: str, validators: Validators | None = None) -> FetchResult:
@@ -253,6 +266,23 @@ class HttpFetcher:
             return result
         finally:
             response.close()
+
+
+def _read_limited(response: httpx.Response, limit: int) -> bytes | None:
+    """The body of a streamed response, or None as soon as it is longer than `limit` bytes (the rest is never read)."""
+    body = bytearray()
+    for chunk in response.iter_bytes():
+        body.extend(chunk)
+        if len(body) > limit:
+            return None
+    return bytes(body)
+
+
+def _decode(body: bytes, encoding: str | None) -> str:
+    try:
+        return body.decode(encoding or "utf-8", errors="replace")
+    except LookupError:                           # an encoding name Python does not know
+        return body.decode("utf-8", errors="replace")
 
 
 def _retry_after_seconds(value: str | None, now: datetime) -> float | None:
