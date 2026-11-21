@@ -17,7 +17,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import Field
 
@@ -27,6 +27,9 @@ from core.knowledge.types import ChunkId
 from core.llm import LLMOutputInvalid, LLMRefused, LLMUnavailable, complete
 from core.spec import Issue, SkillSpec
 from core.spec.models import Reference, Source, SpecModel, Text, Title
+
+if TYPE_CHECKING:
+    from core.agents.writers.support import Embed
 
 PROMPT = "writers/references"
 MAX_CALLS = 2  # one write, one repair
@@ -74,6 +77,8 @@ class Claim:
     section: str
     text: str
     chunk_ids: tuple[str, ...]
+    support: float | None = None  # best cosine similarity to its cited chunks (support check)
+    weak: bool = False  # support below SUPPORT_THRESHOLD: flagged, kept, counted
 
 
 @dataclass(frozen=True)
@@ -231,14 +236,22 @@ async def write_references(
     spec: SkillSpec,
     passages: Sequence[Passage],
     evidence: Mapping[str, Sequence[str]],
+    *,
+    support: bool = True,
+    embed_fn: "Embed | None" = None,
 ) -> list[ReferenceFile]:
     """A file for each reference of the spec, in spec order. `passages` and `evidence` are the
-    Architect's (ArchitectResult.passages / .evidence)."""
+    Architect's (ArchitectResult.passages / .evidence). With `support`, every kept claim also gets
+    its support score and a `weak` flag (core.agents.writers.support)."""
     by_chunk = {p.chunk_id: p for p in passages}
     files = []
     for ref in spec.knowledge.references:
         own = [by_chunk[c] for c in evidence.get(ref.id, ()) if c in by_chunk]
         files.append(await write_reference(spec, ref, own))
+    if support and any(f.claims for f in files):
+        from core.agents.writers.support import check_support, default_embed
+
+        files = await check_support(files, passages, embed_fn=embed_fn or default_embed)
     return files
 
 
@@ -250,7 +263,12 @@ class ReferenceSummary:
     files_ok: int = 0
     claims: int = 0
     uncited: int = 0
+    weak: int = 0  # kept claims below the support threshold
     dropped: dict[str, int] = field(default_factory=dict)
+
+    @property
+    def weak_rate(self) -> float | None:
+        return round(self.weak / self.claims, 4) if self.claims else None
 
 
 def summarise(files: Sequence[ReferenceFile]) -> ReferenceSummary:
@@ -262,6 +280,7 @@ def summarise(files: Sequence[ReferenceFile]) -> ReferenceSummary:
         files_ok=sum(f.ok for f in files),
         claims=sum(len(f.claims) for f in files),
         uncited=sum(1 for f in files for c in f.claims if not c.chunk_ids),
+        weak=sum(1 for f in files for c in f.claims if c.weak),
         dropped=dict(dropped),
     )
 

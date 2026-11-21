@@ -68,10 +68,34 @@ def run_command(args: argparse.Namespace) -> int:
     return 0 if report.passed in (None, True) else 1
 
 
+def calibrate_support_command(args: argparse.Namespace) -> int:
+    """AI-13: choose the support threshold on the fixture passages with the local model."""
+    import os
+
+    from core.llm.gateway import BACKEND_ENV
+    from evaluation.architect.support import calibrate, render, write
+
+    if os.environ.get(BACKEND_ENV, "litellm").strip().lower() == "fake":
+        print(
+            "calibrate-support needs the real local embedding model, not the fake", file=sys.stderr
+        )
+        return 2
+    model = load_config().role("embedding").model
+    result = asyncio.run(calibrate(model=model))
+    md, _ = write(result, args.out or REPORTS_DIR)
+    print(render(result))
+    print(f"report written to {md}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m evaluation.architect")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("check-data", help="build the 103 test requests and check them")
+    calib = commands.add_parser(
+        "calibrate-support", help="AI-13: pick the support threshold on the fixture passages"
+    )
+    calib.add_argument("--out", type=Path, default=None, help="report folder (default: reports/)")
     run = commands.add_parser("run", help="evaluate the Skill Architect")
     run.add_argument("--set", choices=["examples", "gate", "all", "seed"], default="all")
     run.add_argument("--limit", type=int, default=0)
@@ -85,6 +109,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "check-data":
         return check_data_command()
+    if args.command == "calibrate-support":
+        return calibrate_support_command(args)
     return run_command(args)
 
 

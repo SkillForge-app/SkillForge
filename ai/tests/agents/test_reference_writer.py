@@ -158,3 +158,48 @@ def test_claim_issues_names_paths_not_text(designed: ArchitectResult) -> None:
         passages,
     )
     assert [(i.path, i.code) for i in issues] == [("/sections/0/claims/0", "uncited")]
+
+
+# ---------------------------------------------------------------- the support check
+
+
+async def fixed_embed(texts: Any) -> list[list[float]]:
+    """'ok' texts point one way, everything else the other: claims about passages score 1.0
+    against chunks that contain 'ok' and 0.0 against the rest."""
+    return [[1.0, 0.0] if "ok" in t.split() else [0.0, 1.0] for t in texts]
+
+
+async def test_a_claim_below_the_threshold_is_flagged_kept_and_counted(
+    designed: ArchitectResult,
+) -> None:
+    from core.agents.writers import Claim, ReferenceFile
+    from core.agents.writers.support import check_support
+
+    passages = list(designed.passages)
+    p = passages[0]
+    strong = Claim("S", "it is ok", (p.chunk_id,))
+    weak = Claim("S", "something else", (p.chunk_id,))
+    f = ReferenceFile("r", "references/r.md", "R", "md", (strong, weak))
+
+    async def embed(texts: Any) -> list[list[float]]:
+        return [[1.0, 0.0] if t in ("it is ok", p.text) else [0.0, 1.0] for t in texts]
+
+    [checked] = await check_support([f], passages, threshold=0.5, embed_fn=embed)
+    by_text = {c.text: c for c in checked.claims}
+    assert by_text["it is ok"].support == 1.0 and not by_text["it is ok"].weak
+    assert by_text["something else"].support == 0.0 and by_text["something else"].weak
+    assert len(checked.claims) == 2  # flagged, never dropped
+    assert summarise([checked]).weak == 1 and summarise([checked]).weak_rate == 0.5
+
+
+async def test_write_references_scores_every_kept_claim(designed: ArchitectResult) -> None:
+    assert designed.spec is not None
+    files = await write_references(
+        designed.spec, designed.passages, designed.evidence, embed_fn=fixed_embed
+    )
+    claims = [c for f in files for c in f.claims]
+    assert claims and all(c.support is not None for c in claims)
+    unscored = await write_references(
+        designed.spec, designed.passages, designed.evidence, support=False
+    )
+    assert all(c.support is None and not c.weak for f in unscored for c in f.claims)
