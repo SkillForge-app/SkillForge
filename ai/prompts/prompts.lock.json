@@ -22,5 +22,9 @@
   "writers/references": {
     "sha256": "690768da70df4f2347a4f046c2210c67651a534bdae7f81dab5c694af8a20a66",
     "version": 1
+  },
+  "writers/triggers": {
+    "sha256": "063e4c41f41bfc6ff73e93b2784707ee31800eb999d373374c63e81f6c50acd9",
+    "version": 1
   }
 }

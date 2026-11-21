@@ -11,14 +11,24 @@ from core.agents.writers.references import (
     write_reference,
     write_references,
 )
+from core.agents.writers.triggers import (
+    Descriptions,
+    describe,
+    description_issues,
+    write_descriptions,
+)
 
 __all__ = [
     "Claim",
+    "Descriptions",
     "ReferenceFile",
     "WriterRefused",
     "WriterUnavailable",
     "claim_issues",
+    "describe",
+    "description_issues",
     "summarise",
     "write_reference",
+    "write_descriptions",
     "write_references",
 ]
