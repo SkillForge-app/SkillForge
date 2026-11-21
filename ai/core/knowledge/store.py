@@ -43,7 +43,10 @@ INDEX_PATH_ENV = "SKILLFORGE_INDEX_PATH"
 PGVECTOR_DSN_ENV = "SKILLFORGE_PGVECTOR_DSN"
 PGVECTOR_TABLE_ENV = "SKILLFORGE_PGVECTOR_TABLE"
 PGVECTOR_WRITABLE_ENV = "SKILLFORGE_PGVECTOR_WRITABLE"
+PGVECTOR_EF_SEARCH_ENV = "SKILLFORGE_PGVECTOR_EF_SEARCH"
 DEFAULT_PG_TABLE = "knowledge_chunks"
+# DE-02 benchmark: with iterative scan, a larger ef_search made filtered searches faster.
+DEFAULT_EF_SEARCH = 100
 DEFAULT_INDEX_PATH = Path(__file__).resolve().parents[2] / ".data" / "index"
 
 
@@ -138,6 +141,12 @@ def check_model(info: StoreInfo, model: str, dimensions: int) -> None:
         )
 
 
+def _best_first(score: float, chunk_id: str) -> tuple[float, str]:
+    """The order of every search result: best score first, ties by chunk_id. Rounded, so float
+    noise never reorders scores that are equal."""
+    return (-round(score, 6), chunk_id)
+
+
 def _unit(vectors: Any) -> Any:
     matrix = np.asarray(vectors, dtype=np.float32)
     norms = np.linalg.norm(matrix, axis=-1, keepdims=True)
@@ -203,7 +212,7 @@ class LocalStore:
         scores = self._vectors[candidates] @ _unit(vector)
         ranked = sorted(
             zip(candidates, scores.tolist(), strict=True),
-            key=lambda pair: (-round(pair[1], 6), self._records[pair[0]].chunk_id),
+            key=lambda pair: _best_first(pair[1], self._records[pair[0]].chunk_id),
         )
         return [(self._records[i], float(score)) for i, score in ranked[:k]]
 
@@ -342,6 +351,19 @@ def pg_search_sql(table: str) -> str:
     )
 
 
+def pg_search_settings(ef_search: int) -> tuple[str, ...]:
+    """Run in the search's transaction, before pg_search_sql (DE-02, docs/ai/retrieval.md).
+    Without iterative scan, HNSW keeps only its first ef_search candidates and the domain
+    filter drops most of them: fewer than k rows, and no error. relaxed_order keeps scanning
+    until k rows match, but returns them only roughly in distance order, so search re-sorts
+    them. SET LOCAL ends with the transaction, and a READ ONLY transaction allows it. SET takes
+    no parameters: ef_search is an int checked by PgVectorStore."""
+    return (
+        "SET LOCAL hnsw.iterative_scan = relaxed_order",
+        f"SET LOCAL hnsw.ef_search = {int(ef_search)}",
+    )
+
+
 def pg_search_params(vector: Sequence[float], domain: str, k: int) -> dict[str, Any]:
     parts = domain.split("/")
     return {
@@ -360,12 +382,24 @@ class PgVectorStore:
     Read-only unless `writable`: every transaction is READ ONLY, and replace_source and
     create_schema refuse. Production writes go through Data Engineering's pipeline.
 
-    With filtered HNSW search, pgvector may return fewer than `k` rows; pgvector 0.8+ fixes
-    this with `SET hnsw.iterative_scan = relaxed_order` (see docs/ai/retrieval.md).
+    Filtered HNSW search could return fewer than `k` rows, so every search runs with
+    `hnsw.iterative_scan = relaxed_order` and `hnsw.ef_search` (SKILLFORGE_PGVECTOR_EF_SEARCH,
+    default 100) in its transaction (pgvector 0.8+; see pg_search_settings).
     """
 
-    def __init__(self, dsn: str, *, table: str = DEFAULT_PG_TABLE, writable: bool = False) -> None:
-        self.dsn, self.table, self.writable = dsn, table, writable
+    def __init__(
+        self,
+        dsn: str,
+        *,
+        table: str = DEFAULT_PG_TABLE,
+        writable: bool = False,
+        ef_search: int = DEFAULT_EF_SEARCH,
+    ) -> None:
+        if not 1 <= ef_search <= 1000:  # pgvector's range for hnsw.ef_search
+            raise ConfigError(
+                f"hnsw.ef_search must be 1 to 1000 ({PGVECTOR_EF_SEARCH_ENV}), not {ef_search}"
+            )
+        self.dsn, self.table, self.writable, self.ef_search = dsn, table, writable, ef_search
         self.name = pg_name(table)
 
     def _connect(self) -> Any:
@@ -435,7 +469,9 @@ class PgVectorStore:
     def search(
         self, vector: Sequence[float], domain: str, k: int
     ) -> list[tuple[ChunkRecord, float]]:
-        with self._connect() as conn:
+        with self._connect() as conn, conn.transaction():
+            for setting in pg_search_settings(self.ef_search):
+                conn.execute(setting)
             rows = conn.execute(
                 pg_search_sql(self.table), pg_search_params(vector, domain, k)
             ).fetchall()
@@ -445,7 +481,8 @@ class PgVectorStore:
             data["retrieved"] = str(data["retrieved"])
             data["content_hash"] = data["content_hash"].strip()
             results.append((ChunkRecord.model_validate_json(json.dumps(data)), float(row[-1])))
-        return results
+        # relaxed_order returns rows only roughly in distance order: the same order as LocalStore
+        return sorted(results, key=lambda pair: _best_first(pair[1], pair[0].chunk_id))
 
 
 def store_from_env() -> VectorStore:
@@ -458,5 +495,13 @@ def store_from_env() -> VectorStore:
             raise ConfigError(f"{STORE_ENV}=pgvector needs {PGVECTOR_DSN_ENV}")
         table = os.environ.get(PGVECTOR_TABLE_ENV, "").strip() or DEFAULT_PG_TABLE
         writable = os.environ.get(PGVECTOR_WRITABLE_ENV, "").strip().lower() in {"1", "true", "yes"}
-        return PgVectorStore(dsn, table=table, writable=writable)
+        ef_search = os.environ.get(PGVECTOR_EF_SEARCH_ENV, "").strip()
+        if ef_search and not ef_search.isdigit():
+            raise ConfigError(f"{PGVECTOR_EF_SEARCH_ENV} must be a whole number, not {ef_search!r}")
+        return PgVectorStore(
+            dsn,
+            table=table,
+            writable=writable,
+            ef_search=int(ef_search) if ef_search else DEFAULT_EF_SEARCH,
+        )
     raise ConfigError(f"unknown {STORE_ENV}={backend!r}; use 'local' or 'pgvector'")

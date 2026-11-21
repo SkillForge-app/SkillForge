@@ -15,13 +15,19 @@ import pytest
 from dotenv import load_dotenv
 
 from core.llm import load_config, track_usage
-from core.llm.config import key_env_for
+from core.llm.config import LOCAL_PREFIX, key_env_for
 from tests.llm.helpers import PROMPTS, Greeting
 
 pytestmark = pytest.mark.live
 _KEY = key_env_for(load_config().role("analysis").model) or "OPENROUTER_API_KEY"
 
 load_dotenv(PROMPTS.parents[3] / ".env", override=False)  # ai/.env
+
+# The embedding role is a local model since AI-11 (tested with `-m model`, not here). This test
+# covers a hosted embedding model only, so it runs only when the role is one and its key is set.
+_EMBED = load_config().role("embedding")
+_EMBED_KEY = key_env_for(_EMBED.model)
+_EMBED_HOSTED = not _EMBED.model.startswith(LOCAL_PREFIX)
 
 
 @pytest.mark.skipif(not os.environ.get(_KEY), reason=f"{_KEY} not set")
@@ -45,10 +51,13 @@ async def test_live_complete_logs_model_tokens_and_cost(caplog: pytest.LogCaptur
     assert usage.cost_usd == pytest.approx(sum(c["cost_usd"] or 0 for c in calls))
 
 
-@pytest.mark.skipif(not os.environ.get("OPENAI_API_KEY"), reason="OPENAI_API_KEY not set")
+@pytest.mark.skipif(
+    not (_EMBED_HOSTED and _EMBED_KEY and os.environ.get(_EMBED_KEY)),
+    reason=f"the embedding role is not a hosted model with its key set ({_EMBED.model})",
+)
 async def test_live_embed_returns_vectors_of_the_configured_size() -> None:
     from core.llm.litellm_gateway import LiteLLMGateway
 
     vectors = await LiteLLMGateway().embed(["skills for marketing", "skills for data science"])
-    assert [len(v) for v in vectors] == [384, 384]
+    assert [len(v) for v in vectors] == [_EMBED.dimensions] * 2
     assert vectors[0] != vectors[1]
