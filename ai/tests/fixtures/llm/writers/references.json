@@ -1,0 +1,17 @@
+{
+  "sections": [
+    {
+      "heading": "Key points",
+      "claims": [
+        {
+          "text": "Managing the risks of an AI system is an ongoing task that runs through its whole life, not a single check before launch.",
+          "cite": ["ai-nist-ai-rmf-01"]
+        },
+        {
+          "text": "Instructions hidden in content the model reads, such as a web page or a file, can change its behaviour as much as a user's own prompt.",
+          "cite": ["ai-owasp-llm01-01"]
+        }
+      ]
+    }
+  ]
+}

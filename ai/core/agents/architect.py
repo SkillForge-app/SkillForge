@@ -20,7 +20,7 @@ at most MAX_ATTEMPTS model calls.
 import copy
 import os
 import re
-from collections.abc import Callable, Collection, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
@@ -298,8 +298,15 @@ def _text_fields(value: Any, path: str = "") -> Iterator[tuple[str, str]]:
 def copied_text(
     spec: SkillSpec, passages: Sequence[Passage], *, run: int = COPY_RUN_WORDS
 ) -> list[Issue]:
-    """Errors for free-text fields that copy `run` or more consecutive words of a passage
-    (case and punctuation ignored). The message never includes the text."""
+    """Errors for free-text fields of a spec that copy `run` or more consecutive words of a
+    passage (case and punctuation ignored). The message never includes the text."""
+    return copied_fields(_text_fields(spec.model_dump(mode="json")), passages, run=run)
+
+
+def copied_fields(
+    fields: Iterable[tuple[str, str]], passages: Sequence[Passage], *, run: int = COPY_RUN_WORDS
+) -> list[Issue]:
+    """copied_text for any (JSON Pointer, text) pairs, e.g. the claims of a reference file."""
     if not passages:
         return []
     shingles: set[tuple[str, ...]] = set()
@@ -307,7 +314,7 @@ def copied_text(
         words = _words(passage.text)
         shingles.update(tuple(words[i : i + run]) for i in range(len(words) - run + 1))
     issues = []
-    for path, text in _text_fields(spec.model_dump(mode="json")):
+    for path, text in fields:
         words = _words(text)
         if any(tuple(words[i : i + run]) in shingles for i in range(len(words) - run + 1)):
             issues.append(

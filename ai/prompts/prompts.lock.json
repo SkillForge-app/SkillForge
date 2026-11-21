@@ -18,5 +18,9 @@
   "knowledge/injection": {
     "sha256": "d08a14e85de926b9e0e5db6fdf07fd293c2403eedc27dfec955b236d3cdc1e50",
     "version": 1
+  },
+  "writers/references": {
+    "sha256": "690768da70df4f2347a4f046c2210c67651a534bdae7f81dab5c694af8a20a66",
+    "version": 1
   }
 }
