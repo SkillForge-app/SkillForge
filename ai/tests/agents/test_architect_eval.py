@@ -179,3 +179,47 @@ def test_cli_fake_seed_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> N
     assert saved["knowledge"]["backend"] == "fake" and saved["knowledge"]["fixtures"]
     assert saved["sets"]["seed"]["knowledge"]["with_passages"] == 10  # every seed domain
     assert len(list((tmp_path / "runs").glob("*/specs/*.json"))) == 10
+
+
+# ---------------------------------------------------------------- AI-13/AI-14: --writers
+
+
+def writers_metrics(**changes: Any) -> dict[str, Any]:
+    w = {
+        "reference_files": 20,
+        "reference_files_ok": 20,
+        "uncited_claims": 0,
+        "weakly_supported_rate": 0.1,
+    }
+    return {"n": 10, "valid": 10, "writers": {**w, **changes}}
+
+
+def test_references_verdict_needs_files_and_zero_uncited_claims() -> None:
+    from evaluation.architect.writers import references_verdict
+
+    ok = references_verdict(writers_metrics(), live=True)
+    assert ok["passed"] and ok["weakly_supported_rate"] == 0.1  # reported, not gated
+    assert not references_verdict(writers_metrics(uncited_claims=1), live=True)["passed"]
+    assert not references_verdict(writers_metrics(reference_files_ok=19), live=True)["passed"]
+    assert references_verdict(writers_metrics(weakly_supported_rate=0.9), live=True)["passed"]
+
+
+def test_cli_fake_seed_run_with_writers(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    # The fake's canned claims cite technology/ai chunks only: other domains drop them, so the
+    # AI-13 verdict fails in fake mode (and never counts anyway).
+    assert main(["run", "--set", "seed", "--writers", "--runs", str(tmp_path / "runs")]) == 1
+    [report] = list((tmp_path / "runs").glob("*/architect-seed-*.json"))
+    saved = json.loads(report.read_text(encoding="utf-8"))
+    w = saved["sets"]["seed"]["writers"]
+    assert saved["references"]["counts"] is False and w["uncited_claims"] == 0
+    assert w["specs_written"] == 10 and w["descriptions"] >= 10
+    from core.agents.writers.support import SUPPORT_THRESHOLD
+
+    assert w["support_threshold"] == SUPPORT_THRESHOLD
+    assert 0 < len(saved["spot_check"]) <= 10
+    assert all(c["cited"] and c["cited"][0]["text"] for c in saved["spot_check"])
+    run = report.parent
+    assert list((run / "references").glob("*ai-engineer*/*.md"))
+    assert len(json.loads((run / "descriptions.json").read_text(encoding="utf-8"))) == 10
+    assert "does NOT count for AI-13" in report.with_suffix(".md").read_text(encoding="utf-8")

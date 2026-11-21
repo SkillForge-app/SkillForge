@@ -171,11 +171,14 @@ class ArchitectReport:
     sets: dict[str, dict[str, Any]] = field(default_factory=dict)
     gate: dict[str, Any] | None = None
     seed: dict[str, Any] | None = None  # AI-12's verdict, when the seed set ran
+    writers: bool = False  # AI-13/AI-14 ran after each valid spec (--writers)
+    references: dict[str, Any] | None = None  # AI-13's verdict (seed set + writers)
+    spot_check: list[dict[str, Any]] = field(default_factory=list)  # 10 claims to check
     usage: dict[str, Any] = field(default_factory=dict)
 
     @property
     def passed(self) -> bool | None:
-        verdicts = [v for v in (self.gate, self.seed) if v is not None]
+        verdicts = [v for v in (self.gate, self.seed, self.references) if v is not None]
         return None if not verdicts else all(bool(v["passed"]) for v in verdicts)
 
 
@@ -186,7 +189,13 @@ async def run_eval(
     end_to_end: bool = False,
     concurrency: int = 2,
     build: Build | None = None,
+    writers: bool = False,
+    written: dict[str, Any] | None = None,
 ) -> tuple[ArchitectReport, dict[str, list[Result]]]:
+    """With `writers`, AI-13/AI-14 run after each valid spec; their outputs go into `written`
+    (by set name) for write_report's run folder, never into the report itself."""
+    from evaluation.architect import writers as writer_eval
+
     build = build or (_build_end_to_end if end_to_end else _build)
     report = ArchitectReport(
         created=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -196,12 +205,25 @@ async def run_eval(
         model=model_for(GENERATE),
         data_sources=sources(),
         knowledge=knowledge_source(),
+        writers=writers,
     )
+    if writers:
+        report.prompts.update(
+            {p: load_prompt(p).version for p in ("writers/references", "writers/triggers")}
+        )
     outcomes: dict[str, list[Result]] = {}
     with track_usage() as usage:
         for name, items in sets.items():
             outcomes[name] = await run_all(items, build, concurrency=concurrency)
             report.sets[name] = compute_metrics(outcomes[name])
+            if writers:
+                done = await writer_eval.write_all(outcomes[name])
+                report.sets[name]["writers"] = writer_eval.writer_metrics(done)
+                if written is not None:
+                    written[name] = done
+                if name == "seed":
+                    report.references = writer_eval.references_verdict(report.sets[name], live=live)
+                    report.spot_check = writer_eval.spot_check(outcomes[name], done)
     if "all" in report.sets:
         report.gate = gate_verdict(report.sets["all"], live=live)
     if "seed" in report.sets:
@@ -301,6 +323,12 @@ def render_markdown(report: ArchitectReport) -> str:
             f"| {m['attempts']} | {_pct(m['safety_guardrails_ok'])} "
             f"| {_pct(m['knowledge']['with_sources_rate'])} | {sum(m['errors'].values())} |"
         )
+    if report.writers:
+        from evaluation.architect import writers as writer_eval
+
+        lines += [""]
+        for m in report.sets.values():
+            lines += writer_eval.render(report.references, m, report.spot_check)
     u = report.usage
     lines += ["", f"Usage: {u['calls']} calls, ${u['cost_usd']}.", ""]
     return "\n".join(lines)

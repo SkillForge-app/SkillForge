@@ -10,6 +10,7 @@ import asyncio
 import sys
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 from core.agents.architect import GENERATE, MAX_ATTEMPTS
 from core.llm import load_config
@@ -56,13 +57,26 @@ def run_command(args: argparse.Namespace) -> int:
         cost = estimate_cost(len(items))
         span = f", estimated ${cost[0]} to ${cost[1]}" if cost else ""
         print(f"about to design {len(items)} skills with live calls{span}")
+    written: dict[str, Any] = {}
     report, outcomes = asyncio.run(
-        run_eval(sets, live=args.live, end_to_end=args.end_to_end, concurrency=args.concurrency)
+        run_eval(
+            sets,
+            live=args.live,
+            end_to_end=args.end_to_end,
+            concurrency=args.concurrency,
+            writers=args.writers,
+            written=written,
+        )
     )
     reports_dir, run_dir = output_dirs(
         args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
     )
     files = write_report(report, outcomes, label=args.set, reports_dir=reports_dir, run_dir=run_dir)
+    if args.writers:
+        from evaluation.architect.writers import save_outputs
+
+        for done in written.values():
+            save_outputs(done, files.run)
     print(render_markdown(report))
     print(f"report written to {files.md} and {files.json.name}; generated specs in {files.run}")
     return 0 if report.passed in (None, True) else 1
@@ -101,6 +115,9 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--limit", type=int, default=0)
     run.add_argument("--concurrency", type=int, default=2)
     run.add_argument("--end-to-end", action="store_true", help="run analyzer + screen first")
+    run.add_argument(
+        "--writers", action="store_true", help="AI-13/AI-14: write references and descriptions"
+    )
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
     run.add_argument(
         "--out", type=Path, default=None, help="report folder (default: reports/ for --live runs)"
