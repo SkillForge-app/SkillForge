@@ -16,7 +16,7 @@ goes from the contracts to the code that uses them. Estimated time for a careful
 ### 2. Then the code, in this order
 
 5. `skillforge_data/interfaces.py` (the small types between us and AI) and `pipeline/config.py` (`chunk_config` from `ExtractConfig`).
-6. `skillforge_data/adapters/ai.py`: the only place that imports AI's code, lazily. `pyproject.toml`: extra `ai`, marker `ai_real`, no `uv.lock`.
+6. `skillforge_data/adapters/ai.py`: the only place that imports AI's code, lazily. `pyproject.toml`: marker `ai_real`, no `ai` extra (removed in the 17-20 Nov fix, see `ai-install.md`), no `uv.lock`.
 7. `skillforge_data/pipeline/process.py` (small diff), `provenance.py` (reads the 4 new columns).
 8. `skillforge_data/crawler/fetcher.py`, `robots.py`, `run.py`: robots redirects, Retry-After, the licence, validators.
 9. `skillforge_data/licensing.py` (DE-08), `dedup.py` (DE-07), `cache.py` and `freshness.py` (DE-09). New files, no old behaviour.
@@ -113,7 +113,7 @@ I could not run the real package here (no `yaml`, no spaCy in the data environme
 Files:
 
 - `skillforge_data/adapters/__init__.py`, `skillforge_data/adapters/ai.py`
-- `pyproject.toml`: optional extra `ai = ["skillforge"]`, `[tool.uv.sources] skillforge = { path = "../ai", editable = true }`, marker `ai_real`, `addopts = "-m 'not ai_real'"`
+- `pyproject.toml`: (the extra `ai` and `[tool.uv.sources]` of this round were later REMOVED: dependency confusion, see `ai-install.md`), marker `ai_real`, `addopts = "-m 'not ai_real'"`
 - `tests/test_ai_adapter.py` (16 tests, always run), `tests/test_ai_adapter_real.py` (7 tests, marker `ai_real`)
 
 What it gives (all AI imports are inside functions, through `importlib`; the first use without the package raises `ImportError` with the install command):
@@ -139,7 +139,7 @@ They are **deselected**, not skipped, in the default run: `pytest -q -rs` shows 
 ## Decisions I took for you
 
 - Did not push (the PR does not exist, so the rule's condition was false).
-- `ai = ["skillforge"]` is declared as an extra, with the path in `[tool.uv.sources]`. **A plain `pip install ".[ai]"` would look up the name `skillforge` on PyPI** (a package we do not own) and could install the wrong thing; the comment in `pyproject.toml` says to use `uv sync --extra ai` or `pip install -e ../ai`. I did not put a file path in the dependency because pip does not support relative paths there.
+- (SUPERSEDED: the extra was removed after Zeyad's review.) `ai = ["skillforge"]` was declared as an extra, with the path in `[tool.uv.sources]`. **A plain `pip install ".[ai]"` would look up the name `skillforge` on PyPI** (a package we do not own) and could install the wrong thing; the comment in `pyproject.toml` says to use `uv sync --extra ai` or `pip install -e ../ai`. I did not put a file path in the dependency because pip does not support relative paths there.
 - `PINNED_EMBEDDING` is written in the adapter as well as read from AI's config on demand, so the pipeline can run `embedding_version` without importing AI; the drift test (`ai_real`) compares them.
 - `make_embed` checks 384 dimensions and finite values, but not unit length: the database CHECK already enforces unit length and rejects the vector.
 - I did not install anything and did not run the real package (no heavy installs, as agreed).
@@ -154,7 +154,7 @@ They are **deselected**, not skipped, in the default run: `pytest -q -rs` shows 
 
 ## Open items for others
 
-- **You:** open the PR and decide whether to push the local commits into it; run the `ai_real` tests once in an environment with `uv sync --extra ai` (they have never run); reset your local volume (`docker compose down -v`, `up -d`) to get the five-key `chunk_config` CHECK.
+- **You:** open the PR and decide whether to push the local commits into it; run the `ai_real` tests once after the install in `ai-install.md` (they have never run); reset your local volume (`docker compose down -v`, `up -d`) to get the five-key `chunk_config` CHECK.
 - **Backend:** review the `chunk_config` CHECK change (five required keys) and the `chunk_provenance` columns; proposals de-04, de-05, de-09 still wait.
 - **DevOps:** a separate, optional CI job for `ai_real`; and do not add `data/uv.lock` without thinking about `--all-extras`.
 

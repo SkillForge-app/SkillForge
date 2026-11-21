@@ -1,7 +1,14 @@
 """DE-05: contract tests of the adapter against the REAL `skillforge` package (AI's `core`).
 
-Marker `ai_real`: deselected by default (`addopts` in pyproject.toml), because they need the optional extra `ai` (spaCy, fastembed,
-litellm...). Run them with `pytest -m ai_real` in an environment where `skillforge` is installed. When AI changes one of the things
+Marker `ai_real`: deselected by default (`addopts` in pyproject.toml), because they need AI's package (spaCy, fastembed, litellm...).
+There is no pip extra for it. From `data/`, in this order (Git Bash on Windows; use a temp folder on E: instead of /tmp):
+    pip install -e ".[dev]"
+    (cd ../ai && uv export --locked --no-emit-project --format requirements-txt -o <temp folder on E:>/ai-req.txt)
+    pip install -r <the same file>
+    pip install --no-deps -e ../ai
+    pip check
+WARNING: never `pip install skillforge` (that name on PyPI is not our package). Details: docs/ai-install.md.
+Then run them with `pytest -m ai_real -rs`. When AI changes one of the things
 pinned here, a failure is the point: it tells DE before a re-extraction does.
 
 NOTE (16 Nov 2026): these tests were written from AI's source on main and have not been run yet: the package is not installed here.

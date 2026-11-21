@@ -6,8 +6,12 @@
     AI's find_site_boilerplate          ->  per-host hashes                   (`site_boilerplate`)
 
 AI's code is imported **inside the functions that need it** (never at module import), so this module can be imported, and everything
-that uses fakes can be tested, on a machine where `skillforge` is not installed. Install it with the optional extra `ai` (see
-`pyproject.toml`). The conversion functions (`convert_page`, `check_vectors`, `embedding_version`) only read attributes and use no AI
+that uses fakes can be tested, on a machine where `skillforge` is not installed. There is no pip extra for it (a name on PyPI is not
+ours: dependency confusion); install it from the path, see docs/ai-install.md. NEVER `pip install skillforge`.
+
+Units: `ExtractConfig.chunking.target_words` and `overlap_words` are counted in WORDS (not characters, not tokens). Our `chunk_config`
+keys `size` and `overlap` are those two numbers, in words. The real identity of the extraction settings is `extract_fingerprint`
+(`ExtractConfig.fingerprint()`); the default one, f33bf1b5...5483, is the same as AI's documented one. The conversion functions (`convert_page`, `check_vectors`, `embedding_version`) only read attributes and use no AI
 import, so they are tested with stand-in objects that always run; tests against the real code carry the marker `ai_real`.
 """
 from __future__ import annotations
@@ -30,8 +34,8 @@ from ..interfaces import (
 from ..pipeline.config import EMBEDDING_DIMENSIONS
 
 INSTALL_HINT = (
-    "AI's code (the `skillforge` package, ai/core) is not installed. Install the optional extra: "
-    "pip install -e \"data[ai]\"  (see data/pyproject.toml)"
+    "AI's code (the `skillforge` package, ai/core) is not installed. Install it from the path, never from PyPI "
+    "(`pip install skillforge` is NOT our package): see data/docs/ai-install.md"
 )
 
 # The pinned model of the `embedding` role (ai/core/llm/models.yaml, role `embedding`), written in the form of retrieval.md:

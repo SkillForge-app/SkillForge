@@ -74,6 +74,18 @@ Three views, all showing only the active config (see below). They live in
 `host` is the web host (rate limits and robots.txt work per host). `skill_domain` is the skill's field
 (same vocabulary as SkillSpec `skill.domain`). They are different things and live in different tables.
 
+### Units, identity, install, model cache and who writes (DE-05, agreed with AI and Backend)
+
+- **Units:** `size` and `overlap` in `chunk_config` are `ExtractConfig.chunking.target_words` and `overlap_words`: counted in **words**, not characters and
+  not tokens. The real identity of the extraction settings is `extract_fingerprint`; the default fingerprint (`f33bf1b5...5483`) is the same as AI's
+  documented one (checked by an `ai_real` test).
+- **Install of AI's code:** by path, never from PyPI, no pip extra and no `data/uv.lock`: see [`ai-install.md`](ai-install.md). `pip install skillforge` must never be run.
+- **Model:** in CI nobody downloads the embedding model; `ai_real` tests use `use_fake()`, so they download nothing. In staging and production DevOps preloads it
+  (about 66 MB) in a volume on `SKILLFORGE_MODEL_CACHE` with `HF_HUB_OFFLINE=1`, and will add an optional CI job for `ai_real` on the same closed network.
+- **Threads:** `embed_sync` is safe to call from a worker thread. It is forbidden only inside a running event loop (the adapter turns that into `PipelineError`).
+- **Contracts:** AI's contracts are frozen since 13 November 2026.
+- **Writers:** Backend confirmed that it does not write to `knowledge.chunks` or `knowledge.embeddings`. The only write paths are the ones in `data/`.
+
 ## Who writes, who reads, who owns migrations
 
 - **Writer: the DE pipeline (DE-05), and only it.** It calls AI's functions (`extract_page` and `embed`, or
