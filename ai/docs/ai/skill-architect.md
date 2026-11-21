@@ -125,7 +125,7 @@ SKILLFORGE_RETRIEVER=fake .venv/Scripts/python -m evaluation.architect run --set
 
 **The sets:**
 - **`all` (AI-07):** the 3 example AnalyzedRequests, plus the 100 analyzer gate requests built **from their labels**. So the score measures the Architect alone. Vague requests count as "questions skipped".
-- **`seed` (AI-12):** the clear request (`req-1`) of each of the 10 seed-benchmark skills, built from labels the same way. They come from seed release 0.1.0, the one the analyzer gate uses on this branch.
+- **`seed` (AI-12):** the clear request (`req-1`) of each of the 10 seed-benchmark skills, built from labels the same way. They come from the reviewed seed release 1.0.0 (`SEED_SET_RELEASE`). The analyzer gate keeps release 0.1.0, which it was measured on.
 - **Knowledge:** with `SKILLFORGE_RETRIEVER=fake`, passages come from `tests/fixtures/knowledge/passages.yaml`. Version 1.1.0 covers all 10 seed domains; its header records where each passage came from. The report names the retriever it used (and, for the fake, the fixture version and sha256).
 
 **End to end:** `--end-to-end` runs the real safety screen and analyzer first.

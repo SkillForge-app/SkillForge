@@ -14,7 +14,14 @@ from core.llm.gateway import BACKEND_ENV
 from core.spec import HIGH_RISK_AREAS, SkillSpec, load_spec
 from core.spec.models import Knowledge
 from evaluation.architect.__main__ import main
-from evaluation.architect.data import GATE_SIZE, SEED_SET_SIZE, ArchitectItem, load_items
+from evaluation.architect.data import (
+    GATE_SIZE,
+    SEED_SET_RELEASE,
+    SEED_SET_SIZE,
+    ArchitectItem,
+    load_items,
+    sources,
+)
 from evaluation.architect.evaluate import (
     compute_metrics,
     gate_verdict,
@@ -113,6 +120,17 @@ def test_seed_set_is_one_clear_screened_request_per_seed_skill() -> None:
     assert len({i.id.split(":")[1].split("/")[0] for i in items}) == 10  # one per skill
     assert all(i.id.endswith("/req-1") and i.source == "seed" for i in items)
     assert all(i.analyzed.safety is not None and not i.analyzed.needs_clarification for i in items)
+
+
+def test_seed_set_comes_from_the_reviewed_release() -> None:
+    assert SEED_SET_RELEASE == "1.0.0"
+    path = AI_ROOT / "evaluation" / "benchmarks" / "seed" / "releases" / "1.0.0" / "requests.jsonl"
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    req1 = {r["id"]: r["text"] for r in rows if r["id"].endswith("/req-1")}
+    assert {i.id.removeprefix("seed:"): i.text for i in load_items("seed")} == req1
+    versions = {(s["name"], s["version"]) for s in sources()}
+    assert ("skillforge-seed-benchmark (seed set)", "1.0.0") in versions
+    assert ("skillforge-seed-benchmark", "0.1.0") in versions  # the AI-07/AI-05 gate data
 
 
 def _passages_for(spec: SkillSpec) -> tuple[Passage, ...]:

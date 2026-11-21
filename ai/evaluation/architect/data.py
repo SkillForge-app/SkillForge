@@ -7,8 +7,9 @@ AI-07 (done-when: >= 90% valid specs), the 103 requests of `all`:
   "questions skipped" requests: the Architect must still design something sensible.
 
 AI-12 (done-when: "seed skills generated with sources"), the 10 requests of `seed`: the clear
-request (`req-1`) of each seed-benchmark skill, from the release the analyzer gate uses, built
-from its labels the same way.
+request (`req-1`) of each seed-benchmark skill, from the reviewed release SEED_SET_RELEASE, built
+from its labels the same way. (The analyzer gate keeps its own release, analyzer_data.SEED_RELEASE:
+it was measured on it.)
 """
 
 import re
@@ -23,6 +24,7 @@ from evaluation.common import AI_ROOT
 EXAMPLES_DIR = AI_ROOT / "examples" / "analyzed-request"
 GATE_SIZE = 103
 SEED_SET_SIZE = 10
+SEED_SET_RELEASE = "1.0.0"  # the reviewed seed benchmark (docs/ai/ai-04-seed-benchmark-freeze.md)
 LABELS = AnalyzerInfo(prompt_id="labels", prompt_version=1)
 
 
@@ -79,7 +81,7 @@ def seed_items() -> list[ArchitectItem]:
     """One clear request per seed-benchmark skill (its `req-1`)."""
     return [
         ArchitectItem(f"seed:{i.id}", "seed", i.text, from_labels(i))
-        for i in analyzer_data.seed_requests()
+        for i in analyzer_data.seed_requests(SEED_SET_RELEASE)
         if i.id.endswith("/req-1")
     ]
 
@@ -95,9 +97,19 @@ def load_items(name: str) -> list[ArchitectItem]:
 
 
 def sources() -> list[dict[str, str]]:
+    """The gate's data (seed release SEED_RELEASE + the analyzer files), the examples, and the
+    seed set's release."""
+    seed_set = analyzer_data.sources(SEED_SET_RELEASE)[0]
     return [
         {"name": s.name, "version": s.version, "sha256": s.sha256} for s in analyzer_data.sources()
-    ] + [{"name": "analyzed-request-examples", "version": "n/a", "sha256": _examples_hash()}]
+    ] + [
+        {"name": "analyzed-request-examples", "version": "n/a", "sha256": _examples_hash()},
+        {
+            "name": f"{seed_set.name} (seed set)",
+            "version": seed_set.version,
+            "sha256": seed_set.sha256,
+        },
+    ]
 
 
 def _examples_hash() -> str:
@@ -111,6 +123,7 @@ def _examples_hash() -> str:
 
 __all__ = [
     "GATE_SIZE",
+    "SEED_SET_RELEASE",
     "SEED_SET_SIZE",
     "ArchitectItem",
     "from_labels",
