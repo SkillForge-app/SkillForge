@@ -6,7 +6,8 @@ chosen (compose.yaml: RQ, recommended), these two functions are what the worker 
 They block the event loop for the few milliseconds of each database write; the pipeline's own
 network calls are awaited as normal.
 """
-
+import asyncio
+from backend.app.pipeline.core_adapter import get_pipeline
 import copy
 import logging
 from collections.abc import Callable, Sequence
@@ -195,3 +196,68 @@ async def _execute(session_factory: SessionFactory, run_id: UUID, call: Callable
                 run.updated_at = _now()
                 run.completed_at = run.updated_at
                 db.commit()
+def _mark_pipeline_initialization_failed(run_id: UUID) -> None:
+    with session_scope() as db:
+        run = db.get(DesignRun, run_id)
+
+        if run is None:
+            logger.error(
+                "Design run %s not found after pipeline initialization failure",
+                run_id,
+            )
+            return
+
+        run.status = "failed"
+        run.error_code = "internal_error"
+        run.user_message = INTERNAL_ERROR_MESSAGE
+        run.updated_at = _now()
+        run.completed_at = run.updated_at
+        db.commit()
+
+
+def execute_start_job(run_id: str) -> None:
+    parsed_run_id = UUID(run_id)
+
+    try:
+        pipeline = get_pipeline()
+    except Exception:
+        logger.exception(
+            "Failed to initialize pipeline for design run %s",
+            parsed_run_id,
+        )
+        _mark_pipeline_initialization_failed(parsed_run_id)
+        return
+
+    asyncio.run(
+        execute_start(
+            session_scope,
+            pipeline,
+            parsed_run_id,
+        )
+    )
+
+
+def execute_answers_job(
+    run_id: str,
+    answers: list[dict[str, Any]],
+) -> None:
+    parsed_run_id = UUID(run_id)
+
+    try:
+        pipeline = get_pipeline()
+    except Exception:
+        logger.exception(
+            "Failed to initialize pipeline for design run %s",
+            parsed_run_id,
+        )
+        _mark_pipeline_initialization_failed(parsed_run_id)
+        return
+
+    asyncio.run(
+        execute_answers(
+            session_scope,
+            pipeline,
+            parsed_run_id,
+            answers,
+        )
+    )

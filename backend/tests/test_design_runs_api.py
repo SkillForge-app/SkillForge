@@ -1,6 +1,7 @@
+import asyncio
 import os
 from contextlib import nullcontext
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,11 +17,13 @@ if not DATABASE_URL.endswith("/skillforge_test"):
         allow_module_level=True,
     )
 
+from backend.app.api.routes import design_runs as design_runs_route
 from backend.app.api.routes.design_runs import pipeline_dependency
 from backend.app.db.models import DesignRun
 from backend.app.db.session import get_db
 from backend.app.main import app
 from backend.app.pipeline.outcome import StepOutcome
+from backend.app.services import design_runs as design_runs_service
 from backend.app.services.design_runs import get_session_factory
 from backend.tests.pipeline_stubs import ScriptedPipeline, analyzed, ok, valid_spec
 
@@ -42,21 +45,52 @@ def session():
 
 
 @pytest.fixture
-def make_client(session):
-    """make_client(pipeline) -> TestClient that uses `pipeline` and the test's transaction.
+def make_client(session, monkeypatch):
+    """Build a test client and execute queued jobs synchronously."""
 
-    The background task opens its own session in production; here it gets the test session, so
-    its writes are visible to the test and are rolled back at the end.
-    """
     def build(pipeline):
         def override_get_db():
             yield session
 
+        def execute_queued_job(func, *args, **kwargs):
+            session_factory = lambda: nullcontext(session)
+
+            if func == "backend.app.services.design_runs.execute_start_job":
+                asyncio.run(
+                    design_runs_service.execute_start(
+                        session_factory,
+                        pipeline,
+                        UUID(args[0]),
+                    )
+                )
+                return None
+
+            if func == "backend.app.services.design_runs.execute_answers_job":
+                asyncio.run(
+                    design_runs_service.execute_answers(
+                        session_factory,
+                        pipeline,
+                        UUID(args[0]),
+                        args[1],
+                    )
+                )
+                return None
+
+            raise AssertionError(f"Unexpected queued job: {func}")
+
+        monkeypatch.setattr(
+            design_runs_route.skills_queue,
+            "enqueue",
+            execute_queued_job,
+        )
+
         app.dependency_overrides[get_db] = override_get_db
         app.dependency_overrides[pipeline_dependency] = lambda: pipeline
-        app.dependency_overrides[get_session_factory] = lambda: (lambda: nullcontext(session))
-        client = TestClient(app)
-        return client
+        app.dependency_overrides[get_session_factory] = (
+            lambda: (lambda: nullcontext(session))
+        )
+
+        return TestClient(app)
 
     try:
         yield build
@@ -68,7 +102,10 @@ def make_client(session):
 def create_project(client):
     response = client.post(
         "/api/v1/projects",
-        json={"name": f"Design Run Test {uuid4()}", "description": "Design run API test"},
+        json={
+            "name": f"Design Run Test {uuid4()}",
+            "description": "Design run API test",
+        },
     )
     assert response.status_code == 201, response.text
     return response.json()["id"]
@@ -77,7 +114,11 @@ def create_project(client):
 def start_run(client, project_id, **extra):
     return client.post(
         "/api/v1/design-runs",
-        json={"project_id": project_id, "request": "I need an AI engineer skill", **extra},
+        json={
+            "project_id": project_id,
+            "request": "I need an AI engineer skill",
+            **extra,
+        },
     )
 
 
@@ -90,7 +131,11 @@ def happy_pipeline():
 
 def questions_pipeline():
     return ScriptedPipeline(
-        analyze=StepOutcome(step="analyze", status="needs_input", value=analyzed(questions=True)),
+        analyze=StepOutcome(
+            step="analyze",
+            status="needs_input",
+            value=analyzed(questions=True),
+        ),
         clarify=ok("clarify", analyzed()),
         design=ok("design", valid_spec()),
     )
@@ -104,7 +149,9 @@ def test_a_run_designs_a_skill_and_stores_it_as_a_spec_version(make_client):
 
     assert response.status_code == 202, response.text
     run_id = response.json()["id"]
-    assert response.json()["status"] == "queued"
+
+    # The test fixture executes the queued job synchronously.
+    assert response.json()["status"] == "completed"
 
     run = client.get(f"/api/v1/design-runs/{run_id}").json()
     assert run["status"] == "completed"
@@ -125,7 +172,10 @@ def test_the_pipeline_gets_the_text_and_the_chosen_targets(make_client):
 
     start_run(client, create_project(client), targets=["claude", "claude", "codex"])
 
-    assert pipeline.calls[0] == ("analyze", ("I need an AI engineer skill", ["claude", "codex"]))
+    assert pipeline.calls[0] == (
+        "analyze",
+        ("I need an AI engineer skill", ["claude", "codex"]),
+    )
 
 
 def test_a_second_run_creates_the_next_version(make_client):
@@ -135,7 +185,9 @@ def test_a_second_run_creates_the_next_version(make_client):
     start_run(client, project_id)
     second = start_run(client, project_id).json()["id"]
 
-    assert client.get(f"/api/v1/design-runs/{second}").json()["version_number"] == 2
+    assert client.get(
+        f"/api/v1/design-runs/{second}"
+    ).json()["version_number"] == 2
 
 
 def test_questions_are_shown_and_answers_finish_the_design(make_client):
@@ -145,16 +197,23 @@ def test_questions_are_shown_and_answers_finish_the_design(make_client):
 
     run_id = start_run(client, project_id).json()["id"]
     waiting = client.get(f"/api/v1/design-runs/{run_id}").json()
+
     assert waiting["status"] == "needs_input"
     assert [item["id"] for item in waiting["questions"]] == ["q1", "q2", "q3"]
     assert waiting["spec_version_id"] is None
 
     response = client.post(
         f"/api/v1/design-runs/{run_id}/answers",
-        json={"answers": [{"question_id": "q1", "text": "Python"}, {"question_id": "q2"}]},
+        json={
+            "answers": [
+                {"question_id": "q1", "text": "Python"},
+                {"question_id": "q2"},
+            ]
+        },
     )
 
     assert response.status_code == 202, response.text
+
     finished = client.get(f"/api/v1/design-runs/{run_id}").json()
     assert finished["status"] == "completed"
     assert finished["questions"] == []
@@ -170,7 +229,10 @@ def test_answers_are_refused_unless_the_run_is_waiting_for_them(make_client):
     client = make_client(happy_pipeline())
     run_id = start_run(client, create_project(client)).json()["id"]
 
-    response = client.post(f"/api/v1/design-runs/{run_id}/answers", json={"answers": []})
+    response = client.post(
+        f"/api/v1/design-runs/{run_id}/answers",
+        json={"answers": []},
+    )
 
     assert response.status_code == 409
 
@@ -185,7 +247,9 @@ def test_answers_to_questions_that_were_not_asked_are_refused(make_client):
     )
 
     assert response.status_code == 422
-    assert client.get(f"/api/v1/design-runs/{run_id}").json()["status"] == "needs_input"
+    assert client.get(
+        f"/api/v1/design-runs/{run_id}"
+    ).json()["status"] == "needs_input"
 
 
 def test_answers_cannot_be_sent_twice(make_client):
@@ -226,7 +290,10 @@ def test_provider_problems_are_reported_without_a_version(make_client, status):
     pipeline = ScriptedPipeline(
         analyze=ok("analyze", analyzed()),
         design=StepOutcome(
-            step="design", status=status, user_message="Try again.", error_code="provider_unavailable"
+            step="design",
+            status=status,
+            user_message="Try again.",
+            error_code="provider_unavailable",
         ),
     )
     client = make_client(pipeline)
@@ -243,7 +310,11 @@ def test_provider_problems_are_reported_without_a_version(make_client, status):
 def test_a_spec_the_backend_rejects_is_not_stored(make_client):
     broken = valid_spec()
     broken["spec_version"] = "999"
-    pipeline = ScriptedPipeline(analyze=ok("analyze", analyzed()), design=ok("design", broken))
+
+    pipeline = ScriptedPipeline(
+        analyze=ok("analyze", analyzed()),
+        design=ok("design", broken),
+    )
     client = make_client(pipeline)
     project_id = create_project(client)
 
@@ -270,18 +341,70 @@ def test_a_crashing_pipeline_gives_a_failed_run_without_details(make_client):
     assert "secret internal detail" not in str(run)
 
 
+def test_worker_marks_run_failed_when_pipeline_initialization_fails(
+    make_client, session, monkeypatch
+):
+    client = make_client(happy_pipeline())
+    project_id = create_project(client)
+
+    # Prevent the API from sending a real job to Redis.
+    monkeypatch.setattr(
+        design_runs_route.skills_queue,
+        "enqueue",
+        lambda *args, **kwargs: None,
+    )
+
+    response = start_run(client, project_id)
+    assert response.status_code == 202, response.text
+
+    run_id = response.json()["id"]
+    run = session.get(DesignRun, UUID(run_id))
+
+    assert run is not None
+    assert run.status == "queued"
+
+    # Use the test transaction when the worker updates the run.
+    monkeypatch.setattr(
+        design_runs_service,
+        "session_scope",
+        lambda: nullcontext(session),
+    )
+
+    def fail_pipeline():
+        raise RuntimeError("Pipeline initialization failed")
+
+    monkeypatch.setattr(
+        design_runs_service,
+        "get_pipeline",
+        fail_pipeline,
+    )
+
+    design_runs_service.execute_start_job(run_id)
+
+    session.refresh(run)
+
+    assert run.status == "failed"
+    assert run.error_code == "internal_error"
+    assert run.completed_at is not None
+    assert "Pipeline initialization failed" not in run.user_message
+
+
 def test_invalid_requests_and_unknown_ids(make_client):
     client = make_client(happy_pipeline())
     project_id = create_project(client)
 
     assert start_run(client, str(uuid4())).status_code == 404
+
     assert client.post(
-        "/api/v1/design-runs", json={"project_id": project_id, "request": "   "}
+        "/api/v1/design-runs",
+        json={"project_id": project_id, "request": "   "},
     ).status_code == 422
+
     assert client.post(
         "/api/v1/design-runs",
         json={"project_id": project_id, "request": "x", "targets": ["bing"]},
     ).status_code == 422
+
     assert client.get(f"/api/v1/design-runs/{uuid4()}").status_code == 404
     assert client.get(f"/api/v1/projects/{uuid4()}/design-runs").status_code == 404
 
@@ -289,6 +412,7 @@ def test_invalid_requests_and_unknown_ids(make_client):
 def test_list_design_runs_of_a_project(make_client):
     client = make_client(happy_pipeline())
     project_id = create_project(client)
+
     first = start_run(client, project_id).json()["id"]
     second = start_run(client, project_id).json()["id"]
 
@@ -301,6 +425,7 @@ def test_list_design_runs_of_a_project(make_client):
 def test_a_completed_run_can_be_queued_for_compilation(make_client):
     client = make_client(happy_pipeline())
     project_id = create_project(client)
+
     run_id = start_run(client, project_id).json()["id"]
     finished = client.get(f"/api/v1/design-runs/{run_id}").json()
 
