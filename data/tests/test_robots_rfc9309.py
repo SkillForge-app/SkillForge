@@ -134,3 +134,34 @@ def test_a_robots_txt_just_under_the_limit_is_read():
     fetcher = _fetcher(body)
     assert fetcher.fetch("https://example.org/nope").outcome == "blocked"
     assert fetcher.fetch("https://example.org/page").outcome == "ok"
+
+
+# ------------------------------------------------------------------------------------------------ one identity
+def test_the_user_agent_header_and_the_robots_token_are_the_same_word():
+    from skillforge_data.crawler.fetcher import USER_AGENT
+    from skillforge_data.crawler.robots import PRODUCT_TOKEN
+
+    assert PRODUCT_TOKEN == "SkillForgeBot"
+    assert USER_AGENT.split("/", 1)[0] == PRODUCT_TOKEN
+
+
+def test_the_header_the_crawler_really_sends_names_the_token_robots_txt_is_read_for(monkeypatch):
+    seen = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen.append((request.url.path, request.headers["User-Agent"]))
+        if request.url.path == "/robots.txt":
+            return httpx.Response(200, text="User-agent: SkillForgeBot\nDisallow: /bot\n\nUser-agent: *\nDisallow: /all\n")
+        return httpx.Response(200, text="<p>x</p>", headers={"Content-Type": "text/html"})
+
+    real_client = httpx.Client                      # the default client (the one with the User-Agent header) over a mock network
+    monkeypatch.setattr(httpx, "Client", lambda **kw: real_client(transport=httpx.MockTransport(handler), **kw))
+    fetcher = HttpFetcher(FetchConfig(min_interval=0.0), sleep=lambda s: None)
+    assert fetcher.fetch("https://example.org/bot").outcome == "blocked", "our own group applies"
+    assert fetcher.fetch("https://example.org/all").outcome == "ok", "the * group is ignored when ours exists"
+    assert all(ua.startswith("SkillForgeBot/") for _, ua in seen)
+
+
+def test_the_star_group_applies_when_there_is_no_group_for_our_token():
+    assert ok("User-agent: *\nDisallow: /all\n", "/all/x") is False
+    assert ok("User-agent: SkillForge\nDisallow: /\n", "/x") is True, "a different, shorter token is not ours"

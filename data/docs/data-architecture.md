@@ -208,6 +208,14 @@ second implementation. Rows whose `sources.url` is not `normalise_url(sources.ur
 rebuilt. The schema does not enforce this (a CHECK cannot call Python); a test in DE-05 should. If a canonical link
 turns out to 404 for users, keep the fetch URL in a separate column (for example `sources.fetch_url`).
 
+## Crawler identity: one token for the header and for robots.txt
+
+The crawler sends `User-Agent: SkillForgeBot/0.1 (+https://github.com/SkillForge-app/SkillForge; knowledge collection for agent skills)`
+(`USER_AGENT` in `crawler/fetcher.py`). Its **product token** is `SkillForgeBot` (`PRODUCT_TOKEN` in `crawler/robots.py`), the same word
+that starts the header, and it is the one robots.txt is read for (RFC 9309): a `User-agent: SkillForgeBot` group applies to us
+(case-insensitive, whole token, so `User-agent: SkillForge` does not), `User-agent: *` applies when there is no such group.
+A test (`tests/test_robots_rfc9309.py`) fails if the header and the token ever differ.
+
 ## `chunk_id`: stable ids for citations
 
 AI's contract promises the same `chunk_id` for the same text on the same page. A new uuid on every crawl would break

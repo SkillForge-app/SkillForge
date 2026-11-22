@@ -1,7 +1,7 @@
 """The rules of one robots.txt file, read as RFC 9309 says (what `urllib.robotparser` does not do).
 
 - Groups: a group starts with one or more `User-agent` lines; the rules after them belong to it. The group whose agent is our product
-  token (case-insensitive, whole token) is used; without one, the `*` group; without that, everything is allowed. Several groups for
+  token (`SkillForgeBot`, the word the User-Agent header starts with; case-insensitive, whole token) is used; without one, the `*` group; without that, everything is allowed. Several groups for
   the same agent are joined.
 - A rule is `Allow: <path>` or `Disallow: <path>`. In a path, `*` matches any run of characters and a final `$` means "the end of the
   URL's path and query". Any other `$` is a plain character. A path that does not start with `/` or `*` is ignored. An empty
