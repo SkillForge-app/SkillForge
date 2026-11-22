@@ -3,6 +3,8 @@
 `urllib.robotparser` (used before) ignores `*` and `$` inside paths and takes the first matching rule in file order, so a site
 that asks us to stay away from `/*.pdf$` or writes `Allow: /` before `Disallow: /secret/` was crawled. No database, no network.
 """
+import re
+
 import httpx
 import pytest
 
@@ -118,7 +120,7 @@ def test_a_robots_txt_over_512_kb_is_unavailable_and_disallows_the_whole_origin(
     with caplog.at_level("WARNING"):
         result = fetcher.fetch("https://example.org/page")
     assert result.outcome == "blocked" and result.robots_allowed is False
-    assert any("larger than" in r.message and "example.org" in r.message for r in caplog.records), "the decision is logged"
+    assert any(re.search(r"\blarger than\b", r.getMessage()) and re.search(r"\bexample\.org\b", r.getMessage()) for r in caplog.records), "the decision is logged"
 
 
 def test_a_robots_txt_over_512_kb_that_allows_everything_is_still_unavailable():
