@@ -1,12 +1,18 @@
-
 import os
+from pathlib import Path
 
 
 class Settings:
     APP_NAME = os.getenv("APP_NAME", "AgentForge Backend")
     APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
     DEBUG = os.getenv("DEBUG", "false").lower() == "true"
+    REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    ARTIFACTS_DIR = Path(
+        os.getenv(
+            "ARTIFACTS_DIR",
+            str(Path(__file__).resolve().parents[2] / "artifacts"),
+        )
+    )
 
 
 settings = Settings()
-

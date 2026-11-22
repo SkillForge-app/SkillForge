@@ -43,9 +43,10 @@ jobs:
       - name: Install test dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pydantic pytest hypothesis Jinja2 fastapi sqlalchemy "psycopg[binary]" httpx alembic
+          python -m pip install pydantic pytest hypothesis Jinja2 fastapi sqlalchemy "psycopg[binary]" httpx alembic pyyaml redis rq uvicorn
 
       - name: Apply database migrations
+        working-directory: backend
         run: python -m alembic upgrade head
 
       - name: Run backend tests
