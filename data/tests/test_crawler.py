@@ -575,6 +575,33 @@ def test_validators_change_only_after_a_successful_200(db, crawl):
     assert validators.get(url) is None
 
 
+def test_validators_are_not_kept_for_a_page_the_pipeline_failed_on(db, crawl):
+    make, site = crawl
+    validators = ValidatorStore()
+    url = f"{site.base}/ok"
+    first = make(validators).run([url], domains=["technology/ai"], on_page=lambda page: "failed")
+    assert (first.fetched, first.failed) == (1, 1)
+    assert validators.get(url) is None, "nothing was stored for this page, so there is no version to remember"
+    second = make(validators).run([url], domains=["technology/ai"], on_page=lambda page: "processed")
+    assert "If-None-Match" not in site.headers[-1], "the request was not conditional, so the page is fetched again"
+    assert (second.fetched, second.unchanged, second.failed) == (1, 0, 0)
+    assert validators.get(url) == Validators('"v1"', "Wed, 04 Nov 2026 10:00:00 GMT"), "now the page was processed"
+    third = make(validators).run([url], domains=["technology/ai"], on_page=lambda page: "processed")
+    assert site.headers[-1]["If-None-Match"] == '"v1"' and third.unchanged == 1
+
+
+def test_validators_are_not_kept_when_the_handler_raises(db, crawl):
+    make, site = crawl
+    validators = ValidatorStore()
+    url = f"{site.base}/ok"
+
+    def broken(page):
+        raise RuntimeError("boom")
+
+    summary = make(validators).run([url], domains=["technology/ai"], on_page=broken)
+    assert summary.failed == 1 and validators.get(url) is None
+
+
 def test_validator_store_ignores_everything_that_is_not_a_200():
     store = ValidatorStore()
     store.replace("u", Validators('"a"', "d1"))

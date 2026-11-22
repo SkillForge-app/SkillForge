@@ -179,7 +179,6 @@ class Crawler:
         elif result.outcome == "ok":
             summary.fetched += 1
             bump_crawl_run(self._conn, summary.run_id, "pages_fetched")
-            self._validators.replace(canonical, result.validators)   # only here: a 200 that was fetched
             # What the source row says now (a known licence is never replaced by 'unknown'): the document gets the same.
             stored_license, stored_source = self._conn.execute(
                 "SELECT license, license_source FROM knowledge.sources WHERE id = %s", (source_id,)).fetchone()
@@ -189,9 +188,11 @@ class Crawler:
                 license=stored_license, license_source=stored_source,
                 crawl_run_id=summary.run_id,
             )
+            processed = True
             if on_page is not None:
                 handled = on_page(page)
                 status = getattr(handled, "status", handled)       # a ProcessResult, or a plain status string
+                processed = status != "failed"
                 if status == "unchanged":
                     summary.unchanged += 1
                     bump_crawl_run(self._conn, summary.run_id, "pages_unchanged")
@@ -202,6 +203,10 @@ class Crawler:
                 if getattr(handled, "duplicate_of", None) is not None:      # DE-07: a copy of another source's page
                     summary.duplicates += 1
                     bump_crawl_run(self._conn, summary.run_id, "pages_duplicate")
+            if processed:
+                # Only a 200 that was also processed: after a failure the next crawl must ask for the page again, not get a 304 for
+                # content we never stored. (A handler that raises never gets here either.)
+                self._validators.replace(canonical, result.validators)
         else:
             self._failed(summary, url, result.error or f"outcome {result.outcome}")
 
