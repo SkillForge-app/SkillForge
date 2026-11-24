@@ -17,7 +17,12 @@ from pathlib import Path
 from core.llm import load_prompt, track_usage
 from evaluation.common import AI_ROOT, model_for
 from evaluation.harness.data import load_calibration, load_skill
-from evaluation.harness.evaluate import calibrate_judge, run_benchmark, write_report
+from evaluation.harness.evaluate import (
+    calibrate_judge,
+    calibration_status,
+    run_benchmark,
+    write_report,
+)
 
 RUNS_DIR = AI_ROOT / "evaluation" / "harness" / "runs"
 
@@ -70,7 +75,11 @@ def _calibrate(args: argparse.Namespace) -> int:
         result, rows = asyncio.run(
             calibrate_judge(benchmark, labels, live=args.live, concurrency=args.concurrency)
         )
+    status = calibration_status(result)
+    result_data = asdict(result)
     report = {
+        "report_type": "calibration",
+        "status": status,
         "created": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "dataset": benchmark.dataset,
         "dataset_version": benchmark.version,
@@ -87,7 +96,7 @@ def _calibrate(args: argparse.Namespace) -> int:
             "output_tokens": usage.output_tokens,
             "cost_usd": round(usage.cost_usd, 4),
         },
-        "result": asdict(result),
+        "result": result_data,
     }
     with (out / "calibration.json").open("x", encoding="utf-8", newline="\n") as file:
         file.write(json.dumps(report, indent=2, ensure_ascii=False) + "\n")

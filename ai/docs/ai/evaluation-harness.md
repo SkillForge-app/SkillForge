@@ -27,6 +27,10 @@ scores and LLM usage. Do not edit or replace an existing report directory.
 For code-level smoke tests, inject a fake gateway in tests. Fake model output is not evaluation
 evidence and cannot satisfy AI-16.
 
+The machine-readable report and JSONL record contract, including statuses and error codes, is
+defined in [AI-16 report contract](ai-16-report-contract.md) and
+[its JSON Schema](../../evaluation/harness/report.schema.json).
+
 ## Calibrate the judge
 
 Human labels are stored separately from the immutable benchmark because adding them is a later

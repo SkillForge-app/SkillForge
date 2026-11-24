@@ -87,6 +87,8 @@ class RunResult:
 
 @dataclass
 class HarnessReport:
+    report_type: str
+    status: str
     created: str
     live: bool
     dataset: str
@@ -100,6 +102,30 @@ class HarnessReport:
     metrics: dict[str, Any]
     calibration: dict[str, Any]
     usage: dict[str, Any]
+
+
+_ERROR_CODES = {
+    "BudgetExceeded": "budget_exceeded",
+    "ConfigError": "configuration_error",
+    "LLMInputError": "invalid_input",
+    "LLMOutputInvalid": "invalid_model_output",
+    "LLMRefused": "model_refused",
+    "LLMUnavailable": "provider_unavailable",
+    "PromptFormatError": "prompt_format_error",
+    "PromptInputError": "invalid_input",
+    "PromptNotFound": "prompt_not_found",
+    "ValueError": "invalid_model_output",
+}
+
+
+def error_code_for(error: str | None) -> str | None:
+    if error is None:
+        return None
+    return _ERROR_CODES.get(error, "unexpected_error")
+
+
+def calibration_status(result: CalibrationResult) -> str:
+    return "passed" if result.passed else "failed"
 
 
 def _answer_hash(answer: str) -> str:
@@ -213,7 +239,7 @@ def compute_metrics(results: Sequence[RunResult], rubric: Sequence[RubricRecord]
     left = metrics["with_skill"]["pass_rate"]
     right = metrics["without_skill"]["pass_rate"]
     metrics["uplift"] = left - right if left is not None and right is not None else None
-    metrics["errors"] = dict(Counter(row.error for row in results if row.error))
+    metrics["errors"] = dict(Counter(error_code_for(row.error) for row in results if row.error))
     return metrics
 
 
@@ -307,6 +333,8 @@ async def calibrate_judge(
             for rubric_id, human_passed in outcome.item.rubric_scores.items():
                 rows.append(
                     {
+                        "record_type": "calibration_decision",
+                        "status": "failed",
                         "prompt_id": outcome.item.prompt_id,
                         "condition": outcome.item.condition,
                         "reviewer": outcome.item.reviewer,
@@ -316,6 +344,7 @@ async def calibrate_judge(
                         "match": False,
                         "answer_sha256": _answer_hash(outcome.item.answer),
                         "error": outcome.error,
+                        "error_code": error_code_for(outcome.error),
                     }
                 )
             continue
@@ -325,6 +354,8 @@ async def calibrate_judge(
         for rubric_id, human_passed in label.rubric_scores.items():
             rows.append(
                 {
+                    "record_type": "calibration_decision",
+                    "status": "completed",
                     "prompt_id": label.prompt_id,
                     "condition": label.condition,
                     "reviewer": label.reviewer,
@@ -334,12 +365,14 @@ async def calibrate_judge(
                     "match": predictions[rubric_id] == human_passed,
                     "judge_rationale": rationales[rubric_id],
                     "answer_sha256": _answer_hash(label.answer),
+                    "error": None,
+                    "error_code": None,
                 }
             )
     labeled_rows = [row for row in rows if "match" in row]
     matches = sum(bool(row["match"]) for row in labeled_rows)
     agreement = matches / len(labeled_rows) if labeled_rows else None
-    failed_calls = sum("error" in row for row in rows)
+    failed_calls = sum(row.get("error") is not None for row in rows)
     passed = agreement is not None and agreement >= CALIBRATION_THRESHOLD and failed_calls == 0
     return (
         CalibrationResult(
@@ -391,7 +424,26 @@ async def run_benchmark(
         )
         for outcome in outcomes
     ]
+    metrics = compute_metrics(results, benchmark.rubric)
+    run_status = (
+        "completed"
+        if metrics["completed"] == metrics["n"]
+        else ("completed_with_errors" if metrics["completed"] else "failed")
+    )
+    calibration = asdict(
+        CalibrationResult(
+            n=0,
+            matches=0,
+            agreement=None,
+            threshold=CALIBRATION_THRESHOLD,
+            passed=False,
+            reason="calibrate separately against reviewed human labels",
+        )
+    )
+    calibration["status"] = "not_calibrated"
     report = HarnessReport(
+        report_type="benchmark",
+        status=run_status,
         created=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         live=live,
         dataset=benchmark.dataset,
@@ -405,17 +457,8 @@ async def run_benchmark(
             JUDGE_PROMPT: load_prompt(JUDGE_PROMPT).version,
         },
         models={"answer": model_for(ANSWER_PROMPT), "judge": model_for(JUDGE_PROMPT)},
-        metrics=compute_metrics(results, benchmark.rubric),
-        calibration=asdict(
-            CalibrationResult(
-                n=0,
-                matches=0,
-                agreement=None,
-                threshold=CALIBRATION_THRESHOLD,
-                passed=False,
-                reason="calibrate separately against reviewed human labels",
-            )
-        ),
+        metrics=metrics,
+        calibration=calibration,
         usage={
             "calls": usage.calls,
             "errors": usage.errors,
@@ -444,8 +487,11 @@ def write_report(
     with (out_dir / "predictions.jsonl").open("x", encoding="utf-8", newline="\n") as file:
         for row in results:
             record: dict[str, Any] = {
+                "record_type": "prediction",
+                "status": "completed" if row.result is not None else "failed",
                 "prompt_id": row.prompt_id,
                 "error": row.error,
+                "error_code": error_code_for(row.error),
                 "latency_ms": round(row.latency_ms, 2),
             }
             if row.result is not None:
@@ -480,6 +526,7 @@ def render_markdown(report: HarnessReport) -> str:
     lines = [
         f"# AI-16 evaluation: {report.skill}",
         "",
+        f"- Run status: {report.status}",
         f"- Mode: {'live' if report.live else 'fake (does not count)'}",
         f"- Dataset: {report.dataset} {report.dataset_version}",
         f"- Dataset SHA-256: `{report.dataset_sha256}`",

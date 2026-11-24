@@ -5,10 +5,14 @@ from pathlib import Path
 from typing import Any, TypeVar
 
 import pytest
+from jsonschema import Draft202012Validator
 from pydantic import BaseModel
 
 from core.llm import load_prompt, use_fake
+from core.llm.errors import LLMUnavailable
 from evaluation.benchmarks.dataset import PromptRecord, RubricRecord, SkillRecord
+from evaluation.harness import evaluate as harness_evaluate
+from evaluation.harness.__main__ import main as harness_main
 from evaluation.harness.data import HumanLabel, SkillBenchmark, load_calibration, load_skill
 from evaluation.harness.evaluate import (
     GeneratedAnswer,
@@ -297,13 +301,134 @@ async def test_report_contains_release_provenance_and_exact_answers(
     out = write_report(report, results, tmp_path / "run")
     saved = json.loads((out / "report.json").read_text(encoding="utf-8"))
     row = json.loads((out / "predictions.jsonl").read_text(encoding="utf-8"))
+    schema_path = (
+        Path(__file__).resolve().parents[2] / "evaluation" / "harness" / "report.schema.json"
+    )
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    validator = Draft202012Validator(schema, format_checker=Draft202012Validator.FORMAT_CHECKER)
 
     assert saved["dataset_sha256"] == "a" * 64
     assert saved["skill_instructions_sha256"]
+    assert saved["report_type"] == "benchmark"
+    assert saved["status"] == "completed"
+    assert saved["calibration"]["status"] == "not_calibrated"
+    assert row["record_type"] == "prediction"
+    assert row["status"] == "completed"
+    assert row["error_code"] is None
     assert row["arms"]["with_skill"]["answer"] == "WITH SKILL answer"
+    assert validator.is_valid(saved)
+    assert validator.is_valid(row)
     report_markdown = (out / "report.md").read_text(encoding="utf-8")
     assert "80%" in report_markdown
     assert "Cohen's kappa (informational): not measured" in report_markdown
+
+
+async def test_report_classifies_prompt_failures_with_stable_error_codes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
+
+    async def fail_prompt(*args: Any, **kwargs: Any) -> Any:
+        raise LLMUnavailable("provider unavailable")
+
+    monkeypatch.setattr("evaluation.harness.evaluate._run_prompt", fail_prompt)
+    report, results = await run_benchmark(benchmark(), "Follow this skill.", live=False)
+    out = write_report(report, results, tmp_path / "run")
+    saved = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    row = json.loads((out / "predictions.jsonl").read_text(encoding="utf-8"))
+
+    assert saved["status"] == "failed"
+    assert saved["metrics"]["errors"] == {"provider_unavailable": 1}
+    assert row["status"] == "failed"
+    assert row["error"] == "LLMUnavailable"
+    assert row["error_code"] == "provider_unavailable"
+
+
+async def test_report_marks_partial_prompt_failures(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
+    original_run_prompt = harness_evaluate._run_prompt
+
+    async def fail_one_prompt(
+        text: str, prompt_id: str, sample: SkillBenchmark, skill_instructions: str
+    ) -> Any:
+        if prompt_id == "test-skill/p-1":
+            raise LLMUnavailable("provider unavailable")
+        return await original_run_prompt(text, prompt_id, sample, skill_instructions)
+
+    monkeypatch.setattr(harness_evaluate, "_run_prompt", fail_one_prompt)
+    sample = benchmark()
+    second_prompt = sample.prompts[0].model_copy(update={"id": "test-skill/p-2"})
+    sample = replace(sample, prompts=(*sample.prompts, second_prompt))
+    with use_fake(HarnessGateway()):  # type: ignore[arg-type]
+        report, results = await run_benchmark(sample, "Follow this skill.", live=False)
+    out = write_report(report, results, tmp_path / "run")
+    saved = json.loads((out / "report.json").read_text(encoding="utf-8"))
+    predictions = [
+        json.loads(line)
+        for line in (out / "predictions.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+
+    assert saved["status"] == "completed_with_errors"
+    assert [row["status"] for row in predictions] == ["failed", "completed"]
+    assert saved["metrics"]["errors"] == {"provider_unavailable": 1}
+
+
+def test_calibration_cli_writes_schema_valid_report(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
+    monkeypatch.setattr(
+        "evaluation.harness.__main__.load_skill", lambda release, skill: benchmark()
+    )
+    labels = tmp_path / "labels.jsonl"
+    labels.write_text(
+        json.dumps(
+            {
+                "prompt_id": "test-skill/p-1",
+                "prompt": "Write a short report.",
+                "condition": "with_skill",
+                "answer": "WITH SKILL answer",
+                "rubric_scores": {"test-skill/r-1": True},
+                "reviewer": "human-reviewer",
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    out = tmp_path / "calibration"
+    with use_fake(HarnessGateway()):  # type: ignore[arg-type]
+        exit_code = harness_main(
+            [
+                "calibrate",
+                "--release",
+                str(tmp_path / "release"),
+                "--skill",
+                "test-skill",
+                "--labels",
+                str(labels),
+                "--out",
+                str(out),
+            ]
+        )
+
+    report = json.loads((out / "calibration.json").read_text(encoding="utf-8"))
+    decision = json.loads((out / "comparisons.jsonl").read_text(encoding="utf-8"))
+    schema_path = (
+        Path(__file__).resolve().parents[2] / "evaluation" / "harness" / "report.schema.json"
+    )
+    schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    validator = Draft202012Validator(schema)
+
+    assert exit_code == 0
+    assert report["report_type"] == "calibration"
+    assert report["status"] == "passed"
+    assert validator.is_valid(report)
+    assert decision["record_type"] == "calibration_decision"
+    assert decision["status"] == "completed"
+    assert decision["error_code"] is None
+    assert validator.is_valid(decision)
 
 
 async def test_report_does_not_overwrite_existing_directory(
