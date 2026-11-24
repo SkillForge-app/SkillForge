@@ -8,12 +8,18 @@ from typing import Any, TypeVar
 import pytest
 from pydantic import BaseModel
 
-from core.llm import LLMUnavailable, load_prompt, use_fake
+from core.llm import FakeGateway, LLMUnavailable, load_config, load_prompt, use_fake
 from core.llm.gateway import BACKEND_ENV
 from evaluation.analyzer import data
-from evaluation.analyzer.__main__ import main
+from evaluation.analyzer.__main__ import RETRY_ALLOWANCE, TOKENS_PER_CALL, estimate_cost, main
 from evaluation.analyzer.data import EvalItem
-from evaluation.analyzer.evaluate import compute_metrics, gate_verdict, run_eval, write_report
+from evaluation.analyzer.evaluate import (
+    compute_metrics,
+    gate_verdict,
+    render_markdown,
+    run_eval,
+    write_report,
+)
 from evaluation.common import output_dirs
 
 T = TypeVar("T", bound=BaseModel)
@@ -212,3 +218,97 @@ def test_live_runs_report_to_the_tracked_folder(tmp_path: Path) -> None:
     assert reports == tmp_path / "r" and run.parent == tmp_path
     reports, run = output_dirs(False, None, None, reports_dir=tmp_path / "r", runs_dir=tmp_path)
     assert reports == run
+
+
+# ------------------------------------------------------------------ the cost budget (live runs)
+
+
+def _live_env(monkeypatch: pytest.MonkeyPatch) -> list[object]:
+    """A live-looking environment where any real evaluation would be recorded, not run."""
+    monkeypatch.delenv(BACKEND_ENV, raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    monkeypatch.setattr("evaluation.analyzer.__main__.load_dotenv", lambda *a, **k: False)
+    started: list[object] = []
+
+    async def no_run(*args: Any, **kwargs: Any) -> Any:
+        started.append(args)
+        raise AssertionError("no evaluation may start")
+
+    monkeypatch.setattr("evaluation.analyzer.__main__.run_eval", no_run)
+    return started
+
+
+def test_cli_live_needs_a_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    started = _live_env(monkeypatch)
+    assert main(["run", "--set", "dev", "--live", "--limit", "1"]) == 2
+    assert started == []
+
+
+def test_cli_refuses_a_run_whose_estimate_is_over_the_budget(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    started = _live_env(monkeypatch)
+    assert main(["run", "--set", "gate", "--live", "--budget-usd", "0.05"]) == 2
+    assert started == []
+    out = capsys.readouterr()
+    assert "about to make ~100 live calls, estimated $" in out.out
+    assert "no call was made" in out.err
+
+
+def test_cli_rejects_a_budget_of_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    assert main(["run", "--set", "dev", "--limit", "1", "--budget-usd", "0"]) == 2
+
+
+def test_estimate_uses_the_measured_call_size() -> None:
+    model = load_config().role(load_prompt("analysis/request").meta.model_role).model
+    info = load_config().info_for(model)
+    assert info, "the analysis model needs known prices for the estimate"
+    tokens_in, tokens_out = TOKENS_PER_CALL
+    per_call = tokens_in * info["input_cost_per_token"] + tokens_out * info["output_cost_per_token"]
+    assert estimate_cost(100) == round(100 * float(per_call) * RETRY_ALLOWANCE, 2)
+    assert TOKENS_PER_CALL == (3300, 250) and RETRY_ALLOWANCE == 1.15
+
+
+async def test_the_budget_stops_a_run_and_it_does_not_count() -> None:
+    items = data.load_set("gate")
+    fake = FakeGateway(cost_usd=0.40)  # every analysis costs $0.40
+    with use_fake(fake):
+        report, predictions = await run_eval(
+            {"gate": items}, live=False, concurrency=1, budget_usd=1.00
+        )
+    answered = [p for p in predictions["gate"] if p.error is None]
+    refused = [p for p in predictions["gate"] if p.error == "BudgetExceeded"]
+    assert len(answered) == 3  # $1.20 spent after 3 calls: every later call is refused
+    assert len(refused) == len(items) - 3
+    assert report.usage["cost_usd"] == 1.2  # refused calls cost nothing
+    assert report.stopped and "does not count" in report.stopped
+    assert report.gate is not None and report.gate["passed"] is False
+    assert "stopped by the cost budget" in report.gate["reasons"]
+    assert "**STOPPED: budget.**" in render_markdown(report)
+
+
+async def test_a_run_within_its_budget_is_not_stopped() -> None:
+    items = data.load_set("dev")[:3]
+    with use_fake(FakeGateway(cost_usd=0.01)):
+        report, _ = await run_eval({"dev": items}, live=False, budget_usd=1.00)
+    assert report.stopped is None and report.budget_usd == 1.00
+
+
+def test_cli_exits_3_when_the_budget_stops_the_run(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    real_run_eval = run_eval
+
+    async def costly_run(*args: Any, **kwargs: Any) -> Any:
+        with use_fake(FakeGateway(cost_usd=0.40)):
+            return await real_run_eval(*args, **{**kwargs, "concurrency": 1})
+
+    monkeypatch.setattr("evaluation.analyzer.__main__.run_eval", costly_run)
+    args = ["run", "--set", "dev", "--limit", "5", "--budget-usd", "0.50"]
+    code = main([*args, "--runs", str(tmp_path / "runs"), "--out", str(tmp_path / "reports")])
+    assert code == 3
+    (md,) = (tmp_path / "reports").glob("analyzer-dev-*.md")
+    assert "STOPPED: budget" in md.read_text(encoding="utf-8")

@@ -77,10 +77,15 @@ Safety screening of harmful requests is AI-06 (`safety.py`). It is not part of t
 ```bash
 cd ai
 .venv/Scripts/python -m evaluation.analyzer check-data             # validate the labels and coverage
-.venv/Scripts/python -m evaluation.analyzer run --set all --live   # REAL model: about US$1.30, needs OPENROUTER_API_KEY
+.venv/Scripts/python -m evaluation.analyzer run --set gate --live --budget-usd 1.20   # REAL model, needs OPENROUTER_API_KEY
 ```
 
 - **The `--live` guard:** without `--live` the tool refuses to call a real model. For a quick end-to-end check without a key, use `SKILLFORGE_LLM_BACKEND=fake ... run --limit 5`. Its numbers are meaningless, because the fake gives every request the same answer.
+- **The budget guard:** `--live` needs `--budget-usd`, the most the run may spend.
+  - **Before any call:** the tool prints its estimate. If the estimate is over the budget, it stops (exit 2).
+    - The estimate uses the 2 Nov gate's measured call size (about 3,300 input and 250 output tokens) plus 15% for retries.
+    - For reference: dev (50) about $0.50, gate (100) about $1.00, holdout (24) about $0.25.
+  - **During the run:** the calls run inside a skill budget (AI-21). Once the spend reaches the budget, every further call is refused before it is made, fallbacks included. The report then says **STOPPED: budget**, the run doesn't count, and the exit code is 3.
 - **What a run writes:**
   - **The report**, tracked in Git: `ai/evaluation/analyzer/reports/analyzer-<set>-<date>.md` and `.json`, with accuracy per field with confusion tables, joint accuracy, clarification precision and recall, targets match, errors, tokens and cost, prompt version and data versions. A second run on the same day gets `-2`, `-3`, …, so a reviewed report is never overwritten. Only `--live` runs go here.
   - **The raw outputs**, ignored by Git: `ai/evaluation/analyzer/runs/<UTC time>/predictions.jsonl`, one line per request. The report's `run` field names this folder. A fake smoke run keeps its report here too.
