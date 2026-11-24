@@ -15,6 +15,10 @@
     "sha256": "2d959799967f284e829ebc5f00f5b3c2e3acf3cee9a36abf07699fef7bc13019",
     "version": 1
   },
+  "evaluation/ai15_refine": {
+    "sha256": "e81483615eaff2d1bd86067fa922919877b55a437be5d033144f04e1ea9a3d54",
+    "version": 1
+  },
   "knowledge/injection": {
     "sha256": "d08a14e85de926b9e0e5db6fdf07fd293c2403eedc27dfec955b236d3cdc1e50",
     "version": 1

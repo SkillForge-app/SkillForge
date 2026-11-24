@@ -10,19 +10,21 @@ import yaml
 
 from core.spec import PLATFORM_LIMITS, contains_xml_tag
 
-_FENCED_BLOCK = re.compile(
-    r"(?ms)^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?^ {0,3}\1[ \t]*$"
-)
+_FENCED_BLOCK = re.compile(r"(?ms)^ {0,3}(`{3,}|~{3,})[^\n]*\n.*?^ {0,3}\1[ \t]*$")
 _HEADING = re.compile(r"(?m)^ {0,3}#{1,6}[ \t]+.*$")
 _INLINE_CODE = re.compile(r"(?<!`)`+[^`\n]+`+(?!`)")
 _LIST_MARKER = re.compile(r"(?m)^([ \t]*(?:[-*+]|\d+[.)])[ \t]+)")
 _LINK_TARGET = re.compile(r"\]\(([^)]+)\)")
 _PATH = re.compile(
-    r"(?<![A-Za-z0-9:/])(?:\.{1,2}/)?[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)+(?![A-Za-z0-9])"
+    r"(?<![A-Za-z0-9_./])(?:\.{1,2}/)?(?:[A-Za-z0-9_.-]+/)*"
+    r"[A-Za-z0-9_.-]+\.[A-Za-z0-9]{1,8}"
+    r"(?=$|[\s,;:!?)}\]]|\.(?=\s|$))"
 )
+_AUTOLINK = re.compile(r"<(?:https?://|mailto:)[^>]+>")
+_GENERIC_TYPE = re.compile(r"\b[A-Za-z_]\w*<[^<>]+>")
 
 
-def _frontmatter(text: str, path: Path) -> tuple[dict[str, Any] | None, str]:
+def _frontmatter(text: str) -> tuple[dict[str, Any] | None, str]:
     lines = text.splitlines(keepends=True)
     if not lines or lines[0].strip() != "---":
         return None, text
@@ -31,13 +33,21 @@ def _frontmatter(text: str, path: Path) -> tuple[dict[str, Any] | None, str]:
             raw = "".join(lines[1:end])
             data = yaml.safe_load(raw)
             if not isinstance(data, dict):
-                raise ValueError(f"{path}: frontmatter must be a mapping")
+                raise ValueError("frontmatter must be a mapping")
             return data, "".join(lines[end + 1 :])
-    raise ValueError(f"{path}: unterminated frontmatter")
+    raise ValueError("unterminated frontmatter")
 
 
 def _fenced_blocks(text: str) -> list[str]:
     return [match.group(0) for match in _FENCED_BLOCK.finditer(text)]
+
+
+def _visible_text(text: str) -> str:
+    text = _FENCED_BLOCK.sub("", text)
+    text = _INLINE_CODE.sub("", text)
+    text = _AUTOLINK.sub("", text)
+    text = _LINK_TARGET.sub("", text)
+    return _GENERIC_TYPE.sub("", text)
 
 
 def _markdown_errors(before: Path, after: Path, platform: str) -> list[str]:
@@ -45,20 +55,19 @@ def _markdown_errors(before: Path, after: Path, platform: str) -> list[str]:
     try:
         before_text = before.read_text(encoding="utf-8")
         after_text = after.read_text(encoding="utf-8")
-        before_meta, before_body = _frontmatter(before_text, before)
-        after_meta, after_body = _frontmatter(after_text, after)
+        before_meta, before_body = _frontmatter(before_text)
+        after_meta, after_body = _frontmatter(after_text)
     except (UnicodeDecodeError, yaml.YAMLError, ValueError) as exc:
         return [str(exc)]
 
-    relative = after.name
     if (before_meta is None) != (after_meta is None):
-        errors.append(f"{relative}: frontmatter presence changed")
+        errors.append("frontmatter presence changed")
     elif before_meta is not None and after_meta is not None:
         if before_meta.keys() != after_meta.keys():
-            errors.append(f"{relative}: frontmatter keys changed")
+            errors.append("frontmatter keys changed")
         for key in before_meta.keys() & after_meta.keys():
             if key != "description" and before_meta[key] != after_meta[key]:
-                errors.append(f"{relative}: frontmatter field {key!r} changed")
+                errors.append(f"frontmatter field {key!r} changed")
 
     if before_meta is not None and after_meta is not None:
         limit = PLATFORM_LIMITS[platform].description
@@ -66,26 +75,25 @@ def _markdown_errors(before: Path, after: Path, platform: str) -> list[str]:
         if isinstance(description, str):
             if len(description) > limit:
                 errors.append(
-                    f"{relative}: description is {len(description)} characters; "
-                    f"{platform} limit is {limit}"
+                    f"description is {len(description)} characters; {platform} limit is {limit}"
                 )
-            if contains_xml_tag(description):
-                errors.append(f"{relative}: description contains an XML-like tag")
+            if contains_xml_tag(_visible_text(description)):
+                errors.append("description contains an XML-like tag")
 
     if _HEADING.findall(before_body) != _HEADING.findall(after_body):
-        errors.append(f"{relative}: headings or heading order changed")
+        errors.append("headings or heading order changed")
     if _fenced_blocks(before_body) != _fenced_blocks(after_body):
-        errors.append(f"{relative}: fenced code blocks changed")
+        errors.append("fenced code blocks changed")
     if _INLINE_CODE.findall(before_text) != _INLINE_CODE.findall(after_text):
-        errors.append(f"{relative}: inline code, paths, or commands changed")
-    if _PATH.findall(before_text) != _PATH.findall(after_text):
-        errors.append(f"{relative}: path literals changed")
+        errors.append("inline code, paths, or commands changed")
+    if _PATH.findall(_visible_text(before_body)) != _PATH.findall(_visible_text(after_body)):
+        errors.append("path literals changed")
     if _LINK_TARGET.findall(before_text) != _LINK_TARGET.findall(after_text):
-        errors.append(f"{relative}: link targets changed")
+        errors.append("link targets changed")
     if _LIST_MARKER.findall(before_body) != _LIST_MARKER.findall(after_body):
-        errors.append(f"{relative}: list structure changed")
-    if contains_xml_tag(after_text):
-        errors.append(f"{relative}: package contains an XML-like tag")
+        errors.append("list structure changed")
+    if contains_xml_tag(_visible_text(after_body)):
+        errors.append("package contains an XML-like tag")
     return errors
 
 
@@ -106,18 +114,18 @@ def compare_packages(before_root: Path, after_root: Path, platform: str) -> list
         for path in after_root.rglob("*")
         if path.is_file()
     }
-    errors = [
-        f"package file set changed (missing: {sorted(before_files.keys() - after_files.keys())}; "
-        f"added: {sorted(after_files.keys() - before_files.keys())})"
-    ] if before_files.keys() != after_files.keys() else []
+    errors = []
+    if before_files.keys() != after_files.keys():
+        missing = sorted(before_files.keys() - after_files.keys())
+        added = sorted(after_files.keys() - before_files.keys())
+        errors.append(f"package file set changed (missing: {missing}; added: {added})")
 
     for relative in sorted(before_files.keys() & after_files.keys()):
         before = before_files[relative]
         after = after_files[relative]
         if after.suffix.lower() == ".md":
             errors.extend(
-                f"{relative}: {error}"
-                for error in _markdown_errors(before, after, platform)
+                f"{relative}: {error}" for error in _markdown_errors(before, after, platform)
             )
         elif before.read_bytes() != after.read_bytes():
             errors.append(f"{relative}: non-Markdown artifact changed")
@@ -133,10 +141,7 @@ def check_package_trees(before_root: Path, after_root: Path) -> list[str]:
         if not before.is_dir() or not after.is_dir():
             errors.append(f"missing {platform} package directory")
             continue
-        errors.extend(
-            f"{platform}: {error}"
-            for error in compare_packages(before, after, platform)
-        )
+        errors.extend(f"{platform}: {error}" for error in compare_packages(before, after, platform))
     return errors
 
 
