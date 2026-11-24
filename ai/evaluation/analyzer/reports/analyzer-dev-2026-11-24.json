@@ -1,0 +1,166 @@
+{
+  "created": "2026-11-24T23:35:38Z",
+  "live": true,
+  "prompt": {
+    "id": "analysis/request",
+    "version": 3
+  },
+  "model": "openrouter/anthropic/claude-sonnet-5.5",
+  "data_sources": [
+    {
+      "name": "skillforge-seed-benchmark",
+      "version": "0.1.0",
+      "sha256": "f0a92ff2f445ef0e96099d1f2a9cbbc87b2bf598d8b16f13752e3b6a9e4d3337"
+    },
+    {
+      "name": "analyzer-requests-test",
+      "version": "0.3.0",
+      "sha256": "2a96507e736e648a605b608136270347ead5e416d21f5d185ad3fc6e204fdf68"
+    },
+    {
+      "name": "analyzer-requests-dev",
+      "version": "0.3.0",
+      "sha256": "44f94ce3f577629e0157cd8ecb795dd813c5e82636a3894a1a4aced9840e31d6"
+    },
+    {
+      "name": "analyzer-requests-arabic",
+      "version": "0.2.0",
+      "sha256": "6d4d6fb52f4a54f62866e09fbc258dbcb064de35f8b69a2be91155b5cd9d5ca2"
+    },
+    {
+      "name": "analyzer-requests-holdout",
+      "version": "0.1.0",
+      "sha256": "c849f354948ff028b95b2be36b286a6b60b4dfafb3a4ef12a9d2cc56a3937bd1"
+    }
+  ],
+  "sets": {
+    "dev": {
+      "n": 50,
+      "fields": {
+        "kind": {
+          "correct": 46,
+          "accuracy": 0.92,
+          "confusion": {
+            "role": {
+              "role": 17,
+              "task": 1,
+              "<error>": 1
+            },
+            "task": {
+              "task": 26,
+              "<error>": 2
+            },
+            "workflow": {
+              "workflow": 3
+            }
+          }
+        },
+        "domain_area": {
+          "correct": 44,
+          "accuracy": 0.88,
+          "confusion": {
+            "customer-support": {
+              "customer-support": 3
+            },
+            "data": {
+              "data": 3
+            },
+            "design": {
+              "design": 3,
+              "<error>": 2
+            },
+            "education": {
+              "education": 8,
+              "<error>": 1
+            },
+            "finance": {
+              "finance": 1
+            },
+            "general": {
+              "general": 3
+            },
+            "hr": {
+              "hr": 3
+            },
+            "legal": {
+              "legal": 2
+            },
+            "marketing": {
+              "marketing": 2
+            },
+            "medical": {
+              "medical": 1
+            },
+            "operations": {
+              "operations": 2
+            },
+            "product": {
+              "product": 1,
+              "general": 1
+            },
+            "research": {
+              "research": 2
+            },
+            "sales": {
+              "sales": 1
+            },
+            "technology": {
+              "technology": 5,
+              "general": 1
+            },
+            "writing": {
+              "writing": 4,
+              "general": 1
+            }
+          }
+        },
+        "risk": {
+          "correct": 46,
+          "accuracy": 0.92,
+          "confusion": {
+            "high": {
+              "high": 4
+            },
+            "low": {
+              "low": 39,
+              "<error>": 3
+            },
+            "medium": {
+              "medium": 3,
+              "low": 1
+            }
+          }
+        }
+      },
+      "joint_accuracy": 0.84,
+      "needs_clarification": {
+        "accuracy": 0.88,
+        "precision": 0.7778,
+        "recall": 0.6364,
+        "question_rule_kept": 1.0
+      },
+      "mentioned_targets": {
+        "n": 50,
+        "exact_match": 0.94
+      },
+      "errors": {
+        "LLMUnavailable": 3
+      },
+      "latency_ms": {
+        "p50": 2530.9,
+        "max": 10092.9
+      }
+    }
+  },
+  "gate": null,
+  "usage": {
+    "calls": 57,
+    "errors": 10,
+    "input_tokens": 160090,
+    "output_tokens": 12142,
+    "cost_usd": 0.4416
+  },
+  "budget_usd": 0.65,
+  "stopped": null,
+  "run": "20261124T233621Z"
+}
