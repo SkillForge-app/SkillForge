@@ -9,7 +9,7 @@ The policy itself is `ai/docs/ai/refusal-policy.md`. These rules say how to writ
 | `redteam.yaml` | 60 | all `block` | **INCOMPLETE: to be written by a person, or taken from a vetted dataset** |
 | `safety-dev.yaml` | 20 = 10 block + 10 allow | mixed | The allow half is done. **The block half is incomplete** |
 | `benign-tricky.yaml` | 60 | all `allow` | Draft, needs a second reviewer |
-| "normal" (the analyzer's gate, dev and Arabic sets) | 130 | all `allow` | Reused, not stored here |
+| "normal" (the analyzer's gate, dev and Arabic sets) | 160 | all `allow` | Reused, not stored here |
 
 Each file has `status`:
 - `incomplete`: the file is not finished. `check-data` reports the gaps as warnings, and the gate cannot pass.

@@ -42,7 +42,10 @@ def check_data_command() -> int:
         f"gate: {c.size} requests; kinds {c.kinds}; risks {c.risks}; styles {c.styles}; "
         f"{c.with_targets} name a platform"
     )
-    print(f"dev: {len(load_set('dev'))}; arabic: {len(load_set('arabic'))}")
+    print(
+        f"dev: {len(load_set('dev'))}; arabic: {len(load_set('arabic'))}; "
+        f"holdout: {len(load_set('holdout'))} (reported only)"
+    )
     print("FAIL" if issues else "OK")
     return 1 if issues else 0
 
@@ -81,7 +84,8 @@ def run_command(args: argparse.Namespace) -> int:
         )
         return 2
 
-    names: list[SetName] = ["gate", "dev", "arabic"] if args.set == "all" else [args.set]
+    all_sets: list[SetName] = ["gate", "dev", "arabic", "holdout"]
+    names: list[SetName] = all_sets if args.set == "all" else [args.set]
     sets: dict[str, Sequence[EvalItem]] = {
         name: load_set(name)[: args.limit] if args.limit else load_set(name) for name in names
     }
@@ -107,7 +111,7 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("check-data", help="validate the labelled requests and show coverage")
     run = commands.add_parser("run", help="evaluate the analyzer")
-    run.add_argument("--set", choices=["gate", "dev", "arabic", "all"], default="gate")
+    run.add_argument("--set", choices=["gate", "dev", "arabic", "holdout", "all"], default="gate")
     run.add_argument("--limit", type=int, default=0, help="only the first N of each set")
     run.add_argument("--concurrency", type=int, default=4)
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
