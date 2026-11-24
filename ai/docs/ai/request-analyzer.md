@@ -48,7 +48,14 @@ The JSON Schema for BE and FE is `ai/core/analysis/analyzed_request.schema.json`
 - **After answers:** questions are kept, answers are stored, and `needs_clarification` becomes `false`. The analyzer never asks a second round.
 - **Prompt input:** the vocabularies are passed in from `core.spec`, so the prompt can't drift from the contract. The user's text is wrapped in `<request>` tags and treated as data.
 
-The prompt is `ai/prompts/analysis/request.md`, version 1, role `analysis` (Claude Sonnet 5.5). Its 3 few-shot examples come from the **dev set** only.
+The prompt is `ai/prompts/analysis/request.md`, version 3, role `analysis` (Claude Sonnet 5.5). Its 3 few-shot examples come from the **dev set** only.
+
+**v3 (25 Nov) adds the `LABELLING.md` rules as text.** It was written from the rules only, not from any labelled request, and has no new examples:
+- **One job is a task:** the existing rule is strengthened, "This holds even when the request uses a job title or 'act as'". The 2 Nov gate's kind errors were one-job requests read as role.
+- **Vague:** "A vague request (it does not say what the skill should do or produce) is a role."
+- **Tutor:** "A request to learn a subject is a tutor: a role in the education area, with the subject as the sub-area." The example sub-area, `education/chemistry`, is in no labelled set.
+- **Fitness:** "Fitness and nutrition for healthy people (calories, protein, workouts) is general; it is medical only when the request names a condition, a medication or a treatment."
+- **The version number:** v2 was skipped, because "v2" already names the uncommitted 2 Nov dev trial below. The 2 Nov gate measured v1.
 
 Safety screening of harmful requests is AI-06 (`safety.py`). It is not part of this analyzer.
 

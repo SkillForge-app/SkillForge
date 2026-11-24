@@ -155,7 +155,7 @@ async def test_report_files_record_versions_and_hashes(tmp_path: Path) -> None:
     assert files.md.name == f"analyzer-gate-{report.created[:10]}.md"
     assert files.md.parent == files.json.parent == tmp_path / "reports"
     saved = json.loads(files.json.read_text(encoding="utf-8"))
-    assert saved["prompt"] == {"id": "analysis/request", "version": 1}
+    assert saved["prompt"] == {"id": "analysis/request", "version": 3}
     assert [s["name"] for s in saved["data_sources"]][0] == "skillforge-seed-benchmark"
     assert all(len(s["sha256"]) == 64 for s in saved["data_sources"])
     assert saved["run"] == "run"  # the report names the folder with its raw outputs
