@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "domain": {
+      "title": "Domain",
+      "type": "string"
+    },
+    "domain_area": {
+      "title": "Domain Area",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "review_status": {
+      "title": "Review Status",
+      "type": "string"
+    },
+    "reviewer": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reviewer"
+    },
+    "risk": {
+      "title": "Risk",
+      "type": "string"
+    },
+    "spec": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Spec"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "targets": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Targets",
+      "type": "array"
+    },
+    "technical": {
+      "title": "Technical",
+      "type": "boolean"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "title",
+    "kind",
+    "domain",
+    "domain_area",
+    "risk",
+    "technical",
+    "summary",
+    "targets",
+    "spec",
+    "review_status",
+    "reviewer"
+  ],
+  "title": "SkillRecord",
+  "type": "object"
+}

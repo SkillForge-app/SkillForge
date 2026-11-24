@@ -2,8 +2,11 @@
 # postgres + redis become healthy with the first-start init applied. Not a required check.
 # The `web` job builds the web image from frontend/ and checks the app answers; the `api` job builds
 # the API image from backend/, runs the migration and checks the API answers (each skipped without
-# its folder). Run it by hand with `data-ref`, `frontend-ref` or `backend-ref` to test another
-# branch's data/db/ SQL, frontend/ or backend/, e.g. Data-Engineering, Frontend or Backend.
+# its folder). The `worker` job builds the worker image from ai/, fills the model cache with
+# model-init (twice: the second run offline must download nothing) and checks the placeholder
+# worker loads the model with no network, and fails clearly on an empty cache. Run it by hand with
+# `data-ref`, `frontend-ref` or `backend-ref` to test another branch's data/db/ SQL, frontend/ or
+# backend/, e.g. Data-Engineering, Frontend or Backend.
 name: compose
 
 on:
@@ -18,6 +21,11 @@ on:
       - backend/**
       - devops/docker/**
       - .github/workflows/compose.yml
+      # The worker image: AI's locked dependencies, the model pin and the code that fetches it
+      - ai/pyproject.toml
+      - ai/uv.lock
+      - ai/core/llm/models.yaml
+      - ai/core/llm/local_embed.py
   push:
     branches: [main]
     paths:
@@ -29,6 +37,10 @@ on:
       - backend/**
       - devops/docker/**
       - .github/workflows/compose.yml
+      - ai/pyproject.toml
+      - ai/uv.lock
+      - ai/core/llm/models.yaml
+      - ai/core/llm/local_embed.py
   workflow_dispatch:
     inputs:
       data-ref:
@@ -277,3 +289,102 @@ jobs:
       - name: Clean up
         if: always() && steps.project.outputs.present == 'true'
         run: docker compose --profile api down --volumes
+
+  worker:
+    name: worker
+    runs-on: ubuntu-24.04
+    # About 3-6 minutes: the locked AI dependencies and one 66 MB model download.
+    timeout-minutes: 15
+    env:
+      IMAGE: skillforge-worker:local
+      VOLUME: skillforge_models
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Is there an ai/ with its lock?
+        id: project
+        run: |
+          if [ -f ai/pyproject.toml ] && [ -f ai/uv.lock ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::no ai/pyproject.toml + ai/uv.lock here; the worker image is not built"
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: The base image is pinned by digest, and the same as the API image's
+        run: |
+          worker="$(grep -E '^ARG PYTHON_IMAGE=' devops/docker/worker.Dockerfile)"
+          api="$(grep -E '^ARG PYTHON_IMAGE=' devops/docker/api.Dockerfile)"
+          echo "worker: ${worker}"
+          echo "api:    ${api}"
+          if ! printf '%s\n' "${worker}" | grep -q '@sha256:'; then
+            echo "::error::PYTHON_IMAGE in worker.Dockerfile is not pinned by digest"
+            exit 1
+          fi
+          if [ "${worker}" != "${api}" ]; then
+            echo "::error::worker.Dockerfile and api.Dockerfile must use the same PYTHON_IMAGE"
+            exit 1
+          fi
+          if grep -E '^FROM ' devops/docker/worker.Dockerfile | grep -vE 'FROM \$\{PYTHON_IMAGE\} AS '; then
+            echo "::error::every FROM must use PYTHON_IMAGE"
+            exit 1
+          fi
+      - name: Use the example settings
+        if: steps.project.outputs.present == 'true'
+        run: cp .env.example .env
+      - name: Build the worker image (locked install, pip check)
+        if: steps.project.outputs.present == 'true'
+        run: docker compose --profile worker build model-init
+      - name: It runs as a non-root user and holds no .env
+        if: steps.project.outputs.present == 'true'
+        run: |
+          uid="$(docker run --rm --network none "${IMAGE}" id -u)"
+          echo "uid ${uid}"
+          [ "${uid}" != 0 ]
+          found="$(docker run --rm --network none "${IMAGE}" sh -c 'find /app -name ".env*" -not -path "/app/.venv/*" | wc -l')"
+          echo ".env files under /app: ${found}"
+          [ "${found}" = 0 ]
+      - name: model-init fills the cache, and a second run offline downloads nothing
+        if: steps.project.outputs.present == 'true'
+        run: |
+          docker compose --profile worker run --rm model-init
+          # Without a network, this succeeds only when the pinned file is there with its sha256.
+          docker run --rm --network none -v "${VOLUME}:/models" "${IMAGE}" \
+            python -m core.llm.local_embed download
+      - name: The worker loads the model with no network and a read-only cache
+        if: steps.project.outputs.present == 'true'
+        run: |
+          docker run --rm --network none -e HF_HUB_OFFLINE=1 -v "${VOLUME}:/models:ro" "${IMAGE}" \
+            python /app/devops/worker_check.py --once
+      - name: The compose worker starts after model-init and reports the model
+        if: steps.project.outputs.present == 'true'
+        run: |
+          docker compose --profile worker up --detach worker
+          for _ in $(seq 1 40); do
+            if docker compose --profile worker logs worker | grep -q 'worker placeholder: model ok'; then
+              docker compose --profile worker logs --no-log-prefix worker
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::the worker did not report the model within 120 s"
+          exit 1
+      - name: An empty cache fails clearly, without downloading
+        if: steps.project.outputs.present == 'true'
+        run: |
+          docker volume create skillforge_models_empty > /dev/null
+          set +e
+          docker run --rm --network none -e HF_HUB_OFFLINE=1 -v skillforge_models_empty:/models:ro \
+            "${IMAGE}" python /app/devops/worker_check.py --once > /tmp/empty.log 2>&1
+          code=$?
+          set -e
+          cat /tmp/empty.log
+          docker volume rm skillforge_models_empty > /dev/null
+          [ "${code}" = 1 ]
+          grep -q 'model-init service downloads it' /tmp/empty.log
+      - name: Logs
+        if: failure() && steps.project.outputs.present == 'true'
+        run: docker compose --profile worker logs --no-color model-init worker
+      - name: Clean up
+        if: always() && steps.project.outputs.present == 'true'
+        run: docker compose --profile worker down --volumes
