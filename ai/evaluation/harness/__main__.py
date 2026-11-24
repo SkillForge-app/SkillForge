@@ -94,10 +94,12 @@ def _calibrate(args: argparse.Namespace) -> int:
     with (out / "comparisons.jsonl").open("x", encoding="utf-8", newline="\n") as file:
         for row in rows:
             file.write(json.dumps(row, ensure_ascii=False) + "\n")
+    kappa = "n/a" if result.cohen_kappa is None else f"{result.cohen_kappa:.3f}"
     print(
         f"judge-human agreement: "
         f"{'n/a' if result.agreement is None else f'{result.agreement:.1%}'} "
         f"({result.matches}/{result.n}); "
+        f"Cohen's kappa: {kappa} (informational); "
         f"{'PASSED' if result.passed else 'NOT PASSED'}"
     )
     print(f"calibration results written to {out}")

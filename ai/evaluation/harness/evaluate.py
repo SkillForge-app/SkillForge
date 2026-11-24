@@ -74,6 +74,7 @@ class CalibrationResult:
     threshold: float
     passed: bool
     reason: str | None = None
+    cohen_kappa: float | None = None
 
 
 @dataclass(frozen=True)
@@ -103,6 +104,22 @@ class HarnessReport:
 
 def _answer_hash(answer: str) -> str:
     return hashlib.sha256(answer.encode("utf-8")).hexdigest()
+
+
+def _cohen_kappa(rows: Sequence[dict[str, Any]]) -> float | None:
+    compared = [row for row in rows if row["judge_passed"] is not None]
+    n = len(compared)
+    if not n:
+        return None
+
+    human_passed = sum(bool(row["human_passed"]) for row in compared)
+    judge_passed = sum(bool(row["judge_passed"]) for row in compared)
+    expected = (human_passed * judge_passed + (n - human_passed) * (n - judge_passed)) / (n * n)
+    if expected == 1:
+        return None
+
+    observed = sum(bool(row["match"]) for row in compared) / n
+    return (observed - expected) / (1 - expected)
 
 
 async def _run_arm(
@@ -334,6 +351,7 @@ async def calibrate_judge(
             reason="judge calls failed"
             if failed_calls
             else (None if passed else "agreement is below 80%"),
+            cohen_kappa=_cohen_kappa(labeled_rows),
         ),
         rows,
     )
@@ -453,6 +471,11 @@ def render_markdown(report: HarnessReport) -> str:
         if calibration["agreement"] is None
         else f"{calibration['agreement']:.1%} ({calibration['matches']}/{calibration['n']})"
     )
+    kappa = (
+        "not measured"
+        if calibration["cohen_kappa"] is None
+        else f"{calibration['cohen_kappa']:.3f}"
+    )
     uplift_text = "n/a" if uplift is None else f"{uplift:+.1%}"
     lines = [
         f"# AI-16 evaluation: {report.skill}",
@@ -482,6 +505,7 @@ def render_markdown(report: HarnessReport) -> str:
             f"- Judge-human agreement: {agreement}; gate "
             f"{'PASSED' if calibration['passed'] else 'NOT PASSED'} "
             f"(threshold {calibration['threshold']:.0%})",
+            f"- Cohen's kappa (informational): {kappa}",
             f"- LLM usage: {report.usage['calls']} calls, ${report.usage['cost_usd']:.4f}",
             "",
             "Fake runs and runs against draft benchmark data are smoke checks only; they do not "
