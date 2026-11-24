@@ -34,6 +34,26 @@ new content; the function's per-source advisory lock keeps the flip itself consi
 document already current and replace the identical chunk set (it deletes the set of its config first). Two workers on one
 source at the same time is **not tested**; DE-14 should avoid it by queueing per source.
 
+## Orphans: who removes what a failed run leaves behind
+
+A crash between "upload" and "commit" leaves an object that no row points to. That is covered by the **daily orphan sweep**:
+`sweep_orphans()` in [skillforge_data/storage/jobs.py](../../skillforge_data/storage/jobs.py), run by `run_daily_storage_job()` in the same file and by `run_daily_jobs()` in `storage/daily.py`
+(scheduling it is DE-14). It deletes objects older than 24 hours (`ORPHAN_AGE`) that no `documents` row references; clean text of a
+live document is kept. The age rule matters: a young object may belong to a transaction that is still running. Tested in
+`tests/test_storage.py` (`test_orphans_older_than_24_hours_are_swept_and_referenced_objects_are_not`). So, with the proposal applied,
+a clean text uploaded before the transaction and then abandoned is an orphan like any raw upload and needs no new job.
+
+## What happens to `clean_object_key` in Case 1 today
+
+Case 1 (same content as the current version) **does not touch `clean_object_key` at all**: the `UPDATE` in
+`db/schema-draft.sql` sets `fetched_at`, `license`, `http_status`, `raw_object_key` and `raw_deleted_at` only. An empty key stays empty
+and an existing key stays. (The pipeline reaches Case 1 through its "unchanged" path in `process_document`, which calls the function with no raw key and, today, no clean key.)
+The proposed rule (fill NULL, never replace) therefore **adds** behaviour in Case 1 and is compatible with the code: nothing in
+`process.py` or the tests relies on Case 1 leaving an empty key empty. One guard was added: when the clean text was deleted on purpose
+(`clean_deleted_at` is set) the key is not filled, so it never points at a missing object. Caveat: because the key contains the
+extract fingerprint, a document re-processed under a new fingerprint needs an ordinary `UPDATE` of the key by the pipeline;
+the function does not do it.
+
 ## Optional schema proposal (not applied): let the caller choose the document id
 
 Status of this part: proposal only. `db/schema-draft.sql` is **not** changed by this file. It would be applied as a migration
@@ -64,8 +84,9 @@ repeated for the new one.
 
 ### The SQL (complete; run it in one transaction)
 
-Only two things change in the body: `p_document_id` and `p_clean_object_key` are used when a row is inserted (case 2), and
-`p_clean_object_key` when an old row is brought back (case 3); the comment about chunks is corrected. Case 1 is unchanged.
+Three things change in the body: `p_document_id` and `p_clean_object_key` are used when a row is inserted (case 2);
+`p_clean_object_key` **fills an empty key** when an old row is brought back (case 3) and in case 1; the comment about chunks is
+corrected. The rule for the key, in all cases: **empty (NULL) is filled with the key that was sent; an existing key is never replaced.**
 
 ```sql
 -- 1. The old signature goes (nine arguments, as in db/schema-draft.sql). Its privileges go with it.
@@ -85,7 +106,7 @@ DROP FUNCTION knowledge.record_document_version(
 -- chunks and embeds A again; this function does not touch chunks.
 -- p_document_id (case 2 only) lets the caller choose the id of a NEW row, so an object key that
 -- contains it can be uploaded before the transaction. p_clean_object_key is stored on a new row
--- (case 2) and on a returning row (case 3, after the reset).
+-- (case 2); on an existing row (cases 1 and 3) it only fills an empty key and never replaces one.
 CREATE FUNCTION knowledge.record_document_version(
     p_source_id        uuid,
     p_content_hash     text,
@@ -117,7 +138,11 @@ BEGIN
             license = p_license,
             http_status = p_http_status,
             raw_object_key = COALESCE(p_raw_object_key, raw_object_key),
-            raw_deleted_at = CASE WHEN p_raw_object_key IS NULL THEN raw_deleted_at END
+            raw_deleted_at = CASE WHEN p_raw_object_key IS NULL THEN raw_deleted_at END,
+            -- fill an empty key, never replace one; and never point at text that was deleted on purpose
+            clean_object_key = CASE WHEN clean_deleted_at IS NULL
+                                    THEN COALESCE(clean_object_key, p_clean_object_key)
+                                    ELSE clean_object_key END
         WHERE id = v_id;
         RETURN v_id;
     END IF;
@@ -138,9 +163,9 @@ BEGIN
         UPDATE knowledge.documents
         SET status = 'fetched', clean_object_key = NULL, clean_deleted_at = NULL
         WHERE id = v_id AND clean_deleted_at IS NOT NULL;
-        IF p_clean_object_key IS NOT NULL THEN
-            UPDATE knowledge.documents SET clean_object_key = p_clean_object_key WHERE id = v_id;
-        END IF;
+        UPDATE knowledge.documents                                  -- same rule as case 1: fill, never replace
+        SET clean_object_key = COALESCE(clean_object_key, p_clean_object_key)
+        WHERE id = v_id AND p_clean_object_key IS NOT NULL;
         RETURN v_id;
     END IF;
 
@@ -188,6 +213,11 @@ database and `db/schema-draft.sql` were not touched.
 | Case 2 with `p_document_id` and `p_clean_object_key` | the row has the chosen id and the key |
 | Case 1 (same content again) | same id; the key is not changed |
 | Case 3 (A, B, A, with A's clean text deleted in between) | the old row comes back, is current, `status = 'fetched'`, `clean_deleted_at` cleared, key = the new one; B is demoted |
+| Key rule, re-tested 17 Nov 2026 on a throwaway database inside a transaction (rolled back, database dropped), SQL taken from this file: Case 1 with an empty key | the sent key is stored |
+| Case 1 with an existing key and a different key sent | the existing key stays |
+| Case 1 when `clean_deleted_at` is set | the key stays empty (not filled) |
+| Case 2 (new content) with a chosen id and key | stored as sent |
+| Case 3 with an existing key | the existing key stays; after a reset (clean text was deleted) the new key is stored |
 | After the rollback | 1 function again (nine arguments); the test role does not exist |
 | The 97 tests of `data/tests`, run on a **copy** of `data/` whose `schema-draft.sql` had this SQL appended | **97 passed, 0 skipped** |
 

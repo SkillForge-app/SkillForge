@@ -21,13 +21,14 @@ AI never reads object storage. It reads `knowledge_chunks` only.
 - **Raw pages are content-addressed** by the document's `content_hash` (sha256 of the fetched bytes). The same
   bytes from the same host always get the same key, so a re-run writes nothing new. This keeps DE-05 idempotent.
 - **Clean text is keyed by document and extraction version,** not by content hash: `<document_id>/<extract_fingerprint>`.
-  `extract_fingerprint` is AI's `ExtractConfig.fingerprint()` (the same value as in `chunk_config`). Until AI finishes
-  that function, use the literal `v0`. Re-running the same document with the same extraction gives the same key.
+  `extract_fingerprint` is AI's `ExtractConfig.fingerprint()` (the same value as in `chunk_config`; AI finished the function on
+  1 November 2026, so the pipeline always has it and `v0` is no longer written). Re-running the same document with the same extraction
+  gives the same key.
 
 | Bucket | Key pattern | Example |
 | --- | --- | --- |
 | `skillforge-raw` | `<host>/<hash[0:2]>/<hash>.<ext>` | `docs.python.org/3f/3f9a....html` |
-| `skillforge-clean` | `<document_id>/<extract_fingerprint>.txt` | `3b9f2c1e-.../v0.txt` |
+| `skillforge-clean` | `<document_id>/<extract_fingerprint>.txt` | `3b9f2c1e-.../f33bf1b5...5483.txt` |
 | `skillforge-packages` | `<skill_id>/<version>/package.zip` | `pandas-groupby/1.2.0/package.zip` |
 
 - The 2-character prefix of raw keys spreads objects across prefixes.

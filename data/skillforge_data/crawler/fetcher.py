@@ -10,12 +10,14 @@ import logging
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from typing import Literal, Protocol
 from urllib.parse import urljoin, urlsplit
 
 import httpx
 
+from ..urls import host_key
 from .ratelimit import HostRateLimiter
 from .robots import RobotsPolicy, RobotsResponse
 
@@ -24,6 +26,9 @@ logger = logging.getLogger("skillforge_data.crawler")
 USER_AGENT = "SkillForgeBot/0.1 (+https://github.com/SkillForge-app/SkillForge; knowledge collection for agent skills)"
 MAX_BYTES = 20 * 1024 * 1024            # 20 MB, the limit proposed in docs/object-storage.md
 RETRY_STATUSES = frozenset({429, 500, 502, 503, 504})
+REDIRECT_STATUSES = frozenset({301, 302, 303, 307, 308})
+ROBOTS_MAX_REDIRECTS = 5                 # RFC 9309: follow at least five consecutive redirects
+ROBOTS_MAX_BYTES = 512 * 1024            # a bigger robots.txt is "unavailable": the origin is not crawled (RFC 9309 asks for 500 KiB at least)
 
 Outcome = Literal["ok", "not_modified", "blocked", "too_large", "failed"]
 
@@ -36,7 +41,7 @@ class FetchConfig:
     max_redirects: int = 5
     retries: int = 3                      # retries after the first try, for 429/5xx and network errors
     backoff_base: float = 1.0             # seconds; doubled on every retry
-    max_wait: float = 60.0                # longest pause we accept (also caps Retry-After)
+    max_wait: float = 60.0                # longest pause we accept; a Retry-After above it fails the page
     min_interval: float = 1.0             # seconds between two requests to one host
     denylist: frozenset[str] = frozenset()   # hosts we must not fetch (terms of service review: manual decision)
 
@@ -100,15 +105,60 @@ class HttpFetcher:
 
     # --- robots.txt -----------------------------------------------------------------------------------------
     def _fetch_robots(self, origin: str) -> RobotsResponse:
-        """One request for <origin>/robots.txt, rate-limited like any other request (no retries: errors mean disallow)."""
-        self._limiter.wait(_host_key(origin))
+        """<origin>/robots.txt, rate-limited like any other request (no retries: errors mean disallow).
+
+        Follows up to ROBOTS_MAX_REDIRECTS redirects (RFC 9309). More than that, a redirect loop, a redirect without a Location, a
+        redirect to something that is not http(s) or to a deny-listed host all count as "request failed" (status None).
+        A redirect to another host is followed but logged and returned in `RobotsResponse.redirects`.
+        """
+        current = f"{origin}/robots.txt"
+        followed: list[str] = []
+        seen = {current}
+        while True:
+            self._limiter.wait(host_key(current))
+            try:
+                request = self._client.build_request("GET", current, headers={"Accept": "text/plain"})
+                response = self._client.send(request, stream=True)
+            except httpx.HTTPError as exc:
+                logger.warning("robots.txt of %s not reachable (%s): %s", origin, current, exc)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if response.status_code not in REDIRECT_STATUSES:
+                break
+            location = response.headers.get("location")
+            response.close()
+            target = urljoin(current, location) if location else None
+            parts = urlsplit(target) if target else None
+            try:
+                host_key(target) if target else None
+            except ValueError:                           # not http(s), no host, or a bad port
+                parts = None
+            if not parts or parts.scheme not in ("http", "https") or not parts.hostname:
+                logger.warning("robots.txt of %s: redirect without a usable Location from %s", origin, current)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if parts.hostname.lower() in self.config.denylist:
+                logger.warning("robots.txt of %s: redirect to deny-listed host %s", origin, parts.hostname)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if len(followed) >= ROBOTS_MAX_REDIRECTS or target in seen:
+                why = "a redirect loop" if target in seen else f"more than {ROBOTS_MAX_REDIRECTS} redirects"
+                logger.warning("robots.txt of %s: %s, treated as unavailable", origin, why)
+                return RobotsResponse(None, redirects=tuple(followed))
+            if host_key(target) != host_key(current):
+                logger.warning("robots.txt of %s redirects to another host: %s", origin, target)
+            followed.append(target)
+            seen.add(target)
+            current = target
         try:
-            response = self._client.get(f"{origin}/robots.txt", headers={"Accept": "text/plain"})
-        except httpx.HTTPError as exc:
-            logger.warning("robots.txt of %s not reachable: %s", origin, exc)
-            return RobotsResponse(None)
-        text = response.text if response.status_code == 200 and len(response.content) <= 512 * 1024 else ""
-        return RobotsResponse(response.status_code, text)
+            if response.status_code != 200:
+                return RobotsResponse(response.status_code, "", tuple(followed))
+            body = _read_limited(response, ROBOTS_MAX_BYTES)
+            if body is None:
+                # We cannot read the whole file, so we do not know the rules: not "no rules". The origin is not crawled for a while.
+                logger.warning("robots.txt of %s is larger than %d bytes: treated as unavailable, the origin is not crawled",
+                               origin, ROBOTS_MAX_BYTES)
+                return RobotsResponse(None, redirects=tuple(followed), note="too large")
+            return RobotsResponse(200, _decode(body, response.encoding), tuple(followed))
+        finally:
+            response.close()
 
     # --- one URL --------------------------------------------------------------------------------------------
     def fetch(self, url: str, validators: Validators | None = None) -> FetchResult:
@@ -116,7 +166,9 @@ class HttpFetcher:
         current = url
         for hop in range(self.config.max_redirects + 1):
             parts = urlsplit(current)
-            if parts.scheme not in ("http", "https") or not parts.hostname:
+            try:
+                host_key(current)
+            except ValueError:
                 result.error = f"not an http(s) URL: {current}"
                 return result
             if parts.hostname.lower() in self.config.denylist:
@@ -133,7 +185,7 @@ class HttpFetcher:
             if response is None:
                 return result
             result.http_status = response.status_code
-            if response.status_code in (301, 302, 303, 307, 308):
+            if response.status_code in REDIRECT_STATUSES:
                 location = response.headers.get("location")
                 response.close()
                 if not location:
@@ -152,7 +204,7 @@ class HttpFetcher:
             headers["If-None-Match"] = validators.etag
         if validators and validators.last_modified:
             headers["If-Modified-Since"] = validators.last_modified
-        host = _host_key(url)
+        host = host_key(url)
         delay = self._robots.crawl_delay(url)
         for attempt in range(self.config.retries + 1):
             self._limiter.wait(host, delay)
@@ -166,8 +218,16 @@ class HttpFetcher:
                 self._sleep(self._backoff(attempt, None))
                 continue
             if response.status_code in RETRY_STATUSES and attempt < self.config.retries:
-                retry_after = _retry_after_seconds(response.headers.get("retry-after"))
+                retry_after = _retry_after_seconds(response.headers.get("retry-after"), self._now())
                 response.close()
+                if retry_after is not None and retry_after > self.config.max_wait:
+                    # The server wants a longer pause than we accept: do not hammer it and do not wait for minutes. The page fails in
+                    # this run (counted in pages_failed with this reason); the re-crawl schedule (DE-09) picks it up again later.
+                    result.http_status = response.status_code
+                    result.error = (f"HTTP {response.status_code} for {url}: the server asked to wait {retry_after:.0f}s "
+                                    f"(more than max_wait {self.config.max_wait:.0f}s), not retried")
+                    logger.warning("%s", result.error)
+                    return None
                 self._sleep(self._backoff(attempt, retry_after))
                 continue
             return response
@@ -208,12 +268,34 @@ class HttpFetcher:
             response.close()
 
 
-def _host_key(url: str) -> str:
-    parts = urlsplit(url)
-    return parts.netloc.lower()
+def _read_limited(response: httpx.Response, limit: int) -> bytes | None:
+    """The body of a streamed response, or None as soon as it is longer than `limit` bytes (the rest is never read)."""
+    body = bytearray()
+    for chunk in response.iter_bytes():
+        body.extend(chunk)
+        if len(body) > limit:
+            return None
+    return bytes(body)
 
 
-def _retry_after_seconds(value: str | None) -> float | None:
-    if value and value.strip().isdigit():
-        return float(value.strip())
-    return None
+def _decode(body: bytes, encoding: str | None) -> str:
+    try:
+        return body.decode(encoding or "utf-8", errors="replace")
+    except LookupError:                           # an encoding name Python does not know
+        return body.decode("utf-8", errors="replace")
+
+
+def _retry_after_seconds(value: str | None, now: datetime) -> float | None:
+    """Retry-After (RFC 9110, 10.2.3): a number of seconds or an HTTP-date. A date in the past means 0; garbage means None."""
+    if not value:
+        return None
+    value = value.strip()
+    if value.isdigit():
+        return float(value)
+    try:
+        when = parsedate_to_datetime(value)
+    except (TypeError, ValueError):
+        return None
+    if when.tzinfo is None:                     # "-0000" or a date without a zone: HTTP-dates are GMT
+        when = when.replace(tzinfo=UTC)
+    return max(0.0, (when - now).total_seconds())

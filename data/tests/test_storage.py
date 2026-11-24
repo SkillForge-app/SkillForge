@@ -3,9 +3,15 @@ import uuid
 from datetime import timedelta
 
 import pytest
-from fakes import T0, FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
+from fakes import (
+    T0,
+    FakeEmbed,
+    FakeExtract,
+    fake_config,
+    fake_normalise_url,
+    page_bytes,
+)
 
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import RawPage, process_document
 from skillforge_data.storage import (
     BUCKET_CLEAN,
@@ -143,7 +149,7 @@ def test_from_env_names_what_is_missing_and_needs_no_network():
 
 
 # ------------------------------------------------------------------------------------------ daily job
-CONFIG = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+CONFIG = fake_config()
 
 
 class World:

@@ -3,15 +3,21 @@ import hashlib
 from datetime import timedelta
 
 import pytest
-from fakes import T0, FakeEmbed, FakeExtract, fake_normalise_url, page_bytes
+from fakes import (
+    T0,
+    FakeEmbed,
+    FakeExtract,
+    fake_config,
+    fake_normalise_url,
+    page_bytes,
+)
 
-from skillforge_data.pipeline.config import PipelineConfig
 from skillforge_data.pipeline.process import RawPage, process_document
 from skillforge_data.provenance import check_provenance, get_provenance
 from skillforge_data.storage import BUCKET_RAW, MemoryStorage
 from skillforge_data.store import start_crawl_run
 
-CONFIG = PipelineConfig(pipeline_version="p1", embedding_version="rev-1")
+CONFIG = fake_config()
 URL = "https://Docs.Example.org/guide/"
 CANONICAL = "https://docs.example.org/guide"
 CONTENT = page_bytes(("alpha one", "alpha two"), title="Guide")
@@ -43,6 +49,9 @@ def test_a_chunk_leads_back_to_url_date_licence_hashes_and_run(world):
     assert trace.document_id == result.document_id and trace.crawl_run_id == run_id and trace.title == "Guide"
     assert trace.chunk_hash == hashlib.sha256(b"alpha one").hexdigest()
     assert trace.document_hash == hashlib.sha256(CONTENT).hexdigest()
+    assert trace.pipeline_version == "p1"
+    assert trace.chunk_config_hash == world.db.execute(
+        "SELECT chunk_config_hash FROM knowledge.chunks WHERE chunk_id = %s", (chunk_id,)).fetchone()[0]
 
 
 def test_the_retrieval_date_follows_the_latest_fetch_of_the_same_content(world):
@@ -91,3 +100,22 @@ def test_the_chunks_of_a_replaced_version_are_gone_and_the_new_ones_are_traceabl
     assert report.ok and report.chunks_checked == 1
     [trace] = get_provenance(world.db, world.db.execute("SELECT chunk_id FROM knowledge.chunks").fetchone()[0])
     assert trace.title == "Guide B"
+
+
+def _columns(db, view):
+    return [r[0] for r in db.execute(
+        "SELECT column_name FROM information_schema.columns WHERE table_schema = 'knowledge' AND table_name = %s "
+        "ORDER BY ordinal_position", (view,))]
+
+
+def test_chunk_provenance_has_the_four_new_columns_last_and_the_other_views_are_unchanged(world):
+    cols = _columns(world.db, "chunk_provenance")
+    assert cols[:10] == ["chunk_id", "chunk_uuid", "chunk_hash", "document_id", "document_hash", "source_id", "url", "host",
+                         "retrieved_at", "license"], "existing columns keep their names and order"
+    assert cols[10:] == ["crawl_run_id", "page_title", "pipeline_version", "chunk_config_hash"]
+    assert _columns(world.db, "knowledge_chunks") == [
+        "chunk_id", "source_url", "title", "retrieved", "text", "section", "concepts", "content_hash", "domains",
+        "embedding_model", "embedding"]
+    assert _columns(world.db, "retrievable_chunks") == [
+        "chunk_id", "chunk_uuid", "chunk_index", "text", "chunk_hash", "document_id", "document_hash", "language", "source_id",
+        "url", "host", "source_type", "retrieved_at", "license", "skill_domains"]

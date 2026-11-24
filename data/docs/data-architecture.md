@@ -63,7 +63,8 @@ Three views, all showing only the active config (see below). They live in
 [db/knowledge_views.sql](../db/knowledge_views.sql), which is **the contract between DE and AI**: any change to it
 (name, columns, types, filters) needs AI's approval.
 
-- `chunk_provenance`: chunk → `url`, `host`, `retrieved_at`, `license`, chunk and document hashes. It is **not**
+- `chunk_provenance`: chunk → `url`, `host`, `retrieved_at`, `license`, chunk and document hashes, plus (added 10 Nov 2026,
+  approved by AI in the review of PR #18) `crawl_run_id`, `page_title`, `pipeline_version` and `chunk_config_hash`. It is **not**
   filtered by `active_config` or `is_current`, so any chunk, old or new, can be traced.
 - `retrievable_chunks`: `text` plus the provenance columns and `skill_domains`, only for chunks of the active
   config whose document `is_current`, passed AI's quality check (`quality_ok`) and has `duplicate_of IS NULL`.
@@ -72,6 +73,18 @@ Three views, all showing only the active config (see below). They live in
 
 `host` is the web host (rate limits and robots.txt work per host). `skill_domain` is the skill's field
 (same vocabulary as SkillSpec `skill.domain`). They are different things and live in different tables.
+
+### Units, identity, install, model cache and who writes (DE-05, agreed with AI and Backend)
+
+- **Units:** `size` and `overlap` in `chunk_config` are `ExtractConfig.chunking.target_words` and `overlap_words`: counted in **words**, not characters and
+  not tokens. The real identity of the extraction settings is `extract_fingerprint`; the default fingerprint (`f33bf1b5...5483`) is the same as AI's
+  documented one (checked by an `ai_real` test).
+- **Install of AI's code:** by path, never from PyPI, no pip extra and no `data/uv.lock`: see [`ai-install.md`](ai-install.md). `pip install skillforge` must never be run.
+- **Model:** in CI nobody downloads the embedding model; `ai_real` tests use `use_fake()`, so they download nothing. In staging and production DevOps preloads it
+  (about 66 MB) in a volume on `SKILLFORGE_MODEL_CACHE` with `HF_HUB_OFFLINE=1`, and will add an optional CI job for `ai_real` on the same closed network.
+- **Threads:** `embed_sync` is safe to call from a worker thread. It is forbidden only inside a running event loop (the adapter turns that into `PipelineError`).
+- **Contracts:** AI's contracts are frozen since 13 November 2026.
+- **Writers:** Backend confirmed that it does not write to `knowledge.chunks` or `knowledge.embeddings`. The only write paths are the ones in `data/`.
 
 ## Who writes, who reads, who owns migrations
 
@@ -130,9 +143,9 @@ Read against [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI
   2,000 characters (the A4 `Passage.text` limit); `content_hash` is 64 hex characters; `domains` has at least one
   value, no repeats; `embedding_model` is the exact string; vectors are unit length; `source_url` is an absolute
   http(s) URL.
-- AI's `embedding_version` suggestion is a long form
-  (`Qdrant/bge-small-en-v1.5-onnx-Q@aa8f8b06...#model_optimized.onnx:sha256=...`). AI only reads `embedding_model`,
-  so the column is ours; we store the bare revision. Either is accepted by our CHECK (it only requires non-empty).
+- `embedding_version` is stored in the long form AI gave in `retrieval.md` (changed on 10 November 2026 at AI's request; before, we stored
+  only the bare revision): `repo@revision#file:sha256=...`. AI only reads `embedding_model`, so the column is ours. The CHECK only requires
+  non-empty, so old rows with the bare revision stay valid; a switch of the value is a new embedding version (a rebuild, see `active_config`).
 
 **Not yet run in the container** (Docker was off; each is a rolled-back transaction):
 
@@ -150,7 +163,7 @@ Read against [retrieval.md](https://github.com/SkillForge-app/SkillForge/blob/AI
 | Item | Value |
 |---|---|
 | `embedding_model` | exactly `local/BAAI/bge-small-en-v1.5`, enforced by a CHECK. Another value is rejected. |
-| `embedding_version` | `aa8f8b060edb00e03bfdd08813a2949946c8ba55`: the pinned revision of `Qdrant/bge-small-en-v1.5-onnx-Q` (file `model_optimized.onnx`, sha256 `51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431`). Not fixed by a CHECK: a new revision must be able to coexist with the old during a rebuild. The live one is in `active_config`. We store the revision only (AI agreed). The full pin (repo, revision, file, sha256) is in `ai/core/llm/models.yaml`, lines 94-98, on the `AI` branch. |
+| `embedding_version` | `Qdrant/bge-small-en-v1.5-onnx-Q@aa8f8b060edb00e03bfdd08813a2949946c8ba55#model_optimized.onnx:sha256=51f1bd0addd6e859e42c2c8021a5e5461385bb676a649f4b269aa445449f2431`: repo `Qdrant/bge-small-en-v1.5-onnx-Q`, pinned revision, file and sha256 in one string (the form in AI's `retrieval.md`, "The pinned embedding model"; it comes from `ai/core/llm/models.yaml`, role `embedding`, on the `AI` branch). Not fixed by a CHECK: a new revision must be able to coexist with the old during a rebuild. The live one is in `active_config`. |
 | Dimension | 384, `vector(384)` |
 | Unit length | enforced by a CHECK: `abs(vector_norm(embedding) - 1) < 0.001`. A vector that is not L2-normalized is rejected. The margin only absorbs float32 rounding. (pgvector 0.8.7 names this function `vector_norm`; `l2_norm` exists only for halfvec and sparsevec.) |
 | Metric and index | cosine, HNSW with `vector_cosine_ops`. Final. Order by `embedding <=> query`; score is `1 - (embedding <=> query)`. |
@@ -194,6 +207,14 @@ URL asked for, not where a redirect ended.
 second implementation. Rows whose `sources.url` is not `normalise_url(sources.url)` are stale and must be deleted or
 rebuilt. The schema does not enforce this (a CHECK cannot call Python); a test in DE-05 should. If a canonical link
 turns out to 404 for users, keep the fetch URL in a separate column (for example `sources.fetch_url`).
+
+## Crawler identity: one token for the header and for robots.txt
+
+The crawler sends `User-Agent: SkillForgeBot/0.1 (+https://github.com/SkillForge-app/SkillForge; knowledge collection for agent skills)`
+(`USER_AGENT` in `crawler/fetcher.py`). Its **product token** is `SkillForgeBot` (`PRODUCT_TOKEN` in `crawler/robots.py`), the same word
+that starts the header, and it is the one robots.txt is read for (RFC 9309): a `User-agent: SkillForgeBot` group applies to us
+(case-insensitive, whole token, so `User-agent: SkillForge` does not), `User-agent: *` applies when there is no such group.
+A test (`tests/test_robots_rfc9309.py`) fails if the header and the token ever differ.
 
 ## `chunk_id`: stable ids for citations
 
@@ -435,15 +456,41 @@ have compared; the new shape is the one AI asked for.
 
 ## `active_config`: one chunk config, one embedding version
 
-`chunk_config` has fixed keys: `size`, `overlap`, `splitter` (AI-owned values) and `pipeline_version` (ours), plus an
-optional fifth key, `extract_fingerprint`, enforced by a CHECK. `extract_fingerprint` is `ExtractConfig.fingerprint()` from AI: 64 hex
+`chunk_config` has exactly five keys, all required (a CHECK enforces it): `size` and `overlap` (AI's chunking settings
+`ExtractConfig.chunking.target_words` and `.overlap_words`; the pipeline reads them from the injected config, not from numbers in our code),
+`splitter` (the name of the splitting method, `sentence`), `pipeline_version` (ours), and `extract_fingerprint`.
+`extract_fingerprint` is `ExtractConfig.fingerprint()` from AI (final since 1 November 2026): 64 lower-case hex
 characters, the sha256 of every extraction setting except the per-site `site_boilerplate`, so every host gives the
-same value and the single `active_config` row keeps working. **TODO:** the key is optional until AI finishes and
-pins the function (the default config gives `f33bf1b5...5483`); then it becomes required, and the pipeline (DE-05)
-fills it from `ExtractConfig.fingerprint()`. **TODO (DE-05): make `extract_fingerprint` mandatory in the CHECK (a schema
-change) as soon as the pipeline starts writing it;** until then rows without it are accepted. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
+same value and the single `active_config` row keeps working (the default config gives `f33bf1b5...5483`). AI notes that `size`, `overlap`
+and `splitter` repeat part of the fingerprint; we keep them (harmless, and readable in SQL).
+
+**Schema change of 10 November 2026 (Backend must know):** the fifth key used to be optional and is now required, so rows without it are
+refused. Chunks stored before 4 November (the day AI made the extraction final) were built without the final extraction and are not final
+either; rebuild them. The local database volume must be reset to get the new CHECK, because the root `compose.yaml` applies the schema only
+on the first start of an empty volume: `docker compose down -v`, then `up -d`. The shared schema is Backend's contract too, so this change
+needs their review in the PR. Because `pipeline_version` is inside `chunk_config`, it is inside `chunk_config_hash`: a new pipeline
 version, or any new chunk setting, is a new config and a new chunk set. Rows of the old and new config can exist
 side by side while a rebuild runs, so the same text would appear twice.
+
+**Migration note: a database that already has old chunks.** The local reset above is the simple way. On a database you cannot reset
+(staging, a shared dev database), the mandatory CHECK needs one of two paths. First replace the function:
+`CREATE OR REPLACE FUNCTION knowledge.is_valid_chunk_config(...)` with the five-key body from `db/schema-draft.sql` (the existing
+constraint calls the function by name, so it uses the new body at once; existing rows are not re-checked). Then either:
+
+- **A. Delete the old chunks first** (the cascade removes their embeddings; the pipeline rebuilds them on the next run, and chunks from before
+  4 November must be rebuilt anyway):
+  `DELETE FROM knowledge.chunks WHERE NOT knowledge.is_valid_chunk_config(chunk_config);`
+- **B. Keep them for now** with a constraint that skips the old rows:
+  `ALTER TABLE knowledge.chunks DROP CONSTRAINT chunks_chunk_config_check, ADD CONSTRAINT chunks_chunk_config_check CHECK (knowledge.is_valid_chunk_config(chunk_config)) NOT VALID;`
+  New rows must pass, old rows stay. **Warning:** a `NOT VALID` check is still enforced when an old row is *updated*, for any column, so
+  an `UPDATE` of an old chunk fails until it is rebuilt. When the old rows are gone or rebuilt:
+  `ALTER TABLE knowledge.chunks VALIDATE CONSTRAINT chunks_chunk_config_check;` (it fails while an invalid row remains).
+
+Both paths were tried on throwaway databases (17 Nov 2026): A deleted the old row and accepted a new one; B kept the old row, accepted a new
+one, refused an `UPDATE` of the old one, failed `VALIDATE` while it existed and passed after it was deleted. Writers of `knowledge.chunks`
+were audited the same day: the pipeline (`pipeline/process.py`, five keys from `PipelineConfig.chunk_config()`), the tests, and
+`bench/generate.sql`, which had four keys and failed on the CHECK; it now writes a fixed placeholder fingerprint
+(`sha256('bench')`) and `tests/test_chunk_config_writers.py` lists the known writers so a new one is noticed.
 
 `active_config` is a table that can hold only one row (`id boolean PRIMARY KEY CHECK (id)`), with
 `chunk_config_hash` and `embedding_version`. `retrievable_chunks` and `knowledge_chunks` join it, so only the live
@@ -636,13 +683,33 @@ store sets every transaction READ ONLY; `SET LOCAL` is allowed there.
 | Raw HTML | object storage | 30 days after the first upload (a re-fetch of unchanged content does not extend it; see [object-storage.md](object-storage.md)) | Daily DE-05 job: set `raw_deleted_at`, clear `raw_object_key`, then delete the object; keep the document row |
 | Clean text | object storage | Until the page is crawled again and a newer version is stored (not a fixed number of days). AI asked for it to outlive the raw HTML so they can re-chunk or re-embed without a re-crawl; this satisfies it | Delete the old version's object, set `clean_deleted_at` |
 | Chunks and embeddings of a superseded version | `chunks`, `embeddings` | Until newer clean text replaces it (agreed in review). **Backend's condition:** never before the new version has been processed and stored successfully, in the same transaction | Delete as soon as the new version's chunks and embeddings are stored; see the DE-05 TODO below |
-| Superseded documents (`is_current = false`) | `documents` | 90 days (AI agreed) | Delete row (its chunks and embeddings are already gone) |
+| Superseded documents (`is_current = false`) | `documents` | 90 days (AI agreed) | Delete row (its chunks and embeddings are already gone). **Enforced** by `storage/retention.py` since 17 Nov 2026; age counted from `fetched_at` (no "superseded at" column) |
 | Chunks and embeddings of a current document, active config | `chunks`, `embeddings` | While the document exists | Cascade with the document |
 | Chunks of an inactive chunk config, embeddings of an inactive version | `chunks`, `embeddings` | 30 days after `active_config` switched away from them | Delete |
 | Sources never fetched, or not fetched for 12 months | `sources` | 12 months | Delete (cascades to `source_domains`, `documents`) |
-| `crawl_runs` | `crawl_runs` | 12 months (AI agreed) | Delete; `documents.crawl_run_id` becomes NULL |
+| `crawl_runs` | `crawl_runs` | 12 months (AI agreed) | Delete; `documents.crawl_run_id` becomes NULL. **Enforced** by `storage/retention.py` (365 days from `started_at`; a running run is kept) |
 | Crawl and pipeline logs | logs | 90 days | Delete |
 | Sources with license `unknown` | `sources`, `documents` | Allowed as background knowledge only | Never copied as examples (DE-08) |
+
+### Licence policy (DE-08, decided by AI; code in `skillforge_data/licensing.py`)
+
+Two separate policies. No view filters on the licence; the question to AI is in [p3-progress.md](p3-progress.md).
+
+- **Public SKILL.md files** (examples we may copy): only `MIT`, `Apache-2.0`, `BSD-2-Clause`, `BSD-3-Clause`, `ISC`, `CC0-1.0`, `Unlicense`
+  and `CC-BY-4.0`. Refused: CC-BY-SA, every GPL (also LGPL, AGPL), MPL, anything NC or ND, and `unknown` (no licence means all rights
+  reserved). `register_skill_file` stores a file only if allowed, as a `skill_md` source with its `url` and `license`
+  (`license_source = 'repo'`), which is what the attribution needs. A refused file is not stored.
+- **Web pages from `crawl_list()`**: the list gives a label per site, mapped like this (no schema change: `sources.license_source` already
+  accepts `page`, `repo`, `manual` and `unknown`). A licence the page declares itself (`detect_license`) always wins (`license_source = 'page'`).
+
+| crawl_list label | `sources.license` | `sources.license_source` |
+|---|---|---|
+| `public-domain-us-gov` | `LicenseRef-us-gov-public-domain` | `manual` |
+| `cc-by-4.0` | `CC-BY-4.0` | `manual` |
+| `cc-by-sa-4.0` | `CC-BY-SA-4.0` | `manual` |
+| `copyright-summarise-and-cite` | `unknown` | `unknown` (default use: summarise and cite only) |
+
+An unknown or missing label is read as `unknown`, never as permission.
 
 Personal data: these tables hold public web content only. User requests and accounts belong to
 Backend; user deletion and request-text retention are handled in DE-13 and should not add user
@@ -700,6 +767,7 @@ only in V1** (`extract_page` rejects other languages with `wrong_language`).
    **Answer (AI):** see "`sources.url`: the canonical URL" below.
 3. `embedding_version`: we store the bare revision `aa8f8b06...`. Your suggested long form also names the file and
    its sha256. Do you want the long form, even though you do not read the column?
+   **Answer (AI, PR #18 review):** use the long form of `retrieval.md`. Done on 10 November 2026 (see the `embeddings` table notes).
 4. How often does your store call `info()` (a count over the view)? At large size it is a scan.
 
 **For BE**
