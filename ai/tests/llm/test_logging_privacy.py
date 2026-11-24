@@ -1,4 +1,6 @@
-"""The LLM layer logs metadata only: never prompt text, inputs, texts, outputs or error messages.
+"""The LLM layer logs metadata only: never prompt text, inputs, texts, outputs or free-text error
+messages. The one exception, `error_detail`, keeps allowlisted fields of a provider's structured
+error JSON, with the call's own input text and key-like strings removed.
 
 Checked for both backends: the fake, and the real LiteLLM gateway with litellm mocked.
 """
@@ -121,3 +123,80 @@ def test_call_record_rejects_content_fields() -> None:
             status="ok",
             prompt_text="hello",  # type: ignore[call-arg]
         )
+
+
+# ------------------------------------------------------------------ provider error details
+
+
+def openrouter_error(message: str, upstream: str = "Overloaded") -> Exception:
+    """An OpenRouter failure as LiteLLM raises it: the structured error JSON in the message."""
+    import litellm
+
+    raw = json.dumps({"type": "error", "error": {"type": "overloaded_error", "message": upstream}})
+    body = {
+        "error": {
+            "message": message,
+            "code": 502,
+            "metadata": {"raw": raw, "provider_name": "Anthropic"},
+        }
+    }
+    error: Exception = litellm.exceptions.APIError(
+        status_code=502,
+        message=f"OpenrouterException - {json.dumps(body)}",
+        llm_provider="openrouter",
+        model="m",
+    )
+    return error
+
+
+async def test_provider_error_detail_is_logged_without_content(
+    llm: "FakeLiteLLM", caplog: pytest.LogCaptureFixture
+) -> None:
+    from tests.llm.litellm_mock import config_with, make_gateway
+
+    caplog.set_level(logging.DEBUG)
+    set_gateway(make_gateway(config_with(analysis={"num_retries": 0})))
+    # The provider's message echoes the user's input and a key: both must be removed.
+    echoed = (
+        f"Provider returned error for Hello {SECRET_INPUT} on Claude, key sk-or-v1-abcdef123456"
+    )
+    llm.completions = [openrouter_error(echoed)] * 3  # the primary model and both fallbacks
+    with pytest.raises(LLMUnavailable):
+        await complete("demo/greet", INPUTS, Greeting)
+
+    first = llm_calls(caplog)[0]  # llm_calls also fails if SECRET_INPUT reached any log
+    assert first["error_status"] == 502
+    detail = first["error_detail"]
+    assert isinstance(detail, str)
+    assert "provider=Anthropic" in detail and "code=502" in detail
+    assert "upstream_type=overloaded_error" in detail and "upstream_message=Overloaded" in detail
+    assert "[input]" in detail and "[key]" in detail
+    assert "sk-or-v1" not in detail and len(detail) <= 300
+
+
+async def test_free_text_error_messages_are_never_logged(
+    llm: "FakeLiteLLM", caplog: pytest.LogCaptureFixture
+) -> None:
+    import litellm
+
+    from tests.llm.litellm_mock import config_with, make_gateway, provider_error
+
+    caplog.set_level(logging.DEBUG)
+    set_gateway(make_gateway(config_with(analysis={"num_retries": 0})))
+    auth = litellm.exceptions.AuthenticationError
+    llm.completions = [provider_error(auth, SECRET_ERROR)] * 3
+    with pytest.raises(LLMUnavailable):
+        await complete("demo/greet", INPUTS, Greeting)
+
+    calls = llm_calls(caplog)  # fails if SECRET_ERROR reached any log
+    assert all(c["error_detail"] is None for c in calls)
+
+
+def test_provider_error_fields_without_json_keep_only_the_status() -> None:
+    from core.llm.usage import provider_error_fields
+
+    class Boom(Exception):
+        status_code = 429
+
+    assert provider_error_fields(Boom(f"rate limited: {SECRET_ERROR}")) == {"error_status": 429}
+    assert provider_error_fields(ValueError("{not json")) == {"error_status": None}

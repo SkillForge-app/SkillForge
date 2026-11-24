@@ -56,6 +56,7 @@ from core.llm.usage import (  # noqa: E402
     current_skill_id,
     log_call,
     new_call_id,
+    provider_error_fields,
 )
 
 T = TypeVar("T", bound=BaseModel)
@@ -208,7 +209,10 @@ class LiteLLMGateway:
                     **_completion_args(call.role, model, messages, output_model)
                 )
             except Exception as exc:
-                call.record(model, start, error=type(exc).__name__)
+                private = [str(m.get("content", "")) for m in messages]
+                call.record(
+                    model, start, error=type(exc).__name__, **provider_error_fields(exc, private)
+                )
                 raise
             choice = response.choices[0]
             metrics = self._metrics(response, model)
@@ -275,7 +279,8 @@ class LiteLLMGateway:
                     items = sorted(response.data, key=lambda item: _field(item, "index"))
                     vectors = [list(_field(item, "embedding")) for item in items]
             except Exception as exc:
-                call.record(model, start, error=type(exc).__name__, **metrics)
+                errors = provider_error_fields(exc, batch)
+                call.record(model, start, error=type(exc).__name__, **metrics, **errors)
                 raise
             if len(vectors) != len(batch) or any(len(v) != dimensions for v in vectors):
                 call.record(model, start, error=LLMOutputInvalid.__name__, **metrics)

@@ -267,7 +267,12 @@ Both are additive changes to contract A1, for Track B to approve.
 
 Failed attempts that still got a reply (for example an invalid JSON reply) keep their tokens and cost. So you see, and count, everything that was paid for.
 
-**Metadata only.** The log never contains prompt text, inputs, embedded texts, model output or error messages.
+**Metadata only.** The log never contains prompt text, inputs, embedded texts, model output or free-text error messages.
+- **The one exception (2026-11-25):** a failed attempt records `error_status`, the HTTP status, and `error_detail`.
+  - `error_detail` is built only from the provider's structured error JSON (OpenRouter's `error.message`, `error.code`, `metadata.provider_name`, and the upstream `error.type` and `error.message` in `metadata.raw`).
+  - In the two message fields, every word of 4+ characters that also occurs in the call's messages or texts becomes `[input]`. Key-like strings become `[key]`. The detail is capped at 300 characters.
+  - An error with no structured JSON keeps only the status.
+  - Purpose: see why a provider failed, without logging content (`core.llm.usage.provider_error_fields`).
 `CallRecord` rejects unknown fields, and `tests/llm/test_logging_privacy.py` fails if any content reaches the log.
 
 To get the cost of a whole run, for example one skill generation, wrap it in `track_usage()`:
