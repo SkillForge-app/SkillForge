@@ -21,6 +21,7 @@ places (listed below).
 | `compose/postgres-initdb/` | First-start init for the local postgres: pgvector, then Data Engineering's `data/db/` SQL |
 | `docker/web.Dockerfile` (+ `.dockerignore`) | The web app image, built from `frontend/` (Frontend's code). DevOps-owned |
 | `docker/api.Dockerfile` (+ `.dockerignore`) | The API image (also used by `migrate`), built from `backend/` (Backend's code). DevOps-owned |
+| `docker/worker.Dockerfile` (+ `.dockerignore`), `docker/worker_check.py` | The worker image (also used by `model-init`): AI's code from `ai/`, installed from `ai/uv.lock`; the model check and placeholder worker. DevOps-owned |
 
 ## Local stack (OPS-03)
 

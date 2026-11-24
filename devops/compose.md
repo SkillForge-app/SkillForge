@@ -9,9 +9,10 @@ One command starts the shared services every department develops against. It's d
 | `redis` | Redis 8.8 | `127.0.0.1:6379` | `redis:6379` |
 | `web` (only with `--profile web`) | The Next.js app from `frontend/` | `http://127.0.0.1:3000` | `web:3000` |
 | `api` (only with `--profile api`) | The FastAPI app from `backend/`, after `migrate` | `http://127.0.0.1:8000` | `api:8000` |
+| `model-init`, `worker` (only with `--profile worker`) | The embedding-model cache, and a placeholder worker | (no ports) | (no ports) |
 
-`web` is described in [Web app](#web-app), and `api` and `migrate` in [API](#api). `worker` is still a
-commented-out placeholder in `compose.yaml`, waiting for the queue library decision.
+`web` is described in [Web app](#web-app), `api` and `migrate` in [API](#api), and `model-init` and `worker` in
+[Worker and model cache](#worker-and-model-cache). The worker is a placeholder until Backend's worker exists.
 
 The ports listen on `127.0.0.1` only, so nothing is reachable from your network. All values in `.env.example`
 are for local development only; staging and production get theirs from the secret store.
@@ -141,8 +142,52 @@ docker compose --profile api logs migrate api
   - `app/main.py`.
   - The code is copied to `/app/backend` and imported as `backend.app…`. It runs as the non-root user `app`
     (uid 10001), and local `.env*` files and `tests/` are never copied in.
-- **The worker:** not started yet. It waits for the queue library decision, and for Backend's root `core/`
-  package to move under `backend/` (AI's `ai/` also installs a top-level `core`).
+- **The worker:** see [Worker and model cache](#worker-and-model-cache). Backend's package is `backend.app`,
+  so it doesn't clash with AI's top-level `core`.
+
+## Worker and model cache
+The worker will run the AI pipeline (`ai/core/pipeline/interface.py`) for Backend's queue. AI's retrieval embeds
+queries with a local model (`local/BAAI/bge-small-en-v1.5`, about 66 MB), pinned in `ai/core/llm/models.yaml` by
+repo, revision, file and sha256.
+
+```
+docker compose --profile worker up -d --build       # model-init fills the cache once, then the worker starts
+docker compose --profile worker logs model-init worker
+docker compose --profile worker run --rm model-init  # check (or fill) the cache by hand
+```
+
+- **`model-init`** is a one-shot service. It runs `python -m core.llm.local_embed download` into the `models`
+  volume (`skillforge_models`, mounted at `SKILLFORGE_MODEL_CACHE=/models`).
+  - **It's idempotent:** when the pinned file is already there and its sha256 matches, it downloads nothing,
+    so later runs take a second and need no network.
+  - **It's the only writer of `models`.** A file that doesn't match its sha256 makes it fail ("delete the folder
+    and download again"), and then no worker starts.
+- **`worker`** starts only after `model-init` exits with 0. It mounts `models` **read-only** with
+  `HF_HUB_OFFLINE=1`, so a missing model fails loudly instead of downloading at runtime.
+  - **For now it's a placeholder** (`devops/docker/worker_check.py`): it checks that the model is there, embeds
+    one sentence offline, logs `worker placeholder: model ok (…, 384 dims, offline)`, and waits. With an empty
+    volume it exits 1 with a message that names model-init.
+  - **When Backend's worker lands,** the service moves into the `api` profile and runs
+    `rq worker --with-scheduler --url redis://redis:6379/0 skills`. It gets `env_file: ai/.env` (provider keys,
+    never in `compose.yaml`), `DATABASE_URL`, `REDIS_URL`, `SKILLFORGE_VECTOR_STORE=pgvector` and
+    `SKILLFORGE_PGVECTOR_DSN` (DE's read-only role), and waits for `migrate` and `redis`. The model check can stay
+    as a startup step.
+- **For Data Engineering:** when DE's workers join compose, they mount the **same `models` volume read-only**,
+  with `HF_HUB_OFFLINE=1` and `SKILLFORGE_MODEL_CACHE=/models`. They never download the model themselves:
+  `model-init` is the only writer.
+- **The image** (`devops/docker/worker.Dockerfile`, built from the repo root through an allow-list,
+  `worker.Dockerfile.dockerignore`):
+  - **Base:** the same Python base and uv as the API image.
+  - **AI's dependencies:** installed the locked way. That's `uv export --locked --no-emit-project --extra
+    pgvector` from `ai/uv.lock`, then a hash-checked install with `--no-deps`, then `pip check`.
+  - **AI's code:** copied as the `ai/` tree and put on `PYTHONPATH`, the same layout as `pip install -e ai`.
+    It finds `prompts/` through that folder, which a wheel wouldn't keep, and nothing has to be built.
+  - **Never in the image:** no `.env`, venv or model is ever copied in. It runs as the non-root user `app`
+    (uid 10001).
+- **A new model pin** (a new revision or sha256 in `models.yaml`) goes into a new folder in the same volume: run
+  `model-init` again. The old folder can go once no worker uses it.
+- **Reset the cache:** `docker compose --profile worker down`, `docker volume rm skillforge_models`, then `up`
+  again.
 
 ## Images
 The postgres and redis images, the web image's Node base and the api image's Python base are pinned by digest (the multi-arch index,
@@ -151,7 +196,8 @@ amd64 + arm64), each to a release at least two weeks old. To update one:
 2. Take its digest from Docker Hub (`docker buildx imagetools inspect <image>:<tag>`).
 3. Change `compose.yaml`; for pgvector, change `.github/workflows/data.yml` too. For Node, change
    `NODE_IMAGE` in `devops/docker/web.Dockerfile`, in step with `frontend/.nvmrc`. For Python, change
-   `PYTHON_IMAGE` in `devops/docker/api.Dockerfile` (uv's version and sha256s are there too).
+   `PYTHON_IMAGE` in `devops/docker/api.Dockerfile` **and** `devops/docker/worker.Dockerfile` (the two must be
+   equal; uv's version and sha256s are in both).
 4. Open a PR. The `compose` workflow (`.github/workflows/compose.yml`) starts the stack and checks it. It isn't
    a required check.
 
@@ -163,6 +209,14 @@ the image, starts it, and checks three things:
 - the app answers;
 - it doesn't run as root;
 - the API URL is in the browser code.
+
+The `worker` job builds the worker image from `ai/`. It also runs when `ai/uv.lock`, `ai/pyproject.toml` or the model pin
+changes. It checks:
+- the base image matches the API image's, pinned by digest;
+- it doesn't run as root and holds no `.env`;
+- `model-init` fills the cache, and a second run with no network downloads nothing;
+- the worker loads the model with no network and a read-only cache;
+- an empty cache fails with the model-init message.
 
 ## For Data Engineering
 This stack is the one local database for every department. Your `DATABASE_URL` (`data/.env.example`) points

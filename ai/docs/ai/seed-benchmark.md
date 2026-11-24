@@ -1,6 +1,6 @@
 # Seed benchmark (AI-04)
 
-Owner: AI department (Track B, contract **B2**). Test prompts: 3 Nov 2026 (release `0.1.0`). Final: 6 Nov 2026 (release `1.0.0`, handed to Data Engineering for DE-10).
+Owner: AI department (Track B, contract **B2**). Test prompts: 3 Nov 2026 (release `0.1.0`). Final release: 16 Nov 2026 (`1.0.0`, prepared for Data Engineering's DE-10 handoff).
 
 The seed benchmark is the fixed test set every SkillForge skill version is measured against:
 - **AI-16 (evaluation harness):** each test prompt is run with and without the skill, and the answer is graded with the skill's rubric. See [evaluation-harness.md](evaluation-harness.md).
@@ -71,7 +71,7 @@ The validator reports issues in the SkillSpec format, e.g. `skills/review-nda.ya
 
 ## Hand-off to Data Engineering (DE-10)
 
-Give DE the release folder `ai/evaluation/benchmarks/seed/releases/1.0.0/` once it exists. Until then, `0.1.0` is a draft they can use to build their storage.
+The immutable release folder `ai/evaluation/benchmarks/seed/releases/1.0.0/` is included in this change for DE-10. After merge, DE can use it as the fixed dataset. Its manifest records `dataset_sha256` `67bb9b8cb14183181ce8a80a260626e3006a5508a22e5a7523cb464b46b8b605`. The draft `0.1.0` remains unchanged.
 - **Each evaluation run must record** `dataset` (`skillforge-seed-benchmark`), `version` and `dataset_sha256` from `manifest.json`.
 - **Human labels** (AI-16 judge calibration) will come as a later MINOR release, with a new file. The existing files don't change.
 
