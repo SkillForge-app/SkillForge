@@ -25,6 +25,14 @@ ERROR = "<error>"
 BUDGET_STOP = "BudgetExceeded"  # the error name of a call refused by the run's cost budget
 # Decided by Ziad on 2026-11-25, before the gate run of prompt v3 (written into each report that
 # uses it). Not tuning: no prompt or data change.
+# Decided by Ziad on 2026-11-25, AFTER the invalid v3 gate run of 2026-11-24T23:41Z (48 of 100
+# requests got no prediction) and before any rerun. Written into every report.
+MIN_PREDICTED = 0.95
+VALIDITY_RULE = (
+    "A run is valid only if at least 95% of its requests get a prediction (after the one retry). "
+    "Otherwise the run is invalid and is repeated with the same prompt and data. (Rule added "
+    "2026-11-25, after the invalid gate run of 2026-11-24T23:41Z.)"
+)
 RETRY_RULE = (
     "A request that fails with a provider error (no prediction at all) is retried ONCE at the end "
     "of the run, with the same prompt and settings. If it fails again, it counts as wrong."
@@ -139,6 +147,8 @@ class EvalReport:
     stopped: str | None = None  # set when the cost budget stopped the run: it does not count
     retry_rule: str | None = None  # RETRY_RULE when the run used it
     retries: list[dict[str, Any]] = field(default_factory=list)  # one row per retried request
+    validity_rule: str = VALIDITY_RULE
+    invalid: str | None = None  # set when under MIN_PREDICTED of a set got a prediction
 
     @property
     def passed(self) -> bool | None:
@@ -181,11 +191,15 @@ async def run_eval(
             f"the ${budget_usd} budget was used up; {refused} requests were not analysed. "
             "This run does not count."
         )
+    report.invalid = _invalid(predictions)
     if "gate" in report.sets:
         report.gate = gate_verdict(report.sets["gate"])
         if report.stopped:
             report.gate["passed"] = False
             report.gate["reasons"].append("stopped by the cost budget")
+        if report.invalid:
+            report.gate["passed"] = False
+            report.gate["reasons"].append("invalid run (validity rule): repeat it")
     report.usage = {
         "calls": usage.calls,
         "errors": usage.errors,
@@ -194,6 +208,25 @@ async def run_eval(
         "cost_usd": round(usage.cost_usd, 4),
     }
     return report, predictions
+
+
+def _invalid(predictions: dict[str, list[Prediction]]) -> str | None:
+    """VALIDITY_RULE: the run is invalid when any set has under 95% of requests predicted."""
+    missing = {
+        name: sum(p.result is None for p in preds) for name, preds in predictions.items() if preds
+    }
+    bad = {
+        name: n
+        for name, n in missing.items()
+        if (len(predictions[name]) - n) / len(predictions[name]) < MIN_PREDICTED
+    }
+    if not bad:
+        return None
+    counts = "; ".join(f"{name}: {n} of {len(predictions[name])}" for name, n in bad.items())
+    return (
+        f"INVALID: provider failure (requests with no prediction, {counts}). "
+        "Not a measurement of the prompt."
+    )
 
 
 async def _retry_failed_once(
@@ -268,6 +301,9 @@ def render_markdown(report: EvalReport) -> str:
         f"Prompt {report.prompt['id']} v{report.prompt['version']}, model `{report.model}`.",
         "",
     ]
+    if report.invalid:
+        lines = [f"**{report.invalid}**", ""] + lines
+    lines += [f"**Validity rule:** {report.validity_rule}", ""]
     if report.stopped:
         lines += [f"**STOPPED: budget.** {report.stopped}", ""]
     if report.retry_rule:

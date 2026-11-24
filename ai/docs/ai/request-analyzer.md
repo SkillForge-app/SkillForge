@@ -93,6 +93,14 @@ cd ai
     - The estimate uses the 2 Nov gate's measured call size (about 3,300 input and 250 output tokens) plus 15% for retries.
     - For reference: dev (50) about $0.50, gate (100) about $1.00, holdout (24) about $0.25.
   - **During the run:** the calls run inside a skill budget (AI-21). Once the spend reaches the budget, every further call is refused before it is made, fallbacks included. The report then says **STOPPED: budget**, the run doesn't count, and the exit code is 3.
+- **The validity rule:** decided by Ziad on 2026-11-25. **It was added after the invalid v3 gate run of 2026-11-24T23:41Z,** in which 48 of 100 requests got no prediction because of a provider failure, and before any rerun.
+  - A run is valid only if at least 95% of its requests get a prediction, after the one retry.
+  - Otherwise the run is invalid and is repeated with the same prompt and data.
+  - An invalid run's report starts with "INVALID: provider failure …", its gate fails with the reason "invalid run", and the command exits 4.
+  - Every report states the rule.
+- **Provider error details in the call log** (2026-11-25): each failed attempt records `error_status` (the HTTP status) and `error_detail`.
+  - `error_detail` holds the provider, code, message and upstream type and message, read only from the provider's structured error JSON.
+  - Words that also occur in the call's input are removed, as are key-like strings, and it's capped at 300 characters. See `docs/ai/models-and-gateway.md`.
 - **The retry rule (`--retry-errors`):** decided by Ziad on 2026-11-25, before the v3 gate run. It isn't tuning, because no prompt or data changes.
   - A request that fails with a provider error, so with no prediction at all, is retried **once** at the end of the run, with the same prompt and settings.
   - If it fails again, it counts as wrong.

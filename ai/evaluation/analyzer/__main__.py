@@ -128,6 +128,8 @@ def run_command(args: argparse.Namespace) -> int:
     print(f"report written to {files.md} and {files.json.name}; predictions in {files.run}")
     if report.stopped:
         return 3
+    if report.invalid:
+        return 4
     return 0 if report.passed in (None, True) else 1
 
 

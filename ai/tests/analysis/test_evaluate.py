@@ -15,6 +15,7 @@ from evaluation.analyzer.__main__ import RETRY_ALLOWANCE, TOKENS_PER_CALL, estim
 from evaluation.analyzer.data import EvalItem
 from evaluation.analyzer.evaluate import (
     RETRY_RULE,
+    VALIDITY_RULE,
     compute_metrics,
     gate_verdict,
     render_markdown,
@@ -376,3 +377,42 @@ async def test_budget_refusals_are_not_retried() -> None:
     assert report.retries == []
     assert report.stopped
     assert sum(p.error == "BudgetExceeded" for p in predictions["dev"]) == 2
+
+
+# ------------------------------------------------------------------ the validity rule (2026-11-25)
+
+
+async def test_a_run_with_95_percent_predicted_is_valid() -> None:
+    items = gate_items()
+    out = await evaluate(items, fail={i.id for i in items[:5]})  # 95 of 100 predicted
+    report = out["report"]
+    assert report.invalid is None
+    assert "invalid run" not in " ".join(out["gate"]["reasons"])
+    assert VALIDITY_RULE in render_markdown(report)
+
+
+async def test_a_run_under_95_percent_predicted_is_invalid() -> None:
+    items = gate_items()
+    out = await evaluate(items, fail={i.id for i in items[:6]})  # 94 of 100 predicted
+    report = out["report"]
+    assert report.invalid == (
+        "INVALID: provider failure (requests with no prediction, gate: 6 of 100). "
+        "Not a measurement of the prompt."
+    )
+    assert out["gate"]["passed"] is False
+    assert "invalid run (validity rule): repeat it" in out["gate"]["reasons"]
+    assert render_markdown(report).startswith(f"**{report.invalid}**")
+
+
+def test_cli_exits_4_for_an_invalid_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    real_run_eval = run_eval
+
+    async def failing_run(sets: Any, **kwargs: Any) -> Any:
+        items = [i for v in sets.values() for i in v]
+        with use_fake(OracleGateway(items, fail={i.id for i in items})):  # type: ignore[arg-type]
+            return await real_run_eval(sets, **kwargs)
+
+    monkeypatch.setattr("evaluation.analyzer.__main__.run_eval", failing_run)
+    args = ["run", "--set", "dev", "--limit", "3", "--runs", str(tmp_path / "runs")]
+    assert main([*args, "--out", str(tmp_path / "reports")]) == 4
