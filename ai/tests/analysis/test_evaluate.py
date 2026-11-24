@@ -14,6 +14,7 @@ from evaluation.analyzer import data
 from evaluation.analyzer.__main__ import RETRY_ALLOWANCE, TOKENS_PER_CALL, estimate_cost, main
 from evaluation.analyzer.data import EvalItem
 from evaluation.analyzer.evaluate import (
+    RETRY_RULE,
     compute_metrics,
     gate_verdict,
     render_markdown,
@@ -312,3 +313,66 @@ def test_cli_exits_3_when_the_budget_stops_the_run(
     assert code == 3
     (md,) = (tmp_path / "reports").glob("analyzer-dev-*.md")
     assert "STOPPED: budget" in md.read_text(encoding="utf-8")
+
+
+# ------------------------------------------------------------------ the retry rule (2026-11-25)
+
+
+class FlakyGateway(OracleGateway):
+    """Fails the listed requests a set number of times with a provider error, then answers."""
+
+    def __init__(self, items: Sequence[EvalItem], failures: Mapping[str, int]) -> None:
+        super().__init__(items)
+        self.left = dict(failures)
+
+    async def complete(
+        self,
+        prompt_id: str,
+        inputs: Mapping[str, Any],
+        output_model: type[T],
+        *,
+        model_role: str | None = None,
+    ) -> T:
+        item = self.by_text[inputs["request_text"]]
+        if self.left.get(item.id, 0) > 0:
+            self.left[item.id] -= 1
+            raise LLMUnavailable("provider down")
+        return await super().complete(prompt_id, inputs, output_model, model_role=model_role)
+
+
+async def test_retry_rule_runs_each_failed_request_once_more() -> None:
+    items = gate_items()
+    first, second = items[0].id, items[1].id
+    gateway = FlakyGateway(items, {first: 1, second: 2})  # first recovers, second fails twice
+    with use_fake(gateway):  # type: ignore[arg-type]
+        report, predictions = await run_eval({"gate": items}, live=False, retry_errors=True)
+    assert report.retry_rule == RETRY_RULE
+    assert report.retries == [
+        {"set": "gate", "id": first, "first_error": "LLMUnavailable", "retry": "ok"},
+        {"set": "gate", "id": second, "first_error": "LLMUnavailable", "retry": "LLMUnavailable"},
+    ]
+    by_id = {p.item.id: p for p in predictions["gate"]}
+    assert by_id[first].error is None and by_id[second].error == "LLMUnavailable"
+    assert report.sets["gate"]["fields"]["kind"]["correct"] == len(items) - 1  # still wrong once
+    text = render_markdown(report)
+    assert RETRY_RULE in text and "Retried: 2; succeeded on retry: 1; still failed" in text
+
+
+async def test_without_the_rule_nothing_is_retried() -> None:
+    items = gate_items()
+    gateway = FlakyGateway(items, {items[0].id: 1})
+    with use_fake(gateway):  # type: ignore[arg-type]
+        report, predictions = await run_eval({"gate": items}, live=False)
+    assert report.retry_rule is None and report.retries == []
+    assert predictions["gate"][0].error == "LLMUnavailable"
+
+
+async def test_budget_refusals_are_not_retried() -> None:
+    items = data.load_set("dev")[:5]
+    with use_fake(FakeGateway(cost_usd=0.40)):
+        report, predictions = await run_eval(
+            {"dev": items}, live=False, concurrency=1, budget_usd=1.00, retry_errors=True
+        )
+    assert report.retries == []
+    assert report.stopped
+    assert sum(p.error == "BudgetExceeded" for p in predictions["dev"]) == 2

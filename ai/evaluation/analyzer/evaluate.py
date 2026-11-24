@@ -23,6 +23,12 @@ THRESHOLD = 0.90
 GATED_FIELDS = ("kind", "domain_area", "risk")
 ERROR = "<error>"
 BUDGET_STOP = "BudgetExceeded"  # the error name of a call refused by the run's cost budget
+# Decided by Ziad on 2026-11-25, before the gate run of prompt v3 (written into each report that
+# uses it). Not tuning: no prompt or data change.
+RETRY_RULE = (
+    "A request that fails with a provider error (no prediction at all) is retried ONCE at the end "
+    "of the run, with the same prompt and settings. If it fails again, it counts as wrong."
+)
 
 Analyze = Callable[[str], Awaitable[AnalyzedRequest]]
 
@@ -131,6 +137,8 @@ class EvalReport:
     usage: dict[str, Any] = field(default_factory=dict)
     budget_usd: float | None = None
     stopped: str | None = None  # set when the cost budget stopped the run: it does not count
+    retry_rule: str | None = None  # RETRY_RULE when the run used it
+    retries: list[dict[str, Any]] = field(default_factory=list)  # one row per retried request
 
     @property
     def passed(self) -> bool | None:
@@ -144,10 +152,12 @@ async def run_eval(
     concurrency: int = 4,
     analyze: Analyze = analyze_request,
     budget_usd: float | None = None,
+    retry_errors: bool = False,
 ) -> tuple[EvalReport, dict[str, list[Prediction]]]:
     """Run every set. With `budget_usd`, the calls run inside a skill budget (AI-21): once the
     spend reaches it, every further call is refused before it is made (at most the calls already
-    running finish), and the report is marked stopped."""
+    running finish), and the report is marked stopped. With `retry_errors`, RETRY_RULE applies:
+    after all sets, each request with no prediction (budget refusals excepted) is run once more."""
     report = EvalReport(
         created=datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
         live=live,
@@ -155,12 +165,16 @@ async def run_eval(
         model=load_config().role(load_prompt(PROMPT_ID).meta.model_role).model,
         data_sources=[asdict(s) for s in sources()],
         budget_usd=budget_usd,
+        retry_rule=RETRY_RULE if retry_errors else None,
     )
     predictions: dict[str, list[Prediction]] = {}
     with skill_run(None, budget_usd=budget_usd), track_usage() as usage:
         for name, items in sets.items():
             predictions[name] = await predict_all(items, concurrency=concurrency, analyze=analyze)
-            report.sets[name] = compute_metrics(predictions[name])
+        if retry_errors:
+            await _retry_failed_once(predictions, report, concurrency=concurrency, analyze=analyze)
+    for name, preds in predictions.items():
+        report.sets[name] = compute_metrics(preds)
     refused = sum(p.error == BUDGET_STOP for preds in predictions.values() for p in preds)
     if refused:
         report.stopped = (
@@ -180,6 +194,34 @@ async def run_eval(
         "cost_usd": round(usage.cost_usd, 4),
     }
     return report, predictions
+
+
+async def _retry_failed_once(
+    predictions: dict[str, list[Prediction]],
+    report: EvalReport,
+    *,
+    concurrency: int,
+    analyze: Analyze,
+) -> None:
+    """RETRY_RULE: run each request that has no prediction once more, in place, and record how
+    each retry ended. A call refused by the budget is not retried."""
+    for name, preds in predictions.items():
+        failed = [i for i, p in enumerate(preds) if p.error and p.error != BUDGET_STOP]
+        if not failed:
+            continue
+        again = await predict_all(
+            [preds[i].item for i in failed], concurrency=concurrency, analyze=analyze
+        )
+        for i, retry in zip(failed, again, strict=True):
+            report.retries.append(
+                {
+                    "set": name,
+                    "id": preds[i].item.id,
+                    "first_error": preds[i].error,
+                    "retry": "ok" if retry.error is None else retry.error,
+                }
+            )
+            preds[i] = retry
 
 
 def write_report(
@@ -228,6 +270,22 @@ def render_markdown(report: EvalReport) -> str:
     ]
     if report.stopped:
         lines += [f"**STOPPED: budget.** {report.stopped}", ""]
+    if report.retry_rule:
+        ok = sum(r["retry"] == "ok" for r in report.retries)
+        lines += [
+            f"**Retry rule (decided before this run):** {report.retry_rule}",
+            "",
+            f"Retried: {len(report.retries)}; succeeded on retry: {ok}; "
+            f"still failed (counted wrong): {len(report.retries) - ok}.",
+            "",
+        ]
+        if report.retries:
+            lines += ["| set | id | first error | retry |", "|---|---|---|---|"]
+            lines += [
+                f"| {r['set']} | {r['id']} | {r['first_error']} | {r['retry']} |"
+                for r in report.retries
+            ]
+            lines += [""]
     if report.gate is not None:
         verdict = "PASSED" if report.gate["passed"] else "FAILED"
         lines += [f"**Gate (each field >= {THRESHOLD:.0%} on {GATE_SIZE} requests): {verdict}**"]

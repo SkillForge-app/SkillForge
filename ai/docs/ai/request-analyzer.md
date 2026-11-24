@@ -93,6 +93,10 @@ cd ai
     - The estimate uses the 2 Nov gate's measured call size (about 3,300 input and 250 output tokens) plus 15% for retries.
     - For reference: dev (50) about $0.50, gate (100) about $1.00, holdout (24) about $0.25.
   - **During the run:** the calls run inside a skill budget (AI-21). Once the spend reaches the budget, every further call is refused before it is made, fallbacks included. The report then says **STOPPED: budget**, the run doesn't count, and the exit code is 3.
+- **The retry rule (`--retry-errors`):** decided by Ziad on 2026-11-25, before the v3 gate run. It isn't tuning, because no prompt or data changes.
+  - A request that fails with a provider error, so with no prediction at all, is retried **once** at the end of the run, with the same prompt and settings.
+  - If it fails again, it counts as wrong.
+  - The report states the rule and lists every retry and how it ended. A call refused by the budget is not retried.
 - **What a run writes:**
   - **The report**, tracked in Git: `ai/evaluation/analyzer/reports/analyzer-<set>-<date>.md` and `.json`, with accuracy per field with confusion tables, joint accuracy, clarification precision and recall, targets match, errors, tokens and cost, prompt version and data versions. A second run on the same day gets `-2`, `-3`, …, so a reviewed report is never overwritten. Only `--live` runs go here.
   - **The raw outputs**, ignored by Git: `ai/evaluation/analyzer/runs/<UTC time>/predictions.jsonl`, one line per request. The report's `run` field names this folder. A fake smoke run keeps its report here too.

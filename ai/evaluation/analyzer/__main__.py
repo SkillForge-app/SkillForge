@@ -110,7 +110,13 @@ def run_command(args: argparse.Namespace) -> int:
             return 2
 
     report, predictions = asyncio.run(
-        run_eval(sets, live=args.live, concurrency=args.concurrency, budget_usd=args.budget_usd)
+        run_eval(
+            sets,
+            live=args.live,
+            concurrency=args.concurrency,
+            budget_usd=args.budget_usd,
+            retry_errors=args.retry_errors,
+        )
     )
     reports_dir, run_dir = output_dirs(
         args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
@@ -134,6 +140,12 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--limit", type=int, default=0, help="only the first N of each set")
     run.add_argument("--concurrency", type=int, default=4)
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
+    run.add_argument(
+        "--retry-errors",
+        action="store_true",
+        help="retry each request with no prediction (provider error) once at the end of the run; "
+        "the report records the rule and every retry",
+    )
     run.add_argument(
         "--budget-usd",
         type=float,
