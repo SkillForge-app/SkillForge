@@ -1,0 +1,36 @@
+# The demo's additions to the root compose.yaml (OPS, Codespaces demo). Only used through
+# devops/demo/demo.sh, which sets the variables below; docs/devops/demo-codespaces.md.
+#   docker compose -f compose.yaml -f devops/demo/compose.demo.yaml \
+#     --profile api --profile worker --profile web ...
+# Relative paths resolve against the repo root (the folder of the first file).
+#
+# Never run `docker compose ... config` without --quiet on these files in live mode: it prints
+# the resolved environment, OPENROUTER_API_KEY included.
+
+services:
+  # backend/ from this checkout, or from .demo/src/backend (devops/demo/fetch-sources.sh). The
+  # Dockerfile path is absolute so its api.Dockerfile.dockerignore still applies.
+  migrate:
+    build:
+      context: ${DEMO_BACKEND_CONTEXT:-./backend}
+      dockerfile: ${DEMO_ROOT:?run devops/demo/demo.sh}/devops/docker/api.Dockerfile
+
+  api:
+    environment:
+      # Backend's switch (backend/app/pipeline/core_adapter.py): fake = AI's FakePipeline, the
+      # canned examples in ai/examples/. The API gets no provider key.
+      SKILLFORGE_PIPELINE: ${SKILLFORGE_PIPELINE:-fake}
+
+  worker:
+    environment:
+      SKILLFORGE_ENV: dev
+      SKILLFORGE_PIPELINE: ${SKILLFORGE_PIPELINE:-fake}
+      SKILLFORGE_LLM_BACKEND: ${SKILLFORGE_LLM_BACKEND:-fake}
+      # By name only: the value comes from demo.sh's environment (the Codespaces secret) and is
+      # never written to a file. In fake mode demo.sh unsets it, so the worker has no key.
+      OPENROUTER_API_KEY:
+
+  web:
+    build:
+      context: ${DEMO_FRONTEND_CONTEXT:-./frontend}
+      dockerfile: ${DEMO_ROOT:?run devops/demo/demo.sh}/devops/docker/web.Dockerfile

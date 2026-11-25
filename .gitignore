@@ -18,6 +18,9 @@ ai/.data/
 ai/.venv/
 ai/.env
 
+# The demo's exported backend/ and frontend/ sources (devops/demo/fetch-sources.sh)
+.demo/
+
 # OS files
 .DS_Store
 Thumbs.db
