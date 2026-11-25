@@ -264,6 +264,18 @@ experiments:
     role: final
     report: ai/evaluation/analyzer/reports/analyzer-dev-2026-11-02.json
     recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/analyzer/reports/runs/20261102T182254Z/predictions.jsonl
+      source_sha256: 771467430fe3414e2efb586209720b340eb01b72674b1f4d0093f9610a10af01
+      sha256: c811ef504855177a946060386bc91726e81355a6a940f426603bd662402a97ad
+      lines: 20
+    not_recomputable:
+      - metric: mentioned_targets.exact_match
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
+      - metric: needs_clarification.question_rule_kept
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/request v1
     cost_usd: 0.1749
@@ -277,6 +289,18 @@ experiments:
     role: final
     report: ai/evaluation/analyzer/reports/analyzer-dev-2026-11-02-2.json
     recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/analyzer/reports/runs/20261102T182619Z/predictions.jsonl
+      source_sha256: 635f548281404d1e42d79cee9d69f0835fcde45046a6e7e4a72e7caa2c15f65c
+      sha256: 6ad5dae42b4ca31e881b756003018ff12dc953ca572f58bb5ba993d64199b0b6
+      lines: 20
+    not_recomputable:
+      - metric: mentioned_targets.exact_match
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
+      - metric: needs_clarification.question_rule_kept
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/request v2
     cost_usd: 0.1688
@@ -290,6 +314,18 @@ experiments:
     role: final
     report: ai/evaluation/analyzer/reports/analyzer-gate-2026-11-02.json
     recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/analyzer/reports/runs/20261102T182823Z/predictions.jsonl
+      source_sha256: 5405bfcb502b4f7b290aebabd4868d4c857a91241ab21a30abe9128589f9d3ea
+      sha256: 896aa75c3e2184e2978e7538827f82c11845fa470c5be26c94387387b7a79f18
+      lines: 100
+    not_recomputable:
+      - metric: mentioned_targets.exact_match
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
+      - metric: needs_clarification.question_rule_kept
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/request v1
     cost_usd: 0.9735
@@ -303,6 +339,18 @@ experiments:
     role: final
     report: ai/evaluation/analyzer/reports/analyzer-gate-2026-11-02-rescored-labels-v0.3.0.json
     recorded_at: f71ee4cceb78f848b124d8a47bcedf653f2b742c
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/analyzer/reports/runs/20261102T182823Z/predictions.jsonl
+      source_sha256: 5405bfcb502b4f7b290aebabd4868d4c857a91241ab21a30abe9128589f9d3ea
+      sha256: 896aa75c3e2184e2978e7538827f82c11845fa470c5be26c94387387b7a79f18
+      lines: 100
+    not_recomputable:
+      - metric: mentioned_targets.exact_match
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
+      - metric: needs_clarification.question_rule_kept
+        reason: "the 2 Nov raw runs never saved predicted targets or questions"
   - id: E9:safety-dev-2026-11-17
     experiment: E9
     task: AI-06
@@ -312,6 +360,13 @@ experiments:
     role: final
     report: ai/evaluation/safety/reports/safety-dev-2026-11-17.json
     recorded_at: ce0c59b7b8cd6a4882ce34d71267df8f5929cf4a
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/safety/reports/runs/20261117T210003Z/predictions.jsonl
+      source_sha256: 2be5c4d31a2ac48ec033ed89a59ad8db10d5cb3aa0bd186ef127ad529102d9ea
+      sha256: 9df6327e663154ae12bfa51d682b21f00d30ee9769b82772afd4a3720150b9ac
+      lines: 20
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/safety v1
     cost_usd: 0.0931
@@ -325,6 +380,13 @@ experiments:
     role: final
     report: ai/evaluation/safety/reports/safety-dev-2026-11-17-2.json
     recorded_at: 35851ff2bb1ff983cdda052ed38125e8b2da5dd3
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/safety/reports/runs/20261117T211718Z/predictions.jsonl
+      source_sha256: b1b9fd3e6f398b6283ed2e36231abb50cf72fe0164f39c22ea6ac00d61ae3bb0
+      sha256: a28a8c78e5a7c1f739c21c87743669aeee8c1ef43e20ab2a49ae3cf152d9ea5f
+      lines: 20
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/safety v2
     cost_usd: 0.1054
@@ -338,6 +400,13 @@ experiments:
     role: final
     report: ai/evaluation/safety/reports/safety-dev-2026-11-17-3.json
     recorded_at: e80b666507ea2fd3acac90a7f8561d06074b59fb
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/safety/reports/runs/20261117T214331Z/predictions.jsonl
+      source_sha256: 12df1010697d3e6451b7d6d58b931653947835f6169abdde666371e6f8097b67
+      sha256: e00e71401c6aecbc7eea54f3402ed9cacd5ff328d9c5adb93364a792f0eaa5f4
+      lines: 20
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/safety v1
     cost_usd: 0.0873
@@ -351,6 +420,13 @@ experiments:
     role: final
     report: ai/evaluation/safety/reports/safety-all-2026-11-17.json
     recorded_at: c345c83c1676ad4ac00ad88a3266ee701b278483
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/safety/reports/runs/20261117T215949Z/predictions.jsonl
+      source_sha256: 6cb3b180eb56bccdf21225bfd12bb2d59dfaee1421515cee5eda5eb2807b6df3
+      sha256: 7a43ba1f39d75b9d7b8042d178bb05ec1e54b3fa7b000db29909d8651e95bfd5
+      lines: 250
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/safety v1
     cost_usd: 1.138
@@ -364,6 +440,13 @@ experiments:
     role: final
     report: ai/evaluation/safety/reports/safety-normal-ids-2026-11-17.json
     recorded_at: 84b84a5adbc2936fe6e56031f6a4623724fc19c7
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
+    tracked_run:
+      path: ai/evaluation/safety/reports/runs/20261117T222531Z/predictions.jsonl
+      source_sha256: 7ee9249b767dcfffce6a435717c98052ca9c9e40ab75437aba45fbed990209a7
+      sha256: 56ba9e6f7eae0843d139888f5c1f82817ad3e3187ce7f0b70f2a3adc77617588
+      lines: 20
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/safety v1
     cost_usd: 0.0964

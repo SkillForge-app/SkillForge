@@ -35,6 +35,7 @@ from typing import Any
 from evaluation.common import text_sha256
 from evaluation.reproduce.check import git_show
 from evaluation.reproduce.registry import AI_DIR, Entry, Registry
+from evaluation.reproduce.rescore import rescore
 
 TEMP_ROOT = Path(tempfile.gettempdir()) / "skillforge-reproduce"
 VENVS = AI_DIR / ".data" / "reproduce" / "venvs"
@@ -223,14 +224,21 @@ def reproduce(
     only: Sequence[str] = (),
     no_model: bool = False,
 ) -> Iterator[tuple[Outcome, str | None]]:
-    """Yield (outcome, lock hash) per offline entry, each in its own fresh extracted tree."""
-    chosen = [
+    """Yield (outcome, lock hash) per entry: an offline one re-run in its own fresh extracted
+    tree; a live or rescore one re-scored from its tracked run (no model call)."""
+    picked = [
         e
         for e in registry.experiments
-        if e.kind == "offline"
-        and e.status == "active"
-        and (not only or e.id in only or e.experiment in only)
+        if e.status == "active" and (not only or e.id in only or e.experiment in only)
     ]
+    for entry in picked:
+        if entry.kind != "offline" and entry.tracked_run is not None:
+            start = time.perf_counter()
+            diffs, left = rescore(entry, registry, repo)
+            note = f"not recomputable (listed): {', '.join(left)}" if left else ""
+            status = "differs" if diffs else "match"
+            yield Outcome(entry.id, status, note, diffs, time.perf_counter() - start), None
+    chosen = [e for e in picked if e.kind == "offline"]
     TEMP_ROOT.mkdir(parents=True, exist_ok=True)
     for entry in chosen:
         if entry.needs_model and no_model:

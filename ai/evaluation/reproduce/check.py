@@ -4,17 +4,21 @@
 - every active entry's report exists, with its Markdown twin, and its `recorded_at` commit is in
   this branch's history (an ancestor of HEAD);
 - a pending-merge entry is skipped while its report is absent and checked fully once present;
-- every recorded input still has its recorded hash at `recorded_at` (git history is needed).
+- every recorded input still has its recorded hash at `recorded_at` (git history is needed);
+- a live/rescore entry's tracked run exists, has its recorded hash and line count, only
+  allowlisted fields and unique ids; a rescore's source hash equals the one its report recorded.
 """
 
+import json
 import re
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from core.spec import Issue
-from evaluation.common import match_recorded_hash
+from evaluation.common import match_recorded_hash, text_sha256
 from evaluation.reproduce.registry import Entry, Registry
+from evaluation.reproduce.track import bad_fields
 
 REPORT_GLOB = "ai/evaluation/*/reports/*.json"
 # Code that loads the embedding model: under a fake backend it would get random vectors.
@@ -105,6 +109,7 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
             issues.append(Issue(where, "missing_markdown", f"{twin} does not exist"))
     if entry.kind == "offline" and not entry.command:
         issues.append(Issue(where, "no_command", "an offline entry needs its command"))
+    issues += _check_tracked_run(entry, repo)
     if not history:
         return issues
     if not _git_ok(repo, "cat-file", "-e", f"{entry.recorded_at}^{{commit}}"):
@@ -135,6 +140,44 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
             )
         elif match_recorded_hash(item.sha256, content, item.hash) is None:
             issues.append(Issue(where, "changed_input", f"{item.path} no longer has its hash"))
+    return issues
+
+
+def _check_tracked_run(entry: Entry, repo: Path) -> list[Issue]:
+    where = entry.id
+    run = entry.tracked_run
+    if entry.kind == "offline":
+        return []
+    if run is None:
+        if entry.role == "final":
+            return [
+                Issue(where, "no_tracked_run", "a final live/rescore entry needs its tracked run")
+            ]
+        return []
+    path = repo / run.path
+    if not path.is_file():
+        return [Issue(where, "missing_tracked_run", f"{run.path} does not exist")]
+    issues = []
+    if text_sha256(path) != run.sha256:
+        issues.append(Issue(where, "changed_tracked_run", f"{run.path} no longer has its hash"))
+    lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+    if len(lines) != run.lines:
+        issues.append(
+            Issue(where, "tracked_run_lines", f"{len(lines)} lines, recorded {run.lines}")
+        )
+    issues += [Issue(where, "tracked_run_field", p) for p in bad_fields(lines)[:5]]
+    ids = [line.get("id") for line in lines]
+    if len(set(ids)) != len(ids):
+        issues.append(Issue(where, "tracked_run_ids", "duplicate ids in the tracked run"))
+    report = json.loads((repo / entry.report).read_text(encoding="utf-8"))
+    recorded = (report.get("rescored_from") or {}).get("predictions_sha256")
+    if recorded is not None and recorded != run.source_sha256:
+        issues.append(
+            Issue(where, "source_hash", "the tracked run's source is not the run the report used")
+        )
+    n = sum(s.get("n", 0) for s in (report.get("sets") or {}).values())
+    if n and n != len(lines):
+        issues.append(Issue(where, "tracked_run_lines", f"{len(lines)} lines for a report of {n}"))
     return issues
 
 

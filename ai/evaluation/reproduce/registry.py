@@ -45,6 +45,23 @@ class IgnoreExtra(_Model):
     reason: str = Field(min_length=10)
 
 
+class TrackedRun(_Model):
+    """The id-only copy of a live run's raw predictions (evaluation/reproduce/track.py)."""
+
+    path: str
+    source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")  # the raw local file, as recorded
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")  # the tracked file, LF-normalised
+    lines: int = Field(ge=1)
+
+
+class NotRecomputable(_Model):
+    """A report metric the tracked run cannot support, and why. Never used to hide a
+    difference: a listed metric is simply not compared."""
+
+    metric: str  # e.g. mentioned_targets.exact_match
+    reason: str = Field(min_length=10)
+
+
 class Entry(_Model):
     id: str
     experiment: str
@@ -65,6 +82,8 @@ class Entry(_Model):
     cost_usd: float | None = None
     inputs: list[Input] = Field(default_factory=list)
     ignore_extra: list[IgnoreExtra] = Field(default_factory=list)
+    tracked_run: TrackedRun | None = None  # live and rescore entries
+    not_recomputable: list[NotRecomputable] = Field(default_factory=list)
     reproduces: bool | None = None  # set by `reproduce run`; None = not run yet
     reproduces_note: str | None = None
     limitations: list[str] = Field(default_factory=list)
@@ -112,4 +131,14 @@ def load_registry(path: Path = REGISTRY) -> Registry:
         raise RegistryError(issues) from None
 
 
-__all__ = ["REGISTRY", "DataFile", "Entry", "Input", "Registry", "RegistryError", "load_registry"]
+__all__ = [
+    "REGISTRY",
+    "DataFile",
+    "Entry",
+    "Input",
+    "NotRecomputable",
+    "Registry",
+    "RegistryError",
+    "TrackedRun",
+    "load_registry",
+]
