@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A labelled skill request: ready to use as AI-05 (Request Analyzer) training/test data.",
+  "properties": {
+    "domain": {
+      "title": "Domain",
+      "type": "string"
+    },
+    "domain_area": {
+      "title": "Domain Area",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "risk": {
+      "title": "Risk",
+      "type": "string"
+    },
+    "skill": {
+      "title": "Skill",
+      "type": "string"
+    },
+    "style": {
+      "title": "Style",
+      "type": "string"
+    },
+    "targets": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Targets",
+      "type": "array"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "skill",
+    "style",
+    "text",
+    "kind",
+    "domain",
+    "domain_area",
+    "risk",
+    "targets"
+  ],
+  "title": "RequestRecord",
+  "type": "object"
+}

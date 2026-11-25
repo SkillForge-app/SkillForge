@@ -1,7 +1,7 @@
 # Arabic slice: 10 requests in Arabic. Reported separately; NOT part of the 90% gate.
 # Labels use the same English vocabularies as the other sets.
 name: analyzer-requests-arabic
-version: 0.1.0
+version: 0.2.0
 split: arabic
 requests:
   - id: a-01
@@ -9,7 +9,7 @@ requests:
     style: clear
     kind: task
     domain: education/lesson-planning
-    risk: low
+    risk: medium
     needs_clarification: false
     mentioned_targets: []
   - id: a-02
@@ -85,7 +85,7 @@ requests:
   - id: a-10
     text: بيانات
     style: vague
-    kind: task
+    kind: role
     domain: data/general
     risk: low
     needs_clarification: true
