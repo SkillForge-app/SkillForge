@@ -1,6 +1,7 @@
 """Extraction (AI-10) on the saved pages in tests/fixtures/pages: no network, ever."""
 
 import hashlib
+import importlib
 import json
 import re
 from datetime import date
@@ -485,3 +486,65 @@ async def test_extracted_chunks_feed_the_a4_retriever(
         "indirect prompt injection from external websites", "technology"
     )
     assert found and str(found[0].source_url) == normalise_url(str(BY_FILE["owasp-llm01.html"].url))
+
+
+# ------------------------------------------------------------------ over-long tokens (review F8)
+
+EXTRACT = importlib.import_module("core.knowledge.extract")
+GIANT = "0123456789" * 260  # 2600 characters, one token: longer than any passage (2000)
+
+
+def extract_as_before(
+    monkeypatch: pytest.MonkeyPatch, html: str, config: ExtractConfig | None = None
+) -> ExtractedPage:
+    """extract_page as it was before the fix: over-long tokens are never looked at."""
+    with monkeypatch.context() as m:
+        m.setattr(EXTRACT, "_has_unchunkable_token", lambda blocks: False)
+        return extract_page(html, url="https://example.org/a", retrieved=DAY, config=config)
+
+
+def extract_now(html: str, config: ExtractConfig | None = None) -> ExtractedPage:
+    return extract_page(html, url="https://example.org/a", retrieved=DAY, config=config)
+
+
+def test_a_token_longer_than_a_passage_is_dropped_instead_of_raising(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    html = html_page(article(300) + f"<p>{GIANT}</p>" + article(60))
+    with pytest.raises(ValidationError, match="at most 2000 characters"):
+        extract_as_before(monkeypatch, html)  # what DE's pipeline saw on every crawl
+    page = extract_now(html)
+    assert page.quality.ok and page.chunks
+    assert all(len(c.text) <= 2000 for c in page.chunks)
+    assert GIANT not in page.text and "Clear rules help readers" in page.text
+
+
+def test_a_page_left_too_short_gets_the_existing_reason(monkeypatch: pytest.MonkeyPatch) -> None:
+    html = html_page(article(300) + f"<p>{GIANT}</p>")
+    words = extract_now(html).quality.word_count  # the page without its giant token
+    exactly_long_enough = ExtractConfig(min_words=words + 1)  # only with the token counted
+    with pytest.raises(ValidationError):
+        extract_as_before(monkeypatch, html, exactly_long_enough)
+    page = extract_now(html, exactly_long_enough)
+    assert page.quality.reasons == ("too_short",) and not page.chunks
+
+
+def test_a_page_that_is_only_a_giant_token_is_rejected_as_before(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    html = html_page(f"<p>{GIANT}</p>")
+    before = extract_as_before(monkeypatch, html)  # rejected before chunking: never raised
+    page = extract_now(html)
+    assert page.quality.reasons and not page.chunks
+    assert page.model_dump() == before.model_dump()
+
+
+@pytest.mark.parametrize("length", [1801, 2000])
+def test_tokens_that_fit_in_a_passage_give_the_same_page_as_before(
+    monkeypatch: pytest.MonkeyPatch, length: int
+) -> None:
+    """Tokens of 1801 to 2000 characters worked before (one chunk each): nothing changes."""
+    html = html_page(article(300) + f"<p>{GIANT[:length]}</p>" + article(60))
+    page = extract_now(html)
+    assert any(len(c.text) == length for c in page.chunks)
+    assert page.model_dump() == extract_as_before(monkeypatch, html).model_dump()

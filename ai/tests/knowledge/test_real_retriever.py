@@ -5,21 +5,23 @@ with a chunk's exact text must find that chunk first. Semantic quality is measur
 recall evaluation (evaluation/retrieval), not here.
 """
 
-from collections.abc import Iterator
+import threading
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import pytest
 
 from core.knowledge import RetrievalInputError, get_retriever, retrieve
 from core.knowledge.ingest import IngestReport, Page, ingest_pages
-from core.knowledge.real import EMPTY_INDEX, RealRetriever
+from core.knowledge.real import EMPTY_INDEX, INFO_TTL_S, RealRetriever
 from core.knowledge.retrieval import BACKEND_ENV
-from core.knowledge.store import LocalStore
+from core.knowledge.store import ChunkRecord, LocalStore, StoreInfo
 from core.llm import ConfigError, FakeGateway, load_config, use_fake
 from core.llm.config import ModelConfig
 from evaluation.extraction.data import PageLabel, load_pages
 
 LABELS = {label.file: label for label in load_pages()}
+MODEL = load_config().role("embedding").model
 
 
 def page(file: str, domain: str = "marketing", html: bytes | None = None) -> Page:
@@ -167,3 +169,88 @@ def test_build_index_cli_indexes_the_real_pages(
     hosts = {r.source_url.host for r in store.records()}
     assert hosts and not any(h and h.endswith(".example") for h in hosts)  # never synthetic
     assert "indexed" in capsys.readouterr().out
+
+
+# ------------------------------------------------------------------ index check (review F6)
+
+
+class WatchedStore(LocalStore):
+    """A LocalStore that counts info() calls and records the thread of each store call."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.info_calls = 0
+        self.threads: list[threading.Thread] = []
+
+    def info(self) -> StoreInfo:
+        self.info_calls += 1
+        self.threads.append(threading.current_thread())
+        return super().info()
+
+    def search(
+        self, vector: Sequence[float], domain: str, k: int
+    ) -> list[tuple[ChunkRecord, float]]:
+        self.threads.append(threading.current_thread())
+        return super().search(vector, domain, k)
+
+
+class Clock:
+    def __init__(self) -> None:
+        self.now = 1000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+async def watched(*pages: Page) -> WatchedStore:
+    store = WatchedStore()
+    if pages:
+        await ingest_pages(list(pages), store=store)
+    store.info_calls, store.threads = 0, []  # ingest calls info() itself
+    return store
+
+
+async def test_a_passed_index_check_is_trusted_for_a_minute(fake: FakeGateway) -> None:
+    store = await watched(page("synthetic-subscriber-footer.html"))
+    clock = Clock()
+    retriever = RealRetriever(store, clock=clock)
+    for _ in range(3):
+        assert await retriever.retrieve("subscriber newsletter", "marketing", 3)
+    assert store.info_calls == 1  # not one full count per query
+    clock.now += INFO_TTL_S - 1
+    await retriever.retrieve("subscriber newsletter", "marketing", 3)
+    assert store.info_calls == 1
+    clock.now += 2  # the minute is over: checked again
+    await retriever.retrieve("subscriber newsletter", "marketing", 3)
+    assert store.info_calls == 2
+
+
+async def test_store_calls_run_off_the_event_loop(fake: FakeGateway) -> None:
+    store = await watched(page("synthetic-subscriber-footer.html"))
+    await RealRetriever(store).retrieve("subscriber newsletter", "marketing", 3)
+    assert len(store.threads) == 2  # info, then search
+    assert all(t is not threading.main_thread() for t in store.threads)
+
+
+async def test_a_failed_index_check_is_never_trusted(fake: FakeGateway) -> None:
+    store = await watched()
+    retriever = RealRetriever(store, clock=Clock())
+    for _ in range(2):
+        with pytest.raises(ConfigError, match="empty"):
+            await retriever.retrieve("anything", "marketing", 5)
+    assert store.info_calls == 2
+    await ingest_pages([page("synthetic-subscriber-footer.html")], store=store)
+    assert await retriever.retrieve("subscriber newsletter", "marketing", 3)  # no wait
+
+
+async def test_an_index_emptied_later_is_noticed_within_the_minute(fake: FakeGateway) -> None:
+    store = await watched(page("synthetic-subscriber-footer.html"))
+    clock = Clock()
+    retriever = RealRetriever(store, clock=clock)
+    assert await retriever.retrieve("subscriber newsletter", "marketing", 3)
+    for url in {str(r.source_url) for r in store.records()}:
+        store.replace_source(url, [], [], model=MODEL)
+    assert await retriever.retrieve("subscriber newsletter", "marketing", 3) == []
+    clock.now += INFO_TTL_S
+    with pytest.raises(ConfigError, match="empty"):
+        await retriever.retrieve("subscriber newsletter", "marketing", 3)
