@@ -141,6 +141,25 @@ worker's log (`worker: LLM mode ...`). The worker log also lists the warnings of
   warning. Another branch or SHA never stands in: the script stops instead. A pinned SHA that is already in the
   repository needs no network at all.
 
+### Monitoring (optional)
+`DEMO_MONITORING=1 bash devops/demo/demo.sh` also starts monitoring (OPS-10): Prometheus with AI-21's alerts,
+Alertmanager, and Grafana with two dashboards. The full guide is [devops/monitoring.md](../../devops/monitoring.md).
+
+- **On-call alerts in Telegram:** add two more Codespaces secrets, `ONCALL_TELEGRAM_BOT_TOKEN` and
+  `ONCALL_TELEGRAM_CHAT_ID` (how to get them: devops/monitoring.md), then restart the codespace. Without them,
+  monitoring runs with **no on-call channel**: alerts show only in Grafana and Alertmanager, and `demo.sh` says so.
+- **Grafana:** port **3001** (Prometheus 9090, Alertmanager 9093). All three are forwarded **Private** and must
+  stay Private; only 3000 may ever be made Public.
+- **What it adds:**
+  - about **0.4 GB of RAM** (measured on a laptop: devops/monitoring.md), which still fits the 2-core machine;
+  - about **2.7 GB of disk** for its images, of which Grafana is 2.0 GB. That is billed storage while the
+    codespace exists.
+  - `demo.sh prepare` pulls those images ahead of time when `DEMO_MONITORING=1` is set.
+- `demo.sh status` shows a `monitor` row. `stop` stops monitoring too. `reset` deletes its data too.
+- **Prove the on-call works:** `bash devops/monitoring/monitor.sh test` sends one `[TEST]` message.
+- **Never run `monitor.sh test-cost` in the demo codespace.** Its synthetic $20 of spend would stay in AI's
+  7-day alert windows on the demo; it refuses to run in a codespace. Run it on your laptop.
+
 ---
 
 ## 3. Make the frontend port public (demo day only)

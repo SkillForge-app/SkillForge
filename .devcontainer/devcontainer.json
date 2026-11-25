@@ -45,16 +45,29 @@
     "3000": { "label": "web (demo: the only port that may be made Public)", "onAutoForward": "notify" },
     "8000": { "label": "api (keep Private)", "onAutoForward": "silent" },
     "5433": { "label": "postgres (never forward)", "onAutoForward": "ignore" },
-    "6379": { "label": "redis (never forward)", "onAutoForward": "ignore" }
+    "6379": { "label": "redis (never forward)", "onAutoForward": "ignore" },
+    // Monitoring (DEMO_MONITORING=1; devops/monitoring.md): for you only, never Public.
+    "3001": { "label": "grafana (keep Private)", "onAutoForward": "silent" },
+    "9090": { "label": "prometheus (keep Private)", "onAutoForward": "silent" },
+    "9093": { "label": "alertmanager (keep Private)", "onAutoForward": "silent" }
   },
   "otherPortsAttributes": { "onAutoForward": "ignore" },
 
-  // Shown on the "new codespace" page. This holds no value: set the secret yourself in
-  // github.com Settings > Codespaces > Secrets. Without it the demo runs in fake LLM mode.
+  // Shown on the "new codespace" page. This holds no value: set the secrets yourself in
+  // github.com Settings > Codespaces > Secrets. Without OPENROUTER_API_KEY the demo runs in fake
+  // LLM mode; without the two ONCALL_ ones, monitoring (DEMO_MONITORING=1) has no on-call channel.
   "secrets": {
     "OPENROUTER_API_KEY": {
       "description": "Optional. A separate demo key with a small credit limit, never the main key. Without it the demo runs in fake LLM mode (canned examples).",
       "documentationUrl": "https://github.com/SkillForge-app/SkillForge/blob/main/docs/devops/demo-codespaces.md"
+    },
+    "ONCALL_TELEGRAM_BOT_TOKEN": {
+      "description": "Optional. The on-call Telegram bot's token (from @BotFather), for monitoring's alerts (DEMO_MONITORING=1).",
+      "documentationUrl": "https://github.com/SkillForge-app/SkillForge/blob/main/devops/monitoring.md"
+    },
+    "ONCALL_TELEGRAM_CHAT_ID": {
+      "description": "Optional, with the token. The on-call group's chat id, a negative number like -100... (devops/monitoring/monitor.sh chat-id finds it).",
+      "documentationUrl": "https://github.com/SkillForge-app/SkillForge/blob/main/devops/monitoring.md"
     }
   },
 

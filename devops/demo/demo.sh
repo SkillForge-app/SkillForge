@@ -5,8 +5,8 @@
 #   bash devops/demo/demo.sh [up]       # DB, migrations, seed, api, worker, web, then the health table
 #   bash devops/demo/demo.sh status     # the health table only
 #   bash devops/demo/demo.sh logs [svc] # recent logs (TAIL=200)
-#   bash devops/demo/demo.sh stop       # stop the containers, keep the data
-#   bash devops/demo/demo.sh reset      # delete the containers AND the volumes (asks first)
+#   bash devops/demo/demo.sh stop       # stop the containers (monitoring too), keep the data
+#   bash devops/demo/demo.sh reset      # delete the containers AND the volumes, monitoring's too (asks first)
 #   bash devops/demo/demo.sh prepare    # sources, images, model cache, no start (post-create)
 #   bash devops/demo/demo.sh check      # sources + the compose files are valid (CI)
 #
@@ -14,6 +14,10 @@
 #   OPENROUTER_API_KEY  the Codespaces secret. Set: live LLM mode. Not set: fake mode.
 #   DEMO_LLM_MODE       auto (default), fake (even with a key), live (fail without a key)
 #   DEMO_BACKEND_REF, DEMO_FRONTEND_REF   branch or full commit SHA (devops/demo/fetch-sources.sh)
+#   DEMO_MONITORING=1   `up` also starts monitoring (devops/monitoring/monitor.sh up: Prometheus,
+#                       AI-21's alerts, Grafana). With the ONCALL_TELEGRAM_BOT_TOKEN and
+#                       ONCALL_TELEGRAM_CHAT_ID Codespaces secrets, alerts go to Telegram; without,
+#                       it runs with no on-call channel. devops/monitoring.md.
 #
 # The key is never printed, never written to a host file and never read from one: it reaches only
 # the worker, as a compose secret (compose.demo.yaml), so it is not in `docker inspect`. This
@@ -24,11 +28,38 @@ ROOT="$(git rev-parse --show-toplevel)"
 cd "${ROOT}"
 export DEMO_ROOT="${ROOT}"
 
-FILES=(-f compose.yaml -f devops/demo/compose.demo.yaml)
+# The monitoring file is always listed, so its services belong to the project: `up
+# --remove-orphans` must not delete a running monitoring stack. They start only with its profile.
+FILES=(-f compose.yaml -f devops/demo/compose.demo.yaml -f devops/monitoring/compose.monitoring.yaml)
 PROFILES=(--profile api --profile worker --profile web)
 SEED_PROJECT="SkillForge demo"
 
+# Monitoring's compose secrets need their variables to EXIST (empty is fine: no file, no channel).
+# Only a missing one is set, to empty; a value from the Codespaces secrets is kept as it is.
+export ONCALL_TELEGRAM_BOT_TOKEN="${ONCALL_TELEGRAM_BOT_TOKEN-}" ONCALL_TELEGRAM_CHAT_ID="${ONCALL_TELEGRAM_CHAT_ID-}"
+
 dc() { docker compose "${FILES[@]}" "${PROFILES[@]}" "$@"; }
+# The same, monitoring included: for stop, reset and status.
+dcm() { dc --profile monitoring --profile monitoring-test "$@"; }
+
+monitoring_wanted() {
+  case "${DEMO_MONITORING:-0}" in
+    1) return 0 ;;
+    0 | "") return 1 ;;
+    *) die "DEMO_MONITORING must be 1 or 0 (got '${DEMO_MONITORING}')" ;;
+  esac
+}
+
+# Starts monitoring after the stack. Its failure is reported, not fatal: the demo still runs.
+monitoring_up() {
+  local mode=telegram
+  if [ -z "${ONCALL_TELEGRAM_BOT_TOKEN}" ]; then
+    mode=off
+    say "monitoring: no ONCALL_TELEGRAM_BOT_TOKEN in this shell, so no on-call channel (alerts stay in Grafana/Alertmanager)"
+  fi
+  MONITOR_ONCALL="${mode}" bash devops/monitoring/monitor.sh up \
+    || say "WARNING: monitoring did not start: bash devops/monitoring/monitor.sh logs"
+}
 say() { printf 'demo: %s\n' "$*"; }
 die() { printf 'demo: ERROR: %s\n' "$*" >&2; exit 1; }
 
@@ -157,6 +188,10 @@ cmd_prepare() {
   dc build
   say "model cache: downloads the pinned model once, checked against models.yaml's sha256"
   dc run --rm model-init
+  if monitoring_wanted; then
+    say "monitoring images (DEMO_MONITORING=1)"
+    dcm pull --quiet prometheus alertmanager grafana blackbox redis-exporter docker-socket-proxy
+  fi
   say "prepared. Start the demo with: bash devops/demo/demo.sh"
 }
 
@@ -180,6 +215,9 @@ cmd_up() {
     dc exec -T api python - < devops/demo/seed.py
   else
     say "skipping the seed: the stack is not up (see the table below)"
+  fi
+  if monitoring_wanted; then
+    monitoring_up
   fi
   cmd_status
 }
@@ -250,6 +288,16 @@ cmd_status() {
     bad=1
   fi
 
+  if [ "$(dcm ps prometheus --format '{{.State}}' 2> /dev/null)" = running ] \
+    && out="$(MSYS_NO_PATHCONV=1 dcm exec -T ai-metrics python /ops/monitor_query.py oncall 2> /dev/null | tr -d '\r')"; then
+    row monitor up "Grafana on $(dcm port grafana 3000 2> /dev/null | head -n 1 | tr -d '\r'), on-call: ${out} (details: devops/monitoring/monitor.sh status)"
+  elif monitoring_wanted; then
+    row monitor DOWN "DEMO_MONITORING=1 but it is not running: bash devops/monitoring/monitor.sh logs"
+    bad=1
+  else
+    row monitor off "not started (DEMO_MONITORING=1 starts it with the demo)"
+  fi
+
   local dir context ref commit
   for dir in backend frontend; do
     context="${DEMO_BACKEND_CONTEXT}"
@@ -270,7 +318,11 @@ cmd_status() {
     echo "    https://${CODESPACE_NAME}-3000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
     echo "  API docs, for you only (port 8000 stays Private):"
     echo "    https://${CODESPACE_NAME}-8000.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}/docs"
-    echo "  Ports 8000, 5433 and 6379 always stay Private."
+    if [ "$(dcm ps grafana --format '{{.State}}' 2> /dev/null)" = running ]; then
+      echo "  Grafana, for you only (port 3001 stays Private):"
+      echo "    https://${CODESPACE_NAME}-3001.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}"
+    fi
+    echo "  Ports 8000, 5433 and 6379 always stay Private, and so do monitoring's 3001, 9090 and 9093."
   else
     echo "  Web: http://$(published web 3000)   API docs: http://$(published api 8000)/docs"
   fi
@@ -293,17 +345,17 @@ cmd_logs() {
 cmd_stop() {
   need_docker
   contexts
-  dc stop
-  say "stopped; the data and the model cache are kept. Remember: set port 3000 back to Private."
+  dcm stop
+  say "stopped (monitoring too); the data and the model cache are kept. Remember: set port 3000 back to Private."
 }
 
 cmd_reset() {
   need_docker
   contexts
   local answer
-  read -r -p "demo: delete the demo containers AND volumes (database, redis, model cache)? Type 'reset': " answer
+  read -r -p "demo: delete the demo containers AND volumes (database, redis, model cache, monitoring data)? Type 'reset': " answer
   [ "${answer}" = reset ] || die "not reset"
-  dc down --volumes --remove-orphans
+  dcm down --volumes --remove-orphans
   say "reset. The next 'demo.sh' downloads the model again (about 66 MB) and re-seeds."
 }
 
@@ -314,7 +366,8 @@ cmd_check() {
   contexts
   need_sources
   dc config --quiet
-  say "the compose files are valid (api from ${DEMO_BACKEND_CONTEXT}, web from ${DEMO_FRONTEND_CONTEXT})"
+  dcm config --quiet
+  say "the compose files are valid, monitoring's too (api from ${DEMO_BACKEND_CONTEXT}, web from ${DEMO_FRONTEND_CONTEXT})"
 }
 
 case "${1:-up}" in
