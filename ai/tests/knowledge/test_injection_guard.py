@@ -510,9 +510,13 @@ def test_the_llm_plan_never_calls_a_model(evaluator: Evaluator, fake: FakeGatewa
     assert not [c for c in fake.calls if c.kind == "complete"]
 
 
-def test_a_paid_llm_run_is_refused_without_live(capsys: pytest.CaptureFixture[str]) -> None:
+def test_a_paid_llm_run_is_refused_without_live(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from core.llm.gateway import BACKEND_ENV
     from evaluation.injection.__main__ import main
 
+    monkeypatch.setenv(BACKEND_ENV, "litellm")  # the real backend; tests default to the fake
     assert main(["report", "--split", "test", "--llm"]) == 2
     assert "refusing" in capsys.readouterr().err
 

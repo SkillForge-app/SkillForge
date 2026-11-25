@@ -7,11 +7,13 @@ from pathlib import Path
 import pytest
 
 from core.analysis import SafetyDecision
+from core.llm import current_skill_run, load_prompt
 from core.llm.gateway import BACKEND_ENV
 from evaluation.safety import evaluate
 from evaluation.safety.__main__ import main
 from evaluation.safety.data import SafetyEvalItem
 from evaluation.safety.evaluate import compute_metrics, run_eval, write_report
+from tests.analysis.safety_files import install_empty_copies
 from tests.analysis.test_safety_data import placeholder_redteam
 
 
@@ -136,7 +138,8 @@ async def test_report_has_versions_and_no_request_texts(
     )
     assert files.md.name == f"safety-all-{report.created[:10]}.md"
     saved = json.loads(files.json.read_text(encoding="utf-8"))
-    assert saved["prompt"] == {"id": "analysis/safety", "version": 1}
+    version = load_prompt("analysis/safety").version
+    assert saved["prompt"] == {"id": "analysis/safety", "version": version}
     assert {s["name"] for s in saved["data_sources"]} >= {"safety-redteam", "safety-benign-tricky"}
     assert saved["run"] == "run"
     predictions = (tmp_path / "run" / "predictions.jsonl").read_text(encoding="utf-8")
@@ -162,9 +165,53 @@ def test_cli_live_needs_a_key(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_cli_fake_smoke_run_fails_the_gate_while_incomplete(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
+    install_empty_copies(tmp_path, monkeypatch)  # not the real (reviewed) files
     monkeypatch.setenv(BACKEND_ENV, "fake")
     monkeypatch.setattr("evaluation.safety.__main__.REPORTS_DIR", tmp_path / "tracked")
     assert main(["run", "--set", "all", "--limit", "2", "--runs", str(tmp_path / "runs")]) == 1
     assert not (tmp_path / "tracked").exists()  # a fake run is never a tracked result
     (md,) = (tmp_path / "runs").glob("*/safety-all-*.md")
     assert "INCOMPLETE" in md.read_text(encoding="utf-8")
+
+
+def test_cli_run_puts_the_budget_cap_around_every_call(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    install_empty_copies(tmp_path, monkeypatch)
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    seen: list[float | None] = []
+
+    async def screen_request(text: str, answers: object = ()) -> SafetyDecision:
+        run = current_skill_run()
+        seen.append(None if run is None else run.budget_usd)
+        return SafetyDecision(verdict="allow", rationale="placeholder")
+
+    monkeypatch.setattr(evaluate, "screen_request", screen_request)
+    args = ["run", "--set", "dev", "--limit", "3", "--budget-usd", "0.3"]
+    assert main([*args, "--runs", str(tmp_path / "runs")]) == 0
+    assert seen == [0.3, 0.3, 0.3]  # each screening call runs inside the capped skill run
+
+
+def test_cli_run_can_finish_a_run_with_only_the_given_ids(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    install_empty_copies(tmp_path, monkeypatch)
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    screened: list[str] = []
+
+    async def screen_request(text: str, answers: object = ()) -> SafetyDecision:
+        screened.append(text)
+        return SafetyDecision(verdict="allow", rationale="placeholder")
+
+    monkeypatch.setattr(evaluate, "screen_request", screen_request)
+    runs = str(tmp_path / "runs")
+    assert main(["run", "--set", "dev", "--ids", "sd-02, sd-07", "--runs", runs]) == 0
+    assert len(screened) == 2
+    (rows,) = (tmp_path / "runs").glob("*/predictions.jsonl")
+    assert [json.loads(r)["id"] for r in rows.read_text(encoding="utf-8").splitlines()] == [
+        "sd-02",
+        "sd-07",
+    ]
+    assert list((tmp_path / "runs").glob("*/safety-dev-ids-*.md"))
+    assert main(["run", "--set", "dev", "--ids", "sd-02,nope", "--runs", runs]) == 2
+    assert "unknown ids in --set dev: nope" in capsys.readouterr().out

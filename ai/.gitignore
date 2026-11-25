@@ -14,6 +14,7 @@ build/
 evaluation/analyzer/runs/
 evaluation/safety/runs/
 evaluation/architect/runs/
+evaluation/harness/runs/
 
 # Local model files and the local knowledge index (AI-11): downloaded / built, not source
 .data/

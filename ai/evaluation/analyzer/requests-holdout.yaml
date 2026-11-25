@@ -1,0 +1,200 @@
+# Holdout set: 24 requests written by SkillForge team members (Egyptian Arabic, English or a mix).
+# Reported only: NOT part of the 90% gate. NEVER use it for prompt work: no prompt tuning, no
+# few-shot examples, no reading it for prompt ideas. Use requests-dev.yaml for that.
+# Split, labels and decisions: reviews/label-review-2026-11-24.md
+name: analyzer-requests-holdout
+version: 0.1.0
+split: holdout
+requests:
+  - id: h-01
+    text: بقولك، عايز أعمل أداة هنا تساعدني ألخص أي ملف PDF طويل أرفعهولك في 5 نقط بس، ممكن نظبط حاجة زي دي؟
+    style: clear
+    kind: task
+    domain: writing/summarization
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-02
+    text: عايز أعمل skill تراجع ورايا أكواد البايثون وتطلعلي الأخطاء وتقترحلي إزاي أخلي الكود أسرع.
+    style: clear
+    kind: task
+    domain: technology/python-code-review
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-03
+    text: ممكن تعملي حاجة زي مدرب جيم كده؟ أديله وزني وطولي وأكلي وهو يقولي ناقصني كام جرام بروتين النهاردة.
+    style: clear
+    kind: task
+    domain: general/fitness-nutrition
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-04
+    text: زهقت من ترجمة المقالات حرفياً، عايز أعمل أداة تترجم الكلام التقني بسلاسة وتسيب المصطلحات الإنجليزي زي ما هي من غير ما تبوظ المعنى.
+    style: clear
+    kind: task
+    domain: writing/technical-translation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-05
+    text: عاوزك تعملي ميزة تنشئ أسئلة اختياري من أي نص دراسي بدخله، وتوضحلي الإجابة الصحيحة وسبب اختيارها.
+    style: clear
+    kind: task
+    domain: education/quiz-generation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-06
+    text: عايز أعمل Skill متخصصة في كتابة (Cover Letters) بناءً على الـ CV بتاعي والوصف الوظيفي اللي هبعتهولك.
+    style: clear
+    kind: task
+    domain: writing/cover-letter
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-07
+    text: اعملي أداة بتصحح الأخطاء الإملائية والنحوية في النصوص العربية وتظبط علامات الترقيم.
+    style: clear
+    kind: task
+    domain: writing/arabic-proofreading
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-08
+    text: عايز حاجة تحول أي فكرة فيديو لسكريبت تيك توك مدته 60 ثانية.
+    style: clear
+    kind: task
+    domain: marketing/social-media-scripts
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-09
+    text: ظبطلي ميزة تحسبلي السعرات الحرارية لأي وجبة أكتبلك مكوناتها.
+    style: clear
+    kind: task
+    domain: general/calorie-calculation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-10
+    text: أنا بتلخبط جداً في تنظيم وقتي، ينفع تعملي أداة كل ما أكتبلها اللي ورايا ترتبهولي حسب الأولوية وتعملي جدول؟
+    style: clear
+    kind: task
+    domain: general/task-prioritization
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-11
+    text: لما باجي أذاكر مواد نظرية بنسى بسرعة، عايزك تعملي طريقة أختبر بيها نفسي، يعني أديك الدرس وإنت تسألني فيه كأنه امتحان.
+    style: clear
+    kind: task
+    domain: education/self-testing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-12
+    text: عاوز أتعلم لغه بايثون من الصفر لحد الاحتراف
+    style: vague
+    kind: role
+    domain: education/python-programming
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: h-13
+    text: عاوز اتعلم لغه المانيه
+    style: vague
+    kind: role
+    domain: education/german-language
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: h-14
+    text: عاوز أتعلم Python Programming من الصفر إلى مستوى احترافي، مع التركيز على كتابة كود عملي وحل المشكلات.
+    style: clear
+    kind: role
+    domain: education/python-programming
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-15
+    text: عاوز أتعلم (OOP) في Python وأطبق مفاهيمها في مشاريع حقيقية.
+    style: clear
+    kind: role
+    domain: education/python-oop
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-16
+    text: عاوز أتعلم Git & GitHub لإدارة المشاريع والعمل ضمن فرق البرمجة باحترافية.
+    style: clear
+    kind: role
+    domain: education/git-github
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-17
+    text: عاوز أتعلم Machine Learning من الأساسيات إلى بناء وتقييم الموديلات.
+    style: clear
+    kind: role
+    domain: education/machine-learning
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-18
+    text: عاوز أتعلم Cybersecurity Fundamentals وأفهم أساسيات حماية الانظمه والتطبيقات
+    style: clear
+    kind: role
+    domain: education/cybersecurity
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-19
+    text: نفسي أتعلم Time Management & Productivity وأنظم وقتي وأحدد أولوياتي ومضيعة وقتي في الفاضي.
+    style: clear
+    kind: role
+    domain: education/time-management
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-20
+    text: عايز ابني model يساعدني على توقع صعود او هبوط اسهم الذهب والبورصه.
+    style: clear
+    kind: task
+    domain: finance/market-prediction
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-21
+    text: عندي امتحان كمان كام يوم فا عايز ابني نظام شرح وتلخيص واسئله تساعدني على الاستعداد للامتحان بأكمل وجه.
+    style: clear
+    kind: workflow
+    domain: education/exam-preparation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-22
+    text: عايز اعمل فيلم قصير متكامل من حيث السيناريو والموسيقى والإخراج وكل حاجة.
+    style: clear
+    kind: workflow
+    domain: design/short-film-production
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-23
+    text: عاوز skill تساعدني على تأليف أبيات شعرية.
+    style: clear
+    kind: task
+    domain: writing/poetry
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: h-24
+    text: عايز skill تحل محل ال private coach بحيث يجمع بين الأنظمة الغذائية والدايت والتمارين لتحسين بنية الجسم.
+    style: clear
+    kind: role
+    domain: general/fitness-coaching
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []

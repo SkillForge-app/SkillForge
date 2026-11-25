@@ -18,7 +18,7 @@ else:
     page.quality.reasons     # e.g. ("paywall_or_login",): store the verdict, make no chunks
 ```
 
-`raw_html` can be `str` or `bytes`. Bytes are decoded as UTF-8, and other encodings are detected. A URL that is not http(s) raises `ExtractionInputError`. A bad page never raises: it comes back with `quality.reasons` set.
+`raw_html` can be `str` or `bytes`. Bytes are decoded as UTF-8, and other encodings are detected. A URL that is not http(s) raises `ExtractionInputError`. A bad page never raises: it comes back with `quality.reasons` set. A single token longer than a passage (over 2000 characters, e.g. base64 or minified code) can't be chunked, so it's dropped and the page is judged again without it; if too little is left, the usual reason (`too_short`, `empty`) applies. Pages without such a token are not affected, so the fingerprint is unchanged.
 
 ## For DE-05: from a fetched page to rows in the knowledge view
 Data Engineering owns storage. DE-05 runs AI's code and writes the result into DE's tables. AI reads it back through the read-only view `knowledge.knowledge_chunks` (the columns are in [retrieval.md](retrieval.md#for-data-engineering-the-knowledge-view)). The same steps as `ingest_pages`, AI's local equivalent:

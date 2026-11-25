@@ -256,7 +256,7 @@ async def test_safety_log_lines_are_metadata_only(
         "category": "weapons",
         "conditions": [],
         "prompt_id": "analysis/safety",
-        "prompt_version": 1,
+        "prompt_version": load_prompt("analysis/safety").version,
     }
     for record in caplog.records:
         everything = record.getMessage() + repr(record.__dict__)

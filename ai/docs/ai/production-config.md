@@ -15,12 +15,20 @@ This covers how the AI services run in dev, staging and production: environments
 | Search | fake (recorded results) | brave | brave |
 | Budget per skill | $5.00 | $3.00 | $1.50 |
 | Budget per step without a `skill_run` (analyze / clarify / design) | $1 / $1 / $4 | $0.50 / $0.50 / $2 | $0.25 / $0.25 / $1 |
+| Step deadline (analyze / clarify / design) | 120 s / 120 s / 600 s | 120 s / 120 s / 600 s | 120 s / 120 s / 600 s |
 | `max_output_tokens` cap / `max_input_chars` | 32,000 / 400,000 | 32,000 / 200,000 | 32,000 / 200,000 |
 | Concurrency / requests per minute, per role and process | 4 / 30 | 8 / 60 (architect 4 / 30) | 8 / 60 (architect 4 / 60) |
 | Quality sample rate | 0 | 1.0 | 0.05 |
 | Daily spend for the alert | $20 | $30 | $150 |
 
 The budgets and limits are **provisional** until AI-20 measures the real cost per skill and the traffic. Change them in `environments.yaml` by PR, with the reason.
+
+**Step deadlines (`step_timeout_s`).**
+- **Where the values come from:** the latency alerts. Analyze and clarify get 4 × `AILatencyHigh`'s 30 s (one call and its repair, each with one fallback hop). Design gets 3 Architect attempts × `AIArchitectLatencyHigh`'s 180 s, plus 60 s.
+- **What happens when a step passes its deadline:**
+  - its calls still running are cancelled, and each one is logged as a `CallRecord` with `error_type: "CancelledError"` and no cost;
+  - the step returns `retry_later` with `error_code: "provider_unavailable"`.
+- **Without a profile** there is no deadline.
 
 **At startup (BE worker, API process):**
 ```python
@@ -85,7 +93,7 @@ install_json_logs(sys.stdout)
 
 | Logger | Record | One per |
 |---|---|---|
-| `skillforge.llm` | `CallRecord`: role, model, `fallback`, status, `error_type`, tokens, `cost_usd`, `latency_ms`, `skill_run` | model attempt |
+| `skillforge.llm` | `CallRecord`: role, model, `fallback`, status, `error_type`, `invalid_fields`, tokens, `cost_usd`, `latency_ms`, `skill_run` | model attempt |
 | `skillforge.safety` | verdict, category, conditions, prompt version | safety decision |
 | `skillforge.pipeline` | `StepEvent`: step, status, `error_code`, calls, `cost_usd`, `latency_ms`, `skill_run`, `skill_cost_usd` | pipeline step |
 | `skillforge.knowledge` | `IngestPageEvent`: host, verdict reasons (e.g. `injection`), chunks, quarantined; `LLMScreenEvent`: screened, flagged | ingested page; LLM-screen batch |

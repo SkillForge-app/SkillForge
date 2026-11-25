@@ -11,6 +11,8 @@ If a request asks for a person who does one job only ("someone who writes our re
 
 A vague request is labelled role.
 
+A request to learn a subject is a tutor: kind role, area education, sub-area = the subject.
+
 ## domain: `<area>/<sub-area>`
 - **The area is the expertise the skill applies, not the user's industry.**
   - Budgeting for a bakery is `finance`, not food.
@@ -24,6 +26,8 @@ A vague request is labelled role.
 - **high**: exactly when the area is `legal`, `medical` or `finance`. The skill applies expertise where wrong answers can cause legal, health or money harm. Writing *about* tax rules for readers is `finance/tax`, so it is high.
 - **medium**: any other area, when the skill's core work handles personal data about specific people, makes or supports decisions about people (hiring, grading, performance), or works with minors.
 - **low**: everything else.
+
+Fitness and nutrition for healthy people (calories, protein, workouts) is area general, risk low. It is medical only when the request names a condition, a medication or a treatment.
 
 Personal data means records about identifiable people (customers, employees, patients, students), not a user describing someone's tastes in passing. Decisions about people means judging or ranking them (hiring, grading, performance), not scheduling.
 
@@ -49,8 +53,9 @@ If no platform is named, use `[]`. Platforms chosen in the website's UI are not 
 
 ## Data hygiene
 - **Synthetic only:** no real people, companies or personal data.
-- **No duplicates:** no text may appear twice across the seed benchmark, test, dev and Arabic sets. The tests check this.
+- **No duplicates:** no text may appear twice across the seed benchmark, test, dev, Arabic and holdout sets. The tests check this.
 - **A changed label is a new version:** after changing any label, bump the file's `version`. Bump the MINOR number for added, changed or removed requests.
 
 ## Reviews
 - [2026-11-19](reviews/label-review-2026-11-19.md): a full review of the test, dev and Arabic labels. It added the last rule under `kind` and the paragraph under `risk`, and reworded `style`.
+- [2026-11-24](reviews/label-review-2026-11-24.md): 54 new team-written requests (dev +30, new holdout set of 24). It added the tutor rule under `kind` and the fitness rule under `risk`.
