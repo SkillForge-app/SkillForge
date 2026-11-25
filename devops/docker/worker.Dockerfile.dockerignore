@@ -13,8 +13,9 @@
 !ai/pyproject.toml
 !ai/uv.lock
 
-# The placeholder worker's check
+# The placeholder worker's check, and the entrypoint that reads the key from its secret file
 !devops/docker/worker_check.py
+!devops/docker/worker-entrypoint.sh
 
 # Never, even inside the folders above
 **/.env*

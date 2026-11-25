@@ -4,8 +4,8 @@
 #     --profile api --profile worker --profile web ...
 # Relative paths resolve against the repo root (the folder of the first file).
 #
-# Never run `docker compose ... config` without --quiet on these files in live mode: it prints
-# the resolved environment, OPENROUTER_API_KEY included.
+# The key is a compose secret (below), so `docker compose ... config` shows only the variable's
+# name. Still use `config --quiet`: it prints every other resolved setting.
 
 services:
   # backend/ from this checkout, or from .demo/src/backend (devops/demo/fetch-sources.sh). The
@@ -26,11 +26,20 @@ services:
       SKILLFORGE_ENV: dev
       SKILLFORGE_PIPELINE: ${SKILLFORGE_PIPELINE:-fake}
       SKILLFORGE_LLM_BACKEND: ${SKILLFORGE_LLM_BACKEND:-fake}
-      # By name only: the value comes from demo.sh's environment (the Codespaces secret) and is
-      # never written to a file. In fake mode demo.sh unsets it, so the worker has no key.
-      OPENROUTER_API_KEY:
+    # The key, as a secret and NOT in `environment:`: compose copies it into the container's
+    # /run/secrets/openrouter_api_key (no host file, no mount), and the image's entrypoint
+    # (devops/docker/worker-entrypoint.sh) exports it to the worker process only. So it is not in
+    # the container's configuration: `docker inspect` and the monitoring socket proxy can't see it.
+    secrets: [openrouter_api_key]
 
   web:
     build:
       context: ${DEMO_FRONTEND_CONTEXT:-./frontend}
       dockerfile: ${DEMO_ROOT:?run devops/demo/demo.sh}/devops/docker/web.Dockerfile
+
+secrets:
+  # From demo.sh's environment (the Codespaces secret). In fake mode demo.sh sets it to an EMPTY
+  # value: compose then creates no file, and the worker has no key. An UNSET variable makes compose
+  # refuse to create the worker, so demo.sh never leaves it unset.
+  openrouter_api_key:
+    environment: OPENROUTER_API_KEY

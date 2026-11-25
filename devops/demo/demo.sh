@@ -15,8 +15,9 @@
 #   DEMO_LLM_MODE       auto (default), fake (even with a key), live (fail without a key)
 #   DEMO_BACKEND_REF, DEMO_FRONTEND_REF   branch or full commit SHA (devops/demo/fetch-sources.sh)
 #
-# The key is never printed, never written to a file and never read from one: it reaches only
-# the worker, by name. This script never runs `set -x` or `docker compose config` without --quiet.
+# The key is never printed, never written to a host file and never read from one: it reaches only
+# the worker, as a compose secret (compose.demo.yaml), so it is not in `docker inspect`. This
+# script never runs `set -x` or `docker compose config` without --quiet.
 set -euo pipefail
 
 ROOT="$(git rev-parse --show-toplevel)"
@@ -97,7 +98,9 @@ llm_mode() {
     export SKILLFORGE_PIPELINE=real SKILLFORGE_LLM_BACKEND=litellm
   else
     export SKILLFORGE_PIPELINE=fake SKILLFORGE_LLM_BACKEND=fake
-    unset OPENROUTER_API_KEY
+    # Empty, not unset: compose needs the secret's variable to exist, and creates no file for an
+    # empty value, so the worker has no key.
+    export OPENROUTER_API_KEY=
   fi
   echo "=========================================================================="
   if [ "${mode}" = live ]; then
@@ -114,7 +117,7 @@ llm_mode() {
 # The build and model steps need no key: make sure none is passed while they run.
 no_key() {
   export SKILLFORGE_PIPELINE=fake SKILLFORGE_LLM_BACKEND=fake
-  unset OPENROUTER_API_KEY
+  export OPENROUTER_API_KEY=  # empty, not unset: see llm_mode
 }
 
 # wait_until <seconds> <description> <command...>

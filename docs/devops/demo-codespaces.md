@@ -114,7 +114,7 @@ It exits non-zero if anything is down. Other commands:
 | | When | What happens |
 |---|---|---|
 | **FAKE** | No `OPENROUTER_API_KEY` in the codespace, or `DEMO_LLM_MODE=fake` | `SKILLFORGE_PIPELINE=fake` and `SKILLFORGE_LLM_BACKEND=fake`: AI's FakePipeline answers with the canned examples in `ai/examples/`. No model is called, nothing costs money, and the key (if any) is not passed on |
-| **LIVE** | The secret is set (and `DEMO_LLM_MODE` isn't `fake`) | OpenRouter, billed to the demo key. The key goes to the **worker only**, by name |
+| **LIVE** | The secret is set (and `DEMO_LLM_MODE` isn't `fake`) | OpenRouter, billed to the demo key. The key goes to the **worker only**, as a compose secret: the worker's entrypoint reads it from `/run/secrets/openrouter_api_key`, so it is not in the container's configuration (`docker inspect`) |
 
 The mode is shown in three places: the banner at the top of `demo.sh`, the `llm` row of the table, and the
 worker's log (`worker: LLM mode ...`). The worker log also lists the warnings of AI's own startup check
