@@ -22,6 +22,14 @@ places (listed below).
 | `docker/web.Dockerfile` (+ `.dockerignore`) | The web app image, built from `frontend/` (Frontend's code). DevOps-owned |
 | `docker/api.Dockerfile` (+ `.dockerignore`) | The API image (also used by `migrate`), built from `backend/` (Backend's code). DevOps-owned |
 | `docker/worker.Dockerfile` (+ `.dockerignore`), `docker/worker_check.py` | The worker image (also used by `model-init`): AI's code from `ai/`, installed from `ai/uv.lock`; the model check and placeholder worker. DevOps-owned |
+| `demo/` | The demo in GitHub Codespaces or on a laptop: `demo.sh` (one command: DB, migrations, seed, api, worker, web, health table), `post-create.sh`, `fetch-sources.sh`, `seed.py`, `compose.demo.yaml`. Guide: [docs/devops/demo-codespaces.md](../docs/devops/demo-codespaces.md) |
+
+## Demo (Codespaces)
+
+See [docs/devops/demo-codespaces.md](../docs/devops/demo-codespaces.md). In short: create a codespace (2-core), let
+`post-create.sh` build everything once, then `bash devops/demo/demo.sh`. Without the `OPENROUTER_API_KEY` Codespaces
+secret it runs in fake LLM mode. Every port is Private; only port 3000 may be made Public, by hand.
+`.github/workflows/devcontainer.yml` checks the dev container; it isn't a required check.
 
 ## Local stack (OPS-03)
 
@@ -83,3 +91,5 @@ devops/github/setup-org.sh
 | `/.gitignore`, `/.gitattributes` | Git applies them per folder; only the root copy covers the whole repo |
 | `/compose.yaml` (OPS-03) | `docker compose up` looks for it in the current folder. Its init script lives in `devops/compose/` |
 | `/.env.example` (OPS-03) | Compose reads `.env` from the same folder as `compose.yaml`. Local-dev placeholders only |
+| `/.devcontainer/devcontainer.json` | Codespaces and dev container tools only read it from there. Its scripts live in `devops/demo/` |
+| `/docs/devops/demo-codespaces.md` | The demo guide, in the shared `docs/` (any department may approve changes) |
