@@ -1,0 +1,116 @@
+# promtool unit tests for the alerts OPS-10/OPS-17 rely on (devops/monitoring/ci-checks.sh):
+#   promtool test rules devops/monitoring/tests/alerts_test.yaml
+# AI-21's rules are tested here as they are loaded (unchanged); AI's own tests check its metrics.
+rule_files:
+  - ../../../ai/ops/alerts.yaml
+  - ../rules/ops.yaml
+
+evaluation_interval: 1m
+
+tests:
+  # The routing test alert (AI-21 / OPS-10 done-when): always firing.
+  - interval: 1m
+    input_series: []
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: AIAlertPipelineTest
+        exp_alerts:
+          - exp_labels: {severity: test, team: ai}
+            exp_annotations:
+              summary: "Always firing: proves AI alerts reach the on-call channel (OPS-10). Silence after the test."
+              threshold: "1"
+              runbook_url: ai/docs/ai/runbook.md#aialertpipelinetest
+
+  # OPS-17: $20 of spend in an hour pages; the series starts at 0, as ai-metrics shows a new series.
+  - interval: 1m
+    input_series:
+      - series: 'skillforge_llm_cost_usd_total{role="ops-test",model="ops-test/synthetic"}'
+        values: "0 0 20+0x60"
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: AILLMSpendRateHigh
+        exp_alerts:
+          - exp_labels: {severity: page, team: ai}
+            exp_annotations:
+              summary: "Model spend in the last hour is over 3x the daily budget's hourly share ($150/24)"
+              threshold: "18.75"
+              runbook_url: ai/docs/ai/runbook.md#aillmspendratehigh
+
+  # Why ai-metrics holds a new series at 0: a series whose FIRST sample is already 20 shows no
+  # increase, so the same spend would never alert.
+  - interval: 1m
+    input_series:
+      - series: 'skillforge_llm_cost_usd_total{role="ops-test",model="ops-test/synthetic"}'
+        values: "20+0x60"
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: AILLMSpendRateHigh
+        exp_alerts: []
+
+  # OPS-17: the first budget stop fires a ticket.
+  - interval: 1m
+    input_series:
+      - series: 'skillforge_step_total{step="analyze",status="failed",error_code="budget_exceeded"}'
+        values: "0 0 1+0x60"
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: AIBudgetExceeded
+        exp_alerts:
+          - exp_labels: {severity: ticket, team: ai}
+            exp_annotations:
+              summary: "Skills stopped because their model budget was used up"
+              threshold: "0"
+              runbook_url: ai/docs/ai/runbook.md#aibudgetexceeded
+
+  # OPS-17: real spend over 80% of a $3 key fires; synthetic test spend alone does not.
+  - interval: 1h
+    input_series:
+      - series: "skillforge_ops_demo_key_limit_usd"
+        values: "3+0x48"
+      - series: 'skillforge_llm_cost_usd_total{role="analyst",model="test/analyst-a"}'
+        values: "0 0 1 2.5+0x45"
+      - series: 'skillforge_llm_cost_usd_total{role="ops-test",model="ops-test/synthetic"}'
+        values: "0 20+0x47"
+    alert_rule_test:
+      - eval_time: 2h
+        alertname: OpsDemoKeySpendHigh
+        exp_alerts: []
+      - eval_time: 6h
+        alertname: OpsDemoKeySpendHigh
+        exp_alerts:
+          - exp_labels: {severity: ticket, team: ops}
+            exp_annotations:
+              summary: "Model spend in 7 days is over 80% of the demo key's credit limit"
+              threshold: "0.8"
+              runbook_url: devops/monitoring.md#opsdemokeyspendhigh
+
+  # A running service that stops answering pages after 2 minutes.
+  - interval: 1m
+    input_series:
+      - series: 'probe_success{job="probe",service="api",instance="api"}'
+        values: "1 1 0 0 0 0 0"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: ServiceDown
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: ServiceDown
+        exp_alerts:
+          - exp_labels: {severity: page, team: ops, job: probe, service: api, instance: api}
+            exp_annotations:
+              summary: "api runs but does not answer its health check"
+              runbook_url: devops/monitoring.md#servicedown
+
+  - interval: 1m
+    input_series:
+      - series: 'redis_key_size{job="redis",db="db0",key="rq:queue:skills"}'
+        values: "25+0x20"
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: QueueBacklog
+        exp_alerts:
+          - exp_labels: {severity: ticket, team: ops, key: "rq:queue:skills"}
+            exp_annotations:
+              summary: "More than 20 jobs wait in rq:queue:skills (provisional threshold)"
+              threshold: "20"
+              runbook_url: devops/monitoring.md#queuebacklog

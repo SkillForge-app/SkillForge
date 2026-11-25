@@ -1,0 +1,60 @@
+# DevOps' alerting rules (OPS-10, OPS-17), next to AI-21's ai/ops/alerts.yaml. Same conventions:
+# `page` wakes the on-call, `ticket` arrives silently; every rule links its runbook section in
+# devops/monitoring.md (prefixed with the repository URL in the Telegram message).
+# Check: promtool check rules + promtool test rules (devops/monitoring/ci-checks.sh).
+groups:
+  - name: skillforge-ops-services
+    rules:
+      - alert: ServiceDown
+        expr: probe_success{job="probe"} == 0
+        for: 2m
+        labels: {severity: page, team: ops}
+        annotations:
+          summary: "{{ $labels.service }} runs but does not answer its health check"
+          runbook_url: devops/monitoring.md#servicedown
+
+      - alert: QueueBacklog
+        expr: max by (key) (redis_key_size{key=~"rq:queue:.*"}) > 20
+        for: 10m
+        labels: {severity: ticket, team: ops}
+        annotations:
+          summary: "More than 20 jobs wait in {{ $labels.key }} (provisional threshold)"
+          threshold: "20"
+          runbook_url: devops/monitoring.md#queuebacklog
+
+      - alert: AIMetricsExporterDown
+        expr: up{job="ai-metrics"} == 0
+        for: 5m
+        labels: {severity: ticket, team: ops}
+        annotations:
+          summary: "ai-metrics is down: every AI alert (errors, spend, budget) is blind"
+          runbook_url: devops/monitoring.md#aimetricsexporterdown
+
+      - alert: OpsScrapeTargetDown
+        expr: up{job!="ai-metrics"} == 0
+        for: 5m
+        labels: {severity: ticket, team: ops}
+        annotations:
+          summary: "Prometheus can't scrape {{ $labels.job }}: its alerts are blind"
+          runbook_url: devops/monitoring.md#opsscrapetargetdown
+
+      # When Backend exposes /metrics (prometheus.yml's commented `api` job), for example:
+      # - alert: APIErrorRateHigh
+      #   expr: sum(rate(http_requests_total{job="api",status=~"5.."}[5m]))
+      #           / sum(rate(http_requests_total{job="api"}[5m])) > 0.05
+
+  - name: skillforge-ops-cost
+    rules:
+      # OPS-17: real model spend against the demo key's credit limit (DEMO_KEY_LIMIT_USD, exposed by
+      # ai-metrics). The key's limit at OpenRouter is the hard stop; this warns at 80% of it.
+      # 7 days is what Prometheus keeps (8 d retention); spend lost while ai-metrics was down is not
+      # counted. Synthetic spend from `monitor.sh test-cost` (model ops-test/...) is left out.
+      - alert: OpsDemoKeySpendHigh
+        expr: |
+          sum(increase(skillforge_llm_cost_usd_total{model!~"ops-test/.*"}[7d]))
+            > 0.8 * scalar(skillforge_ops_demo_key_limit_usd)
+        labels: {severity: ticket, team: ops}
+        annotations:
+          summary: "Model spend in 7 days is over 80% of the demo key's credit limit"
+          threshold: "0.8"
+          runbook_url: devops/monitoring.md#opsdemokeyspendhigh

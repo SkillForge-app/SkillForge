@@ -1,0 +1,140 @@
+# Monitoring (OPS-10, OPS-17): metrics, AI-21's alerts, Telegram on-call, dashboards. An addition
+# to the root compose.yaml, used through devops/monitoring/monitor.sh (or demo.sh with
+# DEMO_MONITORING=1):
+#   docker compose -f compose.yaml -f devops/monitoring/compose.monitoring.yaml --profile monitoring ...
+# Relative paths resolve against the repo root (the folder of the first file). How it works, the
+# secrets, and how to test: devops/monitoring.md.
+#
+# Every image is pinned by digest to a release at least 14 days old. Every port listens on
+# 127.0.0.1 only. Each container has a memory cap, a read-only root filesystem, no capabilities
+# and no privilege escalation, except where a comment says otherwise.
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+
+services:
+  # ---------------------------------------------------------------- metrics and rules
+  prometheus:
+    <<: *hardening
+    profiles: [monitoring]
+    image: prom/prometheus:v3.16.0@sha256:e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      # 8 days: AI's drift rules compare with a 7-day window. 1 GB caps the disk in a codespace.
+      - --storage.tsdb.retention.time=8d
+      - --storage.tsdb.retention.size=1GB
+      - --web.external-url=http://127.0.0.1:${PROMETHEUS_PORT:-9090}
+    volumes:
+      - ./devops/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./devops/monitoring/rules:/etc/prometheus/rules/ops:ro
+      # AI-21's rules, loaded as they are: ai/ops/alerts.yaml.
+      - ./ai/ops:/etc/prometheus/rules/ai:ro
+      - promdata:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    mem_limit: 300m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # AI-21's metrics, from the AI services' JSON-line logs (devops/monitoring/exporter/). Runs in
+  # the worker image: AI's code and dependencies are already there.
+  ai-metrics:
+    <<: *hardening
+    profiles: [monitoring]
+    build:
+      context: .
+      dockerfile: devops/docker/worker.Dockerfile
+    image: skillforge-worker:local
+    # Not the image's entrypoint (it only reads the worker's key, which this service never gets).
+    entrypoint:
+      - python
+      - /ops/exporter/ai_log_exporter.py
+      - --spec
+      - /ops-ai/metrics.yaml
+      - --spec
+      - /ops/metrics.extra.yaml
+    command: []
+    environment:
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      COMPOSE_PROJECT: skillforge
+      # Its own logs are never AI logs: skip the monitoring services.
+      EXCLUDE_SERVICES: prometheus,alertmanager,grafana,ai-metrics,docker-socket-proxy,redis-exporter,blackbox
+      # The demo key's credit limit at OpenRouter, for OpsDemoKeySpendHigh (OPS-17).
+      DEMO_KEY_LIMIT_USD: ${DEMO_KEY_LIMIT_USD:-3}
+    volumes:
+      - ./devops/monitoring:/ops:ro
+      - ./ai/ops:/ops-ai:ro
+    networks: [default, docker-api]
+    mem_limit: 128m
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:9464/healthz', timeout=4).status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    depends_on:
+      docker-socket-proxy:
+        condition: service_started
+
+  # The Docker API for ai-metrics only: GET on containers (list, logs), nothing else (POST=0). On
+  # an internal network with no port, so only ai-metrics reaches it. The proxy still allows
+  # GET /containers/{id}/json (a container's configured env); ai-metrics never calls it, and no
+  # secret is in any container's env (the worker's key is a compose secret: compose.demo.yaml).
+  docker-socket-proxy:
+    profiles: [monitoring]
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    environment:
+      CONTAINERS: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [docker-api]
+    # haproxy writes its pid and socket under /run and /tmp; the rest of the root fs is read-only.
+    read_only: true
+    tmpfs: [/run, /tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    mem_limit: 64m
+
+  # Queue depth (OPS-10): the length of every RQ queue (rq:queue:*).
+  redis-exporter:
+    <<: *hardening
+    profiles: [monitoring]
+    image: oliver006/redis_exporter:v1.97.0@sha256:f5f903fbe77571d455ede0453b084d6840bc62fc105efac001034421cab83b99
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_EXPORTER_CHECK_KEYS: "rq:queue:*"
+    mem_limit: 32m
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Per-service availability and latency: probes the api's /health and the web's / (only while
+  # they run; see prometheus.yml).
+  blackbox:
+    <<: *hardening
+    profiles: [monitoring]
+    image: prom/blackbox-exporter:v0.29.1@sha256:ea1c7aa3ef3f307cd03e85f34abb604478ccb90b567fc690da0cd9776da76b13
+    command: ["--config.file=/etc/blackbox/blackbox.yml"]
+    volumes:
+      - ./devops/monitoring/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    mem_limit: 32m
+
+networks:
+  # The Docker API (socket proxy) and its one client, ai-metrics. No way out, no port.
+  docker-api:
+    internal: true
+
+volumes:
+  promdata:
