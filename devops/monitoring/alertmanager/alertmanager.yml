@@ -1,0 +1,53 @@
+# Alertmanager (OPS-10): routes AI-21's and DevOps' alerts to the on-call Telegram chat.
+#   page    -> loud message, repeated every hour while it fires, plus a "resolved" message
+#   ticket  -> silent message (no sound or vibration), repeated every 12 hours
+#   test    -> loud: AIAlertPipelineTest, which always fires. monitor.sh keeps it silenced and
+#              lifts the silence only for `monitor.sh test` (the done-when of AI-21 and OPS-10).
+# The bot token and the chat id are compose secrets (compose.monitoring.yaml), read from files
+# that exist only inside this container. Nothing secret is in this file.
+# Without a Telegram chat (MONITOR_ONCALL=off): alertmanager.off.yml.
+# Check: amtool check-config (devops/monitoring/ci-checks.sh).
+global:
+  resolve_timeout: 5m
+
+templates:
+  - /etc/alertmanager/telegram.tmpl
+
+route:
+  receiver: telegram-ticket
+  group_by: [alertname, severity]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  routes:
+    - matchers: ['severity="test"']
+      receiver: telegram-page
+      # Long enough for `monitor.sh up` to silence it on a first start, short enough for the test.
+      group_wait: 1m
+      group_interval: 1m
+      repeat_interval: 5m
+    - matchers: ['severity="page"']
+      receiver: telegram-page
+      repeat_interval: 1h
+    - matchers: ['severity="ticket"']
+      receiver: telegram-ticket
+
+receivers:
+  - name: telegram-page
+    telegram_configs:
+      - bot_token_file: /run/secrets/telegram_bot_token
+        chat_id_file: /run/secrets/telegram_chat_id
+        parse_mode: HTML
+        message: '{{ template "skillforge.telegram.message" . }}'
+        disable_notifications: false
+        send_resolved: true
+        timeout: 30s
+  - name: telegram-ticket
+    telegram_configs:
+      - bot_token_file: /run/secrets/telegram_bot_token
+        chat_id_file: /run/secrets/telegram_chat_id
+        parse_mode: HTML
+        message: '{{ template "skillforge.telegram.message" . }}'
+        disable_notifications: true
+        send_resolved: true
+        timeout: 30s

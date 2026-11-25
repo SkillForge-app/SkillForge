@@ -1,0 +1,21 @@
+# Alertmanager without an on-call channel (MONITOR_ONCALL=off): the same routes, no receiver.
+# Alerts are visible in Prometheus and Alertmanager (http://127.0.0.1:9093) only. For a laptop
+# without the Telegram bot, and for checking everything up to Alertmanager.
+global:
+  resolve_timeout: 5m
+
+route:
+  receiver: none
+  group_by: [alertname, severity]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  routes:
+    - matchers: ['severity="test"']
+      receiver: none
+      group_wait: 1m
+      group_interval: 1m
+      repeat_interval: 5m
+
+receivers:
+  - name: none

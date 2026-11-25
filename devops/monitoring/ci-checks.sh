@@ -49,6 +49,19 @@ docker run --rm --network none --entrypoint promtool \
 step "alert unit tests"
 promtool test rules devops/monitoring/tests/alerts_test.yaml
 
+ALERTMANAGER="$(image_of prom/alertmanager)"
+amtool() {
+  docker run --rm --network none --entrypoint amtool \
+    -v "${MOUNT}/devops/monitoring/alertmanager:/etc/alertmanager:ro" "${ALERTMANAGER}" "$@"
+}
+
+step "Alertmanager configs are valid (Telegram, and MONITOR_ONCALL=off)"
+amtool check-config /etc/alertmanager/alertmanager.yml /etc/alertmanager/alertmanager.off.yml
+
+step "the Telegram message template renders"
+amtool template render --template.glob=/etc/alertmanager/telegram.tmpl \
+  --template.text='{{ template "skillforge.telegram.message" . }}'
+
 step "the exporter applies AI's metric rules exactly (self-test)"
 read -r -a python <<< "${PYTHON:-python3}"
 PYTHONPATH="${ROOT}/ai" "${python[@]}" devops/monitoring/exporter/ai_log_exporter.py \

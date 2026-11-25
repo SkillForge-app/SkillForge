@@ -43,6 +43,40 @@ services:
       timeout: 5s
       retries: 12
 
+  # ---------------------------------------------------------------- alerts -> on-call
+  # Routes to the on-call Telegram chat (alertmanager/alertmanager.yml), or to nowhere with
+  # ALERTMANAGER_CONFIG=alertmanager.off.yml (monitor.sh does this for MONITOR_ONCALL=off).
+  alertmanager:
+    <<: *hardening
+    # The one writable root fs: compose copies an environment-sourced secret into the container,
+    # which a read-only root fs refuses ("`file` is the sole supported option"), and a file source
+    # would put the token in a file. No capabilities and no-new-privileges still apply.
+    read_only: false
+    profiles: [monitoring]
+    image: prom/alertmanager:v0.35.0@sha256:e638797febd034838eca8b98cdbd46f951e9bf7f178777aa8669167406a9946c
+    command:
+      - --config.file=/etc/alertmanager/${ALERTMANAGER_CONFIG:-alertmanager.yml}
+      - --storage.path=/alertmanager
+      - --web.external-url=http://127.0.0.1:${ALERTMANAGER_PORT:-9093}
+      # One instance: no cluster port.
+      - --cluster.listen-address=
+    volumes:
+      - ./devops/monitoring/alertmanager:/etc/alertmanager:ro
+      # Silences (the test alert's) and the notification log survive restarts.
+      - amdata:/alertmanager
+    # The bot token and chat id: copied by compose into /run/secrets inside this container only
+    # (no host file, no mount, not in `docker inspect`). From the shell or Codespaces secrets;
+    # monitor.sh checks them by name and never prints them.
+    secrets: [telegram_bot_token, telegram_chat_id]
+    ports:
+      - "127.0.0.1:${ALERTMANAGER_PORT:-9093}:9093"
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9093/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
   # AI-21's metrics, from the AI services' JSON-line logs (devops/monitoring/exporter/). Runs in
   # the worker image: AI's code and dependencies are already there.
   ai-metrics:
@@ -136,5 +170,14 @@ networks:
   docker-api:
     internal: true
 
+secrets:
+  # Never in a file: set in your shell (read -rs) or as Codespaces secrets. Both must be SET (an
+  # empty value is fine for MONITOR_ONCALL=off): compose refuses to create Alertmanager otherwise.
+  telegram_bot_token:
+    environment: ONCALL_TELEGRAM_BOT_TOKEN
+  telegram_chat_id:
+    environment: ONCALL_TELEGRAM_CHAT_ID
+
 volumes:
   promdata:
+  amdata:

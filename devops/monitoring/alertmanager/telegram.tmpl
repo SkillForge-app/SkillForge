@@ -1,0 +1,25 @@
+{{/*
+  The on-call message (Telegram, parse_mode HTML). Every value from an alert is HTML-escaped.
+  runbook_url is relative to the repository (ai/docs/ai/runbook.md#..., devops/monitoring.md#...),
+  as AI-21's ai/ops/alerts.yaml asks: the link prefixes it with the repository URL.
+*/}}
+{{ define "skillforge.telegram.title" -}}
+{{- if eq .Status "resolved" }}[RESOLVED]
+{{- else if eq .CommonLabels.severity "page" }}[PAGE]
+{{- else if eq .CommonLabels.severity "test" }}[TEST]
+{{- else }}[ticket]{{ end }} <b>{{ .CommonLabels.alertname | html }}</b>
+{{- if gt (len .Alerts) 1 }} ({{ len .Alerts }}){{ end }}
+{{- end }}
+
+{{ define "skillforge.telegram.message" -}}
+{{ template "skillforge.telegram.title" . }}
+{{ range .Alerts -}}
+• {{ .Annotations.summary | html }}
+{{- if .Labels.role }} (role {{ .Labels.role | html }}){{ end }}
+{{- if .Labels.service }} (service {{ .Labels.service | html }}){{ end }}
+{{- if .Annotations.runbook_url }}
+  Runbook: <a href="https://github.com/SkillForge-app/SkillForge/blob/main/{{ .Annotations.runbook_url | html }}">{{ .Annotations.runbook_url | html }}</a>
+{{- end }}
+{{ end -}}
+team {{ .CommonLabels.team | html }} · SkillForge monitoring
+{{- end }}

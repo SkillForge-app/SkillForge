@@ -9,10 +9,20 @@ rule_files:
   - /etc/prometheus/rules/ai/alerts.yaml
   - /etc/prometheus/rules/ops/*.yaml
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: [alertmanager:9093]
+
 scrape_configs:
   - job_name: prometheus
     static_configs:
       - targets: [localhost:9090]
+
+  # Its notification counters prove delivery (monitor.sh test, test-cost).
+  - job_name: alertmanager
+    static_configs:
+      - targets: [alertmanager:9093]
 
   # AI-21's metrics, from the AI services' logs (ai/ops/metrics.yaml + metrics.extra.yaml).
   - job_name: ai-metrics
