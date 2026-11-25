@@ -218,7 +218,8 @@ services:
     tmpfs: [/tmp]
     ports:
       - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
-    mem_limit: 256m
+    # Measured: about 250 MB when idle (Grafana 13); 256m kept it at the limit (devops/monitoring.md).
+    mem_limit: 512m
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
       interval: 10s
