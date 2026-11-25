@@ -46,6 +46,8 @@ def registry(*entries: dict[str, Any], data_files: list[dict[str, str]] | None =
         "task": "AI-00",
         "question": "Does the demo work?",
         "kind": "offline",
+        "role": "final",
+        "llm_backend": "fake",
         "command": ["python", "-m", "evaluation.demo", "report"],
     }
     return Registry.model_validate(
@@ -87,11 +89,27 @@ def test_a_listed_data_file_is_not_a_report(repo: Path) -> None:
     assert check(reg, repo).issues == []
 
 
-def test_missing_markdown_and_wrong_commit_fail(repo: Path) -> None:
-    first = commit_files(repo, {DATA: b"x: 1\n"}, "data only")
-    commit_files(repo, {REPORT: b"{}"}, "report without its .md")
-    result = check(registry({"id": "E1:demo", "report": REPORT, "recorded_at": first}), repo)
-    assert codes(result) == ["missing_markdown", "not_at_commit"]
+def test_missing_markdown_fails_and_the_code_commit_may_precede_the_report(repo: Path) -> None:
+    code = commit_files(repo, {DATA: b"x: 1\n"}, "the code that produced the report")
+    commit_files(repo, {REPORT: b"{}"}, "report added later, without its .md")
+    result = check(registry({"id": "E1:demo", "report": REPORT, "recorded_at": code}), repo)
+    assert codes(result) == ["missing_markdown"]
+
+
+def side_commit(repo: Path) -> str:
+    """A commit on another branch: in the repository, but not an ancestor of HEAD."""
+    main = git(repo, "rev-parse", "--abbrev-ref", "HEAD")
+    git(repo, "checkout", "-q", "-b", "side")
+    sha = commit_files(repo, {"side.txt": b"s"}, "side branch")
+    git(repo, "checkout", "-q", main)
+    return sha
+
+
+def test_a_commit_that_is_not_an_ancestor_fails(repo: Path) -> None:
+    commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# d"}, "report")
+    sha = side_commit(repo)
+    result = check(registry({"id": "E1:demo", "report": REPORT, "recorded_at": sha}), repo)
+    assert codes(result) == ["not_an_ancestor"]
 
 
 def test_a_commit_missing_from_history_fails(repo: Path) -> None:
@@ -102,7 +120,7 @@ def test_a_commit_missing_from_history_fails(repo: Path) -> None:
 
 def test_a_pending_entry_is_skipped_until_its_report_arrives(repo: Path) -> None:
     commit_files(repo, {DATA: b"x: 1\n"}, "start")
-    other = git(repo, "rev-parse", "HEAD")
+    other = side_commit(repo)
     pending = {
         "id": "E1:demo",
         "report": REPORT,
@@ -116,9 +134,9 @@ def test_a_pending_entry_is_skipped_until_its_report_arrives(repo: Path) -> None
     sha = commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# d"}, "merged report")
     result = check(registry({**pending, "recorded_at": sha}), repo)
     assert result.issues == [] and result.checked == ["E1:demo"]
-    # ... and a wrong commit is then reported, not skipped.
+    # ... and a commit outside this branch's history is then reported, not skipped.
     result = check(registry({**pending, "recorded_at": other}), repo)
-    assert codes(result) == ["not_at_commit"]
+    assert codes(result) == ["not_an_ancestor"]
 
 
 def test_inputs_are_verified_at_recorded_at_including_legacy_crlf(repo: Path) -> None:
@@ -158,6 +176,8 @@ def test_an_extra_ignored_field_needs_a_reason() -> None:
                 "task": "t",
                 "question": "q",
                 "kind": "offline",
+                "role": "final",
+                "llm_backend": "fake",
                 "report": REPORT,
                 "recorded_at": "c" * 40,
                 "ignore_extra": [{"field": "score"}],
@@ -176,3 +196,131 @@ def test_the_real_registry_covers_every_committed_report() -> None:
 def test_cli_check_and_list(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["list"]) == 0
     assert "Live experiments" in capsys.readouterr().out
+
+
+def test_later_reports_of_the_same_series_are_removed_never_inputs(tmp_path: Path) -> None:
+    from evaluation.reproduce.run import remove_later_reports
+
+    names = [
+        "sources-2026-10-26.json",
+        "sources-2026-10-26.md",
+        "sources-2026-10-26-2.json",
+        "sources-2026-10-26-3.json",
+        "sources-2026-10-26-3.md",
+        "sources-2026-10-27.json",
+        "sources-2026-10-25-4.json",
+        "other-2026-10-30.json",
+        "llm-verdicts-test-2026-11-02.json",
+        "injection-test-2026-11-02.json",
+    ]
+    for name in names:
+        (tmp_path / name).write_text("{}", encoding="utf-8")
+    keep = {"llm-verdicts-test-2026-11-02.json"}
+    removed = remove_later_reports(tmp_path, "sources-2026-10-26-2", keep)
+    assert removed == [
+        "sources-2026-10-26-2.json",
+        "sources-2026-10-26-3.json",
+        "sources-2026-10-26-3.md",
+        "sources-2026-10-27.json",
+    ]
+    left = {p.name for p in tmp_path.iterdir()}
+    assert {"sources-2026-10-26.json", "sources-2026-10-25-4.json"} <= left
+    assert {"llm-verdicts-test-2026-11-02.json", "other-2026-10-30.json"} <= left
+
+
+# ------------------------------------------------------------------ the backend is per entry
+
+
+EMBEDDING_CODE = (
+    b"from core.llm import embed\n\n\nasync def vectors(t):\n    return await embed(t)\n"
+)
+NO_MODEL_CODE = b"def score(x):\n    return len(x)\n"
+
+
+def test_a_fake_backend_for_code_that_embeds_is_rejected(repo: Path) -> None:
+    sha = commit_files(
+        repo,
+        {
+            "ai/evaluation/demo/evaluate.py": EMBEDDING_CODE,
+            REPORT: b"{}",
+            REPORT[:-5] + ".md": b"# d",
+        },
+        "an evaluation that embeds",
+    )
+    entry = {"id": "E1:demo", "report": REPORT, "recorded_at": sha}
+    assert codes(check(registry(entry), repo)) == ["fake_backend_for_a_model"]
+    assert check(registry({**entry, "llm_backend": "local-model"}), repo).issues == []
+
+
+def test_a_fake_backend_is_fine_for_code_that_does_not_embed(repo: Path) -> None:
+    sha = commit_files(
+        repo,
+        {
+            "ai/evaluation/demo/evaluate.py": NO_MODEL_CODE,
+            REPORT: b"{}",
+            REPORT[:-5] + ".md": b"# d",
+        },
+        "an evaluation without a model",
+    )
+    entry = {"id": "E1:demo", "report": REPORT, "recorded_at": sha}
+    assert check(registry(entry), repo).issues == []
+
+
+def test_an_offline_entry_must_name_its_backend() -> None:
+    with pytest.raises(ValidationError, match="llm_backend"):
+        Entry.model_validate(
+            {
+                "id": "x",
+                "experiment": "E1",
+                "task": "t",
+                "question": "q",
+                "kind": "offline",
+                "role": "final",
+                "report": REPORT,
+                "recorded_at": "c" * 40,
+                "command": ["python", "-m", "evaluation.demo", "report"],
+            }
+        )
+
+
+def test_the_environment_follows_the_entry_not_a_global_setting(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from evaluation.reproduce import run
+
+    monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")  # never inherited
+    monkeypatch.setenv("OPENROUTER_API_KEY", "x")
+    monkeypatch.setattr(run, "MODEL_CACHE", tmp_path)
+    local = run.clean_env(needs_model=True)
+    assert "SKILLFORGE_LLM_BACKEND" not in local and local["SKILLFORGE_MODEL_CACHE"] == str(
+        tmp_path
+    )
+    assert "OPENROUTER_API_KEY" not in local and local["HF_HUB_OFFLINE"] == "1"
+    fake = run.clean_env(needs_model=False)
+    assert fake["SKILLFORGE_LLM_BACKEND"] == "fake" and "SKILLFORGE_MODEL_CACHE" not in fake
+    monkeypatch.setattr(run, "MODEL_CACHE", tmp_path / "missing")
+    with pytest.raises(RuntimeError, match="model cache not found"):
+        run.clean_env(needs_model=True)
+
+
+def test_the_registry_runs_the_model_experiments_on_the_local_model() -> None:
+    reg = load_registry()
+    by_task = {e.id: e.llm_backend for e in reg.experiments if e.kind == "offline"}
+    assert all(backend is not None for backend in by_task.values())
+    for entry_id, backend in by_task.items():
+        if entry_id.startswith(("E3:", "E4:", "E11:")):  # retrieval, gap, support calibration
+            assert backend == "local-model", entry_id
+
+
+def test_the_done_when_counts_final_entries_only(repo: Path) -> None:
+    sha = commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# d"}, "report")
+    entry = {"id": "E1:demo", "report": REPORT, "recorded_at": sha}
+    ok = check(registry({**entry, "reproduces": True}), repo)
+    assert ok.issues == [] and ok.final_reproduces == ["E1:demo"]
+    not_run = check(registry(entry), repo)
+    assert not_run.issues == [] and not_run.final_not_run == ["E1:demo"]
+    failing = check(registry({**entry, "reproduces": False}), repo)
+    assert codes(failing) == ["final_not_reproducing"]
+    for role in ("superseded", "invalid"):  # never count toward the done-when
+        other = check(registry({**entry, "reproduces": False, "role": role}), repo)
+        assert other.issues == [] and other.final_reproduces == other.final_not_run == []

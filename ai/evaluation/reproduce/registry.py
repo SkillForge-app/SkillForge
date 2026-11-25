@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from core.spec import Issue, schema_issues
 
@@ -13,6 +13,16 @@ AI_DIR = Path(__file__).resolve().parents[2]
 REGISTRY = AI_DIR / "evaluation" / "experiments.yaml"
 Kind = Literal["offline", "live", "rescore"]
 Status = Literal["active", "pending-merge"]
+# final: the report a decision rests on (the done-when: every final entry reproduces);
+# superseded: an intermediate round replaced by a later report (may stay reproduces: false);
+# invalid: a run that measured nothing (e.g. a provider failure); like superseded, it never
+# counts toward the done-when, and the doc lists it on its own.
+Role = Literal["final", "superseded", "invalid"]
+# How an offline entry's command gets its model: `fake` (the fake LLM backend: no model at
+# all) or `local-model` (the real gateway with the pinned local embedding model, no key, no
+# network). Set per entry, never globally: a fake backend in place of a model would give a
+# meaningless report, so `check` rejects `fake` for code that embeds.
+LlmBackend = Literal["fake", "local-model"]
 SHA = r"^[0-9a-f]{40}$"
 
 
@@ -42,10 +52,14 @@ class Entry(_Model):
     question: str
     kind: Kind
     status: Status = "active"
+    role: Role
     branch: str | None = None  # where a pending-merge report lives today
     report: str  # repo-relative path of the report (.json) or release manifest
-    recorded_at: str = Field(pattern=SHA)  # the commit that added the report
+    # The commit whose code and data produced the report: the commit that added it, or (for a
+    # report generated after its code was committed) that code commit. Must be in history.
+    recorded_at: str = Field(pattern=SHA)
     command: list[str] | None = None
+    llm_backend: LlmBackend | None = None  # required for offline entries
     model: str | None = None
     prompt: str | None = None
     cost_usd: float | None = None
@@ -54,6 +68,16 @@ class Entry(_Model):
     reproduces: bool | None = None  # set by `reproduce run`; None = not run yet
     reproduces_note: str | None = None
     limitations: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _offline_needs_a_backend(self) -> "Entry":
+        if self.kind == "offline" and self.llm_backend is None:
+            raise ValueError("an offline entry must set llm_backend: fake or local-model")
+        return self
+
+    @property
+    def needs_model(self) -> bool:
+        return self.llm_backend == "local-model"
 
 
 class DataFile(_Model):

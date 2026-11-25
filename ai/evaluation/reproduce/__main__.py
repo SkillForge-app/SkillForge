@@ -2,9 +2,11 @@
 
 python -m evaluation.reproduce check   # registry vs committed reports and inputs (seconds; CI)
 python -m evaluation.reproduce list    # live experiments: command, model, prompt, cost (no calls)
+python -m evaluation.reproduce run [--only E1,E5] [--no-model]   # offline re-runs, compared exactly
 """
 
 import argparse
+import json
 import sys
 
 from evaluation.reproduce.check import check, repo_root
@@ -24,6 +26,10 @@ def check_command() -> int:
         f"{len(result.checked)} entries checked; {len(result.pending_skipped)} pending-merge "
         f"skipped (report not on this branch): {', '.join(result.pending_skipped) or '-'}"
     )
+    print(
+        f"done-when (final entries): {len(result.final_reproduces)} reproduce, "
+        f"{len(result.final_not_run)} not run yet: {', '.join(result.final_not_run) or '-'}"
+    )
     print("FAIL" if result.issues else "OK")
     return 1 if result.issues else 0
 
@@ -41,12 +47,40 @@ def list_command() -> int:
     return 0
 
 
+def run_command(only: list[str], no_model: bool) -> int:
+    from evaluation.reproduce.run import TEMP_ROOT, reproduce
+
+    registry = load_registry()
+    rows = []
+    for outcome, lock in reproduce(registry, repo_root(AI_DIR), only=only, no_model=no_model):
+        rows.append({**outcome.__dict__, "lock": lock})
+        print(
+            f"{outcome.status.upper():8} {outcome.entry} ({outcome.seconds:.0f}s) {outcome.detail}"
+        )
+        for d in outcome.diffs:
+            print(f"           {d}")
+    summary = TEMP_ROOT / "last-run.json"
+    summary.write_text(json.dumps(rows, indent=2), encoding="utf-8")
+    bad = [r for r in rows if r["status"] in ("differs", "error")]
+    print(
+        f"{len(rows)} entries: {sum(r['status'] == 'match' for r in rows)} match, "
+        f"{len(bad)} differ or fail, {sum(r['status'] == 'skipped' for r in rows)} skipped. "
+        f"Summary: {summary}"
+    )
+    return 1 if bad else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m evaluation.reproduce")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("check", help="the registry agrees with the committed reports")
     commands.add_parser("list", help="the live experiments, with command and cost")
+    run = commands.add_parser("run", help="re-run offline experiments at their recorded commit")
+    run.add_argument("--only", default="", help="comma-separated entry ids or experiments (E1)")
+    run.add_argument("--no-model", action="store_true", help="skip entries that need a model")
     args = parser.parse_args(argv)
+    if args.command == "run":
+        return run_command([x for x in args.only.split(",") if x], args.no_model)
     return check_command() if args.command == "check" else list_command()
 
 
