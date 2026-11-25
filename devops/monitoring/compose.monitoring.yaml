@@ -60,6 +60,13 @@ services:
       - --web.external-url=http://127.0.0.1:${ALERTMANAGER_PORT:-9093}
       # One instance: no cluster port.
       - --cluster.listen-address=
+      # Debug: a first-attempt delivery is logged only at this level, as `Notify success` with
+      # the alert group. monitor.sh test / test-cost look for that line for THEIR alert, so another
+      # alert sent at the same moment can't pass for it. Rotated below.
+      - --log.level=debug
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
     volumes:
       - ./devops/monitoring/alertmanager:/etc/alertmanager:ro
       # Silences (the test alert's) and the notification log survive restarts.
@@ -164,6 +171,23 @@ services:
     volumes:
       - ./devops/monitoring/blackbox.yml:/etc/blackbox/blackbox.yml:ro
     mem_limit: 32m
+
+  # ---------------------------------------------------------------- monitor.sh test-cost (OPS-17)
+  # Logs synthetic AI events (4 calls x $5, one budget stop) through AI's own code; ai-metrics
+  # reads them like any AI log. No network at all; never started by `up`, only by
+  # `monitor.sh test-cost` (profile monitoring-test).
+  ai-test-events:
+    <<: *hardening
+    restart: "no"
+    profiles: [monitoring-test]
+    image: skillforge-worker:local
+    pull_policy: never
+    entrypoint: ["python", "/ops/synthetic_ai_events.py"]
+    command: []
+    network_mode: none
+    volumes:
+      - ./devops/monitoring:/ops:ro
+    mem_limit: 128m
 
   # ---------------------------------------------------------------- dashboards
   # Two provisioned dashboards (grafana/dashboards/): "SkillForge AI: models and cost" and
