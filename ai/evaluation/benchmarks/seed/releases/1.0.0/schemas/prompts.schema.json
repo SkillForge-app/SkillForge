@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "closer_skill": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Closer Skill"
+    },
+    "domain": {
+      "description": "The skill's domain; a domain-only label for AI-05.",
+      "title": "Domain",
+      "type": "string"
+    },
+    "id": {
+      "description": "<skill>/<prompt id>, stable across versions.",
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "test",
+        "should_not_trigger"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "skill": {
+      "title": "Skill",
+      "type": "string"
+    },
+    "tags": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tags",
+      "type": "array"
+    },
+    "text": {
+      "title": "Text",
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "skill",
+    "kind",
+    "text",
+    "tags",
+    "closer_skill",
+    "domain"
+  ],
+  "title": "PromptRecord",
+  "type": "object"
+}

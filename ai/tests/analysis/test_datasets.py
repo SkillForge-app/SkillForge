@@ -19,8 +19,22 @@ def test_labelled_data_has_no_issues() -> None:
 def test_counts() -> None:
     assert len(data.load_set("gate")) == 100
     assert len(data.seed_requests()) == 30
-    assert len(data.load_set("dev")) == 20
+    assert len(data.load_set("dev")) == 50
     assert len(data.load_set("arabic")) == 10
+    assert len(data.load_set("holdout")) == 24
+
+
+def test_holdout_is_reported_only() -> None:
+    def norm(text: str) -> str:
+        return " ".join(text.lower().split())
+
+    holdout = data.load_set("holdout")
+    assert {i.source for i in holdout} == {"holdout"}
+    assert all(i.id.startswith("h-") for i in holdout)
+    gate = {norm(i.text) for i in data.load_set("gate")}
+    assert not gate & {norm(i.text) for i in holdout}  # never part of the gate
+    header = data.FILES["holdout"].read_text(encoding="utf-8").split("\nname:")[0]
+    assert "NOT part of the 90% gate" in header and "NEVER use it for prompt work" in header
 
 
 def test_gate_coverage_minimums() -> None:
@@ -50,6 +64,7 @@ def test_sources_record_versions_and_hashes() -> None:
         "analyzer-requests-test",
         "analyzer-requests-dev",
         "analyzer-requests-arabic",
+        "analyzer-requests-holdout",
     ]
     assert all(len(s.sha256) == 64 for s in data.sources())
 
@@ -65,7 +80,10 @@ def test_few_shot_examples_come_from_the_dev_set_only() -> None:
         return " ".join(text.lower().split())
 
     dev = {norm(i.text) for i in data.load_set("dev")}
-    measured = {norm(i.text) for i in data.load_set("gate") + data.load_set("arabic")}
+    measured = {
+        norm(i.text)
+        for i in data.load_set("gate") + data.load_set("arabic") + data.load_set("holdout")
+    }
     for shot in shots:
         assert norm(shot) in dev, shot[:40]
         assert norm(shot) not in measured

@@ -9,7 +9,7 @@ The policy itself is `ai/docs/ai/refusal-policy.md`. These rules say how to writ
 | `redteam.yaml` | 60 | all `block` | **Draft** (2026-11-17): reviewed item by item by Ziad; needs a second check by Yousef |
 | `safety-dev.yaml` | 20 = 10 block + 10 allow | mixed | **Draft** (2026-11-17): allow half by the AI team; block half reviewed by Ziad, as red-team |
 | `benign-tricky.yaml` | 60 | all `allow` | Draft, needs a second reviewer |
-| "normal" (the analyzer's gate, dev and Arabic sets) | 130 | all `allow` | Reused, not stored here |
+| "normal" (the analyzer's gate, dev and Arabic sets) | 160 | all `allow` | Reused, not stored here |
 
 Each file has `status`:
 - `incomplete`: the file is not finished. `check-data` reports the gaps as warnings, and the gate cannot pass.

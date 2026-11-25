@@ -1,6 +1,6 @@
 # Dev set: for prompt tuning and few-shot examples ONLY. Never used to measure the 90% gate.
 name: analyzer-requests-dev
-version: 0.1.0
+version: 0.3.0
 split: dev
 requests:
   - id: d-01
@@ -142,7 +142,7 @@ requests:
   - id: d-16
     text: data stuff for my boss
     style: vague
-    kind: task
+    kind: role
     domain: data/reporting
     risk: low
     needs_clarification: true
@@ -186,4 +186,247 @@ requests:
     domain: technology/release-management
     risk: low
     needs_clarification: false
+    mentioned_targets: []
+  # ---------------------------------------------------------------- team-written (2026-11-24)
+  # d-21 to d-50: written by SkillForge team members in Egyptian Arabic, English or a mix.
+  # Labels and their sources: reviews/label-review-2026-11-24.md
+  - id: d-21
+    text: أنا كل يوم بحتاج أرد على إيميلات شغل بالإنجليزي بنفس الأسلوب الرسمي، عايزك تعملي ميزة تخليني أديلك الكلام بالعربي وإنت تحولهولي لإيميل جاهز على طول.
+    style: clear
+    kind: task
+    domain: writing/email-writing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-22
+    text: اعملي مهارة متخصصه في تحليل بيانات المبيعات بصيغة CSV واستخراج أهم 3 مؤشرات أداء (KIs) مع ملخص تنفيذي.
+    style: clear
+    kind: task
+    domain: data/sales-analytics
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-23
+    text: عاوزك تبنيلي أداة تساعدني اكتب محتوى تسويقي لمنصات التواصل الاجتماعي، عشان تاخد فكرة المنتج وتنتج 3 نسخ إعلانية مختلفين عن بعض.
+    style: clear
+    kind: task
+    domain: marketing/ad-copywriting
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-24
+    text: صمملي أداة تقوم بتحويل محاضر الاجتماعات العشوائية لقائمة مهام واضحة ومقسمة حسب كل شخص وموعد التسليم.
+    style: clear
+    kind: task
+    domain: operations/task-management
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-25
+    text: محتاج أداة تكتبلي استعلامات SQL من خلال إني أشرحلها اللي عايزه بالعربي.
+    style: clear
+    kind: task
+    domain: data/sql-generation
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-26
+    text: اعملي Skill بتلخص الفيديوهات وتطلع أهم الأفكار اللي فيها.
+    style: clear
+    kind: task
+    domain: writing/video-summarization
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-27
+    text: عندي مشكلة إني بكتب بوستات لينكد إن طويلة ومملة، عايز حاجة تاخد أفكاري وتعيد صياغتها بشكل حلو يخلي الناس تتفاعل معاها.
+    style: clear
+    kind: task
+    domain: marketing/social-media-content
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-28
+    text: بشتغل في خدمة العملاء وبنتعرض لشكاوى كتير، عايز أداة أكتبلها مشكلة العميل وتديني رد هادي وكويس يرضي العميل.
+    style: clear
+    kind: task
+    domain: customer-support/complaint-handling
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-29
+    text: أوقات بيكون عندي مكونات في التلاجة ومش عارف أطبخ إيه، عايز ميزة أكتبلها الحاجات الموجودة وتقترحلي وصفات سريعة.
+    style: clear
+    kind: task
+    domain: general/meal-planning
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-30
+    text: عايز أعمل أداة تقيملي الـ cv بتاعي بس بشرط تديني درجة من 10 وتقولي نقط الضعف من غير مجاملة.
+    style: clear
+    kind: task
+    domain: hr/resume-review
+    risk: medium
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-31
+    text: اعملي Skill بتشرح المفاهيم البرمجية المعقدة كأنها بتكلم طفل عنده 10 سنين، وتستخدم أمثلة من الحياة اليومية بس.
+    style: clear
+    kind: task
+    domain: education/programming-instruction
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-32
+    text: عايز أداة لتحويل الأفكار لمخططات Flowcharts مكتوبة بصيغة Mermaid.js عشان أستخدمها في التوثيق التقني.
+    style: clear
+    kind: task
+    domain: technology/diagramming
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-33
+    text: اعملي ميزة تراجع العقود القانونية البسيطة وتنبهني لو في أي بند فيه مخاطرة أو مش واضح.
+    style: clear
+    kind: task
+    domain: legal/contract-review
+    risk: high
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-34
+    text: عايز أعمل حاجه تساعدني في العصف الذهني للمشاريع؛ كل ما أقولها فكرة، تطلعلي 5 تحديات ممكن تقابلني و3 حلول لكل تحدي.
+    style: clear
+    kind: task
+    domain: product/brainstorming
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-35
+    text: عاوز أتعلم اعمل ويبسايت
+    style: vague
+    kind: role
+    domain: education/web-development
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-36
+    text: عاوز أتعلم Data Structures & Algorithms وأطور مهارات التفكير المنطقي وحل المشكلات.
+    style: vague
+    kind: role
+    domain: education/algorithms
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-37
+    text: عاوز أتعلم SQL & Database Management والتعامل مع قواعد البيانات وتصميمها.
+    style: vague
+    kind: role
+    domain: education/databases
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-38
+    text: أريد أن أتعلم NumPy & Pandas لتحليل البيانات ومعالجتها.
+    style: clear
+    kind: role
+    domain: education/data-analysis
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-39
+    text: عاوز أتعلم Statistics & Probability for AI وأفهم تطبيقاتها في الذكاء الاصطناعي.
+    style: clear
+    kind: role
+    domain: education/statistics-for-ai
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-40
+    text: عاوز أتعلم English Communication وأطور مستوايا في التحدث والكتابة باللغة الإنجليزيه
+    style: clear
+    kind: role
+    domain: education/english-communication
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-41
+    text: عايز اعمل بريزنتيشن احترافي فا عايزك تعمل ليskill تساعدني فده.
+    style: vague
+    kind: role
+    domain: design/presentation-design
+    risk: low
+    needs_clarification: true
+    mentioned_targets: []
+  - id: d-42
+    text: عندي تقرير محتاج يتسلم ساعدني في كتابته وعمل سيرش عليه.
+    style: clear
+    kind: task
+    domain: writing/report-writing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-43
+    text: عايز اعمل ويبسايت يكون عباره عن ستور لبيع الاكسسوارات، اصنع لي skill تساعدني في ده.
+    style: clear
+    kind: role
+    domain: technology/ecommerce-development
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-44
+    text: عايز اعمل فيديو مونتاج احترافي ويكون فيه انيميشنز وايفيكتات.
+    style: clear
+    kind: task
+    domain: design/video-editing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-45
+    text: عاوز skill تساعدني على عمل CV احترافي.
+    style: clear
+    kind: task
+    domain: writing/resume-writing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-46
+    text: عايز skill تساعدني على برمجة وبناء video games.
+    style: clear
+    kind: role
+    domain: technology/game-development
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-47
+    text: عايز skill تساعدني على عمل ديزاين لأي Logo في مختلف المجالات.
+    style: clear
+    kind: task
+    domain: design/logo-design
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-48
+    text: عايز skill تساعدني على تحويل أي ملف word الى pdf والعكس صحيح.
+    style: clear
+    kind: task
+    domain: technology/file-conversion
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-49
+    text: عاوز skill تساعدني على تعديل اي image تحتوي على أشخاص وعزلهم عن الخلفيه.
+    style: clear
+    kind: task
+    domain: design/image-editing
+    risk: low
+    needs_clarification: false
+    mentioned_targets: []
+  - id: d-50
+    text: عايز اتعلم كورس مونتاج احترافي.
+    style: vague
+    kind: role
+    domain: education/video-editing
+    risk: low
+    needs_clarification: true
     mentioned_targets: []

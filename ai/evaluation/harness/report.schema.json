@@ -1,0 +1,286 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:skillforge:ai-16-report:1",
+  "title": "AI-16 evaluation harness report and JSONL records",
+  "description": "Validate report.json, calibration.json, or one record from a JSONL output.",
+  "oneOf": [
+    { "$ref": "#/$defs/benchmarkReport" },
+    { "$ref": "#/$defs/calibrationReport" },
+    { "$ref": "#/$defs/predictionRecord" },
+    { "$ref": "#/$defs/calibrationDecisionRecord" }
+  ],
+  "$defs": {
+    "errorCode": {
+      "type": ["string", "null"],
+      "enum": [
+        null,
+        "budget_exceeded",
+        "configuration_error",
+        "invalid_input",
+        "invalid_model_output",
+        "model_refused",
+        "prompt_format_error",
+        "prompt_not_found",
+        "provider_unavailable",
+        "unexpected_error"
+      ]
+    },
+    "calibrationResult": {
+      "type": "object",
+      "required": [
+        "n",
+        "matches",
+        "agreement",
+        "threshold",
+        "passed",
+        "reason",
+        "cohen_kappa"
+      ],
+      "properties": {
+        "n": { "type": "integer", "minimum": 0 },
+        "matches": { "type": "integer", "minimum": 0 },
+        "agreement": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+        "passed": { "type": "boolean" },
+        "reason": { "type": ["string", "null"] },
+        "cohen_kappa": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+        "status": { "enum": ["not_calibrated", "passed", "failed"] }
+      },
+      "additionalProperties": false
+    },
+    "usage": {
+      "type": "object",
+      "required": ["calls", "errors", "input_tokens", "output_tokens", "cost_usd"],
+      "properties": {
+        "calls": { "type": "integer", "minimum": 0 },
+        "errors": { "type": "integer", "minimum": 0 },
+        "input_tokens": { "type": "integer", "minimum": 0 },
+        "output_tokens": { "type": "integer", "minimum": 0 },
+        "cost_usd": { "type": "number", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "armMetrics": {
+      "type": "object",
+      "required": [
+        "rubric_items",
+        "passed",
+        "pass_rate",
+        "critical_items",
+        "critical_passed",
+        "critical_pass_rate"
+      ],
+      "properties": {
+        "rubric_items": { "type": "integer", "minimum": 0 },
+        "passed": { "type": "integer", "minimum": 0 },
+        "pass_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "critical_items": { "type": "integer", "minimum": 0 },
+        "critical_passed": { "type": "integer", "minimum": 0 },
+        "critical_pass_rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "benchmarkMetrics": {
+      "type": "object",
+      "required": ["n", "completed", "with_skill", "without_skill", "uplift", "errors"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 0 },
+        "completed": { "type": "integer", "minimum": 0 },
+        "with_skill": { "$ref": "#/$defs/armMetrics" },
+        "without_skill": { "$ref": "#/$defs/armMetrics" },
+        "uplift": { "type": ["number", "null"], "minimum": -1, "maximum": 1 },
+        "errors": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "budget_exceeded",
+              "configuration_error",
+              "invalid_input",
+              "invalid_model_output",
+              "model_refused",
+              "prompt_format_error",
+              "prompt_not_found",
+              "provider_unavailable",
+              "unexpected_error"
+            ]
+          },
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "additionalProperties": false
+    },
+    "benchmarkReport": {
+      "type": "object",
+      "required": [
+        "report_type",
+        "status",
+        "created",
+        "live",
+        "dataset",
+        "dataset_version",
+        "dataset_sha256",
+        "skill",
+        "skill_instructions_sha256",
+        "review_status",
+        "prompts",
+        "models",
+        "metrics",
+        "calibration",
+        "usage"
+      ],
+      "properties": {
+        "report_type": { "const": "benchmark" },
+        "status": {
+          "enum": ["completed", "completed_with_errors", "failed"]
+        },
+        "created": { "type": "string", "format": "date-time" },
+        "live": { "type": "boolean" },
+        "dataset": { "type": "string", "minLength": 1 },
+        "dataset_version": { "type": "string", "minLength": 1 },
+        "dataset_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "skill": { "type": "string", "minLength": 1 },
+        "skill_instructions_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "review_status": { "type": "string", "minLength": 1 },
+        "prompts": {
+          "type": "object",
+          "additionalProperties": { "type": "integer", "minimum": 1 }
+        },
+        "models": {
+          "type": "object",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "metrics": { "$ref": "#/$defs/benchmarkMetrics" },
+        "calibration": {
+          "allOf": [
+            { "$ref": "#/$defs/calibrationResult" },
+            {
+              "type": "object",
+              "required": ["status"],
+              "properties": {
+                "status": { "enum": ["not_calibrated", "passed", "failed"] }
+              }
+            }
+          ]
+        },
+        "usage": { "$ref": "#/$defs/usage" }
+      },
+      "additionalProperties": false
+    },
+    "calibrationReport": {
+      "type": "object",
+      "required": [
+        "report_type",
+        "status",
+        "created",
+        "dataset",
+        "dataset_version",
+        "dataset_sha256",
+        "skill",
+        "live",
+        "human_labels_sha256",
+        "judge_prompt_version",
+        "judge_model",
+        "usage",
+        "result"
+      ],
+      "properties": {
+        "report_type": { "const": "calibration" },
+        "status": { "enum": ["passed", "failed"] },
+        "created": { "type": "string", "format": "date-time" },
+        "dataset": { "type": "string", "minLength": 1 },
+        "dataset_version": { "type": "string", "minLength": 1 },
+        "dataset_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "skill": { "type": "string", "minLength": 1 },
+        "live": { "type": "boolean" },
+        "human_labels_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "judge_prompt_version": { "type": "integer", "minimum": 1 },
+        "judge_model": { "type": "string", "minLength": 1 },
+        "usage": { "$ref": "#/$defs/usage" },
+        "result": { "$ref": "#/$defs/calibrationResult" }
+      },
+      "additionalProperties": false
+    },
+    "rubricScore": {
+      "type": "object",
+      "required": ["rubric_id", "passed", "rationale"],
+      "properties": {
+        "rubric_id": { "type": "string", "minLength": 1 },
+        "passed": { "type": "boolean" },
+        "rationale": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "predictionRecord": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "status",
+        "prompt_id",
+        "error",
+        "error_code",
+        "latency_ms"
+      ],
+      "properties": {
+        "record_type": { "const": "prediction" },
+        "status": { "enum": ["completed", "failed"] },
+        "prompt_id": { "type": "string", "minLength": 1 },
+        "error": { "type": ["string", "null"] },
+        "error_code": { "$ref": "#/$defs/errorCode" },
+        "latency_ms": { "type": "number", "minimum": 0 },
+        "arms": {
+          "type": "object",
+          "required": ["with_skill", "without_skill"],
+          "properties": {
+            "with_skill": { "$ref": "#/$defs/predictionArm" },
+            "without_skill": { "$ref": "#/$defs/predictionArm" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "predictionArm": {
+      "type": "object",
+      "required": ["answer", "answer_sha256", "scores"],
+      "properties": {
+        "answer": { "type": "string" },
+        "answer_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "scores": { "type": "array", "items": { "$ref": "#/$defs/rubricScore" } }
+      },
+      "additionalProperties": false
+    },
+    "calibrationDecisionRecord": {
+      "type": "object",
+      "required": [
+        "record_type",
+        "status",
+        "prompt_id",
+        "condition",
+        "reviewer",
+        "rubric_id",
+        "human_passed",
+        "judge_passed",
+        "match",
+        "answer_sha256",
+        "error",
+        "error_code"
+      ],
+      "properties": {
+        "record_type": { "const": "calibration_decision" },
+        "status": { "enum": ["completed", "failed"] },
+        "prompt_id": { "type": "string", "minLength": 1 },
+        "condition": { "enum": ["with_skill", "without_skill"] },
+        "reviewer": { "type": "string", "minLength": 1 },
+        "rubric_id": { "type": "string", "minLength": 1 },
+        "human_passed": { "type": "boolean" },
+        "judge_passed": { "type": ["boolean", "null"] },
+        "match": { "type": "boolean" },
+        "judge_rationale": { "type": "string" },
+        "answer_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "error": { "type": ["string", "null"] },
+        "error_code": { "$ref": "#/$defs/errorCode" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
