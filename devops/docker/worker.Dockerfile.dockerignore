@@ -1,0 +1,24 @@
+# What of the repo is sent to the worker image build (worker.Dockerfile, context: the repo root).
+# BuildKit uses this file instead of any .dockerignore, so DevOps owns it. An allow-list: nothing
+# goes in unless listed, so no .env, venv, model cache or other department's files can be baked in.
+*
+
+# AI's code, prompts and the fixtures its fake backends read, plus the locked dependencies
+!ai/core/
+!ai/prompts/
+!ai/tests/fixtures/
+!ai/pyproject.toml
+!ai/uv.lock
+
+# The placeholder worker's check
+!devops/docker/worker_check.py
+
+# Never, even inside the folders above
+**/.env*
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+**/.DS_Store
+**/Thumbs.db

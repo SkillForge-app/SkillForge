@@ -155,7 +155,7 @@ def test_benign_set_is_complete() -> None:
 
 def test_normal_set_reuses_the_analyzer_sets() -> None:
     items = data.load_set("normal")
-    assert len(items) == 130 and all(i.expected == "allow" for i in items)
+    assert len(items) == 160 and all(i.expected == "allow" for i in items)
 
 
 def test_coverage_rules_accept_a_complete_redteam_set() -> None:

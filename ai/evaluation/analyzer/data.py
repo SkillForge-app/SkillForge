@@ -3,8 +3,10 @@
 Sets:
 - gate:   the 30 requests of a pinned seed-benchmark release + requests-test.yaml (70) = 100.
           The 90%-per-field done-when of AI-05 is measured on exactly these.
-- dev:    requests-dev.yaml (20). Prompt tuning and few-shot examples only.
-- arabic: requests-arabic.yaml (10). Reported, never gated.
+- dev:     requests-dev.yaml (50). Prompt tuning and few-shot examples only.
+- arabic:  requests-arabic.yaml (10). Reported, never gated.
+- holdout: requests-holdout.yaml (24, team-written). Reported, never gated, and never used for
+           prompt work (no tuning, no few-shot examples).
 Rules for labels: LABELLING.md.
 """
 
@@ -25,13 +27,22 @@ from evaluation.benchmarks.dataset import SEED_DIR, RequestStyle
 
 ANALYZER_DIR = Path(__file__).resolve().parent
 SEED_RELEASE = "0.1.0"  # move to 1.0.0 once the reviewed seed benchmark is released
-SetName = Literal["gate", "dev", "arabic"]
+SetName = Literal["gate", "dev", "arabic", "holdout"]
 FILES: dict[str, Path] = {
     "test": ANALYZER_DIR / "requests-test.yaml",
     "dev": ANALYZER_DIR / "requests-dev.yaml",
     "arabic": ANALYZER_DIR / "requests-arabic.yaml",
+    "holdout": ANALYZER_DIR / "requests-holdout.yaml",
 }
-EXPECTED = {"test": 70, "dev": 20, "arabic": 10}
+EXPECTED = {"test": 70, "dev": 50, "arabic": 10, "holdout": 24}
+# Text language per file: the gate's test file is English, the Arabic slice is Arabic; dev and
+# holdout hold team-written requests in Egyptian Arabic, English or a mix.
+LANGUAGE: dict[str, Literal["en", "ar", "any"]] = {
+    "test": "en",
+    "arabic": "ar",
+    "dev": "any",
+    "holdout": "any",
+}
 GATE_SIZE = 100
 SEED_COVERED_AREAS = frozenset(
     {"technology", "data", "marketing", "legal", "medical", "finance", "hr", "writing"}
@@ -54,7 +65,7 @@ class LabelledRequest(SpecModel):
 class LabelFile(SpecModel):
     name: str
     version: str = Field(pattern=r"^\d+\.\d+\.\d+$")
-    split: Literal["test", "dev", "arabic"]
+    split: Literal["test", "dev", "arabic", "holdout"]
     requests: list[LabelledRequest]
 
 
@@ -193,8 +204,11 @@ def check_data() -> list[Issue]:
                 issues.append(
                     Issue(f"{at}/needs_clarification", "vague_rule", "true exactly when vague")
                 )
-            if (split == "arabic") != bool(ARABIC.search(r.text)):
-                issues.append(Issue(f"{at}/text", "language", "Arabic only in the arabic set"))
+            has_arabic = bool(ARABIC.search(r.text))
+            if LANGUAGE[split] == "en" and has_arabic:
+                issues.append(Issue(f"{at}/text", "language", f"{where} is English only"))
+            if LANGUAGE[split] == "ar" and not has_arabic:
+                issues.append(Issue(f"{at}/text", "language", f"{where} is Arabic only"))
     issues += _check_overlaps()
     issues += _check_gate_coverage()
     return issues

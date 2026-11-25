@@ -92,39 +92,49 @@ services:
       redis:
         condition: service_healthy
 
-  # ---------------------------------------------------------------- worker (placeholder)
-  # TODO(queue decision): the worker that runs the AI pipeline (ai/core/pipeline/interface.py).
-  # Waits for the queue library choice (recommended: RQ 2.12, see the OPS-03 PR) and for Backend to
-  # move its root core/ package under backend/: ai/ also installs a top-level `core`, and the
-  # worker imports both.
-  # - Image: Backend's and AI's code together, e.g. devops/docker/worker.Dockerfile with
-  #   context ./backend and `additional_contexts: {ai: ./ai}`.
-  # - LLM provider keys only from ai/.env, never from this file.
-  # - AI's rate limits are per process: total provider rate = worker processes x the limits.
-  # worker:
-  #   profiles: [api]
-  #   build:
-  #     context: ./backend
-  #     dockerfile: ../devops/docker/worker.Dockerfile
-  #     additional_contexts:
-  #       ai: ./ai
+  # ---------------------------------------------------------------- worker and model cache
+  # The worker that will run the AI pipeline (ai/core/pipeline/interface.py), and the one-shot
+  # service that fills its model cache. Only with the `worker` profile:
+  #   docker compose --profile worker up -d --build
+  # Image: devops/docker/worker.Dockerfile (AI's code, installed from ai/uv.lock). How it works,
+  # and what is still Backend's: devops/compose.md, "Worker and model cache".
+
+  # Downloads the pinned embedding model (ai/core/llm/models.yaml: repo, revision, file, sha256)
+  # into the `models` volume. Idempotent: when the file is already there and its sha256 matches,
+  # it downloads nothing. The ONLY writer of that volume.
+  model-init:
+    profiles: [worker]
+    build:
+      context: .
+      dockerfile: devops/docker/worker.Dockerfile
+    image: skillforge-worker:local
+    command: ["python", "-m", "core.llm.local_embed", "download"]
+    volumes:
+      - models:/models
+    restart: "no"
+
+  # PLACEHOLDER until Backend's worker exists: checks the model offline (devops/docker/worker_check.py),
+  # then waits. Backend's version adds, in the `api` profile:
   #   command: ["rq", "worker", "--with-scheduler", "--url", "redis://redis:6379/0", "skills"]
-  #   env_file:
-  #     - ai/.env
-  #   environment:
-  #     DATABASE_URL: postgresql+psycopg://skillforge:${POSTGRES_PASSWORD}@postgres:5432/skillforge
-  #     REDIS_URL: redis://redis:6379/0
-  #     SKILLFORGE_VECTOR_STORE: pgvector
-  #     SKILLFORGE_PGVECTOR_DSN: postgresql://skillforge_ai_reader:<password>@postgres:5432/skillforge
-  #     SKILLFORGE_PGVECTOR_TABLE: knowledge.knowledge_chunks
-  #     SKILLFORGE_MODEL_CACHE: /models
-  #   volumes:
-  #     - models:/models
-  #   depends_on:
-  #     migrate:
-  #       condition: service_completed_successfully
-  #     redis:
-  #       condition: service_healthy
+  #   env_file: [ai/.env]          # LLM provider keys only from ai/.env, never from this file
+  #   environment: DATABASE_URL, REDIS_URL, SKILLFORGE_VECTOR_STORE=pgvector,
+  #     SKILLFORGE_PGVECTOR_DSN (the skillforge_ai_reader role), SKILLFORGE_PGVECTOR_TABLE
+  #   depends_on: migrate (completed) and redis (healthy)
+  # AI's rate limits are per process: total provider rate = worker processes x the limits.
+  worker:
+    profiles: [worker]
+    image: skillforge-worker:local  # built by `model-init`
+    pull_policy: never
+    init: true
+    environment:
+      # A missing model fails loudly instead of downloading (SKILLFORGE_MODEL_CACHE=/models is
+      # set in the image).
+      HF_HUB_OFFLINE: "1"
+    volumes:
+      - models:/models:ro
+    depends_on:
+      model-init:
+        condition: service_completed_successfully
 
   # ---------------------------------------------------------------- web app
 
@@ -160,4 +170,6 @@ services:
 volumes:
   pgdata:
   redisdata:
-  # models:   # for the worker, once it exists
+  # The pinned embedding model (about 66 MB). Written only by model-init; every worker (AI's and
+  # DE's) mounts it read-only with HF_HUB_OFFLINE=1.
+  models:

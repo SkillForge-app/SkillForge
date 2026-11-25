@@ -56,8 +56,9 @@ Safety screening of harmful requests is AI-06 (`safety.py`). It is not part of t
 | Set | Requests | Use |
 |---|---|---|
 | **gate** | 100 = 30 from the seed benchmark (release `0.1.0`, `requests.jsonl`) + 70 in `requests-test.yaml` | The 90% measurement. **Never tune the prompt on it** |
-| dev | 20 in `requests-dev.yaml` | Prompt tuning and few-shot examples |
+| dev | 50 in `requests-dev.yaml` (d-21 to d-50 team-written, Egyptian Arabic or mixed) | Prompt tuning and few-shot examples |
 | arabic | 10 in `requests-arabic.yaml` | Reported separately. Not gated |
+| holdout | 24 in `requests-holdout.yaml` (team-written) | Reported separately. Not gated. **Never used for prompt work** |
 
 **Coverage of the gate set:**
 - all 16 domain areas, including at least 5 for each of the 8 areas the seed set did not cover
