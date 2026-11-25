@@ -38,13 +38,18 @@ A new or changed secret reaches a codespace only after the codespace **restarts*
 Your own settings first (github.com → Settings → Codespaces): **Default idle timeout 20 minutes**, **Default
 retention period 7 days**. Then either:
 
-- **On github.com:** the repo → **Code → Codespaces → ⋯ → New with options**. Pick the branch, machine type
-  **2-core**, then **Create codespace**.
+- **On github.com:** the repo → **Code → Codespaces → ⋯ → New with options**. Pick the branch **`DevOps`**,
+  machine type **2-core**, then **Create codespace**.
 - **With the GitHub CLI:**
   ```
-  gh codespace create -R SkillForge-app/SkillForge -b <branch> -m basicLinux32gb --idle-timeout 20m --retention-period 168h
+  gh codespace create -R SkillForge-app/SkillForge -b DevOps -m basicLinux32gb --idle-timeout 20m --retention-period 168h
   ```
   (`gh codespace create --help` lists the flags; the machine picker shows the exact machine names.)
+
+**Pick the branch `DevOps` until it merges into `main`.** The repo page creates a codespace from `main` by default,
+and `main` has no `.devcontainer/` yet, so you get GitHub's default container without the demo setup. If that
+happened: in the codespace's terminal run `git checkout DevOps`, then the command palette → **Codespaces: Rebuild
+Container**.
 
 **The first creation is slow, so do it the day before, not on demo day.** It hasn't been timed in a real codespace
 yet; on a slow home connection it took about an hour (see [Measured](#measured)). `post-create.sh` runs once,
@@ -59,9 +64,9 @@ Its log is in the terminal tab "Creation log" (or **View Creation Log** from the
 of the same codespace do none of this: images, the model and the database are kept while the codespace exists.
 
 ### Which machine, and what it costs
-- **The 2-core machine (8 GB RAM, 32 GB disk) is enough.** The stack's containers use about **0.3 GB RAM**, so
-  about **1.3 GB** with the editor server; the first build peaks higher. Disk: about 11 GB of the 32 (see
-  [Measured](#measured)).
+- **The 2-core machine (8 GB RAM, 32 GB disk) is enough.** Measured in a real codespace with the full demo up:
+  **2.9 GB used, 5.0 GB available** of 7.9 GB; the stack's own containers take about **0.35 GB** of that. Disk:
+  about 11 GB of the 32 (see [Measured](#measured)).
 - **Who pays:** the person who creates the codespace, from their **personal free quota**:
   - The repo is public, and GitHub organization plans include no Codespaces quota. Our org has no Codespaces
     billing, so GitHub bills the user's own account.
@@ -151,7 +156,8 @@ Alertmanager, and Grafana with two dashboards. The full guide is [devops/monitor
 - **Grafana:** port **3001** (Prometheus 9090, Alertmanager 9093). All three are forwarded **Private** and must
   stay Private; only 3000 may ever be made Public.
 - **What it adds:**
-  - about **0.4 GB of RAM** (measured on a laptop: devops/monitoring.md), which still fits the 2-core machine;
+  - about **0.4 GB of RAM** (measured on a laptop: devops/monitoring.md). The 2-core codespace had 5.0 GB
+    available with the demo up, so it fits;
   - about **2.7 GB of disk** for its images, of which Grafana is 2.0 GB. That is billed storage while the
     codespace exists.
   - `demo.sh prepare` pulls those images ahead of time when `DEMO_MONITORING=1` is set.
@@ -181,6 +187,10 @@ Every forwarded port starts **Private**: only you, signed in to GitHub, can open
 
 Things to know:
 - **A Public URL needs no sign-in.** Anyone with the link can open it while the codespace runs.
+- **The first visit shows GitHub's warning page,** "You are about to access a development port", with a
+  **Continue** button. After Continue the SkillForge page loads; the warning comes back once per browser
+  session. Tested in a real codespace: 3000 set Public by hand → warning → Continue → the page; then back to
+  Private. 8000 stayed Private throughout.
 - **Changing a Public port's protocol to HTTPS turns it back to Private.**
 - **"Private to Organization" needs GitHub Team or Enterprise**, so it isn't available to us.
 - **GitHub doesn't document whether a Public setting survives a restart.** Check the Ports tab after every start.
@@ -221,6 +231,9 @@ What a stopped codespace costs and keeps:
 - **Keep the public window short.** Today the web pages don't call the API, so a Public port 3000 exposes only
   the mock pages. Once Frontend wires the API, a Public port 3000 in **live** mode lets anyone with the link make
   model calls on that key. Make port 3000 Public just before you present, and Private right after.
+- **Open the Public link once on the presenting machine before the demo**, in the browser you will present
+  from, and click **Continue** on GitHub's "You are about to access a development port" page. Then the room
+  sees the SkillForge page, not the warning. Anyone else opening the link sees that page once too.
 
 **Idle timeout:**
 - **The codespace stops after the idle timeout without terminal or editor input.** GitHub doesn't document
@@ -241,6 +254,8 @@ What a stopped codespace costs and keeps:
 | `worker DOWN`, "not ready in /models" or a sha256 mismatch | The model cache is missing or damaged: `docker volume rm skillforge_models`, then `bash devops/demo/demo.sh prepare` |
 | `could not fetch Backend` | No network, or the branch doesn't exist. Check `git ls-remote origin Backend`; pin a SHA that's already fetched |
 | `looks like a short SHA` | Use the full 40-character SHA: `git rev-parse <short>` |
+| No `devops/demo/` in the codespace, or a plain default container | It was created from `main`. `git checkout DevOps`, then **Codespaces: Rebuild Container** (or create it again with `-b DevOps`) |
+| The Public link shows "You are about to access a development port" | Expected on the first visit in each browser session: click **Continue** |
 | The Public link asks for a GitHub sign-in | Port 3000 is still Private (or turned Private when its protocol changed). Set it again |
 | "port is already allocated" (laptop) | Another app uses the port. Change `WEB_PORT` / `API_PORT` / `POSTGRES_PORT` in `.env` |
 | The disk is full | `docker builder prune` (build cache), then `docker image prune` |
@@ -269,18 +284,27 @@ bash devops/demo/demo.sh
 ---
 
 ## Measured
-Measured on 2026-11-25 with this dev container, run locally (dev container CLI 0.90.0 on Docker Desktop, WSL 2),
-the whole stack in fake mode. The numbers come from `docker stats --no-stream` and `docker system df` inside the
-dev container. These are not yet numbers from a real codespace: the first real run should replace them.
+**RAM: a real codespace** (2-core, branch `DevOps`, after Rebuild Container), with the full demo up in fake
+mode. `demo.sh`: everything up, the FAKE banner shown, the seed project created.
+
+| Machine | MB |
+|---|---|
+| Total | 7941 |
+| Used (editor server, dev container, the demo) | 2893 |
+| **Available** | **5047** |
 
 | Container | RAM, running |
 |---|---|
-| web (Next.js standalone) | 144 MiB |
-| api (uvicorn) | 91 MiB |
-| postgres | 40-78 MiB |
-| worker (placeholder; the model is loaded only for its check) | 27 MiB |
-| redis | 6 MiB |
-| **Total** | **≈0.3 GB** |
+| web (Next.js standalone) | 133.6 MiB |
+| api (uvicorn) | 81.2 MiB |
+| postgres | 62.1 MiB |
+| worker (placeholder; the model is loaded only for its check) | 27.7 MiB |
+| redis | 26.6 MiB |
+| **Total** | **≈331 MiB (0.35 GB)** |
+
+**Disk and time:** measured on 2026-11-25 with this dev container run locally (dev container CLI 0.90.0 on
+Docker Desktop, WSL 2), the whole stack in fake mode, from `docker system df` inside the dev container. Not yet
+re-measured in a codespace.
 
 | Disk | Size |
 |---|---|
@@ -296,9 +320,9 @@ dev container. These are not yet numbers from a real codespace: the first real r
 | `demo.sh` on a prepared codespace | 204 s (3.4 min) for the first start; about 1 min for a restart |
 | `demo.sh` on a laptop, images not built yet | 413 s |
 
-**RAM in a codespace:** add the editor server and the container itself (about 0.8-1 GB), so ≈1.3 GB in use while
-the demo runs. That fits easily in the 2-core machine's 8 GB. The first creation peaks higher while `next build`
-and the Python installs run.
+**RAM in a codespace:** 2.9 GB in use while the demo runs, more than the 1.3 GB estimated from the laptop: the
+editor server and the dev container take about 2.5 GB of it. That still leaves 5.0 GB of the 2-core machine's 8 GB.
+The first creation peaks higher while `next build` and the Python installs run.
 
 ---
 

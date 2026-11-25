@@ -257,8 +257,9 @@ after a start; "after `test-cost`" was taken with Grafana still capped at 256 MB
 
 - **Grafana 13** needs about 250 MB of memory on its own. A 256 MB cap kept it at the limit (812 reclaim events),
   hence 512 MB (0 limit events since).
-- **In a 2-core codespace** (8 GB): the demo's ≈1.3 GB plus ≈0.4 GB is ≈1.7 GB. These are laptop numbers: the
-  first codespace run should confirm them.
+- **In a 2-core codespace** (7.9 GB): with the demo up, a real codespace had 2.9 GB used and 5.0 GB available
+  (docs/devops/demo-codespaces.md), so monitoring's ≈0.4 GB brings it to about 3.3 GB. The monitoring numbers
+  themselves are from the laptop; they haven't been measured in a codespace yet.
 - **Disk:**
   - images about 2.7 GB (Grafana 2.0 GB, Prometheus 0.39 GB, Alertmanager 0.13 GB, the rest under 0.07 GB each);
   - data a few MB at first, capped at 1 GB for Prometheus (8 days kept, for AI's 7-day rules).
