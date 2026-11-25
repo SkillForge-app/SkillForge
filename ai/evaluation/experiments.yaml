@@ -1,0 +1,338 @@
+# AI-25 experiment registry: every committed report and how to reproduce it.
+# `python -m evaluation.reproduce check` fails when a report under ai/evaluation/*/reports/
+# has no entry here, so every new experiment must add one. Docs: docs/ai/experiments.md.
+#
+# kind: offline (deterministic, re-run from recorded_at), live (paid model calls: listed,
+#   never re-run; re-scored offline once its predictions are tracked), rescore (offline,
+#   from tracked predictions). recorded_at: the commit that added the report.
+# status: pending-merge = the report is on another branch; check skips the entry while
+#   the report is absent and checks it fully once it is present.
+version: 1
+# Fields never compared (volatile or filled in by hand). Never a metric, count or label.
+# A per-entry addition needs `ignore_extra` with a written reason.
+ignore: [date, created, run, latency_ms, mean_ms, usage, cost_usd, human_review]
+data_files:
+  - path: ai/evaluation/injection/reports/llm-verdicts-test-2026-11-02.json
+    why: the saved LLM-screen verdicts of the 2 Nov live run; an input of E6, not a report
+experiments:
+  - id: E1:extraction-2026-10-25
+    experiment: E1
+    task: AI-10
+    question: Are extracted chunks clean (automatic gates) and good to a human (20 sampled)?
+    kind: offline
+    status: active
+    report: ai/evaluation/extraction/reports/extraction-2026-10-25.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.extraction", "report", "--sample", "20", "--seed", "7"]
+  - id: E2:sources-2026-10-26
+    experiment: E2
+    task: AI-09
+    question: Do the top 10 sources per seed domain pass the review rule?
+    kind: offline
+    status: active
+    report: ai/evaluation/sources/reports/sources-2026-10-26.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.sources", "review"]
+  - id: E2:sources-2026-10-26-2
+    experiment: E2
+    task: AI-09
+    question: Do the top 10 sources per seed domain pass the review rule?
+    kind: offline
+    status: active
+    report: ai/evaluation/sources/reports/sources-2026-10-26-2.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.sources", "review"]
+  - id: E2:sources-2026-10-26-3
+    experiment: E2
+    task: AI-09
+    question: Do the top 10 sources per seed domain pass the review rule?
+    kind: offline
+    status: active
+    report: ai/evaluation/sources/reports/sources-2026-10-26-3.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.sources", "review"]
+  - id: E2:sources-2026-10-26-4
+    experiment: E2
+    task: AI-09
+    question: Do the top 10 sources per seed domain pass the review rule?
+    kind: offline
+    status: active
+    report: ai/evaluation/sources/reports/sources-2026-10-26-4.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.sources", "review"]
+  - id: E2:sources-2026-10-26-5
+    experiment: E2
+    task: AI-09
+    question: Do the top 10 sources per seed domain pass the review rule?
+    kind: offline
+    status: active
+    report: ai/evaluation/sources/reports/sources-2026-10-26-5.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.sources", "review"]
+  - id: E3:recall-2026-10-26
+    experiment: E3
+    task: AI-11
+    question: Which embedding model and chunk size give the best recall@5 on 40 questions?
+    kind: offline
+    status: active
+    report: ai/evaluation/retrieval/reports/recall-2026-10-26.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.retrieval", "run", "--models", "all"]
+  - id: E3:recall-2026-11-01
+    experiment: E3
+    task: AI-11
+    question: Which embedding model and chunk size give the best recall@5 on 40 questions?
+    kind: offline
+    status: active
+    report: ai/evaluation/retrieval/reports/recall-2026-11-01.json
+    recorded_at: 78dadd68b18165245665081dbc9720018f8f8584
+    command: ["python", "-m", "evaluation.retrieval", "run", "--models", "all"]
+  - id: E4:gap-dev-2026-10-28
+    experiment: E4
+    task: AI-08
+    question: "Gap Checker: text variant and thresholds on dev; precision on test (once)"
+    kind: offline
+    status: active
+    report: ai/evaluation/gap/reports/gap-dev-2026-10-28.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.gap", "tune"]
+  - id: E4:gap-test-2026-10-28
+    experiment: E4
+    task: AI-08
+    question: "Gap Checker: text variant and thresholds on dev; precision on test (once)"
+    kind: offline
+    status: active
+    report: ai/evaluation/gap/reports/gap-test-2026-10-28.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.gap", "report"]
+  - id: E5:injection-dev-2026-10-28
+    experiment: E5
+    task: AI-19
+    question: Do the injection rules catch inserted injections without hurting clean pages?
+    kind: offline
+    status: active
+    report: ai/evaluation/injection/reports/injection-dev-2026-10-28.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "dev"]
+  - id: E5:injection-dev-2026-10-28-2
+    experiment: E5
+    task: AI-19
+    question: Do the injection rules catch inserted injections without hurting clean pages?
+    kind: offline
+    status: active
+    report: ai/evaluation/injection/reports/injection-dev-2026-10-28-2.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "dev"]
+  - id: E5:injection-dev-2026-10-28-3
+    experiment: E5
+    task: AI-19
+    question: Do the injection rules catch inserted injections without hurting clean pages?
+    kind: offline
+    status: active
+    report: ai/evaluation/injection/reports/injection-dev-2026-10-28-3.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "dev"]
+  - id: E5:injection-test-2026-10-28
+    experiment: E5
+    task: AI-19
+    question: Do the injection rules catch inserted injections without hurting clean pages?
+    kind: offline
+    status: active
+    report: ai/evaluation/injection/reports/injection-test-2026-10-28.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "test"]
+  - id: E5:injection-test-2026-10-28-2
+    experiment: E5
+    task: AI-19
+    question: Do the injection rules catch inserted injections without hurting clean pages?
+    kind: offline
+    status: active
+    report: ai/evaluation/injection/reports/injection-test-2026-10-28-2.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "test"]
+  - id: E5:injection-test-2026-10-28-3
+    experiment: E5
+    task: AI-19
+    question: Do the injection rules catch inserted injections without hurting clean pages?
+    kind: offline
+    status: active
+    report: ai/evaluation/injection/reports/injection-test-2026-10-28-3.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "test"]
+  - id: E6:injection-test-2026-11-02
+    experiment: E6
+    task: AI-19
+    question: "Full system (c): rules + LLM screen + spec gate stop the test injections?"
+    kind: offline
+    status: active
+    report: ai/evaluation/injection/reports/injection-test-2026-11-02.json
+    recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "test", "--llm", "--verdicts", "evaluation/injection/reports/llm-verdicts-test-2026-11-02.json"]
+  - id: E7:analyzer-dev-2026-11-02
+    experiment: E7
+    task: AI-05
+    question: Request Analyzer prompt v1 vs the v2 trial (dev), then the 90% gate on v1
+    kind: live
+    status: active
+    report: ai/evaluation/analyzer/reports/analyzer-dev-2026-11-02.json
+    recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/request v1
+    cost_usd: 0.1749
+    command: ["python", "-m", "evaluation.analyzer", "run", "--set", "dev", "--live"]
+  - id: E7:analyzer-dev-2026-11-02-2
+    experiment: E7
+    task: AI-05
+    question: Request Analyzer prompt v1 vs the v2 trial (dev), then the 90% gate on v1
+    kind: live
+    status: active
+    report: ai/evaluation/analyzer/reports/analyzer-dev-2026-11-02-2.json
+    recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/request v2
+    cost_usd: 0.1688
+    command: ["python", "-m", "evaluation.analyzer", "run", "--set", "dev", "--live"]
+  - id: E7:analyzer-gate-2026-11-02
+    experiment: E7
+    task: AI-05
+    question: Request Analyzer prompt v1 vs the v2 trial (dev), then the 90% gate on v1
+    kind: live
+    status: active
+    report: ai/evaluation/analyzer/reports/analyzer-gate-2026-11-02.json
+    recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/request v1
+    cost_usd: 0.9735
+    command: ["python", "-m", "evaluation.analyzer", "run", "--set", "gate", "--live"]
+  - id: E8:analyzer-gate-2026-11-02-rescored-labels-v0.3.0
+    experiment: E8
+    task: AI-05
+    question: The 2 Nov gate predictions rescored against reviewed labels v0.3.0
+    kind: rescore
+    status: active
+    report: ai/evaluation/analyzer/reports/analyzer-gate-2026-11-02-rescored-labels-v0.3.0.json
+    recorded_at: f71ee4cceb78f848b124d8a47bcedf653f2b742c
+  - id: E9:safety-dev-2026-11-17
+    experiment: E9
+    task: AI-06
+    question: "Safety screen: v1 vs the v2 trial (dev), the final run, normal re-screen"
+    kind: live
+    status: active
+    report: ai/evaluation/safety/reports/safety-dev-2026-11-17.json
+    recorded_at: ce0c59b7b8cd6a4882ce34d71267df8f5929cf4a
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/safety v1
+    cost_usd: 0.0931
+    command: ["python", "-m", "evaluation.safety", "run", "--set", "dev", "--live"]
+  - id: E9:safety-dev-2026-11-17-2
+    experiment: E9
+    task: AI-06
+    question: "Safety screen: v1 vs the v2 trial (dev), the final run, normal re-screen"
+    kind: live
+    status: active
+    report: ai/evaluation/safety/reports/safety-dev-2026-11-17-2.json
+    recorded_at: 35851ff2bb1ff983cdda052ed38125e8b2da5dd3
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/safety v2
+    cost_usd: 0.1054
+    command: ["python", "-m", "evaluation.safety", "run", "--set", "dev", "--live"]
+  - id: E9:safety-dev-2026-11-17-3
+    experiment: E9
+    task: AI-06
+    question: "Safety screen: v1 vs the v2 trial (dev), the final run, normal re-screen"
+    kind: live
+    status: active
+    report: ai/evaluation/safety/reports/safety-dev-2026-11-17-3.json
+    recorded_at: e80b666507ea2fd3acac90a7f8561d06074b59fb
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/safety v1
+    cost_usd: 0.0873
+    command: ["python", "-m", "evaluation.safety", "run", "--set", "dev", "--live"]
+  - id: E9:safety-all-2026-11-17
+    experiment: E9
+    task: AI-06
+    question: "Safety screen: v1 vs the v2 trial (dev), the final run, normal re-screen"
+    kind: live
+    status: active
+    report: ai/evaluation/safety/reports/safety-all-2026-11-17.json
+    recorded_at: c345c83c1676ad4ac00ad88a3266ee701b278483
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/safety v1
+    cost_usd: 1.138
+    command: ["python", "-m", "evaluation.safety", "run", "--set", "all", "--live"]
+  - id: E9:safety-normal-ids-2026-11-17
+    experiment: E9
+    task: AI-06
+    question: "Safety screen: v1 vs the v2 trial (dev), the final run, normal re-screen"
+    kind: live
+    status: active
+    report: ai/evaluation/safety/reports/safety-normal-ids-2026-11-17.json
+    recorded_at: 84b84a5adbc2936fe6e56031f6a4623724fc19c7
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/safety v1
+    cost_usd: 0.0964
+    command: ["python", "-m", "evaluation.safety", "run", "--set", "normal", "--live"]
+  - id: E10:seed-0.1.0
+    experiment: E10
+    task: AI-04
+    question: Is each released seed benchmark unchanged (byte hashes)?
+    kind: offline
+    status: active
+    report: ai/evaluation/benchmarks/seed/releases/0.1.0/manifest.json
+    recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
+    command: ["python", "-m", "evaluation.benchmarks", "validate", "seed"]
+  - id: E10:seed-1.0.0
+    experiment: E10
+    task: AI-04
+    question: Is each released seed benchmark unchanged (byte hashes)?
+    kind: offline
+    status: active
+    report: ai/evaluation/benchmarks/seed/releases/1.0.0/manifest.json
+    recorded_at: d05488b9982ed4518b7f89fcd967fd116f856a8a
+    command: ["python", "-m", "evaluation.benchmarks", "validate", "seed"]
+  - id: E6:injection-test-2026-11-18
+    experiment: E6
+    task: AI-19
+    question: "AI-19 after the F9 rule narrowing: (c) recomputed offline from the saved 2 Nov verdicts"
+    kind: offline
+    status: pending-merge
+    branch: "AI-review-fixes-c2 (#40)"
+    report: ai/evaluation/injection/reports/injection-test-2026-11-18.json
+    recorded_at: 36ba003e399f5bbecab218e028c6420a448f8bdc
+    command: ["python", "-m", "evaluation.injection", "report", "--split", "test", "--llm", "--verdicts", "evaluation/injection/reports/llm-verdicts-test-2026-11-02.json"]
+  - id: E11:support-calibration-2026-11-21
+    experiment: E11
+    task: AI-13
+    question: "AI-13: the support-check threshold, calibrated on the fixture passages only"
+    kind: offline
+    status: pending-merge
+    branch: AI-12-architect-v1
+    report: ai/evaluation/architect/reports/support-calibration-2026-11-21.json
+    recorded_at: 422f994e98c129f8239b18291b78cb6a53ecc6e0
+    command: ["python", "-m", "evaluation.architect", "calibrate-support"]
+  - id: E12:analyzer-dev-2026-11-24
+    experiment: E12
+    task: AI-05
+    question: AI-05 prompt v3 on dev (50), run 1 of 3
+    kind: live
+    status: pending-merge
+    branch: AI-05-prompt-v3
+    report: ai/evaluation/analyzer/reports/analyzer-dev-2026-11-24.json
+    recorded_at: 6f77d138865a5d6e1469a20bbc65f55f2c9b6942
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/request v3
+    cost_usd: 0.4416
+    command: ["python", "-m", "evaluation.analyzer", "run", "--set", "dev", "--live", "--budget-usd", "0.65"]
+  - id: E12:analyzer-gate-2026-11-24
+    experiment: E12
+    task: AI-05
+    question: "AI-05 prompt v3 gate run: INVALID (provider failure), not a measurement"
+    kind: live
+    status: pending-merge
+    branch: AI-05-prompt-v3
+    report: ai/evaluation/analyzer/reports/analyzer-gate-2026-11-24.json
+    recorded_at: 8bb4c1ba4021a8e625f6faa04fa765dbc7218a8d
+    model: openrouter/anthropic/claude-sonnet-5.5
+    prompt: analysis/request v3
+    cost_usd: 0.5742
+    command: ["python", "-m", "evaluation.analyzer", "run", "--set", "gate", "--live", "--budget-usd", "1.30", "--concurrency", "2", "--retry-errors"]
