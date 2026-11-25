@@ -30,7 +30,7 @@ What each AI alert means and what to do. The rules are in `ai/ops/alerts.yaml` a
 - **Do:**
   1. Group the errors by `error_type`.
   2. `RateLimitError`: lower the role's `requests_per_minute`, or ask DevOps to raise the provider limit.
-  3. `LLMOutputInvalid`: compare `prompt_version` and the model with the last good period, and roll back.
+  3. `LLMOutputInvalid`: group the records by `invalid_fields` to see which rule fails, then compare `prompt_version` and the model with the last good period, and roll back.
   4. Missing key: restore the secret.
 
 ### AILLMErrorRateCritical
@@ -41,9 +41,9 @@ What each AI alert means and what to do. The rules are in `ai/ops/alerts.yaml` a
 
 ### AILLMAllModelsFailing
 - **Means:** more than 5% of pipeline steps return `retry_later` / `provider_unavailable`: every model in a role's chain failed, so users' jobs are being retried.
-- **Likely causes:** an OpenRouter outage with no `ANTHROPIC_API_KEY` for the direct hop; exhausted credits; a revoked key.
+- **Likely causes:** an OpenRouter outage with no `ANTHROPIC_API_KEY` for the direct hop; exhausted credits; a revoked key; steps passing their deadline (`step_timeout_s`: the cut-off calls are logged with `error_type: "CancelledError"`).
 - **Do:**
-  1. Check OpenRouter's status and credits.
+  1. Check OpenRouter's status and credits. If the records show `CancelledError`, the provider is slow rather than down: see AILatencyHigh.
   2. Set `ANTHROPIC_API_KEY` to enable the direct hop.
   3. If Anthropic is down too, post on the status page (OPS-18). Jobs are retried by BE.
 

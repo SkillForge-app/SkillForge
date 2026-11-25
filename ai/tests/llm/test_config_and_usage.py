@@ -1,3 +1,6 @@
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -14,6 +17,43 @@ from core.llm.usage import CallRecord, log_call
 from tests.llm.helpers import Greeting
 
 INPUTS = {"name": "Ziad", "platform": "Claude"}
+AI_ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_importing_core_keeps_litellm_on_its_bundled_price_map() -> None:
+    """LiteLLM downloads its price map from GitHub when it is imported, unless this variable is
+    set. Any `import core...` sets it, before anything in core (or BE) imports litellm."""
+    env = {k: v for k, v in os.environ.items() if k != "LITELLM_LOCAL_MODEL_COST_MAP"}
+    code = "import os, core; print(os.environ.get('LITELLM_LOCAL_MODEL_COST_MAP'))"
+    out = subprocess.run(
+        [sys.executable, "-c", code], cwd=AI_ROOT, env=env, capture_output=True, text=True
+    )
+    assert out.stdout.strip() == "True", out.stderr
+
+
+PRICES = (
+    "input_cost_per_token",
+    "output_cost_per_token",
+    "cache_read_input_token_cost",
+    "cache_creation_input_token_cost",
+)
+
+
+def test_openrouter_prices_match_the_direct_anthropic_prices() -> None:
+    """models.yaml: OpenRouter charges Anthropic's own per-token prices, so each OpenRouter
+    entry must price a call like the direct entry for the same model (used when OpenRouter
+    reports no cost)."""
+    info = load_config().model_info
+    prefix = "openrouter/anthropic/"
+    pairs = [
+        (name, name.removeprefix(prefix).replace(".", "-"))
+        for name in info
+        if name.startswith(prefix) and name.removeprefix(prefix).replace(".", "-") in info
+    ]
+    assert pairs  # at least Sonnet and Haiku have both entries
+    for openrouter, direct in pairs:
+        for price in PRICES:
+            assert info[openrouter].get(price) == info[direct].get(price), (openrouter, price)
 
 
 def test_default_config_has_the_contract_roles() -> None:

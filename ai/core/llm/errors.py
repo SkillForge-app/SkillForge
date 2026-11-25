@@ -44,5 +44,10 @@ class LLMUnavailable(LLMError):
     """The provider failed: timeout, rate limit, outage, or all fallbacks exhausted."""
 
 
+class DeadlineExceeded(LLMUnavailable):
+    """A pipeline step ran past the environment's deadline for it (AI-21): its calls were cut
+    off. A subclass of LLMUnavailable, so the step returns `retry_later`."""
+
+
 class BudgetExceeded(LLMError):
     """The skill run's cost budget is used up: no further model call is made (AI-21)."""

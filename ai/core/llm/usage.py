@@ -4,7 +4,7 @@ Policy: log metadata only. A CallRecord never holds prompt text, rendered messag
 embedded texts, model output or exception messages (provider errors can echo the prompt).
 `extra="forbid"` stops a content field from being added by accident.
 
-    with skill_run(job.skill_id, spent_usd=job.cost_so_far, budget_usd=1.50) as run:
+    with skill_run(job.skill_id, spent_usd=job.cost_so_far) as run:   # the environment's budget
         result = await pipeline.design(analyzed)    # stops cleanly once the budget is used up
 """
 
@@ -19,6 +19,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from core.llm.errors import BudgetExceeded
+from core.llm.limits import get_limits
 
 logger = logging.getLogger("skillforge.llm")
 
@@ -47,6 +48,9 @@ class CallRecord(BaseModel):
     fallback: int = Field(default=0, ge=0)
     # AI-21: the skill run (BE's id) this call belongs to, so cost per skill can be summed.
     skill_run: str | None = None
+    # An output that failed validation: "<field path>:<error type>" per error (e.g.
+    # "summary:string_too_long"), never the value. None for every other attempt.
+    invalid_fields: list[str] | None = None
 
 
 @dataclass
@@ -114,7 +118,12 @@ def skill_run(
     this block's cost reaches the budget, the next model call raises BudgetExceeded instead of
     calling. A call already running finishes and is counted, so at most one call overruns.
     Runs can be nested; every active budget is checked.
+
+    Without `budget_usd` the environment's budget per skill applies (`skill_budget_usd` of the
+    profile set by core.ops; $1.50 in production). With no profile installed there is none.
     """
+    if budget_usd is None:
+        budget_usd = get_limits().skill_budget_usd
     if spent_usd < 0 or (budget_usd is not None and budget_usd <= 0):
         raise ValueError("spent_usd must be >= 0 and budget_usd > 0")
     with track_usage() as totals:

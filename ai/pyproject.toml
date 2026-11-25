@@ -30,6 +30,13 @@ dependencies = [
     # LiteLLM: it decides where model files come from (the files are also pinned by revision
     # and sha256 in core/llm/models.yaml).
     "fastembed==0.9.1",
+    # Imported by core/ directly, so declared even though the packages above bring them in
+    # (tests/test_dependencies.py checks it). Loose ranges; uv.lock pins the versions.
+    "numpy>=2,<3",  # vectors (gap checker, local store)
+    "httpx>=0.28,<1",  # Brave search
+    "huggingface-hub>=1,<2",  # local model download
+    "openai>=2,<3",  # LiteLLM's error classes subclass the openai SDK's
+    "pydantic-core>=2,<3",  # schema export (core/spec)
 ]
 
 [project.optional-dependencies]

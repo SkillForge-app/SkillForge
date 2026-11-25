@@ -77,6 +77,8 @@ RETRYABLE_ERRORS: tuple[type[Exception], ...] = (
 
 logger = logging.getLogger("skillforge.llm")
 _FENCE = re.compile(r"^```(?:json)?\s*(.*?)\s*```$", re.DOTALL)
+_FIELD_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,63}$")
+MAX_INVALID_FIELDS = 20
 
 
 def configure_litellm(config: ModelConfig) -> None:
@@ -197,36 +199,80 @@ class LiteLLMGateway:
                 "after one repair attempt"
             ) from bad.error
 
+    async def complete_text(
+        self,
+        prompt_id: str,
+        inputs: Mapping[str, Any],
+        *,
+        model_role: str | None = None,
+    ) -> str:
+        """Like `complete`, for a model that answers in plain text (e.g. a safety classifier):
+        no JSON schema, no validation, no repair. The same retries, fallbacks, budget, rate
+        limit and CallRecord logging."""
+        prompt = load_prompt(prompt_id, self.prompts_root)
+        messages = prompt.render(inputs)
+        check_input_size(prompt_id, sum(len(str(m["content"])) for m in messages))
+        role_name = model_role or prompt.meta.model_role
+        call = _Call(
+            role_name=role_name,
+            role=self.config.role(role_name),
+            fields={"kind": "complete", "prompt_id": prompt_id, "prompt_version": prompt.version},
+        )
+
+        async def attempt(model: str) -> str:
+            reply, metrics, start = await self._reply(call, model, messages, None)
+            call.record(model, start, **metrics)
+            return reply
+
+        return await self._with_retries(call, [call.role.model, *call.role.fallbacks], attempt)
+
+    async def _reply(
+        self,
+        call: _Call,
+        model: str,
+        messages: list[Message],
+        output_model: type[BaseModel] | None,
+    ) -> tuple[str, dict[str, Any], float]:
+        """One request to `model`: the reply text, its metrics and the start time. Failures,
+        refusals and cut-off replies are recorded and raised here."""
+        start = time.perf_counter()
+        try:
+            _require_key(model)
+            response = await litellm.acompletion(
+                **_completion_args(call.role, model, messages, output_model)
+            )
+        except (Exception, asyncio.CancelledError) as exc:  # cancelled: a step deadline
+            call.record(model, start, error=type(exc).__name__)
+            raise
+        choice = response.choices[0]
+        metrics = self._metrics(response, model)
+        metrics["finish_reason"] = finish = choice.finish_reason
+        if finish in REFUSAL_FINISH_REASONS:
+            call.record(model, start, error=LLMRefused.__name__, **metrics)
+            raise _TryNextModel(model)
+        if finish == "length":
+            call.record(model, start, error=LLMOutputInvalid.__name__, **metrics)
+            raise LLMOutputInvalid(
+                f"{call.fields['prompt_id']}: reply cut off at max_tokens="
+                f"{capped_max_tokens(call.role.max_tokens)} on {model}"
+            )
+        return choice.message.content or "", metrics, start
+
     async def _complete_once(
         self, call: _Call, messages: list[Message], output_model: type[T]
     ) -> T:
         async def attempt(model: str) -> T:
-            start = time.perf_counter()
-            try:
-                _require_key(model)
-                response = await litellm.acompletion(
-                    **_completion_args(call.role, model, messages, output_model)
-                )
-            except Exception as exc:
-                call.record(model, start, error=type(exc).__name__)
-                raise
-            choice = response.choices[0]
-            metrics = self._metrics(response, model)
-            metrics["finish_reason"] = finish = choice.finish_reason
-            if finish in REFUSAL_FINISH_REASONS:
-                call.record(model, start, error=LLMRefused.__name__, **metrics)
-                raise _TryNextModel(model)
-            if finish == "length":
-                call.record(model, start, error=LLMOutputInvalid.__name__, **metrics)
-                raise LLMOutputInvalid(
-                    f"{call.fields['prompt_id']}: reply cut off at max_tokens="
-                    f"{capped_max_tokens(call.role.max_tokens)} on {model}"
-                )
-            reply = choice.message.content or ""
+            reply, metrics, start = await self._reply(call, model, messages, output_model)
             try:
                 result = output_model.model_validate_json(_strip_fences(reply))
             except ValidationError as exc:
-                call.record(model, start, error=LLMOutputInvalid.__name__, **metrics)
+                call.record(
+                    model,
+                    start,
+                    error=LLMOutputInvalid.__name__,
+                    invalid_fields=_invalid_fields(exc),
+                    **metrics,
+                )
                 raise _BadOutput(reply, exc) from None
             call.record(model, start, **metrics)
             return result
@@ -274,7 +320,7 @@ class LiteLLMGateway:
                     metrics |= self._metrics(response, model)
                     items = sorted(response.data, key=lambda item: _field(item, "index"))
                     vectors = [list(_field(item, "embedding")) for item in items]
-            except Exception as exc:
+            except (Exception, asyncio.CancelledError) as exc:  # cancelled: a step deadline
                 call.record(model, start, error=type(exc).__name__, **metrics)
                 raise
             if len(vectors) != len(batch) or any(len(v) != dimensions for v in vectors):
@@ -296,9 +342,11 @@ class LiteLLMGateway:
         """Try each model in order; retry transient errors on the same model with backoff.
 
         Before every attempt the skill's cost budget is checked (BudgetExceeded) and the role's
-        rate limit takes a slot (LLMUnavailable when none frees up in time)."""
+        rate limit takes a slot (LLMUnavailable when none frees up in time). Once any model
+        refused, no other model answering means LLMRefused, even if a later link failed or was
+        skipped: a harmful request must not come back as 'try again later'."""
         last: Exception | None = None
-        refused = False
+        refused = False  # sticky: set by the first refusal, never cleared
         call.chain = tuple(models)
         for model in models:
             for retry in range(call.role.num_retries + 1):
@@ -317,11 +365,13 @@ class LiteLLMGateway:
                     if action is None:
                         raise
                     last = exc
-                    refused = isinstance(exc, _E.ContentPolicyViolationError)
+                    refused = refused or isinstance(exc, _E.ContentPolicyViolationError)
                     if action == "next_model":
                         break
         if refused:
-            raise LLMRefused(f"role {call.role_name}: every model refused") from last
+            raise LLMRefused(
+                f"role {call.role_name}: a model refused and no other model answered"
+            ) from last
         raise LLMUnavailable(
             f"role {call.role_name}: all models failed ({', '.join(models)}); "
             f"last error {type(last).__name__}"
@@ -391,15 +441,16 @@ def _classify(exc: Exception) -> str | None:
 
 
 def _completion_args(
-    role: ModelRole, model: str, messages: list[Message], output_model: type[BaseModel]
+    role: ModelRole, model: str, messages: list[Message], output_model: type[BaseModel] | None
 ) -> dict[str, Any]:
     args: dict[str, Any] = {
         "model": model,
         "messages": messages,
-        "response_format": output_model,
         "timeout": role.timeout_s,
         "num_retries": 0,
     }
+    if output_model is not None:  # None: a plain-text reply (complete_text)
+        args["response_format"] = output_model
     optional = {
         "max_tokens": capped_max_tokens(role.max_tokens),
         "temperature": role.temperature,
@@ -420,6 +471,23 @@ def _repair_instruction(error: ValidationError) -> str:
         + "\n".join(problems[:20])
         + "\nReply again with only the corrected JSON object."
     )
+
+
+def _invalid_fields(error: ValidationError) -> list[str]:
+    """`<field path>:<error type>` for each validation error, for the call record. No values: a
+    path part that is not a plain identifier or an index becomes "?", and so does a key the
+    model made up (extra_forbidden), since the model chose its name."""
+    fields = []
+    for e in error.errors(include_url=False, include_input=False, include_context=False):
+        loc = list(e["loc"])
+        if e["type"] == "extra_forbidden" and loc:
+            loc[-1] = "?"
+        parts = [
+            str(p) if isinstance(p, int) or (isinstance(p, str) and _FIELD_NAME.match(p)) else "?"
+            for p in loc
+        ]
+        fields.append(f"{'.'.join(parts) or '(root)'}:{e['type']}")
+    return fields[:MAX_INVALID_FIELDS]
 
 
 def _strip_fences(reply: str) -> str:
