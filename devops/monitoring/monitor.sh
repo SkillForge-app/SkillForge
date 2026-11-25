@@ -68,7 +68,7 @@ oncall_mode() {
       ;;
     off)
       # Empty, not unset: compose needs the secrets' variables; an empty value creates no file.
-      export ONCALL_TELEGRAM_BOT_TOKEN= ONCALL_TELEGRAM_CHAT_ID= ALERTMANAGER_CONFIG=alertmanager.off.yml
+      export ONCALL_TELEGRAM_BOT_TOKEN='' ONCALL_TELEGRAM_CHAT_ID='' ALERTMANAGER_CONFIG=alertmanager.off.yml
       ;;
     *) die "MONITOR_ONCALL must be telegram or off (got '${mode}')" ;;
   esac
@@ -81,9 +81,10 @@ placeholders() {
 }
 
 need_running() {
-  [ "$(dc ps alertmanager --format '{{.State}}' 2> /dev/null)" = running ] \
-    && [ "$(dc ps ai-metrics --format '{{.State}}' 2> /dev/null)" = running ] \
-    || die "monitoring is not running: bash devops/monitoring/monitor.sh up"
+  if [ "$(dc ps alertmanager --format '{{.State}}' 2> /dev/null)" != running ] \
+    || [ "$(dc ps ai-metrics --format '{{.State}}' 2> /dev/null)" != running ]; then
+    die "monitoring is not running: bash devops/monitoring/monitor.sh up"
+  fi
 }
 
 # The always-firing test alert stays silenced except during `test`.
