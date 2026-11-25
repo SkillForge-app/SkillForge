@@ -10,7 +10,9 @@
 // devops/docker/api.Dockerfile.
 {
   "name": "SkillForge demo",
-  "image": "mcr.microsoft.com/devcontainers/python:3.3.2-3.11-bookworm@sha256:ef7e81398ac59cb6d043d91f7ce5d2334bf1a48de54a90c04a5dd3933b1a272d",
+  // Digest only (like the features): the dev container CLI's own registry lookup can't read a
+  // tag@digest reference. The tag is in the list at the top.
+  "image": "mcr.microsoft.com/devcontainers/python@sha256:ef7e81398ac59cb6d043d91f7ce5d2334bf1a48de54a90c04a5dd3933b1a272d",
   "features": {
     // Its own Docker daemon inside the codespace, for the root compose.yaml. Images and volumes
     // (the model cache too) live in its /var/lib/docker volume, so they survive stop and start.

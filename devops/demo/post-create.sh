@@ -8,21 +8,31 @@
 # It needs no secret: OPENROUTER_API_KEY is read only when the demo starts (demo.sh up).
 set -euo pipefail
 
-ROOT="$(git rev-parse --show-toplevel)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
+# A workspace that belongs to another user (a bind mount from Windows or macOS, sometimes a
+# codespace) makes git refuse it ("dubious ownership"). Trust this one folder, only then; the
+# setting stays in the container, so demo.sh and fetch-sources.sh work afterwards too.
+if ! git rev-parse --show-toplevel > /dev/null 2>&1; then
+  git config --global --add safe.directory "${ROOT}"
+  printf 'post-create: git safe.directory += %s (the folder belongs to another user)\n' "${ROOT}"
+fi
 
 log() { printf 'post-create: %s\n' "$*"; }
 
 # ---------------------------------------------------------------- uv
 # The same version and sha256s as the images, read from devops/docker/api.Dockerfile, so there is
 # one place to update them.
+# arg <NAME>: the value of `ARG NAME=` in api.Dockerfile (without a CR: a Windows checkout has CRLF).
+arg() { sed -n "s/^ARG $1=//p" devops/docker/api.Dockerfile | tr -d '\r'; }
+
 install_uv() {
   local dockerfile=devops/docker/api.Dockerfile version arch sha name tmp
-  version="$(sed -n 's/^ARG UV_VERSION=//p' "${dockerfile}")"
+  version="$(arg UV_VERSION)"
   arch="$(uname -m)"
   case "${arch}" in
-    x86_64) sha="$(sed -n 's/^ARG UV_SHA256_X86_64=//p' "${dockerfile}")" ;;
-    aarch64) sha="$(sed -n 's/^ARG UV_SHA256_AARCH64=//p' "${dockerfile}")" ;;
+    x86_64) sha="$(arg UV_SHA256_X86_64)" ;;
+    aarch64) sha="$(arg UV_SHA256_AARCH64)" ;;
     *) log "unsupported architecture ${arch}"; exit 1 ;;
   esac
   if [ -z "${version}" ] || [ -z "${sha}" ]; then
