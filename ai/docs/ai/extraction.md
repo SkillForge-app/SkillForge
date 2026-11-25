@@ -75,6 +75,7 @@ else:
 - **Store it** in `chunk_config` (suggested key: `extract_fingerprint`). A new value means a new chunk set.
 - **The default config** gives `474bd237fac3dc9db4018f1f0ad2b337cd4d99c4ec33b2b61feaad59c79d79c5` (`EXTRACTION_VERSION` 2). A test pins this value, so it changes only on purpose, and AI tells DE when it does.
   - **History:** version 1 gave `f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483`. Version 2 (review F9) narrowed three injection rules, so sentences that version 1 removed from API and prompt documentation now stay. **DE re-chunks and re-embeds every current document** under the new fingerprint, then switches `active_config`; documents whose raw HTML has expired (30 days) are re-fetched first.
+  - **Before version 2 merged** (review on #40, 2026-11-26), its injection rules were tightened again: a credential sent to another site than the page's is now removed. The fingerprint didn't change, because no version of these chunks had been stored yet. Version 2 is the code that merges, so re-chunk from the merged branch, never from an earlier checkout of `AI-review-fixes-c2`. The result now also depends on the page URL passed to `extract_page`, and on `tld`'s Public Suffix List (pinned in `uv.lock`).
 - **It changes when:**
   - any hashed setting changes;
   - AI bumps `EXTRACTION_VERSION` (when AI's extraction code changes the chunks a config gives);
