@@ -116,7 +116,9 @@ services:
   # PLACEHOLDER until Backend's worker exists: checks the model offline (devops/docker/worker_check.py),
   # then waits. Backend's version adds, in the `api` profile:
   #   command: ["rq", "worker", "--with-scheduler", "--url", "redis://redis:6379/0", "skills"]
-  #   env_file: [ai/.env]          # LLM provider keys only from ai/.env, never from this file
+  #   secrets: [openrouter_api_key] # the provider key as a compose secret (environment source),
+  #     never `environment:`/`env_file:`: those show in `docker inspect`. The image's entrypoint
+  #     (devops/docker/worker-entrypoint.sh) exports it; devops/demo/compose.demo.yaml does this.
   #   environment: DATABASE_URL, REDIS_URL, SKILLFORGE_VECTOR_STORE=pgvector,
   #     SKILLFORGE_PGVECTOR_DSN (the skillforge_ai_reader role), SKILLFORGE_PGVECTOR_TABLE
   #   depends_on: migrate (completed) and redis (healthy)

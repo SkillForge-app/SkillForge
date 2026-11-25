@@ -1,0 +1,22 @@
+# OPS-10: metrics DevOps derives from the AI logs IN ADDITION to ai/ops/metrics.yaml (AI-21's file).
+# The same schema and the same rule engine (core.ops.metrics), loaded by the ai-metrics exporter
+# next to AI's file. Kept here so OPS-10 needs no AI change; it can move into ai/ops/metrics.yaml
+# later (AI's tests/ops then check the fields too). Names must not clash with AI's metrics.
+version: 1
+metrics:
+  # ---------------------------------------------------------------- tokens (CallRecord)
+  - name: skillforge_llm_input_tokens_total
+    type: counter
+    help: Input (prompt) tokens of model calls by role and model, as the provider reported them.
+    logger: skillforge.llm
+    record: CallRecord
+    value: input_tokens
+    labels: {role: model_role, model: model}
+
+  - name: skillforge_llm_output_tokens_total
+    type: counter
+    help: Output (completion) tokens of model calls by role and model, as the provider reported them.
+    logger: skillforge.llm
+    record: CallRecord
+    value: output_tokens
+    labels: {role: model_role, model: model}

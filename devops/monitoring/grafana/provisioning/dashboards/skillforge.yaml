@@ -1,0 +1,12 @@
+# The dashboards in devops/monitoring/grafana/dashboards/, in the SkillForge folder (OPS-10).
+# Change them in the JSON files, by pull request: the UI can't save over them.
+apiVersion: 1
+providers:
+  - name: skillforge
+    folder: SkillForge
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/dashboards

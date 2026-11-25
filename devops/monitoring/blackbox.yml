@@ -1,0 +1,9 @@
+# blackbox_exporter (OPS-10): the one probe the services need. Used by prometheus.yml's `probe` job.
+modules:
+  http_2xx:
+    prober: http
+    timeout: 5s
+    http:
+      preferred_ip_protocol: ip4
+      # Compose services have no TLS; never follow a redirect off the compose network.
+      follow_redirects: false

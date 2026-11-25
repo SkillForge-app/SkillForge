@@ -1,0 +1,249 @@
+# Monitoring (OPS-10, OPS-17): metrics, AI-21's alerts, Telegram on-call, dashboards. An addition
+# to the root compose.yaml, used through devops/monitoring/monitor.sh (or demo.sh with
+# DEMO_MONITORING=1):
+#   docker compose -f compose.yaml -f devops/monitoring/compose.monitoring.yaml --profile monitoring ...
+# Relative paths resolve against the repo root (the folder of the first file). How it works, the
+# secrets, and how to test: devops/monitoring.md.
+#
+# Every image is pinned by digest to a release at least 14 days old. Every port listens on
+# 127.0.0.1 only. Each container has a memory cap, a read-only root filesystem, no capabilities
+# and no privilege escalation, except where a comment says otherwise.
+
+x-hardening: &hardening
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+
+services:
+  # ---------------------------------------------------------------- metrics and rules
+  prometheus:
+    <<: *hardening
+    profiles: [monitoring]
+    image: prom/prometheus:v3.16.0@sha256:e04987641b57704f408e31f6373ba4138ecf27cb4a165d24aabb6c38fddd0f06
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      # 8 days: AI's drift rules compare with a 7-day window. 1 GB caps the disk in a codespace.
+      - --storage.tsdb.retention.time=8d
+      - --storage.tsdb.retention.size=1GB
+      - --web.external-url=http://127.0.0.1:${PROMETHEUS_PORT:-9090}
+    volumes:
+      - ./devops/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./devops/monitoring/rules:/etc/prometheus/rules/ops:ro
+      # AI-21's rules, loaded as they are: ai/ops/alerts.yaml.
+      - ./ai/ops:/etc/prometheus/rules/ai:ro
+      - promdata:/prometheus
+    ports:
+      - "127.0.0.1:${PROMETHEUS_PORT:-9090}:9090"
+    mem_limit: 300m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9090/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # ---------------------------------------------------------------- alerts -> on-call
+  # Routes to the on-call Telegram chat (alertmanager/alertmanager.yml), or to nowhere with
+  # ALERTMANAGER_CONFIG=alertmanager.off.yml (monitor.sh does this for MONITOR_ONCALL=off).
+  alertmanager:
+    <<: *hardening
+    # The one writable root fs: compose copies an environment-sourced secret into the container,
+    # which a read-only root fs refuses ("`file` is the sole supported option"), and a file source
+    # would put the token in a file. No capabilities and no-new-privileges still apply.
+    read_only: false
+    profiles: [monitoring]
+    image: prom/alertmanager:v0.35.0@sha256:e638797febd034838eca8b98cdbd46f951e9bf7f178777aa8669167406a9946c
+    command:
+      - --config.file=/etc/alertmanager/${ALERTMANAGER_CONFIG:-alertmanager.yml}
+      - --storage.path=/alertmanager
+      - --web.external-url=http://127.0.0.1:${ALERTMANAGER_PORT:-9093}
+      # One instance: no cluster port.
+      - --cluster.listen-address=
+      # Debug: a first-attempt delivery is logged only at this level, as `Notify success` with
+      # the alert group. monitor.sh test / test-cost look for that line for THEIR alert, so another
+      # alert sent at the same moment can't pass for it. Rotated below.
+      - --log.level=debug
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+    volumes:
+      - ./devops/monitoring/alertmanager:/etc/alertmanager:ro
+      # Silences (the test alert's) and the notification log survive restarts.
+      - amdata:/alertmanager
+    # The bot token and chat id: copied by compose into /run/secrets inside this container only
+    # (no host file, no mount, not in `docker inspect`). From the shell or Codespaces secrets;
+    # monitor.sh checks them by name and never prints them.
+    secrets: [telegram_bot_token, telegram_chat_id]
+    ports:
+      - "127.0.0.1:${ALERTMANAGER_PORT:-9093}:9093"
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:9093/-/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  # AI-21's metrics, from the AI services' JSON-line logs (devops/monitoring/exporter/). Runs in
+  # the worker image: AI's code and dependencies are already there.
+  ai-metrics:
+    <<: *hardening
+    profiles: [monitoring]
+    build:
+      context: .
+      dockerfile: devops/docker/worker.Dockerfile
+    image: skillforge-worker:local
+    # Not the image's entrypoint (it only reads the worker's key, which this service never gets).
+    entrypoint:
+      - python
+      - /ops/exporter/ai_log_exporter.py
+      - --spec
+      - /ops-ai/metrics.yaml
+      - --spec
+      - /ops/metrics.extra.yaml
+    command: []
+    environment:
+      DOCKER_HOST: tcp://docker-socket-proxy:2375
+      COMPOSE_PROJECT: skillforge
+      # Its own logs are never AI logs: skip the monitoring services.
+      EXCLUDE_SERVICES: prometheus,alertmanager,grafana,ai-metrics,docker-socket-proxy,redis-exporter,blackbox
+      # The demo key's credit limit at OpenRouter, for OpsDemoKeySpendHigh (OPS-17).
+      DEMO_KEY_LIMIT_USD: ${DEMO_KEY_LIMIT_USD:-3}
+    volumes:
+      - ./devops/monitoring:/ops:ro
+      - ./ai/ops:/ops-ai:ro
+    networks: [default, docker-api]
+    mem_limit: 128m
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:9464/healthz', timeout=4).status == 200 else 1)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    depends_on:
+      docker-socket-proxy:
+        condition: service_started
+
+  # The Docker API for ai-metrics only: GET on containers (list, logs), nothing else (POST=0). On
+  # an internal network with no port, so only ai-metrics reaches it. The proxy still allows
+  # GET /containers/{id}/json (a container's configured env); ai-metrics never calls it, and no
+  # secret is in any container's env (the worker's key is a compose secret: compose.demo.yaml).
+  docker-socket-proxy:
+    profiles: [monitoring]
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    environment:
+      CONTAINERS: 1
+      POST: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [docker-api]
+    # haproxy writes its pid and socket under /run and /tmp; the rest of the root fs is read-only.
+    read_only: true
+    tmpfs: [/run, /tmp]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+    mem_limit: 64m
+
+  # Queue depth (OPS-10): the length of every RQ queue (rq:queue:*).
+  redis-exporter:
+    <<: *hardening
+    profiles: [monitoring]
+    image: oliver006/redis_exporter:v1.97.0@sha256:f5f903fbe77571d455ede0453b084d6840bc62fc105efac001034421cab83b99
+    environment:
+      REDIS_ADDR: redis://redis:6379
+      REDIS_EXPORTER_CHECK_KEYS: "rq:queue:*"
+    mem_limit: 32m
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  # Per-service availability and latency: probes the api's /health and the web's / (only while
+  # they run; see prometheus.yml).
+  blackbox:
+    <<: *hardening
+    profiles: [monitoring]
+    image: prom/blackbox-exporter:v0.29.1@sha256:ea1c7aa3ef3f307cd03e85f34abb604478ccb90b567fc690da0cd9776da76b13
+    command: ["--config.file=/etc/blackbox/blackbox.yml"]
+    volumes:
+      - ./devops/monitoring/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    mem_limit: 32m
+
+  # ---------------------------------------------------------------- monitor.sh test-cost (OPS-17)
+  # Logs synthetic AI events (4 calls x $5, one budget stop) through AI's own code; ai-metrics
+  # reads them like any AI log. No network at all; never started by `up`, only by
+  # `monitor.sh test-cost` (profile monitoring-test).
+  ai-test-events:
+    <<: *hardening
+    restart: "no"
+    profiles: [monitoring-test]
+    image: skillforge-worker:local
+    pull_policy: never
+    entrypoint: ["python", "/ops/synthetic_ai_events.py"]
+    command: []
+    network_mode: none
+    volumes:
+      - ./devops/monitoring:/ops:ro
+    mem_limit: 128m
+
+  # ---------------------------------------------------------------- dashboards
+  # Two provisioned dashboards (grafana/dashboards/): "SkillForge AI: models and cost" and
+  # "SkillForge services". Anyone who can open the port sees them (anonymous viewer); the admin
+  # login is the local placeholder in .env. No outbound calls: no update checks, no news, no
+  # plugin downloads.
+  grafana:
+    <<: *hardening
+    profiles: [monitoring]
+    image: grafana/grafana:13.3.1@sha256:0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      # The same local placeholder as .env.example, so an older .env without it still works.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-skillforge_dev}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/ai.json
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    volumes:
+      - ./devops/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./devops/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    tmpfs: [/tmp]
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    # Measured: about 250 MB when idle (Grafana 13); 256m kept it at the limit (devops/monitoring.md).
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    depends_on:
+      prometheus:
+        condition: service_started
+
+networks:
+  # The Docker API (socket proxy) and its one client, ai-metrics. No way out, no port.
+  docker-api:
+    internal: true
+
+secrets:
+  # Never in a file: set in your shell (read -rs) or as Codespaces secrets. Both must be SET (an
+  # empty value is fine for MONITOR_ONCALL=off): compose refuses to create Alertmanager otherwise.
+  telegram_bot_token:
+    environment: ONCALL_TELEGRAM_BOT_TOKEN
+  telegram_chat_id:
+    environment: ONCALL_TELEGRAM_CHAT_ID
+
+volumes:
+  promdata:
+  amdata:
+  grafanadata:

@@ -10,9 +10,11 @@ One command starts the shared services every department develops against. It's d
 | `web` (only with `--profile web`) | The Next.js app from `frontend/` | `http://127.0.0.1:3000` | `web:3000` |
 | `api` (only with `--profile api`) | The FastAPI app from `backend/`, after `migrate` | `http://127.0.0.1:8000` | `api:8000` |
 | `model-init`, `worker` (only with `--profile worker`) | The embedding-model cache, and a placeholder worker | (no ports) | (no ports) |
+| Monitoring (`devops/monitoring/compose.monitoring.yaml`, via `monitor.sh up`) | Prometheus with AI-21's alerts, Alertmanager to the on-call Telegram chat, Grafana | `http://127.0.0.1:3001` (Grafana), `:9090`, `:9093` | `prometheus:9090`, `alertmanager:9093` |
 
 `web` is described in [Web app](#web-app), `api` and `migrate` in [API](#api), and `model-init` and `worker` in
 [Worker and model cache](#worker-and-model-cache). The worker is a placeholder until Backend's worker exists.
+Monitoring has its own guide: [monitoring.md](monitoring.md).
 
 The ports listen on `127.0.0.1` only, so nothing is reachable from your network. All values in `.env.example`
 are for local development only; staging and production get theirs from the secret store.

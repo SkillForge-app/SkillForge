@@ -77,6 +77,10 @@ COPY --from=deps /app/.venv /app/.venv
 # Read-only for the app user: the worker writes nothing to its own files.
 COPY ai /app/ai
 COPY devops/docker/worker_check.py /app/devops/worker_check.py
+# Exports OPENROUTER_API_KEY from the compose secret /run/secrets/openrouter_api_key, if there is
+# one, then runs the command: the key stays out of the container's configuration (docker inspect).
+COPY --chmod=0555 devops/docker/worker-entrypoint.sh /app/devops/worker-entrypoint.sh
 USER app
+ENTRYPOINT ["/app/devops/worker-entrypoint.sh"]
 # Placeholder until Backend's worker exists: checks the model offline, then waits.
 CMD ["python", "/app/devops/worker_check.py"]
