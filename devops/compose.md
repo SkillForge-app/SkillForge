@@ -189,6 +189,12 @@ docker compose --profile worker run --rm model-init  # check (or fill) the cache
 - **Reset the cache:** `docker compose --profile worker down`, `docker volume rm skillforge_models`, then `up`
   again.
 
+## The demo
+`bash devops/demo/demo.sh` runs this stack with every profile for a demo, in GitHub Codespaces or on a laptop. It
+adds `devops/demo/compose.demo.yaml`: `backend/` and `frontend/` from their branches while `main` doesn't have
+them yet, the LLM mode (fake without a key), and a seeded project. It uses the same project name and volumes as
+the local stack. Guide: [docs/devops/demo-codespaces.md](../docs/devops/demo-codespaces.md).
+
 ## Images
 The postgres and redis images, the web image's Node base and the api image's Python base are pinned by digest (the multi-arch index,
 amd64 + arm64), each to a release at least two weeks old. To update one:

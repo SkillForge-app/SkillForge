@@ -1,0 +1,87 @@
+# Dev container check (OPS, Codespaces demo: docs/devops/demo-codespaces.md). Not a required check.
+# About 4-6 minutes, and only when the dev container or the demo scripts change:
+#   - every image and feature in .devcontainer/devcontainer.json is pinned by digest;
+#   - the dev container builds and starts (no post-create, so none of the stack's images are built:
+#     the compose workflow already builds and checks every one of them);
+#   - its tools are the pinned versions: Python 3.11, uv (post-create.sh --tools-only, the same
+#     version as the images), Node = frontend/.nvmrc's 24.21.0, and its own Docker daemon;
+#   - `demo.sh check`: backend/ and frontend/ are exported from their branches and the demo's
+#     compose files are valid (on this shallow CI checkout, so the --depth=1 path runs).
+name: devcontainer
+
+on:
+  pull_request:
+    branches: [main, AI, Backend, Frontend, Data-Engineering, DevOps]
+    paths:
+      - .devcontainer/**
+      - devops/demo/**
+      - compose.yaml
+      - .env.example
+      # post-create.sh reads uv's version and sha256s from here
+      - devops/docker/api.Dockerfile
+      - .github/workflows/devcontainer.yml
+  push:
+    branches: [main]
+    paths:
+      - .devcontainer/**
+      - devops/demo/**
+      - compose.yaml
+      - .env.example
+      - devops/docker/api.Dockerfile
+      - .github/workflows/devcontainer.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devcontainer-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+env:
+  # The dev container CLI, an exact version at least two weeks old (2026-10-28).
+  DEVCONTAINER_CLI: "@devcontainers/cli@0.90.0"
+
+jobs:
+  devcontainer:
+    name: devcontainer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Every image and feature is pinned by digest
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          # devcontainer.json is JSONC: drop the whole-line // comments, then parse.
+          text = open(".devcontainer/devcontainer.json", encoding="utf-8").read()
+          data = json.loads("\n".join(l for l in text.splitlines() if not l.lstrip().startswith("//")))
+          refs = [data["image"], *data.get("features", {})]
+          bad = [r for r in refs if "@sha256:" not in r]
+          for r in refs:
+              print(("ok    " if r not in bad else "NOT PINNED ") + r)
+          if bad:
+              print("::error::pin every image and feature by digest")
+              sys.exit(1)
+          PY
+      - name: Build and start the dev container (no post-create)
+        run: npx --yes "${DEVCONTAINER_CLI}" up --workspace-folder . --skip-post-create
+      - name: The tools are the pinned versions
+        run: |
+          dc() { npx --yes "${DEVCONTAINER_CLI}" exec --workspace-folder . "$@"; }
+          dc bash devops/demo/post-create.sh --tools-only
+          uv="$(sed -n 's/^ARG UV_VERSION=//p' devops/docker/api.Dockerfile)"
+          # The same Node as the web image (devops/docker/web.Dockerfile, = frontend/.nvmrc).
+          node="v$(sed -n 's/^ARG NODE_IMAGE=node:\([0-9.]*\)-.*/\1/p' devops/docker/web.Dockerfile)"
+          echo "expected: uv ${uv}, node ${node}"
+          [ "${uv}" != "" ] && [ "${node}" != "v" ]
+          dc bash -c "set -euo pipefail
+            python --version | tee /dev/stderr | grep -q '^Python 3\.11\.'
+            uv --version | tee /dev/stderr | grep -qx 'uv ${uv}\( .*\)\?'
+            node --version | tee /dev/stderr | grep -qx '${node}'
+            docker info --format 'docker {{.ServerVersion}}'
+            docker compose version"
+      - name: The demo's compose files are valid, with backend/ and frontend/ from their branches
+        run: npx --yes "${DEVCONTAINER_CLI}" exec --workspace-folder . bash devops/demo/demo.sh check

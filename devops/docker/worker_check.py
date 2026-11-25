@@ -9,6 +9,10 @@
 2. The model is loaded and embeds one sentence, through the same gateway call the pipeline
    uses (core.llm.embed_sync), with HF_HUB_OFFLINE=1 and no network needed.
 
+3. It logs the LLM mode (fake or live, from SKILLFORGE_PIPELINE / SKILLFORGE_LLM_BACKEND and
+   whether OPENROUTER_API_KEY is set) and the warnings of AI's own startup check
+   (core.ops.settings.check_environment). Both name variables, never their values.
+
 When Backend's worker lands, the service runs `rq worker ... skills` instead; this check can stay
 as a startup step before it.
 """
@@ -50,11 +54,45 @@ def check() -> str:
     )
 
 
+def llm_mode() -> str:
+    """The LLM mode, in one line for the logs. Says whether the key is set, never what it is."""
+    pipeline = os.environ.get("SKILLFORGE_PIPELINE", "").strip().lower()
+    backend = os.environ.get("SKILLFORGE_LLM_BACKEND", "").strip().lower()
+    switches = (
+        f"SKILLFORGE_PIPELINE={pipeline or '(unset)'}, "
+        f"SKILLFORGE_LLM_BACKEND={backend or '(unset)'}"
+    )
+    if "fake" in (pipeline, backend):
+        return (
+            "worker: LLM mode FAKE: no model is called; answers are the canned examples in "
+            f"ai/examples/ ({switches})"
+        )
+    if os.environ.get("OPENROUTER_API_KEY"):
+        return f"worker: LLM mode LIVE: OpenRouter, OPENROUTER_API_KEY is set ({switches})"
+    return (
+        "worker: LLM mode LIVE, but OPENROUTER_API_KEY is not set: model calls will fail "
+        f"({switches})"
+    )
+
+
+def environment_problems() -> list[str]:
+    """AI's startup check (core.ops.settings). Advice here: the model check above is the gate."""
+    try:
+        from core.ops.settings import check_environment
+
+        return [str(problem) for problem in check_environment()]
+    except Exception as exc:  # never let the advice stop the worker
+        return [f"warning environment check could not run ({type(exc).__name__})"]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="worker_check.py")
     parser.add_argument("--once", action="store_true", help="check and exit (no waiting)")
     args = parser.parse_args()
     print(check(), flush=True)
+    print(llm_mode(), flush=True)
+    for problem in environment_problems():
+        print(f"worker: environment {problem}", flush=True)
     if args.once:
         return 0
     print(

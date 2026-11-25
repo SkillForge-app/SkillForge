@@ -1,0 +1,66 @@
+// The demo environment in GitHub Codespaces (OPS). How to start, run and stop it:
+// docs/devops/demo-codespaces.md. The same file works as a local dev container.
+//
+// Every image and feature is pinned by digest to a release at least 14 days old (the repo rule);
+// .github/workflows/devcontainer.yml checks that and builds it. Versions, for updating:
+//   python image  3.3.2-3.11-bookworm  (Python 3.11.18, built 2026-10-28)
+//   docker-in-docker 4.1.3             (2026-10-07)
+//   node 2.1.1                         (2026-10-07), installing Node 24.21.0 = frontend/.nvmrc
+// uv is not a feature: post-create.sh installs the same version and sha256 as
+// devops/docker/api.Dockerfile.
+{
+  "name": "SkillForge demo",
+  // Digest only (like the features): the dev container CLI's own registry lookup can't read a
+  // tag@digest reference. The tag is in the list at the top.
+  "image": "mcr.microsoft.com/devcontainers/python@sha256:ef7e81398ac59cb6d043d91f7ce5d2334bf1a48de54a90c04a5dd3933b1a272d",
+  "features": {
+    // Its own Docker daemon inside the codespace, for the root compose.yaml. Images and volumes
+    // (the model cache too) live in its /var/lib/docker volume, so they survive stop and start.
+    "ghcr.io/devcontainers/features/docker-in-docker@sha256:fae40f3c8be5a7c3b0db344c1d30341bc2c91ba38d1d5b14cd2ad72e6d65d084": {
+      "moby": true
+    },
+    // For Frontend's tools (npm ci, npm run dev in frontend/). The demo itself runs the web image.
+    "ghcr.io/devcontainers/features/node@sha256:2a19d3b0b3879437637cfd292eb29fee0afcfbe6364e33db9afc4f80c5c1f956": {
+      "version": "24.21.0"
+    }
+  },
+
+  // The smallest Codespaces machine (2 cores, 8 GB RAM, 32 GB disk) runs the whole stack plus
+  // the local embedding model. This only hides smaller machines; it never picks a bigger one.
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+
+  // Once, on create: uv, the backend/ and frontend/ sources, every image, and the model cache
+  // (downloaded once, checked against the sha256 in ai/core/llm/models.yaml). Nothing heavy runs
+  // on later starts. It needs no secret.
+  "postCreateCommand": "bash devops/demo/post-create.sh",
+
+  // Port VISIBILITY can't be set here (portsAttributes has no such property); every forwarded
+  // port starts Private. Only 3000 may be made Public, by hand, on demo day: see the doc.
+  "forwardPorts": [3000, 8000],
+  "portsAttributes": {
+    "3000": { "label": "web (demo: the only port that may be made Public)", "onAutoForward": "notify" },
+    "8000": { "label": "api (keep Private)", "onAutoForward": "silent" },
+    "5433": { "label": "postgres (never forward)", "onAutoForward": "ignore" },
+    "6379": { "label": "redis (never forward)", "onAutoForward": "ignore" }
+  },
+  "otherPortsAttributes": { "onAutoForward": "ignore" },
+
+  // Shown on the "new codespace" page. This holds no value: set the secret yourself in
+  // github.com Settings > Codespaces > Secrets. Without it the demo runs in fake LLM mode.
+  "secrets": {
+    "OPENROUTER_API_KEY": {
+      "description": "Optional. A separate demo key with a small credit limit, never the main key. Without it the demo runs in fake LLM mode (canned examples).",
+      "documentationUrl": "https://github.com/SkillForge-app/SkillForge/blob/main/docs/devops/demo-codespaces.md"
+    }
+  },
+
+  "customizations": {
+    "codespaces": {
+      "openFiles": ["docs/devops/demo-codespaces.md"]
+    }
+  }
+}
