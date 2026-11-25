@@ -83,22 +83,33 @@ def id_problem(value: object, known: Collection[str] | None) -> str | None:
     return None
 
 
-def _labels(values: dict[str, Any]) -> dict[str, Any]:
+def _labels(values: object) -> dict[str, Any]:
+    """The labels, each checked against its closed vocabulary. A problem names the field only when
+    it is a known one, and never shows a value: either could be the text being kept out."""
+    if not isinstance(values, dict):
+        raise TrackError("the labels are not an object (value not shown)")
     out: dict[str, Any] = {}
     for key, value in values.items():
         if key in LISTS:
             if value is not None and (
                 not isinstance(value, list) or any(c not in LISTS[key] for c in value)
             ):
-                raise TrackError(f"{key} outside the vocabulary: {value!r}")
+                raise TrackError(f"{key}: the value is outside the vocabulary (value not shown)")
             out[key] = value
         elif key in VOCAB:
-            if value not in VOCAB[key]:
-                raise TrackError(f"{key}={value!r} is outside its vocabulary")
+            if not _in_vocab(value, VOCAB[key]):
+                raise TrackError(f"{key}: the value is outside the vocabulary (value not shown)")
             out[key] = value
         else:
-            raise TrackError(f"unexpected label field {key!r}")
+            raise TrackError("a label field outside the allowlist (name not shown)")
     return out
+
+
+def _in_vocab(value: object, vocab: set[Any]) -> bool:
+    try:
+        return value in vocab
+    except TypeError:  # unhashable (a list or an object): never a vocabulary value
+        return False
 
 
 def convert_line(row: dict[str, Any], known: Collection[str]) -> dict[str, Any]:
@@ -125,7 +136,7 @@ def convert_line(row: dict[str, Any], known: Collection[str]) -> dict[str, Any]:
             "conditions": row["conditions"],
         }
     else:
-        raise TrackError(f"unknown prediction format: {sorted(row)}")
+        raise TrackError("unknown prediction format (field names not shown)")
     return {
         "id": line_id,
         "expected": _labels(expected),
@@ -166,7 +177,9 @@ def bad_fields(lines: Iterable[dict[str, Any]], known: Collection[str] | None) -
     for n, line in enumerate(lines, 1):
         extra = set(line) - set(FIELDS)
         if extra:
-            problems.append(f"line {n}: fields {sorted(extra)} are not allowed")
+            problems.append(
+                f"line {n}: {len(extra)} field(s) outside the allowlist (names not shown)"
+            )
         problem = id_problem(line.get("id"), known)
         if problem:
             problems.append(f"line {n}: {problem}")
@@ -175,8 +188,8 @@ def bad_fields(lines: Iterable[dict[str, Any]], known: Collection[str] | None) -
                 _labels(line.get(part) or {})
             except TrackError as exc:
                 problems.append(f"line {n} {part}: {exc}")
-        if line.get("error") not in (None, *ERROR_CLASSES):
-            problems.append(f"line {n}: error {line.get('error')!r} is not an error class")
+        if not _in_vocab(line.get("error"), {None, *ERROR_CLASSES}):
+            problems.append(f"line {n}: error is not an error class (value not shown)")
     return problems
 
 

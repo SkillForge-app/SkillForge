@@ -124,6 +124,51 @@ def test_bad_fields_checks_every_id() -> None:
     ]
 
 
+# Text in a label value, a label key, a top-level key or the error: each problem names the known
+# field (or says a name is hidden) and never contains the text itself.
+TEXT_IN_A_LINE: list[tuple[str, Any, str]] = [
+    ("predicted", {"kind": TEXT}, "line 1 predicted: kind: the value is outside the vocabulary"),
+    ("expected", {"risk": [TEXT]}, "line 1 expected: risk: the value is outside the vocabulary"),
+    ("predicted", {"mentioned_targets": [TEXT]}, "mentioned_targets: the value is outside"),
+    ("predicted", {"mentioned_targets": TEXT}, "mentioned_targets: the value is outside"),
+    ("predicted", {TEXT: "task"}, "a label field outside the allowlist (name not shown)"),
+    ("predicted", TEXT, "line 1 predicted: the labels are not an object (value not shown)"),
+    ("error", TEXT, "line 1: error is not an error class (value not shown)"),
+    (TEXT, "x", "line 1: 1 field(s) outside the allowlist (names not shown)"),
+]
+
+
+@pytest.mark.parametrize(("field", "value", "message"), TEXT_IN_A_LINE)
+def test_a_label_problem_never_shows_the_value(field: str, value: Any, message: str) -> None:
+    clean = convert_line(ANALYZER_ROW, KNOWN)
+    problems = bad_fields([{**clean, field: value}], KNOWN)
+    assert len(problems) == 1 and message in problems[0]
+    assert "cover letter" not in problems[0] and "not shown" in problems[0]
+
+
+@pytest.mark.parametrize(
+    "row",
+    [
+        {**ANALYZER_ROW, "predicted": {**ANALYZER_ROW["predicted"], "kind": TEXT}},
+        {**ANALYZER_ROW, "predicted": {**ANALYZER_ROW["predicted"], TEXT: "task"}},
+        {**ANALYZER_ROW, "mentioned_targets": {"expected": [], "predicted": [TEXT]}},
+        {**SAFETY_ROW, "category": TEXT},
+        {**SAFETY_ROW, "conditions": [TEXT]},
+        {"set": "gate", "id": "t-01", TEXT: 1},  # unknown format: its keys are not shown either
+    ],
+)
+def test_the_converter_never_shows_a_refused_value(row: dict[str, Any], tmp_path: Path) -> None:
+    with pytest.raises(TrackError) as caught:
+        convert_line(row, KNOWN)
+    assert "cover letter" not in str(caught.value) and "not shown" in str(caught.value)
+    source = tmp_path / "predictions.jsonl"
+    source.write_text(json.dumps(row) + "\n", encoding="utf-8")
+    with pytest.raises(TrackError) as caught:
+        convert(source, tmp_path / "tracked.jsonl", KNOWN)
+    assert "cover letter" not in str(caught.value)
+    assert not (tmp_path / "tracked.jsonl").exists()
+
+
 def test_new_runs_keep_targets_and_the_question_rule_as_labels() -> None:
     row = {
         **ANALYZER_ROW,

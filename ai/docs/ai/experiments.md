@@ -44,7 +44,8 @@ cd ai
   - **Checked:** every label against its closed vocabulary, and **every id** in two ways:
     - it's well-formed (`<set>:<id>`, or `normal:<set>:<id>`; lowercase letters, digits and `._/-` only);
     - it's one of the ids in the tracked label files at `recorded_at` (the seed release, `analyzer/requests-*.yaml`, and safety `redteam`, `benign-tricky` and `safety-dev`).
-    - So no text can ride in on an id. The converter refuses such a line, and `check` fails on one. Neither ever prints the id.
+    - So no text can ride in on an id. The converter refuses such a line, and `check` fails on one.
+    - **Messages never show the refused text:** not the id, a label value, an unknown field name or an error value. They name the known field only.
   - The SimpleSafetyTests items (`r-31`…`r-36`, used by reference) are id and labels only.
   - **From 25 Nov on,** analyzer lines also keep the predicted and expected `mentioned_targets` (platform labels) and `question_rule_kept` (a boolean computed at run time, never question text).
 - **Two hashes per tracked run:**
