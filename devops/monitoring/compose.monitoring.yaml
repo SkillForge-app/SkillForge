@@ -165,6 +165,46 @@ services:
       - ./devops/monitoring/blackbox.yml:/etc/blackbox/blackbox.yml:ro
     mem_limit: 32m
 
+  # ---------------------------------------------------------------- dashboards
+  # Two provisioned dashboards (grafana/dashboards/): "SkillForge AI: models and cost" and
+  # "SkillForge services". Anyone who can open the port sees them (anonymous viewer); the admin
+  # login is the local placeholder in .env. No outbound calls: no update checks, no news, no
+  # plugin downloads.
+  grafana:
+    <<: *hardening
+    profiles: [monitoring]
+    image: grafana/grafana:13.3.1@sha256:0615ec4fbd4072004b7d86b46ded63013a74b7d6eb1119273dd89e8fa25c13cf
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      # The same local placeholder as .env.example, so an older .env without it still works.
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-skillforge_dev}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/ai.json
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+    volumes:
+      - ./devops/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./devops/monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    tmpfs: [/tmp]
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3001}:3000"
+    mem_limit: 256m
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    depends_on:
+      prometheus:
+        condition: service_started
+
 networks:
   # The Docker API (socket proxy) and its one client, ai-metrics. No way out, no port.
   docker-api:
@@ -181,3 +221,4 @@ secrets:
 volumes:
   promdata:
   amdata:
+  grafanadata:
