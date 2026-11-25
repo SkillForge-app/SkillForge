@@ -7,6 +7,9 @@
 !ai/core/
 !ai/prompts/
 !ai/tests/fixtures/
+# The canned AnalyzedRequests and SkillSpecs that AI's FakePipeline returns (SKILLFORGE_PIPELINE=fake,
+# the demo's fake LLM mode: docs/devops/demo-codespaces.md)
+!ai/examples/
 !ai/pyproject.toml
 !ai/uv.lock
 
