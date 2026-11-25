@@ -41,12 +41,16 @@ cd ai
 - **What each line holds:** exactly `id`, `expected`, `predicted`, `error`.
   - `error` is a class: `provider_error`, `parse_error`, `timeout`, `budget` or `other`.
   - **Never stored:** request text, rationale or summary, raw error messages.
-  - **Checked:** every label against its closed vocabulary. The SimpleSafetyTests items (`r-31`…`r-36`, used by reference) are id and labels only.
+  - **Checked:** every label against its closed vocabulary, and **every id** in two ways:
+    - it's well-formed (`<set>:<id>`, or `normal:<set>:<id>`; lowercase letters, digits and `._/-` only);
+    - it's one of the ids in the tracked label files at `recorded_at` (the seed release, `analyzer/requests-*.yaml`, and safety `redteam`, `benign-tricky` and `safety-dev`).
+    - So no text can ride in on an id. The converter refuses such a line, and `check` fails on one. Neither ever prints the id.
+  - The SimpleSafetyTests items (`r-31`…`r-36`, used by reference) are id and labels only.
   - **From 25 Nov on,** analyzer lines also keep the predicted and expected `mentioned_targets` (platform labels) and `question_rule_kept` (a boolean computed at run time, never question text).
 - **Two hashes per tracked run:**
   - `source_sha256`: the original local file. For E8 it equals the report's `predictions_sha256`.
   - `sha256`: the tracked file, LF-normalised.
-- **What `check` verifies:** both hashes, the line count (equal to the report's n), the allowlist and unique ids.
+- **What `check` verifies:** both hashes, the line count (equal to the report's n), the allowlist, unique ids, and that each id is in the label files at `recorded_at`. Without git history, it checks the id format only.
 
 ## Roles
 - **final:** a decision rests on it. **The done-when: every final entry reproduces.** `check` fails on a final entry recorded as `reproduces: false`.
@@ -126,7 +130,7 @@ These are checked once their branch merges:
 
 ## Adding an experiment
 1. **Run it.** Live runs need `--budget-usd`; for analyzer runs, `--retry-errors` and the 95% validity rule apply. Commit the report (`.md` and `.json`).
-2. **Live runs:** write the tracked run with `track.convert` from your local `runs/<id>/predictions.jsonl`, and commit it.
+2. **Live runs:** write the tracked run with `track.convert(source, target, rescore.known_ids(repo, recorded_at))` from your local `runs/<id>/predictions.jsonl`, and commit it.
 3. **Add the entry to `experiments.yaml`:**
    - required: `id`, `experiment`, `task`, `question`, `kind`, `role`, `report`, `recorded_at` (the code commit), `command`;
    - offline entries also need `llm_backend`; live entries also need `tracked_run` (its two hashes and lines), plus `not_recomputable` if anything applies.

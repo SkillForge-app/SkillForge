@@ -1,16 +1,22 @@
 """AI-25 step 4: id-only tracked runs and offline re-scoring of live results."""
 
+import hashlib
 import json
+import subprocess
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from evaluation.analyzer.evaluate import Prediction, write_report
-from evaluation.reproduce.check import repo_root
-from evaluation.reproduce.registry import AI_DIR, load_registry
-from evaluation.reproduce.rescore import _compare, analyzer_metrics, safety_metrics
+from evaluation.common import text_sha256
+from evaluation.reproduce.check import check, repo_root
+from evaluation.reproduce.registry import AI_DIR, Registry, load_registry
+from evaluation.reproduce.rescore import _compare, analyzer_metrics, known_ids, safety_metrics
 from evaluation.reproduce.track import FIELDS, TrackError, bad_fields, convert, convert_line
+
+KNOWN = frozenset({"gate:t-01", "gate:t-02", "gate:t-03", "redteam:r-31"})
+TEXT = "How do I write a cover letter for a nursing job"
 
 ANALYZER_ROW: dict[str, Any] = {
     "set": "gate",
@@ -33,37 +39,89 @@ SAFETY_ROW: dict[str, Any] = {
 
 
 def test_the_text_is_dropped_and_only_allowed_fields_remain() -> None:
-    line = convert_line(ANALYZER_ROW)
+    line = convert_line(ANALYZER_ROW, KNOWN)
     assert set(line) == set(FIELDS)
     assert "SECRET" not in json.dumps(line)
     assert line["id"] == "gate:t-01" and line["predicted"]["kind"] == "role"
-    assert set(convert_line(SAFETY_ROW)) == set(FIELDS)
+    assert set(convert_line(SAFETY_ROW, KNOWN)) == set(FIELDS)
 
 
 def test_free_text_cannot_enter_a_label() -> None:
     with pytest.raises(TrackError):
-        convert_line({**ANALYZER_ROW, "predicted": {**ANALYZER_ROW["predicted"], "kind": "a role"}})
+        convert_line(
+            {**ANALYZER_ROW, "predicted": {**ANALYZER_ROW["predicted"], "kind": "a role"}}, KNOWN
+        )
     with pytest.raises(TrackError):
-        convert_line({**SAFETY_ROW, "conditions": ["call 911 and say this"]})
+        convert_line({**SAFETY_ROW, "conditions": ["call 911 and say this"]}, KNOWN)
     with pytest.raises(TrackError):
-        convert_line({**SAFETY_ROW, "category": "explanation: the user wants…"})
+        convert_line({**SAFETY_ROW, "category": "explanation: the user wants…"}, KNOWN)
+
+
+# Ids that would carry text: free text in the id or the set, a slug of the text that is
+# well-formed but in no label file, and a known id with a newline (or more) after it.
+TEXT_IDS = [
+    {"id": TEXT},
+    {"set": TEXT},
+    {"id": "how-do-i-write-a-cover-letter-for-a-nursing-job"},
+    {"id": "t-01\n" + TEXT},
+    {"id": "t-01\n"},
+]
+
+
+@pytest.mark.parametrize("change", TEXT_IDS)
+def test_an_id_that_could_carry_text_is_refused_and_never_echoed(
+    change: dict[str, str], tmp_path: Path
+) -> None:
+    with pytest.raises(TrackError) as caught:
+        convert_line({**ANALYZER_ROW, **change}, KNOWN)
+    assert "cover" not in str(caught.value) and "t-01" not in str(caught.value)
+    source = tmp_path / "runs" / "x" / "predictions.jsonl"
+    source.parent.mkdir(parents=True)
+    rows = [ANALYZER_ROW, {**ANALYZER_ROW, **change}]
+    source.write_text("".join(json.dumps(r) + "\n" for r in rows), encoding="utf-8")
+    target = tmp_path / "tracked" / "predictions.jsonl"
+    with pytest.raises(TrackError, match="line 2"):
+        convert(source, target, KNOWN)
+    assert not target.exists()  # nothing written
+
+
+def test_an_unknown_but_well_formed_id_is_refused() -> None:
+    with pytest.raises(TrackError, match="not in the label files"):
+        convert_line({**ANALYZER_ROW, "id": "t-99"}, KNOWN)
+    with pytest.raises(TrackError, match="not in the label files"):
+        convert_line({**SAFETY_ROW, "set": "benign"}, KNOWN)  # right id, wrong set
 
 
 def test_errors_become_classes_never_messages() -> None:
-    assert convert_line({**ANALYZER_ROW, "error": "LLMUnavailable"})["error"] == "provider_error"
-    assert convert_line({**SAFETY_ROW, "error": "SafetyUnavailable"})["error"] == "provider_error"
-    assert convert_line({**ANALYZER_ROW, "error": "LLMOutputInvalid"})["error"] == "parse_error"
-    assert convert_line({**ANALYZER_ROW, "error": "SomethingElse"})["error"] == "other"
+    def error(row: dict[str, Any], name: str) -> Any:
+        return convert_line({**row, "error": name}, KNOWN)["error"]
+
+    assert error(ANALYZER_ROW, "LLMUnavailable") == "provider_error"
+    assert error(SAFETY_ROW, "SafetyUnavailable") == "provider_error"
+    assert error(ANALYZER_ROW, "LLMOutputInvalid") == "parse_error"
+    assert error(ANALYZER_ROW, "SomethingElse") == "other"
 
 
 def test_the_allowlist_test_fails_on_any_other_field() -> None:
-    clean = convert_line(ANALYZER_ROW)
-    assert bad_fields([clean]) == []
-    assert bad_fields([{**clean, "text": "x"}]) != []
-    assert bad_fields([{**clean, "rationale": "because"}]) != []
-    assert bad_fields([{**clean, "error": "Provider said: …"}]) != []
+    clean = convert_line(ANALYZER_ROW, KNOWN)
+    assert bad_fields([clean], KNOWN) == []
+    assert bad_fields([{**clean, "text": "x"}], KNOWN) != []
+    assert bad_fields([{**clean, "rationale": "because"}], KNOWN) != []
+    assert bad_fields([{**clean, "error": "Provider said: …"}], KNOWN) != []
     leaky = {**clean, "predicted": {**clean["predicted"], "summary": "free text"}}
-    assert bad_fields([leaky]) != []
+    assert bad_fields([leaky], KNOWN) != []
+
+
+def test_bad_fields_checks_every_id() -> None:
+    clean = convert_line(ANALYZER_ROW, KNOWN)
+    for bad in (f"gate:{TEXT}", TEXT, "gate:t-01\n", None, 7):
+        problems = bad_fields([{**clean, "id": bad}], KNOWN)
+        assert problems == ["line 1: the id is not well-formed (value not shown)"]
+        assert bad_fields([{**clean, "id": bad}], None) == problems  # format: no history needed
+    unknown = {**clean, "id": "gate:how-do-i-write-a-cover-letter"}
+    assert bad_fields([unknown], KNOWN) == [
+        "line 1: the id is not in the label files at recorded_at (value not shown)"
+    ]
 
 
 def test_new_runs_keep_targets_and_the_question_rule_as_labels() -> None:
@@ -72,7 +130,7 @@ def test_new_runs_keep_targets_and_the_question_rule_as_labels() -> None:
         "mentioned_targets": {"expected": ["claude"], "predicted": ["claude", "codex"]},
         "question_rule_kept": True,
     }
-    line = convert_line(row)
+    line = convert_line(row, KNOWN)
     assert line["expected"]["mentioned_targets"] == ["claude"]
     assert line["predicted"] == {
         "kind": "role",
@@ -82,9 +140,9 @@ def test_new_runs_keep_targets_and_the_question_rule_as_labels() -> None:
         "mentioned_targets": ["claude", "codex"],
         "question_rule_kept": True,
     }
-    assert bad_fields([line]) == []
+    assert bad_fields([line], KNOWN) == []
     with pytest.raises(TrackError):
-        convert_line({**row, "mentioned_targets": {"expected": [], "predicted": ["gemini"]}})
+        convert_line({**row, "mentioned_targets": {"expected": [], "predicted": ["gemini"]}}, KNOWN)
 
 
 def test_convert_reads_the_source_and_records_both_hashes(tmp_path: Path) -> None:
@@ -92,13 +150,15 @@ def test_convert_reads_the_source_and_records_both_hashes(tmp_path: Path) -> Non
     source.parent.mkdir(parents=True)
     source.write_text(json.dumps(ANALYZER_ROW) + "\n", encoding="utf-8")
     before = source.read_bytes()
-    record = convert(source, tmp_path / "tracked" / "predictions.jsonl")
+    record = convert(source, tmp_path / "tracked" / "predictions.jsonl", KNOWN)
     assert source.read_bytes() == before  # read only
     assert record["lines"] == 1 and record["source_sha256"] != record["sha256"]
 
 
 def test_the_committed_tracked_runs_are_clean() -> None:
+    """All 8 tracked files: allowlisted fields, and every id in the label files at recorded_at."""
     repo = repo_root(AI_DIR)
+    files = set()
     for entry in load_registry().experiments:
         if entry.tracked_run is None:
             continue
@@ -106,15 +166,100 @@ def test_the_committed_tracked_runs_are_clean() -> None:
             json.loads(line)
             for line in (repo / entry.tracked_run.path).read_text(encoding="utf-8").splitlines()
         ]
-        assert bad_fields(lines) == [], entry.id
+        known = known_ids(repo, entry.recorded_at)
+        assert known, entry.id
+        assert bad_fields(lines, known) == [], entry.id
         assert all(set(line) <= set(FIELDS) for line in lines)
+        files.add(entry.tracked_run.path)
+    assert len(files) == 8
+
+
+# ------------------------------------------------------------------ `reproduce check`
+
+REPORT = "ai/evaluation/analyzer/reports/analyzer-dev-2026-11-25.json"
+RUN = "ai/evaluation/analyzer/reports/runs/20261125T000000Z/predictions.jsonl"
+LABELS = "ai/evaluation/analyzer/requests-test.yaml"
+
+
+def git(repo: Path, *args: str) -> str:
+    out = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, check=True)
+    return out.stdout.strip()
+
+
+def live_repo(tmp_path: Path, tracked_id: str) -> tuple[Path, Registry]:
+    """A throwaway repo: labels for gate:t-01, a live report of n=1, and its tracked run."""
+    git(tmp_path, "init", "-q")
+    git(tmp_path, "config", "user.email", "test@example.invalid")
+    git(tmp_path, "config", "user.name", "test")
+    git(tmp_path, "config", "core.autocrlf", "false")
+    line = {**convert_line(ANALYZER_ROW, KNOWN), "id": tracked_id}
+    run = json.dumps(line, sort_keys=True) + "\n"
+    files = {
+        LABELS: (
+            "requests:\n  - {id: t-01, kind: task, domain: writing/cv, risk: low,"
+            " needs_clarification: false}\n"
+        ),
+        REPORT: json.dumps({"sets": {"gate": {"n": 1}}}),
+        REPORT[: -len(".json")] + ".md": "# demo",
+        RUN: run,
+    }
+    for rel, content in files.items():
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text(content, encoding="utf-8", newline="\n")
+        git(tmp_path, "add", rel)
+    git(tmp_path, "commit", "-q", "-m", "live run")
+    entry = {
+        "id": "E7:demo",
+        "experiment": "E7",
+        "task": "AI-05",
+        "question": "Does the demo work?",
+        "kind": "live",
+        "role": "final",
+        "report": REPORT,
+        "recorded_at": git(tmp_path, "rev-parse", "HEAD"),
+        "tracked_run": {
+            "path": RUN,
+            "source_sha256": hashlib.sha256(b"source").hexdigest(),
+            "sha256": text_sha256(run.encode()),
+            "lines": 1,
+        },
+    }
+    reg = Registry.model_validate({"version": 1, "ignore": [], "experiments": [entry]})
+    return tmp_path, reg
+
+
+def test_check_passes_a_tracked_run_whose_ids_are_in_the_labels(tmp_path: Path) -> None:
+    repo, reg = live_repo(tmp_path, "gate:t-01")
+    assert check(reg, repo).issues == []
+
+
+@pytest.mark.parametrize(
+    ("tracked_id", "problem"),
+    [
+        (f"gate:{TEXT}", "not well-formed"),
+        ("gate:how-do-i-write-a-cover-letter", "not in the label files"),
+        ("gate:t-02", "not in the label files"),
+    ],
+)
+def test_check_fails_an_id_that_is_text_or_unknown(
+    tmp_path: Path, tracked_id: str, problem: str
+) -> None:
+    repo, reg = live_repo(tmp_path, tracked_id)
+    issues = check(reg, repo).issues
+    assert [i.code for i in issues] == ["tracked_run_field"]
+    assert problem in issues[0].message and "cover" not in issues[0].message
+    # without git history only the format is checked
+    format_only = check(reg, repo, history=False).issues
+    assert [i.code for i in format_only] == (
+        ["tracked_run_field"] if problem == "not well-formed" else []
+    )
 
 
 # ------------------------------------------------------------------ re-scoring
 
 
 def tracked(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [convert_line(r) for r in rows]
+    return [convert_line(r, KNOWN) for r in rows]
 
 
 def test_analyzer_rescore_matches_the_evaluation_formulas() -> None:

@@ -1,10 +1,12 @@
 """Tracked runs (AI-25): id-only copies of a live run's raw predictions, for offline re-scoring.
 
 The raw `runs/<id>/predictions.jsonl` of a live evaluation stays out of Git (it holds request
-text). `python -m evaluation.reproduce track` READS it (never moves, renames or deletes it) and
-writes `ai/evaluation/<area>/reports/runs/<id>/predictions.jsonl` with, per line, exactly:
+text). `convert()` READS it (never moves, renames or deletes it) and writes
+`ai/evaluation/<area>/reports/runs/<id>/predictions.jsonl` with, per line, exactly:
 
-    id         "<set>:<request id>"
+    id         "<set>:<request id>": well-formed (ID_FORMAT) AND one of the ids in the tracked
+               label files at the entry's recorded_at (rescore.known_ids), so no text can
+               ride in on an id
     expected   the labels the run was scored against
     predicted  the labels the model gave (closed vocabularies only); from runs that record
                them (2026-11-25 on): mentioned_targets (platform names, a label) and
@@ -13,14 +15,17 @@ writes `ai/evaluation/<area>/reports/runs/<id>/predictions.jsonl` with, per line
     error      an error class (provider_error, parse_error, timeout, budget, other) or null
 
 No request text, no rationale or summary, no raw error message: every value is checked against
-the closed vocabularies, so free text cannot get in. Two hashes are recorded for each: the
-source file's sha256 (raw bytes, as the old reports recorded it) and the tracked file's
-(LF-normalised, the same on every OS).
+the closed vocabularies and every id against the label files, so free text cannot get in.
+Problems never echo an id (it could be the text being kept out).
+
+Two hashes are recorded for each: the source file's sha256 (raw bytes, as the old reports
+recorded it) and the tracked file's (LF-normalised, the same on every OS).
 """
 
 import hashlib
 import json
-from collections.abc import Iterable
+import re
+from collections.abc import Collection, Iterable
 from pathlib import Path
 from typing import Any, get_args
 
@@ -29,6 +34,9 @@ from core.spec import DOMAIN_AREAS, KINDS, RISK_LEVELS, TARGETS
 from evaluation.common import text_sha256
 
 FIELDS = ("id", "expected", "predicted", "error")
+# "<set>:<id>", or "normal:<set>:<id>" for the safety screen's everyday requests. Matched with
+# fullmatch (a trailing newline does not pass). The allowlist is the real guard; this is a second.
+ID_FORMAT = re.compile(r"[a-z]+:(?:[a-z]+:)?[a-z0-9._/-]{1,80}")
 ERROR_CLASSES = ("provider_error", "parse_error", "timeout", "budget", "other")
 ERROR = "<error>"  # what the evaluations print for "no prediction"
 _ERROR_CLASS = {
@@ -65,6 +73,16 @@ def error_class(name: str | None) -> str | None:
     return None if name is None else _ERROR_CLASS.get(name, "other")
 
 
+def id_problem(value: object, known: Collection[str] | None) -> str | None:
+    """Why `value` can't be a tracked id, or None. `known` is the allowlist at recorded_at; None
+    (only `reproduce check` without git history) checks the format alone. Never echoes the id."""
+    if not isinstance(value, str) or not ID_FORMAT.fullmatch(value):
+        return "the id is not well-formed (value not shown)"
+    if known is not None and value not in known:
+        return "the id is not in the label files at recorded_at (value not shown)"
+    return None
+
+
 def _labels(values: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for key, value in values.items():
@@ -83,8 +101,13 @@ def _labels(values: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def convert_line(row: dict[str, Any]) -> dict[str, Any]:
-    """One id-only line from an analyzer or safety prediction line."""
+def convert_line(row: dict[str, Any], known: Collection[str]) -> dict[str, Any]:
+    """One id-only line from an analyzer or safety prediction line. `known`: the ids in the label
+    files at the run's recorded_at (rescore.known_ids); any other id is refused."""
+    line_id = f"{row.get('set')}:{row.get('id')}"
+    problem = id_problem(line_id, known)
+    if problem:
+        raise TrackError(problem)
     if "predicted" in row:  # analyzer: expected/predicted are dicts of the gated fields
         clar = row.get("needs_clarification") or {}
         expected = {**row["expected"], "needs_clarification": clar.get("expected")}
@@ -104,18 +127,24 @@ def convert_line(row: dict[str, Any]) -> dict[str, Any]:
     else:
         raise TrackError(f"unknown prediction format: {sorted(row)}")
     return {
-        "id": f"{row['set']}:{row['id']}",
+        "id": line_id,
         "expected": _labels(expected),
         "predicted": _labels(predicted),
         "error": error_class(row.get("error")),
     }
 
 
-def convert(source: Path, target: Path) -> dict[str, Any]:
-    """Write the id-only file; return its record (hashes, line count). Reads `source` only."""
+def convert(source: Path, target: Path, known: Collection[str]) -> dict[str, Any]:
+    """Write the id-only file; return its record (hashes, line count). Reads `source` only.
+    `known`: rescore.known_ids(repo, recorded_at). Nothing is written if any line is refused."""
     raw = source.read_bytes()
     rows = [json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()]
-    lines = [convert_line(r) for r in rows]
+    lines = []
+    for n, row in enumerate(rows, 1):
+        try:
+            lines.append(convert_line(row, known))
+        except TrackError as exc:
+            raise TrackError(f"line {n}: {exc}") from None
     ids = [line["id"] for line in lines]
     if len(set(ids)) != len(ids):
         raise TrackError("duplicate ids in the source run")
@@ -129,13 +158,18 @@ def convert(source: Path, target: Path) -> dict[str, Any]:
     }
 
 
-def bad_fields(lines: Iterable[dict[str, Any]]) -> list[str]:
-    """Any field outside the allowlist, anywhere in a tracked file (empty when it is clean)."""
+def bad_fields(lines: Iterable[dict[str, Any]], known: Collection[str] | None) -> list[str]:
+    """Any field outside the allowlist, or an id that is malformed or (with `known`, the ids at
+    recorded_at) unknown, anywhere in a tracked file. Empty when it is clean. `known=None` checks
+    the id format only: pass it explicitly, and only where git history is unavailable."""
     problems = []
     for n, line in enumerate(lines, 1):
         extra = set(line) - set(FIELDS)
         if extra:
             problems.append(f"line {n}: fields {sorted(extra)} are not allowed")
+        problem = id_problem(line.get("id"), known)
+        if problem:
+            problems.append(f"line {n}: {problem}")
         for part in ("expected", "predicted"):
             try:
                 _labels(line.get(part) or {})
@@ -146,4 +180,13 @@ def bad_fields(lines: Iterable[dict[str, Any]]) -> list[str]:
     return problems
 
 
-__all__ = ["ERROR_CLASSES", "FIELDS", "TrackError", "bad_fields", "convert", "convert_line"]
+__all__ = [
+    "ERROR_CLASSES",
+    "FIELDS",
+    "ID_FORMAT",
+    "TrackError",
+    "bad_fields",
+    "convert",
+    "convert_line",
+    "id_problem",
+]

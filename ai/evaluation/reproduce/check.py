@@ -6,7 +6,8 @@
 - a pending-merge entry is skipped while its report is absent and checked fully once present;
 - every recorded input still has its recorded hash at `recorded_at` (git history is needed);
 - a live/rescore entry's tracked run exists, has its recorded hash and line count, only
-  allowlisted fields and unique ids; a rescore's source hash equals the one its report recorded.
+  allowlisted fields and unique ids, and every id is well-formed and (with history) one of the
+  ids in the label files at `recorded_at`; a rescore's source hash equals its report's.
 """
 
 import json
@@ -18,6 +19,7 @@ from pathlib import Path
 from core.spec import Issue
 from evaluation.common import match_recorded_hash, text_sha256
 from evaluation.reproduce.registry import Entry, Registry
+from evaluation.reproduce.rescore import known_ids
 from evaluation.reproduce.track import bad_fields
 
 REPORT_GLOB = "ai/evaluation/*/reports/*.json"
@@ -109,7 +111,13 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
             issues.append(Issue(where, "missing_markdown", f"{twin} does not exist"))
     if entry.kind == "offline" and not entry.command:
         issues.append(Issue(where, "no_command", "an offline entry needs its command"))
-    issues += _check_tracked_run(entry, repo)
+    known = None  # without history: the id format only
+    if history and entry.tracked_run is not None:
+        if _git_ok(repo, "cat-file", "-e", f"{entry.recorded_at}^{{commit}}"):
+            known = known_ids(repo, entry.recorded_at)
+        else:
+            known = frozenset()  # unknown_commit is reported below; no id can pass
+    issues += _check_tracked_run(entry, repo, known)
     if not history:
         return issues
     if not _git_ok(repo, "cat-file", "-e", f"{entry.recorded_at}^{{commit}}"):
@@ -143,7 +151,7 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
     return issues
 
 
-def _check_tracked_run(entry: Entry, repo: Path) -> list[Issue]:
+def _check_tracked_run(entry: Entry, repo: Path, known: frozenset[str] | None) -> list[Issue]:
     where = entry.id
     run = entry.tracked_run
     if entry.kind == "offline":
@@ -165,7 +173,7 @@ def _check_tracked_run(entry: Entry, repo: Path) -> list[Issue]:
         issues.append(
             Issue(where, "tracked_run_lines", f"{len(lines)} lines, recorded {run.lines}")
         )
-    issues += [Issue(where, "tracked_run_field", p) for p in bad_fields(lines)[:5]]
+    issues += [Issue(where, "tracked_run_field", p) for p in bad_fields(lines, known)[:5]]
     ids = [line.get("id") for line in lines]
     if len(set(ids)) != len(ids):
         issues.append(Issue(where, "tracked_run_ids", "duplicate ids in the tracked run"))

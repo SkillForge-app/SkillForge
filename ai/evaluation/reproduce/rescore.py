@@ -11,6 +11,7 @@ entry's `not_recomputable` with a reason; any other metric left out makes the en
 import json
 import subprocess
 from collections import Counter, defaultdict
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +66,12 @@ def analyzer_labels(repo: Path, commit: str, seed_release: str = "0.1.0") -> dic
             "risk": r["risk"],
             "needs_clarification": r["style"] == "vague",
         }
-    for split, name in (("test", "gate"), ("dev", "dev"), ("arabic", "arabic")):
+    for split, name in (
+        ("test", "gate"),
+        ("dev", "dev"),
+        ("arabic", "arabic"),
+        ("holdout", "holdout"),
+    ):
         text = _show(repo, commit, f"ai/evaluation/analyzer/requests-{split}.yaml")
         for r in (yaml.safe_load(text) or {}).get("requests", []) if text else []:
             out[f"{name}:{r['id']}"] = {
@@ -252,6 +258,22 @@ def false_block_targets(sets: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+# ------------------------------------------------------------------ the id allowlist
+
+NORMAL_FROM = ("gate", "dev", "arabic")  # safety/data.py normal_items: "normal:<set>:<id>"
+
+
+@lru_cache(maxsize=32)
+def known_ids(repo: Path, commit: str) -> frozenset[str]:
+    """Every id a tracked run may hold, from the tracked label files at `commit`: the seed
+    release and analyzer requests-*.yaml, safety redteam/benign/dev, and the safety screen's
+    everyday requests (the analyzer's gate, dev and Arabic sets, prefixed "normal:")."""
+    analyzer = set(analyzer_labels(repo, commit))
+    normal = {f"normal:{i}" for i in analyzer if i.split(":", 1)[0] in NORMAL_FROM}
+    safety, _ = safety_items(repo, commit)
+    return frozenset(analyzer | normal | set(safety))
+
+
 # ------------------------------------------------------------------ compare
 
 
@@ -326,4 +348,4 @@ def rescore(entry: Entry, registry: Registry, repo: Path) -> tuple[list[str], li
     return diffs, left
 
 
-__all__ = ["analyzer_metrics", "rescore", "safety_metrics"]
+__all__ = ["analyzer_metrics", "known_ids", "rescore", "safety_metrics"]
