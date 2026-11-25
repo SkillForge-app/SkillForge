@@ -1,0 +1,60 @@
+# Monitoring checks (OPS-10, OPS-17: devops/monitoring.md). Not a required check. About 2-3
+# minutes, and only when the monitoring or the files it loads change. Everything is in
+# devops/monitoring/ci-checks.sh, which runs the same way on a laptop:
+#   - the compose files are valid and every image is pinned by digest;
+#   - AI-21's ai/ops/alerts.yaml loads UNCHANGED (promtool check rules), and so do DevOps' rules;
+#   - the Prometheus and Alertmanager configs are valid, and the Telegram template renders;
+#   - promtool unit tests: the test alert, spend, budget, demo key, service and queue alerts;
+#   - the ai-metrics exporter gives exactly the numbers of AI's own aggregator
+#     (ai/core/ops/metrics.py, which it imports: hence ai/core/ops/** below).
+# No secret is used: nothing here talks to Telegram.
+name: monitoring
+
+on:
+  pull_request:
+    branches: [main, AI, Backend, Frontend, Data-Engineering, DevOps]
+    paths:
+      - ai/ops/**
+      - ai/core/ops/**
+      - devops/monitoring/**
+      - .github/workflows/monitoring.yml
+  push:
+    branches: [main]
+    paths:
+      - ai/ops/**
+      - ai/core/ops/**
+      - devops/monitoring/**
+      - .github/workflows/monitoring.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: monitoring-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  monitoring:
+    name: monitoring
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      UV_PYTHON: "3.11"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # The same uv as ai.yml; AI's locked dependencies for the exporter's self-test.
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.0"
+          enable-cache: true
+          cache-dependency-glob: ai/uv.lock
+          cache-python: true
+      - name: Install AI's locked dependencies (hash-checked)
+        run: uv sync --locked --project ai
+      - name: Monitoring checks
+        env:
+          PYTHON: uv run --locked --project ai python
+        run: bash devops/monitoring/ci-checks.sh
