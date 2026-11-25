@@ -266,7 +266,7 @@ def extract_page(
         )
     screening = ScreeningReport(invisible_chars=signals.invisible_chars)
     if config.injection_screen:
-        blocks, screening = _screen(content.blocks, screening, config)
+        blocks, screening = _screen(content.blocks, screening, config, url)
         content = replace(content, blocks=blocks)
 
     text, quality = _assess(content, signals, config, screening)
@@ -903,16 +903,17 @@ def _drop_site_boilerplate(blocks: list[_Block], keys: set[str]) -> list[_Block]
 
 
 def _screen(
-    blocks: list[_Block], screening: ScreeningReport, config: ExtractConfig
+    blocks: list[_Block], screening: ScreeningReport, config: ExtractConfig, url: str
 ) -> tuple[list[_Block], ScreeningReport]:
     """Remove flagged sentences (and whole headings, items and rows) before chunking, so an
-    injected page gives the same chunks as the page without the injection."""
+    injected page gives the same chunks as the page without the injection. `url` is the
+    page's own site: a credential may go there, not elsewhere (review on #40)."""
     kept: list[_Block] = []
     findings = []
     removed = 0
     for i, block in enumerate(blocks):
         whole = block.kind != "paragraph"
-        text, hits = screen_block(block.text, whole=whole)
+        text, hits = screen_block(block.text, whole=whole, source_hosts=(url,))
         findings += [h.model_copy(update={"block": i}) for h in hits]
         removed += (1 if hits else 0) if whole else len({h.sentence for h in hits})
         if text:

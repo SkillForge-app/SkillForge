@@ -3777,6 +3777,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "spacy" },
+    { name = "tld" },
     { name = "trafilatura" },
 ]
 
@@ -3822,6 +3823,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6,<7" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6" },
     { name = "spacy", specifier = ">=3.8,<3.9" },
+    { name = "tld", specifier = ">=0.13,<1" },
     { name = "trafilatura", specifier = ">=2.3,<3" },
     { name = "types-jsonschema", marker = "extra == 'dev'" },
     { name = "types-pyyaml", marker = "extra == 'dev'" },
