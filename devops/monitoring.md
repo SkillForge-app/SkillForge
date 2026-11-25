@@ -164,7 +164,14 @@ never in the demo codespace.**
 - `[PAGE]` and `[TEST]` arrive loud and `[ticket]` silent;
 - the messages are HTML-escaped and their runbook links are complete.
 
-The real delivery to Telegram is the one step only you can run, with the real bot.
+**Done-when proof, with the real bot (2026-11-25, laptop, real on-call Telegram group):**
+
+| Ticket | Done-when | Command | Result |
+|---|---|---|---|
+| AI-21, OPS-10 | `ai/ops/alerts.yaml` loaded; a test alert reaches the on-call | `monitor.sh test` | Delivered: one loud `[TEST] AIAlertPipelineTest` message |
+| OPS-17 | Budget alert tested | `monitor.sh test-cost` | `DELIVERED: AILLMSpendRateHigh AIBudgetExceeded -> Telegram`: a loud `[PAGE] AILLMSpendRateHigh` and a silent `[ticket] AIBudgetExceeded`; synthetic spend counted $20, tokens 10000 |
+
+Run by hand, with the token and chat id in the shell only (`read -rs`), as described above.
 
 ## Runbooks (DevOps' alerts)
 AI-21's alerts have theirs in [ai/docs/ai/runbook.md](../ai/docs/ai/runbook.md).
