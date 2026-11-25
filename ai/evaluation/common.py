@@ -1,6 +1,7 @@
 """Helpers shared by the evaluation tools (analyzer, safety, ...)."""
 
 import asyncio
+import hashlib
 import json
 import os
 import sys
@@ -9,7 +10,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 from dotenv import load_dotenv
 
@@ -78,6 +79,42 @@ def live_guard(live: bool, prompt_id: str) -> int | None:
     if key and not os.environ.get(key):
         print(f"--live needs {key} for {model} (env var or ai/.env)", file=sys.stderr)
         return 2
+    return None
+
+
+# ------------------------------------------------------------------ data hashes (AI-25)
+
+# How data-file hashes in reports are computed. A text file's hash is taken on its content with
+# CRLF turned into LF, so a Windows checkout (core.autocrlf) and a Linux one give the same hash.
+# Report entries written since 2026-11-25 say so with "hash": HASH_SCHEME. Older entries have
+# no "hash" field: they are "legacy", hashed on the raw bytes of whatever checkout ran them.
+HASH_SCHEME = "sha256-lf"
+LegacyMatch = Literal["sha256-lf", "legacy-crlf", "legacy-raw"]
+
+
+def text_sha256(source: Path | bytes) -> str:
+    """sha256 of a text file (or its bytes) with CRLF normalised to LF."""
+    data = source.read_bytes() if isinstance(source, Path) else source
+    return hashlib.sha256(data.replace(b"\r\n", b"\n")).hexdigest()
+
+
+def match_recorded_hash(
+    recorded: str, content: bytes, scheme: str | None = None
+) -> LegacyMatch | None:
+    """Which form of `content` gives the `recorded` hash, or None if none does.
+
+    With scheme HASH_SCHEME only the LF form counts. A legacy entry (no scheme) also matches the
+    CRLF form (a Windows checkout) or the raw bytes, so old reports stay verifiable unchanged.
+    """
+    lf = content.replace(b"\r\n", b"\n")
+    if hashlib.sha256(lf).hexdigest() == recorded:
+        return "sha256-lf"
+    if scheme == HASH_SCHEME:
+        return None
+    if hashlib.sha256(lf.replace(b"\n", b"\r\n")).hexdigest() == recorded:
+        return "legacy-crlf"
+    if hashlib.sha256(content).hexdigest() == recorded:
+        return "legacy-raw"
     return None
 
 

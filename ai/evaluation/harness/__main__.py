@@ -7,7 +7,6 @@ python -m evaluation.harness calibrate --release <release-dir> --skill <name> \
 
 import argparse
 import asyncio
-import hashlib
 import json
 import sys
 from dataclasses import asdict, replace
@@ -15,7 +14,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from core.llm import load_prompt, track_usage
-from evaluation.common import AI_ROOT, model_for
+from evaluation.common import AI_ROOT, model_for, text_sha256
 from evaluation.harness.data import load_calibration, load_skill
 from evaluation.harness.evaluate import (
     calibrate_judge,
@@ -86,7 +85,7 @@ def _calibrate(args: argparse.Namespace) -> int:
         "dataset_sha256": benchmark.dataset_sha256,
         "skill": benchmark.skill.name,
         "live": args.live,
-        "human_labels_sha256": hashlib.sha256(args.labels.read_bytes()).hexdigest(),
+        "human_labels_sha256": text_sha256(args.labels),
         "judge_prompt_version": load_prompt("evaluation/judge").version,
         "judge_model": model_for("evaluation/judge"),
         "usage": {
