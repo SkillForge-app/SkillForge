@@ -8,12 +8,16 @@ from evaluation.ai15_package_check import check_package_trees, compare_packages,
 
 
 def _package(
-    root: Path, *, description: str = "A description.", body: str = "Original prose."
+    root: Path,
+    *,
+    description: str = "A description.",
+    body: str = "Original prose.",
+    code: str = "echo unchanged\n",
 ) -> Path:
     root.mkdir(parents=True)
     (root / "agent.md").write_text(
         f'---\nname: test-agent\ndescription: "{description}"\ntools: Read\n---\n'
-        f"# Agent\n\n{body}\n\n```sh\necho unchanged\n```\n\n"
+        f"# Agent\n\n{body}\n\n```sh\n{code}```\n\n"
         "## Procedure\n\n- Use `references/guide.md`.\n",
         encoding="utf-8",
     )
@@ -76,10 +80,12 @@ def test_allows_autolinks_and_generic_types_in_markdown(tmp_path: Path) -> None:
     before = _package(
         tmp_path / "before",
         body="See <https://example.com/> and `List<String>`.",
+        code="List<String> values;\n",
     )
     after = _package(
         tmp_path / "after",
         body="See <https://docs.example.com/> and `List<String>`.",
+        code="List<String> values;\n",
     )
 
     assert compare_packages(before, after, "claude") == []
@@ -101,6 +107,22 @@ def test_rejects_path_literal_changes_without_flagging_and_or(tmp_path: Path) ->
     errors = compare_packages(before, after, "claude")
 
     assert any("path literals changed" in error for error in errors)
+
+
+@pytest.mark.parametrize(
+    ("before_body", "after_body"),
+    [
+        ("Use this feature.", "Use and/or this feature."),
+        ("Use and/or this feature.", "Use this feature."),
+    ],
+)
+def test_allows_adding_or_removing_and_or(
+    tmp_path: Path, before_body: str, after_body: str
+) -> None:
+    before = _package(tmp_path / "before", body=before_body)
+    after = _package(tmp_path / "after", body=after_body)
+
+    assert compare_packages(before, after, "claude") == []
 
 
 def test_rejects_link_target_changes(tmp_path: Path) -> None:

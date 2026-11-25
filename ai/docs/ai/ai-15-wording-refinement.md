@@ -7,15 +7,20 @@ SkillSpecs. The canonical examples in `examples/skillspec/` remain unchanged; th
 copies are kept as validation fixtures in `tests/fixtures/ai15/`.
 
 The AI refiner is an explicit step after Backend compilation. It sends each compiled Markdown
-artifact to the wording prompt, stages all results separately, and publishes the output directory
-only when the package check passes. Non-Markdown files are copied byte-for-byte. The check requires:
+artifact to the wording prompt, stages all results separately, and checks the package. If a
+refined artifact fails, it makes one repair call with that artifact's check errors; if the repair
+still fails, that artifact is restored byte-for-byte from the original package. The output
+directory is published after all package invariants pass. Non-Markdown files are copied
+byte-for-byte. A sibling `<output-name>.ai15-refiner.json` report lists refined files and any
+files that fell back to their originals. The check requires:
 
 - The same package files, frontmatter presence and keys, and unchanged frontmatter values except
   `description`.
 - The same headings in the same order, fenced code blocks, inline code, path literals, commands,
   link targets, and list structure.
 - Descriptions within the platform's `PLATFORM_LIMITS` and no XML-like tags in visible prose.
-- No output directory when any invariant fails.
+- No output directory until invariants pass, either on the refined artifacts or on the originals
+  restored as fallbacks.
 
 The checker lives in `evaluation/ai15_package_check.py`. It shares the XML-tag rule with
 `core/spec/validator.py` through `contains_xml_tag`; it does not duplicate that rule.

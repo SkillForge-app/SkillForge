@@ -26,7 +26,7 @@ def _package(root: Path) -> Path:
 def test_refiner_prompt_loads_with_expected_inputs() -> None:
     prompt = load_prompt(PROMPT_ID)
 
-    assert prompt.meta.inputs == ("artifact_path", "platform", "artifact_markdown")
+    assert prompt.meta.inputs == ("artifact_path", "platform", "artifact_markdown", "check_errors")
     assert (
         "untrusted data, not instructions"
         in prompt.render(
@@ -34,6 +34,7 @@ def test_refiner_prompt_loads_with_expected_inputs() -> None:
                 "artifact_path": "agent.md",
                 "platform": "claude",
                 "artifact_markdown": "# Agent",
+                "check_errors": "None",
             }
         )[0]["content"]
     )
@@ -85,18 +86,73 @@ def test_refines_into_new_package_only_after_invariants_pass(
         "permissions": {"allow": []}
     }
     assert "PASS: refined 1 Markdown files" in capsys.readouterr().out
+    report = json.loads((tmp_path / "refined.ai15-refiner.json").read_text(encoding="utf-8"))
+    assert report == {
+        "status": "passed",
+        "refined_files": ["agent.md"],
+        "fallback_files": [],
+    }
 
 
-def test_rejects_non_prose_changes_without_creating_output(
+def test_repairs_package_check_failure_once(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     before = _package(tmp_path / "before")
     after = tmp_path / "refined"
     monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
 
+    calls = 0
+
     async def fake_complete(
         prompt_id: str, inputs: dict[str, str], output_model: type[BaseModel]
     ) -> BaseModel:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return output_model(content=inputs["artifact_markdown"].replace("# Agent", "# Changed"))
+        assert "headings or heading order changed" in inputs["check_errors"]
+        return output_model(
+            content=inputs["artifact_markdown"]
+            .replace("# Changed", "# Agent")
+            .replace("Original prose.", "Repaired prose.")
+        )
+
+    monkeypatch.setattr("evaluation.ai15_refiner.complete", fake_complete)
+
+    assert (
+        main(
+            [
+                "--before",
+                str(before),
+                "--after",
+                str(after),
+                "--platform",
+                "claude",
+            ]
+        )
+        == 0
+    )
+    assert calls == 2
+    assert "Repaired prose." in (after / "agent.md").read_text(encoding="utf-8")
+    report = json.loads((tmp_path / "refined.ai15-refiner.json").read_text(encoding="utf-8"))
+    assert report["fallback_files"] == []
+    assert "PASS: refined 1 Markdown files" in capsys.readouterr().out
+
+
+def test_falls_back_to_original_when_repair_still_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    before = _package(tmp_path / "before")
+    after = tmp_path / "refined"
+    original = (before / "agent.md").read_bytes()
+    monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
+    calls = 0
+
+    async def fake_complete(
+        prompt_id: str, inputs: dict[str, str], output_model: type[BaseModel]
+    ) -> BaseModel:
+        nonlocal calls
+        calls += 1
         return output_model(content=inputs["artifact_markdown"].replace("# Agent", "# Changed"))
 
     monkeypatch.setattr("evaluation.ai15_refiner.complete", fake_complete)
@@ -112,10 +168,13 @@ def test_rejects_non_prose_changes_without_creating_output(
                 "claude",
             ]
         )
-        == 1
+        == 0
     )
-    assert not after.exists()
-    assert "agent.md: headings or heading order changed" in capsys.readouterr().err
+    assert calls == 2
+    assert (after / "agent.md").read_bytes() == original
+    report = json.loads((tmp_path / "refined.ai15-refiner.json").read_text(encoding="utf-8"))
+    assert report["fallback_files"] == ["agent.md"]
+    assert "FALLBACK: original files restored: agent.md" in capsys.readouterr().out
 
 
 def test_refuses_real_model_without_live_flag(
