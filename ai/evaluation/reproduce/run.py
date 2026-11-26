@@ -36,6 +36,7 @@ from evaluation.common import text_sha256
 from evaluation.reproduce.check import git_show
 from evaluation.reproduce.registry import AI_DIR, Entry, Registry
 from evaluation.reproduce.rescore import rescore
+from evaluation.reproduce.strict import loads_unique
 
 TEMP_ROOT = Path(tempfile.gettempdir()) / "skillforge-reproduce"
 VENVS = AI_DIR / ".data" / "reproduce" / "venvs"
@@ -211,8 +212,8 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
             entry.id, "error", f"exit {proc.returncode}; no new report: {tail}", [], seconds
         )
     ignore = set(registry.ignore) | {x.field for x in entry.ignore_extra}
-    old = strip(json.loads(committed), ignore)
-    fresh = strip(json.loads(new.read_text(encoding="utf-8")), ignore)
+    old = strip(loads_unique(committed), ignore)
+    fresh = strip(loads_unique(new.read_text(encoding="utf-8")), ignore)
     diffs = differences(old, fresh)
     return Outcome(entry.id, "differs" if diffs else "match", "", diffs, seconds)
 

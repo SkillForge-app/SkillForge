@@ -32,6 +32,7 @@ from typing import Any, get_args
 from core.analysis.types import HarmCategory, SafetyCondition
 from core.spec import DOMAIN_AREAS, KINDS, RISK_LEVELS, TARGETS
 from evaluation.common import text_sha256
+from evaluation.reproduce.strict import DuplicateKeyError, loads_unique
 
 FIELDS = ("id", "expected", "predicted", "error")
 # "<set>:<id>", or "normal:<set>:<id>" for the safety screen's everyday requests. Matched with
@@ -64,8 +65,35 @@ LISTS: dict[str, set[str]] = {
 }
 
 
+# The keys a problem message may name: the tracked fields, the label fields, and the source
+# run's own. Any other key is "(name not shown)".
+NAMES = frozenset({*FIELDS, *VOCAB, *LISTS, "set", "text", "latency_ms"})
+
+
 class TrackError(ValueError):
     pass
+
+
+def parse_lines(text: str) -> tuple[list[dict[str, Any]], list[str]]:
+    """A run file's lines, and one problem for each line that is not a single JSON object with
+    unique keys at every depth (json.loads would keep the last of two equal keys, hiding the
+    first). Problems name the line and a known key, never a value."""
+    lines: list[dict[str, Any]] = []
+    problems: list[str] = []
+    for n, raw in enumerate((r for r in text.splitlines() if r.strip()), 1):
+        try:
+            value = loads_unique(raw, NAMES)
+        except DuplicateKeyError as exc:
+            problems.append(f"line {n}: {exc}")
+            continue
+        except ValueError:
+            problems.append(f"line {n}: not valid JSON (value not shown)")
+            continue
+        if not isinstance(value, dict):
+            problems.append(f"line {n}: not a JSON object (value not shown)")
+            continue
+        lines.append(value)
+    return lines, problems
 
 
 def error_class(name: str | None) -> str | None:
@@ -149,7 +177,9 @@ def convert(source: Path, target: Path, known: Collection[str]) -> dict[str, Any
     """Write the id-only file; return its record (hashes, line count). Reads `source` only.
     `known`: rescore.known_ids(repo, recorded_at). Nothing is written if any line is refused."""
     raw = source.read_bytes()
-    rows = [json.loads(line) for line in raw.decode("utf-8").splitlines() if line.strip()]
+    rows, problems = parse_lines(raw.decode("utf-8"))
+    if problems:
+        raise TrackError(problems[0])
     lines = []
     for n, row in enumerate(rows, 1):
         try:
@@ -202,4 +232,5 @@ __all__ = [
     "convert",
     "convert_line",
     "id_problem",
+    "parse_lines",
 ]

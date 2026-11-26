@@ -10,7 +10,6 @@
   ids in the label files at `recorded_at`; a rescore's source hash equals its report's.
 """
 
-import json
 import re
 import subprocess
 from dataclasses import dataclass, field
@@ -20,7 +19,8 @@ from core.spec import Issue
 from evaluation.common import match_recorded_hash, text_sha256
 from evaluation.reproduce.registry import Entry, Registry
 from evaluation.reproduce.rescore import known_ids
-from evaluation.reproduce.track import bad_fields
+from evaluation.reproduce.strict import DuplicateKeyError, loads_unique
+from evaluation.reproduce.track import bad_fields, parse_lines
 
 REPORT_GLOB = "ai/evaluation/*/reports/*.json"
 # Code that loads the embedding model: under a fake backend it would get random vectors.
@@ -109,6 +109,11 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
         twin = entry.report[: -len(".json")] + ".md"
         if not (repo / twin).is_file():
             issues.append(Issue(where, "missing_markdown", f"{twin} does not exist"))
+    if entry.report.endswith(".json"):
+        try:
+            loads_unique((repo / entry.report).read_text(encoding="utf-8"))
+        except DuplicateKeyError as exc:
+            return [*issues, Issue(where, "report_duplicate_key", str(exc))]
     if entry.kind == "offline" and not entry.command:
         issues.append(Issue(where, "no_command", "an offline entry needs its command"))
     known = None  # without history: the id format only
@@ -168,24 +173,30 @@ def _check_tracked_run(entry: Entry, repo: Path, known: frozenset[str] | None) -
     issues = []
     if text_sha256(path) != run.sha256:
         issues.append(Issue(where, "changed_tracked_run", f"{run.path} no longer has its hash"))
-    lines = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
-    if len(lines) != run.lines:
+    lines, problems = parse_lines(path.read_text(encoding="utf-8"))
+    issues += [Issue(where, "tracked_run_json", p) for p in problems[:5]]
+    if len(lines) + len(problems) != run.lines:
         issues.append(
-            Issue(where, "tracked_run_lines", f"{len(lines)} lines, recorded {run.lines}")
+            Issue(
+                where,
+                "tracked_run_lines",
+                f"{len(lines) + len(problems)} lines, recorded {run.lines}",
+            )
         )
     issues += [Issue(where, "tracked_run_field", p) for p in bad_fields(lines, known)[:5]]
     ids = [line.get("id") for line in lines]
     if len(set(ids)) != len(ids):
         issues.append(Issue(where, "tracked_run_ids", "duplicate ids in the tracked run"))
-    report = json.loads((repo / entry.report).read_text(encoding="utf-8"))
+    report = loads_unique((repo / entry.report).read_text(encoding="utf-8"))
     recorded = (report.get("rescored_from") or {}).get("predictions_sha256")
     if recorded is not None and recorded != run.source_sha256:
         issues.append(
             Issue(where, "source_hash", "the tracked run's source is not the run the report used")
         )
     n = sum(s.get("n", 0) for s in (report.get("sets") or {}).values())
-    if n and n != len(lines):
-        issues.append(Issue(where, "tracked_run_lines", f"{len(lines)} lines for a report of {n}"))
+    total = len(lines) + len(problems)
+    if n and n != total:
+        issues.append(Issue(where, "tracked_run_lines", f"{total} lines for a report of {n}"))
     return issues
 
 

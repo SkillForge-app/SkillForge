@@ -46,6 +46,7 @@ cd ai
     - it's one of the ids in the tracked label files at `recorded_at` (the seed release, `analyzer/requests-*.yaml`, and safety `redteam`, `benign-tricky` and `safety-dev`).
     - So no text can ride in on an id. The converter refuses such a line, and `check` fails on one.
     - **Messages never show the refused text:** not the id, a label value, an unknown field name or an error value. They name the known field only.
+  - **No duplicate keys, at any depth.** A plain JSON or YAML parser keeps the last of two equal keys, so text could hide under a first `id`. Every file `reproduce` reads (tracked runs, source runs, reports, the registry, label files) is parsed by `evaluation/reproduce/strict.py`, which refuses duplicates.
   - The SimpleSafetyTests items (`r-31`…`r-36`, used by reference) are id and labels only.
   - **From 25 Nov on,** analyzer lines also keep the predicted and expected `mentioned_targets` (platform labels) and `question_rule_kept` (a boolean computed at run time, never question text).
 - **Two hashes per tracked run:**

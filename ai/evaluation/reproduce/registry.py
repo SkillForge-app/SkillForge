@@ -4,10 +4,10 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
-import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 from core.spec import Issue, schema_issues
+from evaluation.reproduce.strict import DuplicateKeyError, yaml_unique
 
 AI_DIR = Path(__file__).resolve().parents[2]
 REGISTRY = AI_DIR / "evaluation" / "experiments.yaml"
@@ -121,7 +121,10 @@ class RegistryError(ValueError):
 
 
 def load_registry(path: Path = REGISTRY) -> Registry:
-    data: Any = yaml.safe_load(path.read_text(encoding="utf-8"))
+    try:  # a duplicate key would silently keep the last value (e.g. a second `reproduces`)
+        data: Any = yaml_unique(path.read_text(encoding="utf-8"))
+    except DuplicateKeyError as exc:
+        raise RegistryError([Issue(path.name, "duplicate_key", str(exc))]) from None
     try:
         return Registry.model_validate_json(json.dumps(data, default=str))
     except ValidationError as exc:

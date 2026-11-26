@@ -15,10 +15,9 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from evaluation.reproduce.registry import Entry, Registry
-from evaluation.reproduce.track import error_class
+from evaluation.reproduce.strict import loads_unique, yaml_unique
+from evaluation.reproduce.track import TrackError, error_class, parse_lines
 
 GATED = ("kind", "domain_area", "risk")
 GATE_SIZE = 100
@@ -45,8 +44,10 @@ def _ratio(part: int, whole: int) -> float | None:
 
 def load_tracked(repo: Path, entry: Entry) -> list[dict[str, Any]]:
     assert entry.tracked_run is not None
-    text = (repo / entry.tracked_run.path).read_text(encoding="utf-8")
-    return [json.loads(line) for line in text.splitlines() if line.strip()]
+    lines, problems = parse_lines((repo / entry.tracked_run.path).read_text(encoding="utf-8"))
+    if problems:
+        raise TrackError(f"{entry.id}: {problems[0]}")
+    return lines
 
 
 # ------------------------------------------------------------------ analyzer (AI-05)
@@ -59,7 +60,7 @@ def analyzer_labels(repo: Path, commit: str, seed_release: str = "0.1.0") -> dic
         repo, commit, f"ai/evaluation/benchmarks/seed/releases/{seed_release}/requests.jsonl"
     )
     for line in (seed or "").splitlines():
-        r = json.loads(line)
+        r = loads_unique(line)
         out[f"gate:{r['id']}"] = {
             "kind": r["kind"],
             "domain_area": r["domain"].split("/")[0],
@@ -73,7 +74,7 @@ def analyzer_labels(repo: Path, commit: str, seed_release: str = "0.1.0") -> dic
         ("holdout", "holdout"),
     ):
         text = _show(repo, commit, f"ai/evaluation/analyzer/requests-{split}.yaml")
-        for r in (yaml.safe_load(text) or {}).get("requests", []) if text else []:
+        for r in (yaml_unique(text) or {}).get("requests", []) if text else []:
             out[f"{name}:{r['id']}"] = {
                 "kind": r["kind"],
                 "domain_area": r["domain"].split("/")[0],
@@ -173,7 +174,7 @@ def safety_items(repo: Path, commit: str) -> tuple[dict[str, Any], str]:
         ("dev", "safety-dev.yaml"),
     ):
         text = _show(repo, commit, f"ai/evaluation/safety/{file}")
-        data = yaml.safe_load(text) if text else {}
+        data = yaml_unique(text) if text else {}
         if name == "redteam":
             status = str(data.get("status", "unknown"))
         for r in data.get("requests") or []:
@@ -315,7 +316,7 @@ def _compare(
 def rescore(entry: Entry, registry: Registry, repo: Path) -> tuple[list[str], list[str]]:
     """(differences, metrics left out as listed). Empty differences = the entry reproduces."""
     del registry
-    report = json.loads((repo / entry.report).read_text(encoding="utf-8"))
+    report = loads_unique((repo / entry.report).read_text(encoding="utf-8"))
     rows = load_tracked(repo, entry)
     by_set: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for r in rows:

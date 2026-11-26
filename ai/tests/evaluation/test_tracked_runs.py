@@ -11,8 +11,9 @@ import pytest
 from evaluation.analyzer.evaluate import Prediction, write_report
 from evaluation.common import text_sha256
 from evaluation.reproduce.check import check, repo_root
-from evaluation.reproduce.registry import AI_DIR, Registry, load_registry
+from evaluation.reproduce.registry import AI_DIR, Registry, RegistryError, load_registry
 from evaluation.reproduce.rescore import _compare, analyzer_metrics, known_ids, safety_metrics
+from evaluation.reproduce.strict import DuplicateKeyError, loads_unique, yaml_unique
 from evaluation.reproduce.track import FIELDS, TrackError, bad_fields, convert, convert_line
 
 KNOWN = frozenset({"gate:t-01", "gate:t-02", "gate:t-03", "redteam:r-31"})
@@ -231,20 +232,23 @@ def git(repo: Path, *args: str) -> str:
     return out.stdout.strip()
 
 
-def live_repo(tmp_path: Path, tracked_id: str) -> tuple[Path, Registry]:
-    """A throwaway repo: labels for gate:t-01, a live report of n=1, and its tracked run."""
+def live_repo(
+    tmp_path: Path, tracked_id: str, *, run: str | None = None, report: str | None = None
+) -> tuple[Path, Registry]:
+    """A throwaway repo: labels for gate:t-01, a live report of n=1, and its tracked run (or the
+    raw `run` / `report` text given)."""
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "test@example.invalid")
     git(tmp_path, "config", "user.name", "test")
     git(tmp_path, "config", "core.autocrlf", "false")
     line = {**convert_line(ANALYZER_ROW, KNOWN), "id": tracked_id}
-    run = json.dumps(line, sort_keys=True) + "\n"
+    run = run if run is not None else json.dumps(line, sort_keys=True) + "\n"
     files = {
         LABELS: (
             "requests:\n  - {id: t-01, kind: task, domain: writing/cv, risk: low,"
             " needs_clarification: false}\n"
         ),
-        REPORT: json.dumps({"sets": {"gate": {"n": 1}}}),
+        REPORT: report if report is not None else json.dumps({"sets": {"gate": {"n": 1}}}),
         REPORT[: -len(".json")] + ".md": "# demo",
         RUN: run,
     }
@@ -381,3 +385,95 @@ def test_the_analyzer_run_file_keeps_targets_and_the_rule_but_no_question_text(
     assert row["mentioned_targets"]["predicted"] == ["claude"]
     assert row["question_rule_kept"] is True
     assert "questions" not in row
+
+
+# ------------------------------------------------------------------ duplicate keys
+# json.loads keeps the LAST of two equal keys: text could sit under a first `id` while a check
+# sees only the allowed second one. Every parse in `reproduce` refuses duplicates at any depth.
+
+CLEAN = json.dumps(convert_line(ANALYZER_ROW, KNOWN), sort_keys=True)
+QUOTED = json.dumps(TEXT)
+
+
+def first(key_and_value: str, line: str = CLEAN, at: str = "{") -> str:
+    """`line` with `key_and_value` inserted right after `at`: before the real key, so the
+    real (allowed) value is the one json.loads would keep."""
+    head, tail = line.split(at, 1)
+    return f"{head}{at}{key_and_value}, {tail}"
+
+
+DUPLICATE_LINES = {
+    "id: text first, allowed id second": (first(f'"id": "gate:{TEXT}"'), "'id'"),
+    "id: free text first": (first(f'"id": {QUOTED}'), "'id'"),
+    "a nested label key": (first(f'"kind": {QUOTED}', at='"predicted": {'), "'kind'"),
+    "a top-level key": (first(f'"error": {QUOTED}'), "'error'"),
+    "an unknown key, twice": (first(f"{QUOTED}: 1, {QUOTED}: 2"), "(name not shown)"),
+}
+
+
+@pytest.mark.parametrize("case", DUPLICATE_LINES)
+def test_a_duplicate_key_fails_check_and_never_shows_the_text(tmp_path: Path, case: str) -> None:
+    line, named = DUPLICATE_LINES[case]
+    assert json.loads(line)["id"] == "gate:t-01"  # the hole: plain json.loads sees the allowed id
+    repo, reg = live_repo(tmp_path, "gate:t-01", run=line + "\n")
+    issues = check(reg, repo).issues
+    assert [i.code for i in issues] == ["tracked_run_json"]
+    assert f"duplicate key {named}" in issues[0].message
+    assert "cover letter" not in issues[0].message and "values not shown" in issues[0].message
+
+
+@pytest.mark.parametrize("case", DUPLICATE_LINES)
+def test_a_duplicate_key_is_refused_by_the_converter(tmp_path: Path, case: str) -> None:
+    line, named = DUPLICATE_LINES[case]
+    source = tmp_path / "predictions.jsonl"
+    source.write_text(line + "\n", encoding="utf-8")
+    with pytest.raises(TrackError) as caught:
+        convert(source, tmp_path / "tracked.jsonl", KNOWN)
+    assert f"line 1: duplicate key {named}" in str(caught.value)
+    assert "cover letter" not in str(caught.value)
+    assert not (tmp_path / "tracked.jsonl").exists()
+
+
+def test_a_duplicate_key_in_a_source_row_is_refused(tmp_path: Path) -> None:
+    raw = json.dumps(ANALYZER_ROW)
+    source = tmp_path / "predictions.jsonl"
+    for line in (
+        first(f'"id": {QUOTED}', raw),  # the source id: text first, the real one second
+        first(f'"kind": {QUOTED}', raw, at='"predicted": {'),
+        first(f'"text": {QUOTED}', raw),  # even a field the converter drops
+    ):
+        source.write_text(line + "\n", encoding="utf-8")
+        with pytest.raises(TrackError, match="duplicate key") as caught:
+            convert(source, tmp_path / "tracked.jsonl", KNOWN)
+        assert "cover letter" not in str(caught.value) and "SECRET" not in str(caught.value)
+        assert not (tmp_path / "tracked.jsonl").exists()
+
+
+def test_a_report_with_a_duplicate_key_fails_check(tmp_path: Path) -> None:
+    report = '{"sets": {"gate": {"n": 2, "n": 1}}}'  # a changed count, hidden by the second `n`
+    repo, reg = live_repo(tmp_path, "gate:t-01", report=report)
+    issues = check(reg, repo).issues
+    assert [(i.code, i.message) for i in issues] == [
+        ("report_duplicate_key", "duplicate key 'n' in one object (values not shown)")
+    ]
+
+
+def test_the_registry_and_label_yaml_refuse_duplicate_keys(tmp_path: Path) -> None:
+    registry = (AI_DIR / "evaluation" / "experiments.yaml").read_text(encoding="utf-8")
+    path = tmp_path / "experiments.yaml"
+    path.write_text(registry.replace("version: 1\n", "version: 1\nversion: 1\n", 1), "utf-8")
+    with pytest.raises(RegistryError) as caught:
+        load_registry(path)
+    assert caught.value.issues[0].code == "duplicate_key"
+    with pytest.raises(DuplicateKeyError, match="'reproduces'"):
+        yaml_unique("- {id: E1, reproduces: false, reproduces: true}\n")
+    with pytest.raises(DuplicateKeyError, match=r"\(name not shown\)"):
+        yaml_unique(f"{QUOTED}: 1\n{QUOTED}: 2\n")
+    merged = yaml_unique("base: &b {x: 1}\nother:\n  <<: *b\n  x: 2\n")  # an override is fine
+    assert merged["other"] == {"x": 2}
+
+
+def test_loads_unique_refuses_duplicates_at_any_depth() -> None:
+    assert loads_unique('{"a": [{"b": 1}, {"b": 2}]}') == {"a": [{"b": 1}, {"b": 2}]}
+    with pytest.raises(DuplicateKeyError, match="'b'"):
+        loads_unique('{"a": [{"c": {"b": 1, "b": 1}}]}')  # even with equal values
