@@ -121,14 +121,20 @@ def load_spec(path: str | Path, *, existing_names: Collection[str] = ()) -> Skil
     return result.spec
 
 
+# The text draft_description puts between the parts. The Skill Architect's prompt states this
+# exact rule to the model (core/agents/architect.py), so it is defined once, here.
+DESCRIPTION_PARTS = {"use_when": " Use when: ", "not_for": " Not for: ", "join": "; ", "end": "."}
+
+
 def draft_description(spec: SkillSpec) -> str:
     """The description a compiler can always build from the spec (AI-14 may write a better one).
 
     Used to check that a valid spec fits every target's description limit.
     """
-    text = f"{spec.skill.summary} Use when: {'; '.join(spec.triggers.use_when)}."
+    p = DESCRIPTION_PARTS
+    text = spec.skill.summary + p["use_when"] + p["join"].join(spec.triggers.use_when) + p["end"]
     if spec.triggers.avoid_when:
-        text += f" Not for: {'; '.join(spec.triggers.avoid_when)}."
+        text += p["not_for"] + p["join"].join(spec.triggers.avoid_when) + p["end"]
     return text
 
 

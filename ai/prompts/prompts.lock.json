@@ -8,8 +8,8 @@
     "version": 1
   },
   "architect/generate": {
-    "sha256": "739a84a824f0aaf3775b50234bf76ded4b7d67bb58cb0bcbcbe5e8dfc911e079",
-    "version": 1
+    "sha256": "743b0cbc43740a849a409c005bebc3d924f6d64d250df7e897fd2cc8a96ed242",
+    "version": 2
   },
   "architect/repair": {
     "sha256": "2d959799967f284e829ebc5f00f5b3c2e3acf3cee9a36abf07699fef7bc13019",

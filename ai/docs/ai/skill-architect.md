@@ -53,7 +53,7 @@ START → write → enforce → check ─(valid)──────────�
 - **A model refusal** raises `ArchitectRefused`.
 - **Progress events** (`attempt`, `repairing`, `done` or `failed`, plus the attempt number) go to `on_progress`.
 
-**Prompts and model.** The prompts are in `ai/prompts/architect/` (version 1). Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
+**Prompts and model.** The prompts are in `ai/prompts/architect/`: `generate` version 2, `repair` version 1. Version 2 of `generate` (2026-11-26, before any live run) also tells the model three rules `validate_spec` enforces: the field length limits, the exact way the description is built from the summary and triggers (and its limit), and the words a skill name must never contain. Each value is a template input computed from `core/spec` (`core.agents.architect.length_limits`, `DESCRIPTION_PARTS`, `RESERVED_NAME_WORDS`), never typed into the prompt; `tests/agents/test_architect_prompt.py` checks each one against the code. Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
 
 **Tracing is off.** LangGraph comes with LangSmith tracing, which the Architect switches off by default (`LANGSMITH_TRACING=false`), because traces would contain users' requests.
 
@@ -67,7 +67,8 @@ cd ai
 - **End to end:** `--end-to-end` runs the real safety screen and analyzer first.
 - **What a run writes:**
   - **The report**, tracked in Git: `ai/evaluation/architect/reports/architect-<set>[-e2e]-<date>.md` and `.json`. A second run on the same day gets `-2`, `-3`, …, so a reviewed report is never overwritten. Only `--live` runs go here.
-  - **The raw outputs**, ignored by Git: `ai/evaluation/architect/runs/<UTC>/` holds `predictions.jsonl` and **every generated spec** in `specs/`, for review by hand. The report's `run` field names this folder. A fake smoke run keeps its report here too.
+  - **The raw outputs**, ignored by Git: `ai/evaluation/architect/runs/<UTC>/` holds `manifest.json` (what the run measures), `predictions.jsonl` and **every generated spec** in `specs/`, for review by hand. The folder is made before the first call, and each request's spec and line are saved the moment it finishes. The report's `run` field names this folder. A fake smoke run keeps its report here too.
+  - **Resume:** if a run dies, `run --set all --live --resume ai/evaluation/architect/runs/<UTC>` runs only the requests that have no saved outcome and writes the report from everything saved. It refuses when the prompts, model, data, items or mode differ from the manifest.
 - **The report:** valid rate, first-try rate, the attempts histogram, the most common failure codes, safety-guardrail compliance and identity fidelity.
 - **The gate:** exactly 103 requests, at least 90% valid. A fake run prints "does NOT count for AI-07", because the fake gives every request the same canned spec.
 

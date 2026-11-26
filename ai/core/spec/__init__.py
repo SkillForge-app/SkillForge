@@ -29,7 +29,9 @@ from core.spec.models import (
     render_schema,
 )
 from core.spec.validator import (
+    DESCRIPTION_PARTS,
     PLATFORM_LIMITS,
+    RESERVED_NAME_WORDS,
     Issue,
     SpecValidationError,
     ValidationResult,
@@ -41,12 +43,14 @@ from core.spec.validator import (
 
 __all__ = [
     "CAPABILITIES",
+    "DESCRIPTION_PARTS",
     "DOMAIN_AREAS",
     "GUARDRAIL_CATEGORIES",
     "HIGH_RISK_AREAS",
     "KINDS",
     "RISK_LEVELS",
     "PLATFORM_LIMITS",
+    "RESERVED_NAME_WORDS",
     "SCHEMA_PATH",
     "SEVERITIES",
     "SPEC_VERSION",
