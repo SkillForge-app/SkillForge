@@ -1,14 +1,15 @@
 """Skill Architect evaluation (AI-07) command line.
 
 python -m evaluation.architect check-data
+python -m evaluation.architect estimate --set all [--tokens-from <pilot run folder>]   # no calls
 python -m evaluation.architect run --set all --live --budget-usd 30 --retry-errors   # costs money
 python -m evaluation.architect run --set all --live --budget-usd 30 --retry-errors \
     --resume evaluation/architect/runs/<id>                     # after exit 5 (paused) or a crash
 python -m evaluation.architect run --set dev --ids d-02,d-03 --live --budget-usd 2   # a pilot
+SKILLFORGE_LLM_BACKEND=fake python -m evaluation.architect run --set examples   # smoke test
 
 Exit codes: 0 passed (or no gate), 1 gate failed, 2 refused before any call, 3 stopped by the
 budget, 4 invalid (validity rule), 5 paused on a provider outage (resume it).
-SKILLFORGE_LLM_BACKEND=fake python -m evaluation.architect run --set examples   # smoke test
 
 Every outcome is saved in the run folder as it finishes. If a run dies, `--resume <run folder>`
 runs only the requests that have no outcome yet (same prompts, model, data and items, or it
@@ -21,9 +22,9 @@ import sys
 from collections.abc import Sequence
 from pathlib import Path
 
-from core.agents.architect import GENERATE, MAX_ATTEMPTS
-from core.llm import load_config
+from core.agents.architect import GENERATE
 from evaluation.architect.data import GATE_SIZE, ArchitectItem, load_items
+from evaluation.architect.estimate import Estimate, estimate
 from evaluation.architect.evaluate import (
     PAUSE_AFTER,
     exit_code,
@@ -32,11 +33,10 @@ from evaluation.architect.evaluate import (
     write_report,
 )
 from evaluation.architect.runlog import ResumeError
-from evaluation.common import AI_ROOT, live_guard, model_for, output_dirs
+from evaluation.common import AI_ROOT, live_guard, output_dirs
 
 REPORTS_DIR = AI_ROOT / "evaluation" / "architect" / "reports"  # tracked: .md + .json per live run
 RUNS_DIR = AI_ROOT / "evaluation" / "architect" / "runs"  # ignored by Git: predictions + specs
-TOKENS_PER_CALL = (6000, 8000)  # rough input/output of one Architect call (spec + thinking)
 
 
 def check_data_command() -> int:
@@ -47,15 +47,34 @@ def check_data_command() -> int:
     return 0 if ok else 1
 
 
-def estimate_cost(requests: int) -> tuple[float, float] | None:
-    info = load_config().info_for(model_for(GENERATE))
-    if not info:
+def estimate_cost(items: Sequence[ArchitectItem], tokens_from: Path | None) -> Estimate | None:
+    try:
+        return estimate(items, tokens_from=tokens_from)
+    except LookupError as exc:
+        print(f"no estimate: {exc}", file=sys.stderr)
         return None
-    tokens_in, tokens_out = TOKENS_PER_CALL
-    per_call = float(
-        tokens_in * info["input_cost_per_token"] + tokens_out * info["output_cost_per_token"]
-    )
-    return round(requests * per_call, 2), round(requests * MAX_ATTEMPTS * per_call, 2)
+
+
+def items_for(args: argparse.Namespace) -> list[ArchitectItem] | None:
+    items = load_items(args.set)
+    if args.ids:
+        chosen = select(items, args.ids)
+        if chosen is None:
+            print(f"--ids names a request that is not in the {args.set} set", file=sys.stderr)
+            return None
+        items = chosen
+    return items[: args.limit] if args.limit else items
+
+
+def estimate_command(args: argparse.Namespace) -> int:
+    items = items_for(args)
+    if items is None:
+        return 2
+    cost = estimate_cost(items, args.tokens_from)
+    if cost is None:
+        return 2
+    print("\n".join(cost.lines()))
+    return 0
 
 
 def select(items: list[ArchitectItem], ids: str) -> list[ArchitectItem] | None:
@@ -79,24 +98,18 @@ def run_command(args: argparse.Namespace) -> int:
     if args.live and args.budget_usd is None:
         print("--live needs --budget-usd (the most this run may spend)", file=sys.stderr)
         return 2
-    items = load_items(args.set)
-    if args.ids:
-        chosen = select(items, args.ids)
-        if chosen is None:
-            print(f"--ids names a request that is not in the {args.set} set", file=sys.stderr)
-            return 2
-        items = chosen
-    if args.limit:
-        items = items[: args.limit]
+    items = items_for(args)
+    if items is None:
+        return 2
     sets: dict[str, Sequence[ArchitectItem]] = {args.set: items}
     if args.live:
-        cost = estimate_cost(len(items))
-        shown = "unknown" if cost is None else f"${cost[0]} expected, ${cost[1]} high"
-        print(
-            f"about to design {len(items)} skills with live calls, estimated {shown}, "
-            f"budget ${args.budget_usd}"
-        )
-        if cost is None or cost[1] > args.budget_usd:
+        # As AI-05: refuse when the expected cost is over the budget. The high and worst cases
+        # are shown; the budget cap is what bounds them during the run.
+        cost = estimate_cost(items, args.tokens_from)
+        print(f"about to design {len(items)} skills with live calls, budget ${args.budget_usd}")
+        if cost is not None:
+            print("\n".join("  " + line for line in cost.lines()))
+        if cost is None or cost.expected_usd > args.budget_usd:
             print("the estimate is unknown or over the budget: no call was made", file=sys.stderr)
             return 2
     if args.resume is not None:
@@ -137,15 +150,23 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m evaluation.architect")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("check-data", help="build the 103 test requests and check them")
-    run = commands.add_parser("run", help="evaluate the Skill Architect")
-    run.add_argument(
+    which = argparse.ArgumentParser(add_help=False)  # the requests, for run and estimate
+    which.add_argument(
         "--set",
         choices=["examples", "gate", "all", "dev"],
         default="all",
         help="all = the 103 gate requests; dev = the analyzer's dev requests (pilots only)",
     )
-    run.add_argument("--ids", default="", help="only these requests, e.g. d-02,d-03 (pilots)")
-    run.add_argument("--limit", type=int, default=0)
+    which.add_argument("--ids", default="", help="only these requests, e.g. d-02,d-03 (pilots)")
+    which.add_argument("--limit", type=int, default=0)
+    which.add_argument(
+        "--tokens-from",
+        type=Path,
+        default=None,
+        help="a pilot's run folder: estimate from its measured tokens per call (calls.jsonl)",
+    )
+    commands.add_parser("estimate", parents=[which], help="what a run would cost (no model call)")
+    run = commands.add_parser("run", parents=[which], help="evaluate the Skill Architect")
     run.add_argument("--concurrency", type=int, default=2)
     run.add_argument("--end-to-end", action="store_true", help="run analyzer + screen first")
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
@@ -164,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
         type=float,
         default=None,
         help="the most this run may spend (all segments); required with --live. The run "
-        "refuses to start when the high estimate is over it, and stops calling once reached",
+        "refuses to start when the expected estimate is over it, and stops calling once reached",
     )
     run.add_argument(
         "--retry-errors",
@@ -182,6 +203,8 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command == "check-data":
         return check_data_command()
+    if args.command == "estimate":
+        return estimate_command(args)
     return run_command(args)
 
 
