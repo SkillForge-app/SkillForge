@@ -69,11 +69,22 @@ def gate_items() -> list[ArchitectItem]:
     ]
 
 
+def dev_items() -> list[ArchitectItem]:
+    """The analyzer's dev requests, built the same way. For pilot runs and prompt work only:
+    never part of the 103, and the gate set is never used for tuning."""
+    return [
+        ArchitectItem(f"dev:{i.id}", "dev", i.text, from_labels(i))
+        for i in analyzer_data.load_set("dev")
+    ]
+
+
 def load_items(name: str) -> list[ArchitectItem]:
     if name == "examples":
         return example_items()
     if name == "gate":
         return gate_items()
+    if name == "dev":
+        return dev_items()
     return example_items() + gate_items()
 
 

@@ -61,8 +61,16 @@ START → write → enforce → check ─(valid)──────────�
 ```bash
 cd ai
 .venv/Scripts/python -m evaluation.architect check-data              # the 103 test requests
-.venv/Scripts/python -m evaluation.architect run --set all --live    # REAL calls: about $10–20
+.venv/Scripts/python -m evaluation.architect run --set all --live --budget-usd 30 --retry-errors   # REAL calls
+.venv/Scripts/python -m evaluation.architect run --set dev --ids d-02,d-03 --live --budget-usd 2  # a dev pilot
 ```
+- **Run rules for live runs** (decided 2026-11-26, before the first live architect run; each report states them):
+  - **Budget:** `--live` needs `--budget-usd`. The run refuses before any call when the high estimate is over it, and stops calling once the spend of all its segments reaches it (exit 3, does not count).
+  - **Retry (`--retry-errors`):** a request that ends in a provider error is retried once, at the end of the segment. If it fails again it counts as not valid.
+  - **Pause:** after 5 requests in a row end in a provider error (`--pause-after`), no new request starts (exit 5). Resume it later with `--resume`.
+  - **Validity:** a complete run where under 95% of the requests got a prediction (98 of 103) is INVALID (exit 4): a provider failure, not a measurement. It is repeated.
+  - **Call log:** `runs/<UTC>/calls.jsonl` has every call attempt (metadata only, with the sanitized provider error detail). The report counts the failed attempts by error, HTTP status, provider and model link.
+- **Dev pilots:** `--set dev` builds the analyzer's dev requests the same way. It is for pilots and prompt work only and is never part of the 103. The gate set is never used for tuning.
 - **The test requests:** the 3 example AnalyzedRequests, plus the 100 analyzer gate requests built **from their labels**. So the score measures the Architect alone. Vague requests count as "questions skipped".
 - **End to end:** `--end-to-end` runs the real safety screen and analyzer first.
 - **What a run writes:**

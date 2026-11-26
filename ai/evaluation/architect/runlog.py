@@ -8,6 +8,9 @@ folder is made before the first model call, and every outcome is saved the momen
         predictions.jsonl  one line per finished request, appended and flushed to disk at once
         specs/<id>.json    every generated spec, written before its line
         segments.jsonl     one line per process that worked on the run (start, end, git HEAD)
+        calls.jsonl        one CallRecord per model call attempt, as it happens: metadata
+                           only (tokens, cost, model, fallback link, error class, HTTP status,
+                           the sanitized provider error detail), never prompt or output text
 
 `--resume runs/<id>` continues such a run: it refuses when the prompts, model, data or items
 differ from the manifest, skips every request that already has a line, and runs the rest.
@@ -16,9 +19,13 @@ by the same code. The run folder is ignored by Git (request text and model outpu
 """
 
 import json
+import logging
 import os
+import re
 import subprocess
-from collections.abc import Mapping, Sequence
+from collections import Counter
+from collections.abc import Iterator, Mapping, Sequence
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -32,13 +39,18 @@ from evaluation.common import AI_ROOT, Outcome
 MANIFEST = "manifest.json"
 PREDICTIONS = "predictions.jsonl"
 SEGMENTS = "segments.jsonl"
+CALLS = "calls.jsonl"
 SPECS = "specs"
+LLM_LOGGER = "skillforge.llm"  # core.llm.usage.log_call logs every CallRecord here
 MANIFEST_VERSION = 1
 # What must be the same for a resumed run to be one measurement. Not compared: when it started,
 # the git HEAD (a bug fix in scoring between segments is fine; segments.jsonl records each HEAD).
 COMPARED = ("label", "live", "end_to_end", "model", "fallbacks", "prompts", "data_sources", "ids")
-# A request refused by the cost budget was never attempted: a resumed run runs it.
-NOT_ATTEMPTED = frozenset({"BudgetExceeded"})
+# A request refused by the cost budget, or not started because the run paused on a provider
+# outage, was never attempted: a resumed run runs it. (The harness does not write lines for
+# them; a line with one of these errors from elsewhere is still not an outcome.)
+NOT_ATTEMPTED = frozenset({"BudgetExceeded", "ProviderPaused"})
+_PROVIDER = re.compile(r"(?:^|; )provider=([^;]+)")
 USAGE_FIELDS = ("calls", "errors", "input_tokens", "output_tokens", "cost_usd")
 
 Result = Outcome[ArchitectItem, ArchitectResult]
@@ -185,6 +197,70 @@ class RunLog:
         total["cost_usd"] = round(total["cost_usd"], 4)
         return total
 
+    # ------------------------------------------------------------------ the call log
+
+    @contextmanager
+    def logging_calls(self) -> Iterator[None]:
+        """Append every CallRecord logged in the block to calls.jsonl (flushed at once), so a
+        provider failure can be diagnosed after the run and the spend of a request that never
+        finished is still counted."""
+        logger = logging.getLogger(LLM_LOGGER)
+        handler = _CallFileHandler(self.run_dir / CALLS)
+        level = logger.level
+        logger.addHandler(handler)
+        logger.setLevel(logging.INFO)  # successful calls are logged at INFO
+        try:
+            yield
+        finally:
+            logger.removeHandler(handler)
+            logger.setLevel(level)
+            handler.close()
+
+    def calls(self) -> list[dict[str, Any]]:
+        path = self.run_dir / CALLS
+        if not path.exists():
+            return []
+        out = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                out.append(json.loads(line))
+            except ValueError:
+                continue  # cut off by a crash
+        return out
+
+    def calls_usage(self) -> dict[str, Any]:
+        """Usage from the call log: every attempt of every segment, including the calls of a
+        request that never finished. Zeros when there is no call log (an old run folder)."""
+        total: dict[str, Any] = dict.fromkeys(USAGE_FIELDS, 0)
+        for c in self.calls():
+            total["calls"] += 1
+            total["errors"] += c.get("status") == "error"
+            total["input_tokens"] += c.get("input_tokens") or 0
+            total["output_tokens"] += c.get("output_tokens") or 0
+            total["cost_usd"] += c.get("cost_usd") or 0.0
+        total["cost_usd"] = round(total["cost_usd"], 4)
+        return total
+
+    def provider_errors(self) -> list[dict[str, Any]]:
+        """Failed call attempts counted by (error class, HTTP status, provider, model link).
+        Only closed fields: the provider name comes from the sanitized error_detail."""
+        counts: Counter[tuple[str, int | None, str | None, int]] = Counter()
+        for c in self.calls():
+            if c.get("status") != "error":
+                continue
+            match = _PROVIDER.search(c.get("error_detail") or "")
+            key = (
+                str(c.get("error_type")),
+                c.get("error_status"),
+                match.group(1) if match else None,
+                int(c.get("fallback") or 0),
+            )
+            counts[key] += 1
+        return [
+            {"error": e, "status": s, "provider": p, "fallback": f, "count": n}
+            for (e, s, p, f), n in sorted(counts.items(), key=lambda kv: (-kv[1], str(kv[0])))
+        ]
+
     def outcomes(self, sets: Mapping[str, Sequence[ArchitectItem]]) -> dict[str, list[Result]]:
         """The outcome of every request that has one, rebuilt from the lines and spec files, in
         the items' order (so the metrics never depend on which call finished first)."""
@@ -237,6 +313,26 @@ def _issue(issue: Issue) -> dict[str, str]:
 def _plain(value: Any) -> Any:
     """`value` as it reads back from JSON (tuples become lists), for comparing manifests."""
     return json.loads(json.dumps(value)) if value is not None else None
+
+
+class _CallFileHandler(logging.Handler):
+    """Writes the structured CallRecord a log_call record carries (`llm_call`), nothing else."""
+
+    def __init__(self, path: Path) -> None:
+        super().__init__(level=logging.INFO)
+        self.path = path
+
+    def emit(self, record: logging.LogRecord) -> None:
+        data = getattr(record, "llm_call", None)
+        if not isinstance(data, dict):
+            return
+        try:
+            lead = "\n" if _ends_mid_line(self.path) else ""
+            with self.path.open("a", encoding="utf-8", newline="\n") as f:
+                f.write(lead + json.dumps(data, ensure_ascii=False, default=str) + "\n")
+                _sync(f)
+        except OSError:
+            self.handleError(record)
 
 
 def _ends_mid_line(path: Path) -> bool:
