@@ -133,6 +133,11 @@ These are checked once their branch merges:
 ## Adding an experiment
 1. **Run it.** Live runs need `--budget-usd`; for analyzer runs, `--retry-errors` and the 95% validity rule apply. Commit the report (`.md` and `.json`).
 2. **Live runs:** write the tracked run with `track.convert(source, target, rescore.known_ids(repo, recorded_at))` from your local `runs/<id>/predictions.jsonl`, and commit it.
+   - **Skill Architect (AI-07):**
+     - Its ids are `<set>:<item id>`, for example `all:gate:t-01` or `dev:dev:d-02`.
+     - Each line keeps the expected labels and `valid`, `attempts`, the issue `codes` (a closed list, never the messages), `safety_ok` and `identity_ok`.
+     - A retried request keeps only its last line, and the lines follow the run's `manifest.json` order.
+     - `reproduce run` re-scores every set metric and the gate. The gate's "no outcome", "stopped" and "paused" reasons are taken from the report: they are facts about the run, not metrics.
 3. **Add the entry to `experiments.yaml`:**
    - required: `id`, `experiment`, `task`, `question`, `kind`, `role`, `report`, `recorded_at` (the code commit), `command`;
    - offline entries also need `llm_backend`; live entries also need `tracked_run` (its two hashes and lines), plus `not_recomputable` if anything applies.
