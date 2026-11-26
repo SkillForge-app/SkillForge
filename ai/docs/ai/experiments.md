@@ -146,3 +146,8 @@ These are checked once their branch merges:
    - required: `id`, `experiment`, `task`, `question`, `kind`, `role`, `report`, `recorded_at` (the code commit), `command`;
    - offline entries also need `llm_backend`; live entries also need `tracked_run` (its two hashes and lines), plus `not_recomputable` if anything applies.
 4. **Run** `reproduce run --only <id>`, record `reproduces` and `reproduces_note`, then run `reproduce check`.
+
+## Follow-ups (from the review of #41, not done yet)
+- **Network isolation for offline runs.** `run` removes API keys, uses the fake search backend and sets the Hugging Face hub offline, but the re-run command itself can still reach the network. Run it without network access, like the CI pytest step (`unshare --net`) or an equivalent on Windows.
+- **`SECRET_ENV` as an allowlist.** `clean_env` drops variables whose names contain `API_KEY`, `TOKEN`, `SECRET`, `PASSWORD` or `DSN`: a denylist, so a secret under any other name is passed on. Pass only a named allowlist instead (`PATH`, the system variables Python needs, and the `SKILLFORGE_*` and `HF_*` settings `run` sets).
+- **The `last-run.json` path.** `run` writes its summary to one fixed, shared file, `%TEMP%\skillforge-reproduce\last-run.json`, which every run overwrites. Write a new file per run (or to an explicit `--out` path), created by `run` itself.
