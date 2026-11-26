@@ -36,11 +36,11 @@ from evaluation.common import text_sha256
 from evaluation.reproduce.check import git_show
 from evaluation.reproduce.registry import AI_DIR, TEMP_ROOT, Entry, Registry
 from evaluation.reproduce.rescore import rescore
+from evaluation.reproduce.sandbox import refuse_env_file, sandbox_env
 from evaluation.reproduce.strict import loads_unique
 
 VENVS = AI_DIR / ".data" / "reproduce" / "venvs"
 MODEL_CACHE = Path(os.environ.get("SKILLFORGE_MODEL_CACHE") or AI_DIR / ".data" / "models")
-SECRET_ENV = ("API_KEY", "TOKEN", "SECRET", "PASSWORD", "DSN")
 
 
 @dataclass
@@ -126,25 +126,14 @@ def venv_for(tree: Path) -> tuple[Path, str]:
 
 
 def clean_env(needs_model: bool) -> dict[str, str]:
-    """The environment for one entry: no secrets, offline hub, and the entry's own backend
-    (fake, or the real gateway with the local model). Nothing is inherited for the backend."""
-    env = {k: v for k, v in os.environ.items() if not any(s in k.upper() for s in SECRET_ENV)}
-    env.pop("SKILLFORGE_LLM_BACKEND", None)
-    env.update(
-        SKILLFORGE_SEARCH="fake",
-        HF_HUB_OFFLINE="1",
-        PYTHONUTF8="1",
-        PYTHONHASHSEED="0",
-    )
-    env.pop("VIRTUAL_ENV", None)
+    """The whole environment for one entry's command (old-commit code): sandbox.sandbox_env,
+    an allowlist with every proxy at a dead port, and the entry's own backend: fake, or the
+    real gateway with the local model (and no key). Nothing else is inherited."""
     if not needs_model:
-        env["SKILLFORGE_LLM_BACKEND"] = "fake"
-    else:
-        # The real gateway with the local model (no key, no network: hub offline, keys removed).
-        if not MODEL_CACHE.is_dir():
-            raise RuntimeError(f"model cache not found: {MODEL_CACHE} (set SKILLFORGE_MODEL_CACHE)")
-        env["SKILLFORGE_MODEL_CACHE"] = str(MODEL_CACHE)
-    return env
+        return sandbox_env()
+    if not MODEL_CACHE.is_dir():
+        raise RuntimeError(f"model cache not found: {MODEL_CACHE} (set SKILLFORGE_MODEL_CACHE)")
+    return sandbox_env(model_cache=MODEL_CACHE)
 
 
 _SERIES = re.compile(r"^(?P<series>.+?)-(?P<date>\d{4}-\d{2}-\d{2})(?:-(?P<n>\d+))?(?P<rest>.*)$")
@@ -193,6 +182,7 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
     start = time.perf_counter()
     if not entry.command:
         return Outcome(entry.id, "skipped", "no command")
+    refuse_env_file(tree)  # the gateway would load keys from an extracted ai/.env
     committed = (repo / entry.report).read_bytes()
     pinned = text_sha256(committed)
     reports_dir = reports_dir_for(tree, entry.report)

@@ -15,10 +15,15 @@ cd ai
 - **Offline entries are re-run at the commit that produced them** (`recorded_at`).
   1. `git archive <recorded_at> ai` is extracted with `core.autocrlf` off, so the tree is the same on every OS. It goes into a new folder under `%TEMP%\skillforge-reproduce\`. Nothing is written inside the repository, and only folders this run created are deleted.
   2. The venv comes from that commit's `uv.lock` (`uv sync --locked`), cached by the lock's hash in `ai/.data/reproduce/`, which Git ignores.
-  3. The command runs with no API keys, the Hugging Face hub offline, and the **entry's own backend**:
-     - `llm_backend: fake` means the fake LLM backend, with no model at all;
-     - `llm_backend: local-model` means the real gateway with the pinned local embedding model.
-     - There is no global setting. `check` rejects `fake` for an entry whose code embeds text (looked up at `recorded_at`), because fake vectors would give a meaningless report.
+  3. The command runs in a **sandbox environment** (`evaluation/reproduce/sandbox.py`), and so does any other code from an old commit (the `.md` check's renderer at `recorded_at`):
+     - **An allowlist only:** `PATH`, `SYSTEMROOT`, `TEMP`/`TMP`, `HOME`/`USERPROFILE` and `LANG`, plus the settings below. Everything else is dropped whatever its name: any `*_KEY`, `*_TOKEN` or `*_SECRET`, `DATABASE_URL`, and any variable not on the list.
+     - **No HTTP:** `HTTP_PROXY`, `HTTPS_PROXY` and `ALL_PROXY` point at `http://127.0.0.1:0` (fails at once on every OS) and `NO_PROXY` is empty, so httpx, requests and urllib fail. `HF_HUB_OFFLINE=1`.
+     - **No `.env`:** an extracted tree that holds `ai/.env` is refused (the gateway would load keys from it; none was ever committed).
+     - **Tested** with a fake old commit that reports which secret-named variables it sees and tries HTTP to a live local server, through both `run` and the renderer (`tests/evaluation/test_sandbox.py`).
+     - **The entry's own backend:**
+       - `llm_backend: fake` means `SKILLFORGE_LLM_BACKEND=fake`, with no model at all;
+       - `llm_backend: local-model` means the real gateway with the pinned local embedding model (`SKILLFORGE_MODEL_CACHE`), and no key to call anything else with.
+       - There is no global setting. `check` rejects `fake` for an entry whose code embeds text (looked up at `recorded_at`), because fake vectors would give a meaningless report.
 - **Live entries are never re-run** (their model calls cost money and aren't deterministic).
   - Their raw predictions are **tracked id-only** (below) and **re-scored offline**, with the same formulas as `analyzer/` and `safety/evaluate.py` and the labels at `recorded_at`.
   - A rescore entry (E8) is scored the same way, against its newer labels.
@@ -147,7 +152,9 @@ These are checked once their branch merges:
    - offline entries also need `llm_backend`; live entries also need `tracked_run` (its two hashes and lines), plus `not_recomputable` if anything applies.
 4. **Run** `reproduce run --only <id>`, record `reproduces` and `reproduces_note`, then run `reproduce check`.
 
-## Follow-ups (from the review of #41, not done yet)
-- **Network isolation for offline runs.** `run` removes API keys, uses the fake search backend and sets the Hugging Face hub offline, but the re-run command itself can still reach the network. Run it without network access, like the CI pytest step (`unshare --net`) or an equivalent on Windows.
-- **`SECRET_ENV` as an allowlist.** `clean_env` drops variables whose names contain `API_KEY`, `TOKEN`, `SECRET`, `PASSWORD` or `DSN`: a denylist, so a secret under any other name is passed on. Pass only a named allowlist instead (`PATH`, the system variables Python needs, and the `SKILLFORGE_*` and `HF_*` settings `run` sets).
-- **The `last-run.json` path.** `run` writes its summary to one fixed, shared file, `%TEMP%\skillforge-reproduce\last-run.json`, which every run overwrites. Write a new file per run (or to an explicit `--out` path), created by `run` itself.
+## Follow-ups (from the review of #41)
+- **Done in #41:** old-commit code runs with an allowlisted environment and every HTTP proxy at `127.0.0.1:0` (step 3 above). This replaced the `SECRET_ENV` denylist.
+  - Before it, E2's re-runs made real `robots.txt` requests; the sandbox blocks them, and E2 still reproduces exactly.
+- **Not done yet: E2 makes many `robots.txt` attempts once the first fetch fails (why?).** With HTTP blocked, its re-run takes far longer than the 3 s it took with the network. The sources code is unchanged here.
+- **Not done yet: OS-level network isolation.** A raw socket ignores proxy settings. Run old-commit code in a network namespace, like the CI pytest step (`unshare --net`), or an equivalent on Windows. `uv sync` builds the recorded venv outside the sandbox, because it needs the network; it installs only the hash-pinned packages of that commit's `uv.lock` and runs none of the commit's code.
+- **Not done yet: the `last-run.json` path.** `run` writes its summary to one fixed, shared file, `%TEMP%\skillforge-reproduce\last-run.json`, which every run overwrites. Write a new file per run (or to an explicit `--out` path), created by `run` itself.
