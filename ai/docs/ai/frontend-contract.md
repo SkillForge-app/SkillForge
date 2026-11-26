@@ -2,7 +2,7 @@
 
 For Frontend (FE-08 questions, FE-09 gap check, FE-10 progress, FE-11 spec form, FE-25/FE-26 later). This page states what the AI code returns, field by field, with the source `file:line` of each fact, and what the UI should do with it. Sections marked **Backend owns** are Backend's to confirm (Abdo). The AI-16 and AI-23 sections are Yousef's.
 
-- **Written 26 Nov 2026** against `origin/AI` 009888a plus two open PRs: **#39** (c129191, the pipeline input rules and closing progress event) and **#40** (2a00a70, the extraction contract). Lines marked *(#39)* or *(#40)* exist only on those branches until they merge.
+- **Written 26 Nov 2026** against `origin/AI` 672be98, which includes **#39** (merged 26 Nov: the pipeline input rules and the closing progress event, marked *(#39)* below), plus the still-open **#40** (2a00a70, the extraction contract). Lines marked *(#40)* exist only on #40's branch until it merges.
 - **Every example is generated, never hand-written.** `python -m evaluation.contract export` (and `export --gap`, which uses the local embedding model) writes them to [frontend-contract/](frontend-contract/), and CI fails when one is out of date (`tests/evaluation/test_frontend_contract.py`).
   - **How they're made:** the pipeline examples run `RealPipeline` with a fake model gateway, whose answers are the fixture files in `ai/tests/fixtures/llm/` and the examples in `ai/examples/`. The AI-16 examples run the harness with a fake answer and judge model. The gap examples run `check_gap` with the real local model over `ai/tests/fixtures/gap/skills.yaml`.
   - **So the text inside them is fixture text** ("Fake answer with the skill."), but every field, status, code and message comes from the code.
