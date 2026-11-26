@@ -1,0 +1,77 @@
+{
+  "step": "clarify",
+  "status": "ok",
+  "value": {
+    "kind": "role",
+    "domain": "marketing/strategy",
+    "risk": "low",
+    "audience": "a small marketing team",
+    "expected_outputs": [
+      "marketing plan",
+      "campaign brief"
+    ],
+    "skill_name": "marketing-strategist",
+    "summary": "A marketing strategist skill that turns business goals into positioning and campaign plans.",
+    "needs_clarification": false,
+    "questions": [
+      {
+        "id": "q1",
+        "text": "What do you sell, and to whom?",
+        "about": "audience"
+      },
+      {
+        "id": "q2",
+        "text": "What should the skill produce: a plan, campaigns, posts or ad copy?",
+        "about": "outputs"
+      },
+      {
+        "id": "q3",
+        "text": "Roughly what budget and time can you spend on marketing each month?",
+        "about": "constraints"
+      },
+      {
+        "id": "q4",
+        "text": "Which platforms will you use the skill in?",
+        "about": "platforms"
+      }
+    ],
+    "request": "a skill to get more customers",
+    "targets": [],
+    "answers": [
+      {
+        "question_id": "q1",
+        "text": null
+      },
+      {
+        "question_id": "q2",
+        "text": null
+      },
+      {
+        "question_id": "q3",
+        "text": null
+      },
+      {
+        "question_id": "q4",
+        "text": null
+      }
+    ],
+    "analyzer": {
+      "prompt_id": "analysis/request",
+      "prompt_version": 1
+    },
+    "safety": {
+      "conditions": [],
+      "prompt_version": 1
+    }
+  },
+  "user_message": null,
+  "error_code": null,
+  "issues": [],
+  "usage": {
+    "calls": 2,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  },
+  "pipeline_version": "0.1"
+}

@@ -1,0 +1,22 @@
+{
+  "step": "design",
+  "status": "failed",
+  "value": null,
+  "user_message": "We could not design this skill. Please rephrase or add detail and try again.",
+  "error_code": "invalid_spec",
+  "issues": [
+    {
+      "path": "/skill/name",
+      "code": "name_taken",
+      "message": "a skill with this name already exists",
+      "severity": "error"
+    }
+  ],
+  "usage": {
+    "calls": 3,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  },
+  "pipeline_version": "0.1"
+}

@@ -1,0 +1,15 @@
+{
+  "step": "clarify",
+  "status": "failed",
+  "value": null,
+  "user_message": "Please answer only the questions shown, at most once each.",
+  "error_code": "invalid_request",
+  "issues": [],
+  "usage": {
+    "calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  },
+  "pipeline_version": "0.1"
+}

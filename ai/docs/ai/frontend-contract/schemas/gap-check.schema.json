@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "GapMatch": {
+      "additionalProperties": false,
+      "properties": {
+        "skill": {
+          "$ref": "#/$defs/SkillCard"
+        },
+        "score": {
+          "title": "Score",
+          "type": "number"
+        }
+      },
+      "required": [
+        "skill",
+        "score"
+      ],
+      "title": "GapMatch",
+      "type": "object"
+    },
+    "SkillCard": {
+      "additionalProperties": false,
+      "description": "What the gap checker knows about one existing skill. Built from a SkillSpec for the\nregistry (from_spec), or from a SKILL.md's metadata for the public corpus.",
+      "properties": {
+        "id": {
+          "description": "Unique across all indexes, e.g. registry:review-nda.",
+          "pattern": "^[a-z0-9][a-z0-9._:/-]{1,127}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 64,
+          "minLength": 2,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Name",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "description": "What the skill makes the agent do.",
+          "maxLength": 300,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "role",
+            "task",
+            "workflow"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "domain": {
+          "maxLength": 80,
+          "pattern": "^(?:technology|data|design|product|marketing|sales|customer-support|operations|hr|education|writing|research|finance|legal|medical|general)(?:/[a-z0-9]+(?:-[a-z0-9]+)*)+$",
+          "title": "Domain",
+          "type": "string"
+        },
+        "use_when": {
+          "items": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "title": "Use When",
+          "type": "array"
+        },
+        "source": {
+          "enum": [
+            "registry",
+            "corpus"
+          ],
+          "title": "Source",
+          "type": "string"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "format": "uri",
+              "maxLength": 2083,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Url"
+        },
+        "licence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Licence"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "title",
+        "description",
+        "kind",
+        "domain",
+        "source"
+      ],
+      "title": "SkillCard",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "verdict": {
+      "enum": [
+        "exists",
+        "similar",
+        "new"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    },
+    "matches": {
+      "items": {
+        "$ref": "#/$defs/GapMatch"
+      },
+      "title": "Matches",
+      "type": "array"
+    },
+    "exists_threshold": {
+      "title": "Exists Threshold",
+      "type": "number"
+    },
+    "similar_threshold": {
+      "title": "Similar Threshold",
+      "type": "number"
+    },
+    "model": {
+      "title": "Model",
+      "type": "string"
+    },
+    "settings_version": {
+      "title": "Settings Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "verdict",
+    "matches",
+    "exists_threshold",
+    "similar_threshold",
+    "model",
+    "settings_version"
+  ],
+  "title": "GapCheck",
+  "type": "object"
+}

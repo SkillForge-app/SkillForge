@@ -1,0 +1,20 @@
+[
+  {
+    "step": "design",
+    "stage": "started",
+    "attempt": null,
+    "message": "Starting the skill design"
+  },
+  {
+    "step": "design",
+    "stage": "attempt",
+    "attempt": 1,
+    "message": "Designing the skill (attempt 1)"
+  },
+  {
+    "step": "design",
+    "stage": "done",
+    "attempt": 1,
+    "message": "Design ready"
+  }
+]

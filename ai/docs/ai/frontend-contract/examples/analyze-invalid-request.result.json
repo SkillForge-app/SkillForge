@@ -1,0 +1,15 @@
+{
+  "step": "analyze",
+  "status": "failed",
+  "value": null,
+  "user_message": "Please describe the skill you want in 1 to 4000 characters.",
+  "error_code": "invalid_request",
+  "issues": [],
+  "usage": {
+    "calls": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  },
+  "pipeline_version": "0.1"
+}

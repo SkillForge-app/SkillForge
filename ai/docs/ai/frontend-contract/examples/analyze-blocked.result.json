@@ -1,0 +1,15 @@
+{
+  "step": "analyze",
+  "status": "blocked",
+  "value": null,
+  "user_message": "We can't create this skill. It would help deceive or defraud people. We can help with spotting and preventing fraud. If you think this is a mistake, please rephrase what the skill should help with, or contact support.",
+  "error_code": "blocked.fraud_scams",
+  "issues": [],
+  "usage": {
+    "calls": 2,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  },
+  "pipeline_version": "0.1"
+}
