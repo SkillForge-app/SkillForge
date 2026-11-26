@@ -214,6 +214,25 @@ async def test_provider_error_detail_is_logged_without_content(
     assert "sk-or-v1" not in detail and len(detail) <= 300
 
 
+async def test_complete_text_provider_error_detail_is_logged_without_content(
+    llm: "FakeLiteLLM", caplog: pytest.LogCaptureFixture
+) -> None:
+    """complete_text shares _reply with complete, so it logs the same sanitized detail."""
+    from tests.llm.litellm_mock import config_with, make_gateway
+
+    caplog.set_level(logging.DEBUG)
+    gateway = make_gateway(config_with(analysis={"num_retries": 0}))
+    llm.completions = [openrouter_error(f"Provider returned error for {SECRET_INPUT}")] * 3
+    with pytest.raises(LLMUnavailable):
+        await gateway.complete_text("demo/greet", INPUTS)
+
+    calls = llm_calls(caplog)  # fails if SECRET_INPUT reached any log
+    assert calls and all(c["error_status"] == 502 for c in calls)
+    detail = calls[0]["error_detail"]
+    assert isinstance(detail, str)
+    assert "provider=Anthropic" in detail and "[input]" in detail
+
+
 async def test_free_text_error_messages_are_never_logged(
     llm: "FakeLiteLLM", caplog: pytest.LogCaptureFixture
 ) -> None:
