@@ -23,6 +23,7 @@ from evaluation.reproduce.strict import DuplicateKeyError, loads_unique
 from evaluation.reproduce.track import bad_fields, parse_lines
 
 REPORT_GLOB = "ai/evaluation/*/reports/*.json"
+RUNS_GLOB = "ai/evaluation/*/reports/runs"  # tracked runs only: see _unlisted_run_files
 # Code that loads the embedding model: under a fake backend it would get random vectors.
 EMBEDS = re.compile(rb"core\.llm\.local_embed|embed\(")
 
@@ -79,6 +80,7 @@ def check(registry: Registry, repo: Path, *, history: bool = True) -> CheckResul
     for data_file in registry.data_files:
         if not (repo / data_file.path).is_file():
             issues.append(Issue(data_file.path, "missing_file", "listed data file is missing"))
+    issues += _unlisted_run_files(registry, repo)
 
     for entry in registry.experiments:
         present = (repo / entry.report).is_file()
@@ -98,6 +100,29 @@ def check(registry: Registry, repo: Path, *, history: bool = True) -> CheckResul
                 Issue(entry.id, "final_not_reproducing", "a final entry must reproduce (done-when)")
             )
     return result
+
+
+def _unlisted_run_files(registry: Registry, repo: Path) -> list[Issue]:
+    """Every file under ai/evaluation/*/reports/runs/ (on disk, tracked or not) must be some
+    entry's tracked_run.path: anything else could hold request text. Reported per folder with a
+    count, never a file name (a name could carry text too)."""
+    listed = {e.tracked_run.path for e in registry.experiments if e.tracked_run is not None}
+    issues = []
+    for runs in sorted(repo.glob(RUNS_GLOB)):
+        stray = [
+            p
+            for p in runs.rglob("*")
+            if p.is_file() and p.relative_to(repo).as_posix() not in listed
+        ]
+        if stray:
+            issues.append(
+                Issue(
+                    runs.relative_to(repo).as_posix(),
+                    "unlisted_run_file",
+                    f"{len(stray)} file(s) here are no entry's tracked_run.path (names not shown)",
+                )
+            )
+    return issues
 
 
 def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> list[Issue]:

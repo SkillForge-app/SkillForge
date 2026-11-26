@@ -324,3 +324,45 @@ def test_the_done_when_counts_final_entries_only(repo: Path) -> None:
     for role in ("superseded", "invalid"):  # never count toward the done-when
         other = check(registry({**entry, "reproduces": False, "role": role}), repo)
         assert other.issues == [] and other.final_reproduces == other.final_not_run == []
+
+
+# ------------------------------------------------------------------ review fix 1: privacy
+
+
+@pytest.mark.parametrize(
+    "stray",
+    [
+        "20261125T000000Z/how-to-write-a-cover-letter.jsonl",  # a name could carry text
+        "20261125T000000Z/predictions.jsonl",  # the right name, but no entry tracks it
+        "notes.md",
+    ],
+)
+def test_a_file_under_reports_runs_that_no_entry_tracks_fails_without_its_name(
+    repo: Path, stray: str
+) -> None:
+    sha = commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# demo"}, "report")
+    path = repo / "ai/evaluation/demo/reports/runs" / stray
+    path.parent.mkdir(parents=True)
+    path.write_text("{}\n", encoding="utf-8")  # untracked: check looks at the files on disk
+    result = check(registry({"id": "E1:demo", "report": REPORT, "recorded_at": sha}), repo)
+    assert codes(result) == ["unlisted_run_file"]
+    assert stray.split("/")[-1] not in str(result.issues[0]) and "20261125" not in str(
+        result.issues[0]
+    )
+
+
+@pytest.mark.parametrize(
+    ("path", "ignored"),
+    [
+        ("ai/evaluation/analyzer/reports/runs/20261125T000000Z/predictions.jsonl", False),
+        ("ai/evaluation/analyzer/reports/runs/20261125T000000Z/raw.jsonl", True),
+        ("ai/evaluation/safety/reports/runs/20261125T000000Z/notes.md", True),
+        ("ai/evaluation/safety/reports/runs/stray.jsonl", True),
+        ("ai/evaluation/safety/reports/runs/a/b/predictions.jsonl", True),
+    ],
+)
+def test_git_ignores_everything_under_reports_runs_but_predictions_jsonl(
+    path: str, ignored: bool
+) -> None:
+    out = subprocess.run(["git", "check-ignore", "--no-index", "-q", path], cwd=repo_root(AI_DIR))
+    assert (out.returncode == 0) is ignored, path
