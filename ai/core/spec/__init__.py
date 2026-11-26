@@ -37,6 +37,7 @@ from core.spec.validator import (
     ValidationResult,
     draft_description,
     load_spec,
+    reserved_name_words,
     schema_issues,
     validate_spec,
 )
@@ -70,6 +71,7 @@ __all__ = [
     "json_schema",
     "load_spec",
     "render_schema",
+    "reserved_name_words",
     "schema_issues",
     "validate_spec",
 ]

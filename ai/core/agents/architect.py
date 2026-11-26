@@ -38,12 +38,12 @@ from core.spec import (
     GUARDRAIL_CATEGORIES,
     HIGH_RISK_AREAS,
     PLATFORM_LIMITS,
-    RESERVED_NAME_WORDS,
     SEVERITIES,
     SPEC_VERSION,
     TARGETS,
     Issue,
     SkillSpec,
+    reserved_name_words,
     validate_spec,
 )
 from core.spec.models import (
@@ -177,6 +177,11 @@ def required_guardrails(analyzed: AnalyzedRequest) -> list[dict[str, str]]:
     return guardrails
 
 
+def spec_targets(analyzed: AnalyzedRequest) -> list[str]:
+    """The targets every spec for this request gets (`enforce` sets them)."""
+    return list(analyzed.targets) or list(DEFAULT_TARGETS)
+
+
 def enforce(
     analyzed: AnalyzedRequest, draft: Mapping[str, Any], existing_names: Collection[str] = ()
 ) -> dict[str, Any]:
@@ -188,7 +193,7 @@ def enforce(
     skill["domain"] = analyzed.domain
     if analyzed.skill_name and analyzed.skill_name not in existing_names:
         skill["name"] = analyzed.skill_name
-    spec["targets"] = list(analyzed.targets) or list(DEFAULT_TARGETS)
+    spec["targets"] = spec_targets(analyzed)
     required = required_guardrails(analyzed)
     ours = {g["id"] for g in required}
     theirs = [g for g in spec.get("guardrails", []) if g.get("id") not in ours]
@@ -253,7 +258,11 @@ def _generate_inputs(analyzed: AnalyzedRequest, existing_names: Collection[str])
         "description_limit": min(PLATFORM_LIMITS[t].description for t in TARGETS),
         "description_parts": dict(DESCRIPTION_PARTS),
         "length_limits": length_limits(),
-        "reserved_name_words": sorted({w for words in RESERVED_NAME_WORDS.values() for w in words}),
+        # Only the words validate_spec will apply to this request's targets: none for a request
+        # whose targets have no reserved words, and then the prompt does not state the rule.
+        "reserved_name_words": sorted(
+            {w for words in reserved_name_words(spec_targets(analyzed)).values() for w in words}
+        ),
         "required_guardrails": required_guardrails(analyzed),
         "name_hint": name_hint,
     }

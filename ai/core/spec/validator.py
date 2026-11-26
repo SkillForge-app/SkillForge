@@ -47,6 +47,13 @@ RESERVED_NAME_WORDS = {"claude": ("claude", "anthropic")}
 _XML_TAG = re.compile(r"<[^<>]+>")
 
 
+def reserved_name_words(targets: Iterable[str]) -> dict[str, tuple[str, ...]]:
+    """The words a skill name may not contain, per target, for a spec with these `targets`
+    (rule reserved_name). The one place this condition lives: the validator applies it, and the
+    Skill Architect's prompt states it from it (only when it applies)."""
+    return {t: RESERVED_NAME_WORDS[t] for t in dict.fromkeys(targets) if RESERVED_NAME_WORDS.get(t)}
+
+
 @dataclass(frozen=True)
 class Issue:
     path: str
@@ -321,11 +328,11 @@ def _platform_rules(spec: SkillSpec) -> Iterator[Issue]:
                 f"{target} is supported by the SkillSpec but is not available in V1.",
                 "warning",
             )
-    for target in spec.targets:
-        for word in RESERVED_NAME_WORDS.get(target, ()):
+    for platform, words in reserved_name_words(spec.targets).items():
+        for word in words:
             if word in spec.skill.name:
                 yield Issue(
-                    "/skill/name", "reserved_name", f'{target} does not allow "{word}" in names'
+                    "/skill/name", "reserved_name", f'{platform} does not allow "{word}" in names'
                 )
     texts = [("/skill/summary", spec.skill.summary)]
     texts += [(f"/triggers/use_when/{i}", t) for i, t in enumerate(spec.triggers.use_when)]

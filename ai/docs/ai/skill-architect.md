@@ -53,7 +53,17 @@ START → write → enforce → check ─(valid)──────────�
 - **A model refusal** raises `ArchitectRefused`.
 - **Progress events** (`attempt`, `repairing`, `done` or `failed`, plus the attempt number) go to `on_progress`.
 
-**Prompts and model.** The prompts are in `ai/prompts/architect/`: `generate` version 2, `repair` version 1. Version 2 of `generate` (2026-11-26, before any live run) also tells the model three rules `validate_spec` enforces: the field length limits, the exact way the description is built from the summary and triggers (and its limit), and the words a skill name must never contain. Each value is a template input computed from `core/spec` (`core.agents.architect.length_limits`, `DESCRIPTION_PARTS`, `RESERVED_NAME_WORDS`), never typed into the prompt; `tests/agents/test_architect_prompt.py` checks each one against the code. Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
+**Prompts and model.** The prompts are in `ai/prompts/architect/`: `generate` version 3, `repair` version 1. Since version 2 (2026-11-26, before any live run), `generate` also tells the model three rules `validate_spec` enforces:
+- the field length limits;
+- the exact way the description is built from the summary and triggers, and its limit;
+- the words a skill name must not contain.
+
+Version 3 (after review on #44) states the reserved-words rule only when the validator applies it to the request's targets. Those are the targets `enforce` will set: today, only when claude is among them, which includes the default claude and codex. Each value is a template input computed from `core/spec`, never typed into the prompt:
+- `core.agents.architect.length_limits`;
+- `DESCRIPTION_PARTS`;
+- `reserved_name_words(targets)`, the one function the validator's `reserved_name` rule also uses.
+
+`tests/agents/test_architect_prompt.py` checks each value against the code. For every combination of targets, it also checks that the prompt states the rule exactly when the validator applies it. Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
 
 **Tracing is off.** LangGraph comes with LangSmith tracing, which the Architect switches off by default (`LANGSMITH_TRACING=false`), because traces would contain users' requests.
 

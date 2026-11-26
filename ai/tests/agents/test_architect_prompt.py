@@ -1,4 +1,4 @@
-"""architect/generate v2 states the rules validate_spec enforces, with the code's own values.
+"""architect/generate v3 states the rules validate_spec enforces, with the code's own values.
 
 Every number and string the prompt gives the model is a template input computed from the code
 (core/spec). These tests read the same values by another route and compare them with the
@@ -7,12 +7,19 @@ silently drifting from what is enforced.
 """
 
 import re
+from itertools import combinations
 from typing import Any, get_args
 
 import pytest
 from pydantic import StringConstraints
 
-from core.agents.architect import GENERATE, _generate_inputs, length_limits, max_length
+from core.agents.architect import (
+    GENERATE,
+    _generate_inputs,
+    enforce,
+    length_limits,
+    max_length,
+)
 from core.llm import load_prompt
 from core.spec import (
     PLATFORM_LIMITS,
@@ -40,8 +47,11 @@ from evaluation.common import AI_ROOT
 SPEC = load_spec(AI_ROOT / "examples" / "skillspec" / "ai-engineer.yaml")
 
 
-def rendered() -> str:
+def rendered(targets: list[str] | None = None) -> str:
+    """The system prompt for one request; `targets`: the request's targets (None: as labelled)."""
     analyzed = load_items("all")[3].analyzed
+    if targets is not None:
+        analyzed = analyzed.model_copy(update={"targets": targets})
     return load_prompt(GENERATE).render(_generate_inputs(analyzed, ()))[0]["content"]
 
 
@@ -51,8 +61,8 @@ def alias_max(alias: Any) -> int:
     return constraint.max_length
 
 
-def test_version_2() -> None:
-    assert load_prompt(GENERATE).version == 2
+def test_version_3() -> None:
+    assert load_prompt(GENERATE).version == 3
 
 
 def test_length_limits_are_the_models_limits() -> None:
@@ -111,17 +121,51 @@ def test_description_rule_builds_what_the_validator_measures(avoid: bool) -> Non
     assert int(m["limit"]) == min(PLATFORM_LIMITS[x].description for x in TARGETS)
 
 
-def test_reserved_words_are_the_validators() -> None:
-    text = rendered()
-    words = {w for ws in RESERVED_NAME_WORDS.values() for w in ws}
-    line = next(x for x in text.splitlines() if x.startswith("- skill.name:"))
-    assert set(re.findall(r'"([a-z]+)"', line)) == words
-    for word in words:  # and each one is what validate_spec rejects
-        bad = SPEC.model_dump(mode="json")
-        bad["skill"]["name"] = f"{word}-helper"
-        bad["targets"] = ["claude"]
-        codes = {i.code for i in validate_spec(bad).errors}
-        assert "reserved_name" in codes
+ALL_WORDS = sorted({w for ws in RESERVED_NAME_WORDS.values() for w in ws})
+
+
+def name_rule_words(targets: list[str]) -> set[str]:
+    """The words the rendered prompt forbids in skill.name (empty: no rule stated)."""
+    text = rendered(targets)
+    start = text.index("- skill.name:")
+    rule = text[start : text.index("- skill.version", start)]
+    return set(re.findall(r'"([a-z]+)"', rule)) if "must never contain" in rule else set()
+
+
+def rejects(targets: list[str], word: str) -> bool:
+    """Whether validate_spec rejects a name with `word`, for a spec built for a request with
+    these targets (enforce gives the spec its final targets, as in the Architect)."""
+    analyzed = load_items("all")[3].analyzed.model_copy(update={"targets": targets})
+    data = SPEC.model_dump(mode="json")
+    data["skill"]["name"] = f"{word}-helper"
+    spec = enforce(analyzed, data)
+    return "reserved_name" in {i.code for i in validate_spec(spec).errors}
+
+
+def test_claude_target_states_the_rule_and_the_validator_rejects() -> None:
+    assert name_rule_words(["claude"]) == set(ALL_WORDS) == {"claude", "anthropic"}
+    assert all(rejects(["claude"], w) for w in ALL_WORDS)
+
+
+def test_codex_only_states_no_rule_and_the_validator_accepts() -> None:
+    assert name_rule_words(["codex"]) == set()
+    assert "must never contain" not in rendered(["codex"])
+    assert not any(rejects(["codex"], w) for w in ALL_WORDS)
+
+
+SUBSETS = [list(c) for n in range(len(TARGETS) + 1) for c in combinations(TARGETS, n)]
+
+
+@pytest.mark.parametrize("targets", SUBSETS, ids=lambda t: "+".join(t) or "default")
+def test_the_prompt_states_the_rule_exactly_when_the_validator_applies_it(
+    targets: list[str],
+) -> None:
+    """For every combination of targets (none = the defaults enforce gives): the prompt forbids
+    a word in the name if and only if validate_spec rejects a name with that word. Fails as soon
+    as the prompt's condition and the validator's condition diverge."""
+    stated = name_rule_words(targets)
+    for word in ALL_WORDS:
+        assert (word in stated) is rejects(targets, word), (targets, word)
 
 
 def test_comment_with_sources_never_reaches_the_model() -> None:
