@@ -175,6 +175,15 @@ def remove_later_reports(reports_dir: Path, target_stem: str, keep: set[str]) ->
     return removed
 
 
+def reports_dir_for(tree: Path, report: str) -> Path:
+    """The extracted tree's folder of `report`; refuses one outside the temp root, so the
+    series rule can never remove a file anywhere else (e.g. in the repository)."""
+    reports_dir = (tree / Path(report).relative_to("ai").parent).resolve()
+    if not reports_dir.is_relative_to(TEMP_ROOT.resolve()):
+        raise RuntimeError(f"refusing to touch reports outside {TEMP_ROOT}: {reports_dir}")
+    return reports_dir
+
+
 def _new_json(reports_dir: Path, before: set[Path]) -> Path | None:
     made = sorted(p for p in reports_dir.glob("*.json") if p not in before)
     return made[-1] if len(made) == 1 else None
@@ -186,13 +195,13 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
         return Outcome(entry.id, "skipped", "no command")
     committed = (repo / entry.report).read_bytes()
     pinned = text_sha256(committed)
-    reports_dir = tree / Path(entry.report).relative_to("ai").parent
+    reports_dir = reports_dir_for(tree, entry.report)
     reports_dir.mkdir(parents=True, exist_ok=True)
     if "/reports/" in entry.report:
         keep = {Path(d.path).name for d in registry.data_files}
         remove_later_reports(reports_dir, Path(entry.report).stem, keep)
     before = set(reports_dir.glob("*.json"))
-    argv = [str(python), *entry.command[1:]] if entry.command[0] == "python" else entry.command
+    argv = [str(python), *entry.command[1:]]  # `python -m evaluation.*` only (the registry)
     proc = subprocess.run(
         argv,
         cwd=tree,

@@ -501,3 +501,85 @@ def test_every_real_superseded_entry_names_its_final_entry() -> None:
         assert e.superseded_by is not None
         final = by_id[e.superseded_by]
         assert final.role == "final" and final.experiment == e.experiment, e.id
+
+
+# ------------------------------------------------------------------ review fix 4: paths
+
+BAD_PATHS = [
+    "../etc/passwd",
+    "ai/../outside.json",
+    "ai/evaluation/../../outside.json",
+    "ai/evaluation/./demo/reports/x.json",
+    "ai//evaluation/x.json",
+    "/ai/evaluation/x.json",
+    "C:/ai/evaluation/x.json",
+    "evaluation/demo/reports/x.json",  # not under ai/
+    "ai\\evaluation\\x.json",
+    "ai/evaluation/x.json/",
+]
+
+
+def with_path(where: str, path: str) -> dict[str, Any]:
+    entry: dict[str, Any] = {"id": "E1:demo", "report": REPORT, "recorded_at": "c" * 40}
+    if where == "report":
+        entry["report"] = path
+    elif where == "input":
+        entry["inputs"] = [{"path": path, "sha256": "a" * 64}]
+    elif where == "tracked_run":
+        entry |= {"kind": "live", "llm_backend": None}
+        entry["tracked_run"] = {
+            "path": path,
+            "source_sha256": "a" * 64,
+            "sha256": "b" * 64,
+            "lines": 1,
+        }
+    return entry
+
+
+@pytest.mark.parametrize("path", BAD_PATHS)
+@pytest.mark.parametrize("where", ["report", "input", "tracked_run", "data_file"])
+def test_every_registry_path_stays_under_ai(where: str, path: str) -> None:
+    with pytest.raises(ValidationError):
+        if where == "data_file":
+            registry(with_path("report", REPORT), data_files=[{"path": path, "why": "test"}])
+        else:
+            registry(with_path(where, path))
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        ["bash", "-c", "rm -rf ~"],
+        ["python", "-c", "import os"],
+        ["python", "-m", "os"],
+        ["python", "-m", "evaluation"],
+        ["python", "-m", "pip", "install", "x"],
+        ["python3", "-m", "evaluation.extraction"],
+        ["python", "-m", "evaluation.extraction; rm -rf ~"],
+        ["python", "-I", "-m", "evaluation.extraction"],
+        ["python"],
+    ],
+)
+def test_only_python_m_evaluation_commands_are_allowed(command: list[str]) -> None:
+    with pytest.raises(ValidationError):
+        registry({"id": "E1:demo", "report": REPORT, "recorded_at": "c" * 40, "command": command})
+
+
+def test_a_python_m_evaluation_command_is_allowed() -> None:
+    command = ["python", "-m", "evaluation.extraction", "report", "--seed", "7"]
+    entry = {"id": "E1:demo", "report": REPORT, "recorded_at": "c" * 40, "command": command}
+    assert registry(entry).experiments[0].command == command
+
+
+def test_reports_are_removed_only_inside_the_temp_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import evaluation.reproduce.run as run
+
+    report = "ai/evaluation/demo/reports/demo-2026-11-25.json"
+    outside = tmp_path / "repo-like"  # not under the temp root
+    monkeypatch.setattr(run, "TEMP_ROOT", tmp_path / "skillforge-reproduce")
+    with pytest.raises(RuntimeError, match="outside"):
+        run.reports_dir_for(outside, report)
+    tree = tmp_path / "skillforge-reproduce" / "abc" / "ai"
+    assert run.reports_dir_for(tree, report) == (tree / "evaluation/demo/reports").resolve()

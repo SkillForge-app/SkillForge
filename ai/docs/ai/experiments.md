@@ -28,7 +28,8 @@ cd ai
   - **No tolerances:** no entry has a numeric tolerance.
 - **The series rule.** Before re-running, the target report and every **later** report of its series are removed from the extracted reports folder. The series is the name before the date; later means a later date, or the same date with a higher `-N`.
   - This leaves the folder as it was when the report was written. A tool that reads earlier reports (for example the sources review's history) then sees what it saw.
-  - Only reports of that series are removed, never inputs or data files.
+  - Only reports of that series are removed, never inputs or data files, and only inside the extracted tree: `run` refuses a reports folder outside the temp root.
+- **What the registry may name.** Every path (`report`, `inputs[].path`, `tracked_run.path`, `data_files[].path`) is under `ai/`, with no `.` or `..` segment. The only command `run` executes is `python -m evaluation.<module> [args]`, with the recorded commit's venv.
 - **Metrics a tracked run can't support** are listed per entry in `not_recomputable`, with the reason. Any other metric left out of a comparison makes the entry fail.
 - **What `check` re-verifies on every PR** (no model, no network):
   - **Offline reports are pinned.** Once `reproduces` is set, the entry also records `report_sha256`: the sha256-lf of the report that run compared (`run` prints it). `check` fails if the report changes later.
