@@ -23,7 +23,7 @@ from evaluation.common import match_recorded_hash, text_sha256
 from evaluation.reproduce.registry import Entry, Registry
 from evaluation.reproduce.rescore import known_ids, rescore
 from evaluation.reproduce.strict import DuplicateKeyError, loads_unique
-from evaluation.reproduce.track import bad_fields, parse_lines
+from evaluation.reproduce.track import bad_fields, canonical, parse_lines
 from evaluation.reproduce.twins import markdown_issues
 
 REPORT_GLOB = "ai/evaluation/*/reports/*.json"
@@ -292,8 +292,19 @@ def _check_tracked_run(entry: Entry, repo: Path, known: frozenset[str] | None) -
     issues = []
     if text_sha256(path) != run.sha256:
         issues.append(Issue(where, "changed_tracked_run", f"{run.path} no longer has its hash"))
-    lines, problems = parse_lines(path.read_text(encoding="utf-8"))
+    text = path.read_bytes().replace(b"\r\n", b"\n").decode("utf-8")  # a CRLF checkout too
+    lines, problems = parse_lines(text)
     issues += [Issue(where, "tracked_run_json", p) for p in problems[:5]]
+    if not problems and text != canonical(lines):
+        # One form only (sorted keys, json.dumps separators, no blank line or extra space):
+        # nothing can ride along in the layout, and the file's hash depends on its data alone.
+        issues.append(
+            Issue(
+                where,
+                "tracked_run_not_canonical",
+                "the file is not in its canonical form (track.canonical)",
+            )
+        )
     if len(lines) + len(problems) != run.lines:
         issues.append(
             Issue(

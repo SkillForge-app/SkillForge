@@ -535,3 +535,68 @@ def test_loads_unique_refuses_duplicates_at_any_depth() -> None:
     assert loads_unique('{"a": [{"b": 1}, {"b": 2}]}') == {"a": [{"b": 1}, {"b": 2}]}
     with pytest.raises(DuplicateKeyError, match="'b'"):
         loads_unique('{"a": [{"c": {"b": 1, "b": 1}}]}')  # even with equal values
+
+
+# ------------------------------------------------------------------ review fix 5: canonical form
+
+
+def canonical_line() -> str:
+    return json.dumps(convert_line(ANALYZER_ROW, KNOWN), sort_keys=True)
+
+
+NOT_CANONICAL: dict[str, Callable[[str], str]] = {
+    "compact separators": lambda s: json.dumps(
+        json.loads(s), sort_keys=True, separators=(",", ":")
+    ),
+    "unsorted keys": lambda s: json.dumps(dict(reversed(list(json.loads(s).items())))),
+    "a leading space": lambda s: " " + s,
+    "trailing spaces": lambda s: s + "   ",
+    "a blank line": lambda s: s + "\n",
+    "an escaped character": lambda s: s.replace('"gate:t-01"', '"gate:t-\\u0030\\u0031"'),
+}
+
+
+@pytest.mark.parametrize("case", NOT_CANONICAL)
+def test_a_tracked_file_must_be_in_its_canonical_form(tmp_path: Path, case: str) -> None:
+    text = NOT_CANONICAL[case](canonical_line())
+    assert text != canonical_line()
+    assert json.loads(text) == json.loads(canonical_line())  # the same data: only the form differs
+    repo, reg = live_repo(tmp_path, "gate:t-01", run=text + "\n")
+    issues = check(reg, repo).issues
+    assert [i.code for i in issues] == ["tracked_run_not_canonical"]
+
+
+def test_the_canonical_form_passes_also_from_a_crlf_checkout(tmp_path: Path) -> None:
+    repo, reg = live_repo(tmp_path, "gate:t-01")
+    path = repo / RUN
+    path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+    assert check(reg, repo).issues == []
+
+
+UNHASHABLE: list[tuple[dict[str, Any], dict[str, Any]]] = [
+    (  # a list where a label belongs, in a list label
+        {"mentioned_targets": [["claude"]]},
+        {**ANALYZER_ROW, "mentioned_targets": {"expected": [], "predicted": [["claude"]]}},
+    ),
+    (
+        {"mentioned_targets": [{"name": TEXT}]},
+        {**ANALYZER_ROW, "mentioned_targets": {"expected": [], "predicted": [{"name": TEXT}]}},
+    ),
+    ({"conditions": [[TEXT]]}, {**SAFETY_ROW, "conditions": [[TEXT]]}),
+    (
+        {"kind": {"text": TEXT}},
+        {**ANALYZER_ROW, "predicted": {**ANALYZER_ROW["predicted"], "kind": {"text": TEXT}}},
+    ),
+]
+
+
+@pytest.mark.parametrize(("labels", "row"), UNHASHABLE)
+def test_an_unhashable_label_is_a_problem_not_a_crash(
+    labels: dict[str, Any], row: dict[str, Any]
+) -> None:
+    clean = convert_line(ANALYZER_ROW, KNOWN)
+    problems = bad_fields([{**clean, "predicted": labels}], KNOWN)
+    assert len(problems) == 1 and "not shown" in problems[0] and "cover" not in problems[0]
+    with pytest.raises(TrackError) as caught:
+        convert_line(row, KNOWN)
+    assert "not shown" in str(caught.value) and "cover" not in str(caught.value)

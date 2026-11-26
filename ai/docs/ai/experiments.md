@@ -58,6 +58,7 @@ cd ai
   - `source_sha256`: the original local file. For E8 it equals the report's `predictions_sha256`.
   - `sha256`: the tracked file, LF-normalised.
 - **What `check` verifies:** both hashes, the line count (equal to the report's n), the allowlist, unique ids, and that each id is in the label files at `recorded_at`. Without git history, it checks the id format only.
+- **One form only:** a tracked file must equal its canonical form, `"".join(json.dumps(line, sort_keys=True) + "\n" for line in lines)` (`track.canonical`, which the converter writes). Nothing can ride along in spacing, key order, escapes or blank lines.
 
 ## Roles
 - **final:** a decision rests on it. **The done-when: every final entry reproduces.** `check` fails on a final entry recorded as `reproduces: false`.
