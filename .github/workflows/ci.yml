@@ -29,6 +29,7 @@ jobs:
       backend: ${{ steps.diff.outputs.backend }}
       frontend: ${{ steps.diff.outputs.frontend }}
       data: ${{ steps.diff.outputs.data }}
+      ai_db: ${{ steps.diff.outputs.ai_db }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -103,7 +104,8 @@ jobs:
 
   ai:
     needs: changes
-    if: needs.changes.outputs.ai == 'true'
+    # ai_db: also when DE's data/db/ changed, so AI's pgvector job checks the new schema (F22).
+    if: needs.changes.outputs.ai == 'true' || needs.changes.outputs.ai_db == 'true'
     uses: ./.github/workflows/ai.yml
 
   backend:

@@ -20,7 +20,15 @@ from typing import Any, TypedDict
 from core.analysis import AnalyzedRequest
 from core.analysis.safety import CONDITION_DESCRIPTIONS
 from core.analysis.types import SafetyCondition
-from core.llm import LLMOutputInvalid, LLMRefused, LLMUnavailable, complete, load_prompt
+from core.llm import (
+    DeadlineExceeded,
+    LLMOutputInvalid,
+    LLMRefused,
+    LLMUnavailable,
+    complete,
+    load_prompt,
+    step_deadline,
+)
 from core.spec import (
     CAPABILITIES,
     GUARDRAIL_CATEGORIES,
@@ -284,9 +292,17 @@ async def build_spec(
         raise NotScreened("this request was not safety-screened; use screen_and_analyze")
     if analyzed.needs_clarification:
         raise NotReady("this request still has open clarifying questions")
-    final: _State = await _GRAPH.ainvoke(
-        {"analyzed": analyzed, "existing_names": tuple(existing_names), "progress": on_progress}
-    )
+    try:
+        async with step_deadline("design"):
+            final: _State = await _GRAPH.ainvoke(
+                {
+                    "analyzed": analyzed,
+                    "existing_names": tuple(existing_names),
+                    "progress": on_progress,
+                }
+            )
+    except DeadlineExceeded as exc:
+        raise ArchitectUnavailable(str(exc)) from exc
     spec = final.get("spec")
     if on_progress:
         on_progress("done" if spec is not None else "failed", final.get("attempt", 0))

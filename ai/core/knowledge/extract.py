@@ -19,7 +19,7 @@ from collections import Counter
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, replace
 from datetime import date
-from typing import Any, Literal
+from typing import Any, Literal, get_args
 
 import trafilatura
 from bs4 import BeautifulSoup, Tag
@@ -42,6 +42,10 @@ from core.knowledge.injection_guard import ScreeningReport, page_rejected, scree
 from core.knowledge.types import ChunkId, Passage, PassageText
 from core.knowledge.urls import normalise_url
 from core.spec.models import Line, SpecModel
+
+# The longest text an A4 Passage can hold. A single token longer than this can never fit in a
+# chunk (the chunker splits at word boundaries only), so such tokens are dropped (review F8).
+PASSAGE_MAX_CHARS: int = get_args(PassageText)[1].max_length
 
 Reason = Literal[
     "empty", "paywall_or_login", "boilerplate", "wrong_language", "too_short", "injection"
@@ -254,18 +258,13 @@ def extract_page(
         blocks, screening = _screen(content.blocks, screening, config)
         content = replace(content, blocks=blocks)
 
-    text = "\n".join(b.text for b in content.blocks)
-    words = len(text.split())
-    body = " ".join(b.text for b in content.blocks if b.kind != "heading")
-    language = nlp.detect_language(body) if words else None
-    quality = QualityReport(
-        reasons=_reasons(content, signals, words, language, config, screening.rejected),
-        word_count=words,
-        link_density=content.link_density,
-        short_line_ratio=content.short_line_ratio,
-        language=language[0] if language else None,
-        language_confidence=language[1] if language else None,
-    )
+    text, quality = _assess(content, signals, config, screening)
+    if quality.ok and _has_unchunkable_token(content.blocks):
+        # Review F8: a token longer than a passage (base64, minified code, a long URL) made the
+        # chunker raise. Only those pages change: the tokens are dropped and the page is judged
+        # again, so it may now be too short or empty. Every page that worked before is untouched.
+        content = replace(content, blocks=_drop_unchunkable_tokens(content.blocks))
+        text, quality = _assess(content, signals, config, screening)
     title = _title(content.title, content.sitename, tree, url)
     if not quality.ok:
         return ExtractedPage(
@@ -909,6 +908,42 @@ def _screen(
 
 
 # ------------------------------------------------------------------ quality
+
+
+def _assess(
+    content: _Content, signals: _Signals, config: ExtractConfig, screening: ScreeningReport
+) -> tuple[str, "QualityReport"]:
+    """The page text and its quality verdict."""
+    text = "\n".join(b.text for b in content.blocks)
+    words = len(text.split())
+    body = " ".join(b.text for b in content.blocks if b.kind != "heading")
+    language = nlp.detect_language(body) if words else None
+    return text, QualityReport(
+        reasons=_reasons(content, signals, words, language, config, screening.rejected),
+        word_count=words,
+        link_density=content.link_density,
+        short_line_ratio=content.short_line_ratio,
+        language=language[0] if language else None,
+        language_confidence=language[1] if language else None,
+    )
+
+
+def _has_unchunkable_token(blocks: list[_Block]) -> bool:
+    return any(len(token) > PASSAGE_MAX_CHARS for b in blocks for token in b.text.split())
+
+
+def _drop_unchunkable_tokens(blocks: list[_Block]) -> list[_Block]:
+    """Remove every token longer than a passage; a block left empty goes too."""
+    kept = []
+    for block in blocks:
+        tokens = block.text.split()
+        if all(len(t) <= PASSAGE_MAX_CHARS for t in tokens):
+            kept.append(block)
+            continue
+        text = " ".join(t for t in tokens if len(t) <= PASSAGE_MAX_CHARS)
+        if text:
+            kept.append(replace(block, text=text))
+    return kept
 
 
 def _reasons(

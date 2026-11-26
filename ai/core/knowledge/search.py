@@ -740,7 +740,8 @@ async def discover_sources(
             rejected.append(Rejected(url=source.url, reason=f"same title as {titles[site, title]}"))
             continue
         if not source.crawl:  # listed for review; takes no place in the top list or site cap
-            status = robots.status(source.fetch_url or source.url)
+            # robots.txt over HTTP blocks for up to 10 s: keep it off the event loop
+            status = await asyncio.to_thread(robots.status, source.fetch_url or source.url)
             if status == "disallowed":
                 reason = f"robots.txt disallows {USER_AGENT}"
                 rejected.append(Rejected(url=source.url, reason=reason))
@@ -752,7 +753,7 @@ async def discover_sources(
                 Rejected(url=source.url, reason=f"already {PER_SITE} pages from this site")
             )
             continue
-        status = robots.status(source.fetch_url or source.url)
+        status = await asyncio.to_thread(robots.status, source.fetch_url or source.url)
         if status == "disallowed":
             rejected.append(Rejected(url=source.url, reason=f"robots.txt disallows {USER_AGENT}"))
             continue

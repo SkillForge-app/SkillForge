@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Which department folders changed (OPS-02). Prints "ai=true" style lines for $GITHUB_OUTPUT.
 # A change to the CI itself (.github/workflows/, devops/ci/) counts as every folder changed.
+# Also prints ai_db: ai/ or DE's database files (data/db/) changed, so AI's checks run against
+# a DE schema change too (review F22).
 #
 # Usage: changed-folders.sh <base-sha> <head-sha>
 #   An empty or all-zero base (manual run, new branch) means every folder changed.
@@ -28,3 +30,9 @@ for folder in "${FOLDERS[@]}"; do
     echo "$folder=false"
   fi
 done
+
+if [ "$all" = true ] || grep -qE '^(ai|data/db)/' <<<"$changed"; then
+  echo "ai_db=true"
+else
+  echo "ai_db=false"
+fi

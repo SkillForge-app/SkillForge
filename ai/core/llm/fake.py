@@ -23,7 +23,7 @@ import json
 import math
 import random
 import time
-from collections.abc import Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -39,6 +39,7 @@ from core.llm.prompts import Message, load_prompt
 from core.llm.usage import CallRecord, check_budget, current_skill_id, log_call, new_call_id
 
 T = TypeVar("T", bound=BaseModel)
+R = TypeVar("R")
 
 FIXTURES_DIR = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "llm"
 EMBED_KEY = "embed"
@@ -80,10 +81,15 @@ class FakeGateway:
     )
     _errors: dict[str, _ErrorRule] = field(default_factory=dict, init=False, repr=False)
     _failing: dict[str, _ErrorRule] = field(default_factory=dict, init=False, repr=False)
+    _texts: dict[str, str] = field(default_factory=dict, init=False, repr=False)
 
     def register(self, prompt_id: str, output: BaseModel | Mapping[str, Any]) -> None:
         """Return `output` (validated against the caller's output_model) for this prompt."""
         self._outputs[prompt_id] = output
+
+    def register_text(self, prompt_id: str, text: str) -> None:
+        """Return `text` from `complete_text` for this prompt."""
+        self._texts[prompt_id] = text
 
     def register_error(self, key: str, error: Exception, *, times: int | None = None) -> None:
         """Raise `error` for a prompt_id, or for embed calls with key "embed".
@@ -114,6 +120,7 @@ class FakeGateway:
         self._outputs.clear()
         self._errors.clear()
         self._failing.clear()
+        self._texts.clear()
 
     async def complete(
         self,
@@ -123,6 +130,35 @@ class FakeGateway:
         *,
         model_role: str | None = None,
     ) -> T:
+        return self._answer(
+            prompt_id, inputs, output_model, model_role,
+            lambda: self._canned_output(prompt_id, output_model),
+        )  # fmt: skip
+
+    async def complete_text(
+        self,
+        prompt_id: str,
+        inputs: Mapping[str, Any],
+        *,
+        model_role: str | None = None,
+    ) -> str:
+        """Like the real gateway's complete_text: the registered text, logged like `complete`."""
+
+        def text() -> str:
+            if prompt_id not in self._texts:
+                raise FakeOutputMissing(f"no fake text for {prompt_id!r}: fake.register_text(...)")
+            return self._texts[prompt_id]
+
+        return self._answer(prompt_id, inputs, None, model_role, text)
+
+    def _answer(
+        self,
+        prompt_id: str,
+        inputs: Mapping[str, Any],
+        output_model: type[BaseModel] | None,
+        model_role: str | None,
+        produce: Callable[[], R],
+    ) -> R:
         prompt = load_prompt(prompt_id, self.prompts_root)
         messages = prompt.render(inputs)
         check_input_size(prompt_id, sum(len(str(m["content"])) for m in messages))
@@ -157,7 +193,7 @@ class FakeGateway:
                 continue
             try:
                 self._raise_registered(prompt_id)
-                result = self._canned_output(prompt_id, output_model)
+                result = produce()
             except Exception as exc:
                 _log(record, start, error=exc, model=model, call_id=call_id, fallback=index)
                 raise

@@ -1,9 +1,11 @@
 """AI-21: environments and the startup check, the pipeline's budget handling and events, quality
 sampling, and the metric and alert files that OPS-10 loads. No network."""
 
+import asyncio
 import io
 import json
 import re
+import time
 from pathlib import Path
 from typing import Any
 
@@ -23,6 +25,7 @@ from core.llm import (
     load_config,
     set_limits,
     skill_run,
+    use_fake,
 )
 from core.ops import settings
 from core.ops.events import (
@@ -216,6 +219,49 @@ async def test_a_used_up_budget_fails_cleanly_in_every_step(fake: FakeGateway) -
     for result in (analyzed, designed):
         assert (result.status, result.error_code) == ("failed", "budget_exceeded")
         assert result.usage.calls == 0 and result.user_message  # no model attempt was made
+
+
+async def test_the_documented_skill_run_gets_the_environment_budget(fake: FakeGateway) -> None:
+    """production-config.md: `with skill_run(job.id, spent_usd=job.cost_so_far):`, with no
+    budget_usd. The profile's budget per skill ($1.50 in production) must then apply."""
+    apply_environment("production")
+    fake.cost_usd = 0.40
+    with skill_run("job-1", spent_usd=1.50) as run:
+        stopped = await RealPipeline().design(screened())
+    assert run.budget_usd == 1.50
+    assert (stopped.status, stopped.error_code) == ("failed", "budget_exceeded")
+    assert stopped.usage.calls == 0
+    with skill_run("job-2", spent_usd=1.10) as run:
+        allowed = await RealPipeline().design(screened())
+    assert allowed.status == "ok" and run.total_usd == pytest.approx(1.50)
+
+
+class SlowGateway(FakeGateway):
+    """A provider that hangs: every call takes 5 s."""
+
+    async def complete(self, *args: Any, **kwargs: Any) -> Any:
+        await asyncio.sleep(5)
+        return await super().complete(*args, **kwargs)
+
+
+@pytest.mark.parametrize("step", ["analyze", "design"])
+async def test_a_step_stops_at_its_deadline(step: str) -> None:
+    set_limits(Limits(step_timeout_s={step: 0.05}))
+    pipeline = RealPipeline()
+    start = time.perf_counter()
+    result: Any
+    with use_fake(SlowGateway()):
+        if step == "analyze":
+            result = await pipeline.analyze("A skill that writes press releases")
+        else:
+            result = await pipeline.design(screened())
+    assert time.perf_counter() - start < 2
+    assert (result.status, result.error_code) == ("retry_later", "provider_unavailable")
+
+
+def test_the_profiles_set_step_deadlines_from_the_latency_alerts() -> None:
+    apply_environment("production")
+    assert dict(get_limits().step_timeout_s) == {"analyze": 120, "clarify": 120, "design": 600}
 
 
 async def test_the_step_budget_stops_a_repair_loop(fake: FakeGateway) -> None:

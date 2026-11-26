@@ -12,7 +12,7 @@ dependencies = [
     "pyyaml>=6,<7",
     # Exact pin: LiteLLM has had compromised PyPI releases. Only move to a release that is
     # at least two weeks old, then re-run `uv lock` and the full test suite.
-    "litellm==1.104.2",
+    "litellm==1.108.3",
     "python-dotenv>=1,<2",
     # The Skill Architect (AI-07) is a LangGraph flow. Same rule as LiteLLM: exact pin, and
     # only a release that is at least two weeks old.
@@ -30,6 +30,13 @@ dependencies = [
     # LiteLLM: it decides where model files come from (the files are also pinned by revision
     # and sha256 in core/llm/models.yaml).
     "fastembed==0.9.1",
+    # Imported by core/ directly, so declared even though the packages above bring them in
+    # (tests/test_dependencies.py checks it). Loose ranges; uv.lock pins the versions.
+    "numpy>=2,<3",  # vectors (gap checker, local store)
+    "httpx>=0.28,<1",  # Brave search
+    "huggingface-hub>=1,<2",  # local model download
+    "openai>=2,<3",  # LiteLLM's error classes subclass the openai SDK's
+    "pydantic-core>=2,<3",  # schema export (core/spec)
 ]
 
 [project.optional-dependencies]
@@ -60,7 +67,11 @@ dev = [
 # 2026-11-13, same cutoff: soupsieve 2.10 -> 3.0.4 (2026-10-22) for CVE-2026-126191 (Trivy #35).
 # It needs Python >=3.11.5, hence requires-python. CVE-2026-126190 (#34) needs soupsieve 4.0
 # (2026-11-03), which meets the two-week rule on 2026-11-17.
-exclude-newer = "2026-10-25T00:00:00Z"
+# Moved 2026-11-24 to 2026-11-08 (16 days back), with targeted upgrades only: litellm 1.108.3
+# (2026-11-07; allows filelock 4), filelock 4.2.1 (2026-10-17), soupsieve 4.0.1 (2026-11-04;
+# CVE-2026-126190), setuptools 84.1.0 (2026-10-19). Any other version change in that re-lock is
+# a dependency those four require (see the PR).
+exclude-newer = "2026-11-08T00:00:00Z"
 
 [build-system]
 requires = ["hatchling"]

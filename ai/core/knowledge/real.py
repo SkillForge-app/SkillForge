@@ -7,7 +7,16 @@ The query is embedded with the `embedding` role (core/llm/models.yaml; its `quer
 put first, e.g. BGE's search instruction) and the index returns the closest chunks in the
 domain. Same rules as every A4 backend; on top of them, an empty index or one built with a
 different model raises ConfigError instead of quietly returning nothing.
+
+The index check (a count over the whole index on pgvector) passes once per INFO_TTL_S, not on
+every query (review F6): an index that is emptied later is noticed within that time; until
+then a query returns no passages. A failing check is never cached. The store's blocking calls
+run in a worker thread, so a query doesn't hold up the event loop.
 """
+
+import asyncio
+import time
+from collections.abc import Callable
 
 from core.knowledge.retrieval import DEFAULT_K, check_request
 from core.knowledge.store import VectorStore, check_model, store_from_env
@@ -20,6 +29,7 @@ from core.llm.gateway import EMBEDDING_ROLE
 EMPTY_INDEX = (
     "the knowledge index is empty; run ingest (python -m evaluation.retrieval build-index)"
 )
+INFO_TTL_S = 60.0  # how long a passed index check is trusted
 
 
 class RealRetriever:
@@ -29,10 +39,13 @@ class RealRetriever:
         *,
         model_role: str = EMBEDDING_ROLE,
         model_config: ModelConfig | None = None,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._store = store
         self.model_role = model_role
         self._model_config = model_config
+        self._clock = clock
+        self._checked: dict[tuple[str, int], float] = {}  # (model, dimensions) -> passed at
 
     @property
     def store(self) -> VectorStore:
@@ -43,9 +56,21 @@ class RealRetriever:
     async def retrieve(self, query: str, domain: str, k: int = DEFAULT_K) -> list[Passage]:
         check_request(query, domain, k)
         role = (self._model_config or load_config()).role(self.model_role)
-        info = self.store.info()
+        store = self.store
+        await self._check_index(store, role.model, role.dimensions or 0)
+        [vector] = await embed([role.query_prefix + query], model_role=self.model_role)
+        results = await asyncio.to_thread(store.search, vector, domain, k)
+        return [record.to_passage() for record, _ in results]
+
+    async def _check_index(self, store: VectorStore, model: str, dimensions: int) -> None:
+        """Raise ConfigError for an empty index or one from another model; a pass is trusted
+        for INFO_TTL_S."""
+        key = (model, dimensions)
+        passed = self._checked.get(key)
+        if passed is not None and self._clock() - passed < INFO_TTL_S:
+            return
+        info = await asyncio.to_thread(store.info)
         if not info.count:
             raise ConfigError(EMPTY_INDEX)
-        check_model(info, role.model, role.dimensions or 0)
-        [vector] = await embed([role.query_prefix + query], model_role=self.model_role)
-        return [record.to_passage() for record, _ in self.store.search(vector, domain, k)]
+        check_model(info, model, dimensions)
+        self._checked[key] = self._clock()

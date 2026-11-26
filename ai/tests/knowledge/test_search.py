@@ -1,6 +1,7 @@
 """Source discovery (AI-09): queries, ranking, blocklist, licence and robots. No network."""
 
 import json
+import threading
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -295,6 +296,29 @@ async def test_robots_disallowed_sources_are_dropped_and_unknown_is_labelled(
     assert any("robots.txt disallows" in r.reason for r in found.rejected)
     assert all(s.crawl for s in found.sources)
     assert [u for u, _ in found.crawl_list()] == [s.url for s in found.sources]
+
+
+class RecordingRobots:
+    """Notes the thread each robots.txt check runs on: HttpRobots blocks for up to 10 s per
+    site, which must not stall the event loop (and every other job's coroutines)."""
+
+    def __init__(self) -> None:
+        self.threads: set[int] = set()
+
+    def status(self, url: str) -> str:
+        self.threads.add(threading.get_ident())
+        return "allowed"
+
+
+async def test_robots_checks_run_off_the_event_loop() -> None:
+    robots = RecordingRobots()
+    await discover_sources(
+        "legal/contracts",
+        provider=Scripted([("https://www.dol.gov/contracts", "Contracts")]),
+        robots=robots,  # type: ignore[arg-type]
+        registry=without_pins(),
+    )
+    assert robots.threads and threading.get_ident() not in robots.threads
 
 
 @pytest.mark.parametrize(

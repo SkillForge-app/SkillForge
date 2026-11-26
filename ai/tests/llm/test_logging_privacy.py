@@ -10,7 +10,7 @@ import logging
 from typing import TYPE_CHECKING
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from core.llm import CallRecord, FakeGateway, LLMUnavailable, complete, embed, set_gateway
 from tests.llm.helpers import Greeting
@@ -110,6 +110,46 @@ async def test_litellm_backend_logs_no_content(
         ("embed", "error", "AuthenticationError"),
     ]
     assert all(c["model"] != "fake" for c in calls)
+
+
+class StrictGreeting(BaseModel):
+    """Like Greeting, but with a length limit and no extra keys, so a reply can break both."""
+
+    model_config = ConfigDict(extra="forbid")
+    greeting: str = Field(max_length=20)
+    tone: str
+
+
+async def test_invalid_output_logs_field_names_and_error_types_only(
+    llm: "FakeLiteLLM", caplog: pytest.LogCaptureFixture
+) -> None:
+    """Which rule a bad reply broke is logged (AI-05's invalid outputs, review F4), but never
+    the value, and never a key name the model made up."""
+    from tests.llm.litellm_mock import chat, config_with, make_gateway
+
+    caplog.set_level(logging.DEBUG)
+    set_gateway(make_gateway(config_with(analysis={"num_retries": 0})))
+    good = json.dumps({"greeting": "Hi", "tone": "warm"})
+    too_long_and_extra = json.dumps(
+        {"greeting": SECRET_OUTPUT * 3, "tone": "warm", SECRET_OUTPUT: 1}
+    )
+    llm.completions = [
+        chat(too_long_and_extra),
+        chat(good),
+        chat(f"not json {SECRET_OUTPUT}"),
+        chat(good),
+    ]
+
+    await complete("demo/greet", INPUTS, StrictGreeting)  # one repair round each
+    await complete("demo/greet", INPUTS, StrictGreeting)
+
+    calls = llm_calls(caplog)  # also checks that no sentinel reached any log
+    assert [c["invalid_fields"] for c in calls] == [
+        ["?:extra_forbidden", "greeting:string_too_long"],  # pydantic's order
+        None,
+        ["(root):json_invalid"],
+        None,
+    ]
 
 
 def test_call_record_rejects_content_fields() -> None:

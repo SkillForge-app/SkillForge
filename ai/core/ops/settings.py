@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, PositiveFloat, ValidationError
 
 from core.llm import ConfigError, Limits, RoleLimit, load_config, set_limits
 from core.llm.config import LOCAL_PREFIX, key_env_for
@@ -70,6 +70,7 @@ class LimitsSpec(_Model):
     max_wait_s: float = Field(gt=0)
     skill_budget_usd: float = Field(gt=0)
     step_budget_usd: dict[Literal["analyze", "clarify", "design"], float]
+    step_timeout_s: dict[Literal["analyze", "clarify", "design"], PositiveFloat]
     default_role: RoleLimitSpec
     roles: dict[str, RoleLimitSpec] = {}
 
@@ -82,6 +83,7 @@ class LimitsSpec(_Model):
             default_role=RoleLimit(**self.default_role.model_dump()),
             skill_budget_usd=self.skill_budget_usd,
             step_budget_usd={str(step): usd for step, usd in self.step_budget_usd.items()},
+            step_timeout_s={str(step): s for step, s in self.step_timeout_s.items()},
         )
 
 

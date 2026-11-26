@@ -9,6 +9,8 @@ it nothing is limited, which keeps tests and scripts unchanged.
   minute, in this process. A call waits for a slot up to `max_wait_s`, then fails with
   LLMUnavailable, which the pipeline turns into `retry_later`. The limits are per process: a
   backend with N workers allows N times as much.
+- step_timeout_s: a deadline per pipeline step (analyze, clarify, design). `step_deadline`
+  cuts the step's calls off when it passes and raises DeadlineExceeded (`retry_later`).
 """
 
 import asyncio
@@ -19,7 +21,7 @@ from collections.abc import AsyncIterator, Callable, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 
-from core.llm.errors import LLMInputError, LLMUnavailable
+from core.llm.errors import DeadlineExceeded, LLMInputError, LLMUnavailable
 
 
 @dataclass(frozen=True)
@@ -38,9 +40,26 @@ class Limits:
     # Budgets the pipeline uses when the backend gives none (see core.llm.usage.skill_run).
     skill_budget_usd: float | None = None
     step_budget_usd: Mapping[str, float] = field(default_factory=dict)
+    # Seconds a pipeline step may take in all (see step_deadline); a step not listed has none.
+    step_timeout_s: Mapping[str, float] = field(default_factory=dict)
 
     def for_role(self, role: str) -> RoleLimit:
         return self.roles.get(role, self.default_role)
+
+
+@asynccontextmanager
+async def step_deadline(step: str) -> AsyncIterator[None]:
+    """Cut the block off after the environment's deadline for `step`: the calls still running
+    are cancelled and DeadlineExceeded is raised. Without a deadline the block runs as is."""
+    seconds = _limits.step_timeout_s.get(step)
+    if seconds is None:
+        yield
+        return
+    try:
+        async with asyncio.timeout(seconds):
+            yield
+    except TimeoutError as exc:
+        raise DeadlineExceeded(f"the {step} step passed its {seconds:g} s deadline") from exc
 
 
 _limits = Limits()
