@@ -73,6 +73,7 @@ class Entry(_Model):
     kind: Kind
     status: Status = "active"
     role: Role
+    superseded_by: str | None = None  # a superseded entry: the final entry that replaced it
     branch: str | None = None  # where a pending-merge report lives today
     report: str  # repo-relative path of the report (.json) or release manifest
     # The commit whose code and data produced the report: the commit that added it, or (for a
@@ -101,6 +102,8 @@ class Entry(_Model):
     def _offline_needs_a_backend(self) -> "Entry":
         if self.kind == "offline" and self.llm_backend is None:
             raise ValueError("an offline entry must set llm_backend: fake or local-model")
+        if self.superseded_by is not None and self.role != "superseded":
+            raise ValueError("only a superseded entry names superseded_by")
         return self
 
     @property

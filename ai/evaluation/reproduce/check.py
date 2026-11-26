@@ -39,7 +39,10 @@ class CheckResult:
     pending_skipped: list[str] = field(default_factory=list)
     # The done-when, over checked FINAL entries only (superseded and invalid never count).
     final_reproduces: list[str] = field(default_factory=list)
-    final_not_run: list[str] = field(default_factory=list)
+    final_not_run: list[str] = field(default_factory=list)  # includes final_pending
+    final_pending: list[str] = field(default_factory=list)  # pending-merge: not run here yet
+    # pending-merge entries whose report is here: checked fully; set them to status: active
+    pending_arrived: list[str] = field(default_factory=list)
 
 
 def repo_root(start: Path) -> Path:
@@ -85,12 +88,28 @@ def check(registry: Registry, repo: Path, *, history: bool = True) -> CheckResul
         if not (repo / data_file.path).is_file():
             issues.append(Issue(data_file.path, "missing_file", "listed data file is missing"))
     issues += _unlisted_run_files(registry, repo)
+    issues += _superseded_issues(registry)
 
     for entry in registry.experiments:
         present = (repo / entry.report).is_file()
         if entry.status == "pending-merge" and not present:
+            if history and _in_history(repo, entry.report):
+                issues.append(
+                    Issue(
+                        entry.id,
+                        "pending_report_in_history",
+                        f"{entry.report} was in this branch's history and is gone: deleted, "
+                        "not pending (restore it, or remove the entry)",
+                    )
+                )
+                continue
             result.pending_skipped.append(entry.id)
+            if entry.role == "final":
+                result.final_not_run.append(entry.id)
+                result.final_pending.append(entry.id)
             continue
+        if entry.status == "pending-merge":
+            result.pending_arrived.append(entry.id)
         issues += _check_entry(entry, registry, repo, present, history=history)
         result.checked.append(entry.id)
         if entry.role != "final":
@@ -104,6 +123,44 @@ def check(registry: Registry, repo: Path, *, history: bool = True) -> CheckResul
                 Issue(entry.id, "final_not_reproducing", "a final entry must reproduce (done-when)")
             )
     return result
+
+
+def _in_history(repo: Path, path: str) -> bool:
+    """Did `path` ever exist in HEAD's history (added, changed or deleted)?"""
+    out = subprocess.run(
+        ["git", "log", "-1", "--format=%H", "HEAD", "--", path],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    return out.returncode == 0 and bool(out.stdout.strip())
+
+
+def _superseded_issues(registry: Registry) -> list[Issue]:
+    """A superseded entry names the final entry of the same experiment that replaced it."""
+    by_id = {e.id: e for e in registry.experiments}
+    issues = []
+    for e in registry.experiments:
+        if e.role != "superseded":
+            continue
+        if e.superseded_by is None:
+            issues.append(Issue(e.id, "no_superseded_by", "name the final entry that replaced it"))
+            continue
+        final = by_id.get(e.superseded_by)
+        if (
+            final is None
+            or final.id == e.id
+            or final.role != "final"
+            or final.experiment != e.experiment
+        ):
+            issues.append(
+                Issue(
+                    e.id,
+                    "bad_superseded_by",
+                    f"{e.superseded_by} is not another final entry of {e.experiment}",
+                )
+            )
+    return issues
 
 
 def _unlisted_run_files(registry: Registry, repo: Path) -> list[Issue]:

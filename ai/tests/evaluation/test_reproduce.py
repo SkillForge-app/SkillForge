@@ -323,9 +323,18 @@ def test_the_done_when_counts_final_entries_only(repo: Path) -> None:
     assert not_run.issues == [] and not_run.final_not_run == ["E1:demo"]
     failing = check(registry({**ran, "reproduces": False}), repo)
     assert codes(failing) == ["final_not_reproducing"]
-    for role in ("superseded", "invalid"):  # never count toward the done-when
-        other = check(registry({**ran, "reproduces": False, "role": role}), repo)
-        assert other.issues == [] and other.final_reproduces == other.final_not_run == []
+    # superseded and invalid never count toward the done-when (a superseded entry names the
+    # final entry that replaced it: here a second report of the same experiment)
+    later = REPORT.replace("2026-11-25", "2026-11-26")
+    sha2 = commit_files(repo, {later: b"{}", later[:-5] + ".md": b"# d"}, "later")
+    final = {"id": "E1:later", "report": later, "recorded_at": sha2}
+    for extra in (
+        {"role": "superseded", "superseded_by": "E1:later"},
+        {"role": "invalid"},
+    ):
+        other = check(registry({**ran, "reproduces": False, **extra}, final), repo)
+        assert other.issues == [] and other.final_reproduces == []
+        assert other.final_not_run == ["E1:later"]
 
 
 # ------------------------------------------------------------------ review fix 1: privacy
@@ -378,7 +387,7 @@ def test_an_offline_entry_that_was_run_pins_its_report_hash(repo: Path) -> None:
     sha = commit_files(repo, {REPORT: content, REPORT[:-5] + ".md": b"# d"}, "report")
     entry = {"id": "E1:demo", "report": REPORT, "recorded_at": sha}
     assert check(registry(entry), repo).issues == []  # not run yet: no hash needed
-    for result in ({"reproduces": True}, {"reproduces": False, "role": "superseded"}):
+    for result in ({"reproduces": True}, {"reproduces": False, "role": "invalid"}):
         missing = check(registry({**entry, **result}), repo)  # a run recorded a result
         assert codes(missing) == ["no_report_hash"]
     ran = {**entry, "reproduces": True, "report_sha256": text_sha256(content)}
@@ -393,3 +402,102 @@ def test_run_reports_the_hash_of_the_report_it_compared(tmp_path: Path) -> None:
     from evaluation.reproduce.run import Outcome
 
     assert "report_sha256" in Outcome.__dataclass_fields__
+
+
+# ------------------------------------------------------------------ review fix 3: registry
+
+
+def test_a_pending_entry_whose_report_was_deleted_fails(repo: Path) -> None:
+    commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# d"}, "report")
+    git(repo, "rm", "-q", REPORT, REPORT[:-5] + ".md")
+    git(repo, "commit", "-q", "-m", "delete the report")
+    pending = {"id": "E1:demo", "report": REPORT, "recorded_at": "b" * 40}
+    result = check(registry({**pending, "status": "pending-merge"}), repo)
+    assert codes(result) == ["pending_report_in_history"] and result.pending_skipped == []
+    # never in this branch's history: a real pending-merge, skipped
+    fresh = {**pending, "report": REPORT.replace("2026-11-25", "2026-12-01")}
+    result = check(registry({**fresh, "status": "pending-merge"}), repo)
+    assert result.issues == [] and result.pending_skipped == ["E1:demo"]
+
+
+def test_an_arrived_pending_report_is_checked_and_listed_to_activate(repo: Path) -> None:
+    sha = commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# d"}, "merged report")
+    pending = {"id": "E1:demo", "report": REPORT, "recorded_at": sha, "status": "pending-merge"}
+    result = check(registry(pending), repo)
+    assert result.issues == [] and result.pending_arrived == ["E1:demo"]
+
+
+def test_pending_merge_finals_count_as_not_run_yet(repo: Path) -> None:
+    commit_files(repo, {DATA: b"x: 1\n"}, "start")
+    base = {"recorded_at": "b" * 40, "status": "pending-merge"}
+    reg = registry(
+        {**base, "id": "E1:a", "report": REPORT},
+        {**base, "id": "E1:b", "report": REPORT[:-5] + "-2.json", "role": "invalid"},
+    )
+    result = check(reg, repo)
+    assert result.issues == []
+    assert result.final_not_run == ["E1:a"] and result.final_pending == ["E1:a"]
+
+
+def test_the_summary_counts_every_final_entry(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["check"]) == 0
+    out = capsys.readouterr().out
+    assert "21 final entries: 18 reproduce, 3 not run yet" in out
+    assert "pending-merge: E6:injection-test-2026-11-18" in out
+
+
+def superseded_case(repo: Path, **extra: str) -> list[str]:
+    sha = commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# d"}, "first")
+    later = REPORT.replace("2026-11-25", "2026-11-26")
+    other = REPORT.replace("demo-2026-11-25", "other-2026-11-27")
+    for path in (later, other):
+        commit_files(repo, {path: b"{}", path[:-5] + ".md": b"# d"}, path)
+    reg = registry(
+        {"id": "E1:old", "report": REPORT, "recorded_at": sha, "role": "superseded", **extra},
+        {"id": "E1:new", "report": later, "recorded_at": sha},
+        {"id": "E1:also-old", "report": other, "recorded_at": sha, "role": "invalid"},
+        {
+            "id": "E2:new",
+            "experiment": "E2",
+            "report": other[:-5] + "x.json",
+            "recorded_at": sha,
+            "status": "pending-merge",
+        },
+    )
+    return codes(check(reg, repo))
+
+
+@pytest.mark.parametrize(
+    ("extra", "code"),
+    [
+        ({}, "no_superseded_by"),
+        ({"superseded_by": "E1:missing"}, "bad_superseded_by"),
+        ({"superseded_by": "E1:also-old"}, "bad_superseded_by"),  # not a final entry
+        ({"superseded_by": "E2:new"}, "bad_superseded_by"),  # another experiment
+        ({"superseded_by": "E1:old"}, "bad_superseded_by"),  # itself
+    ],
+)
+def test_a_superseded_entry_names_the_final_entry_that_replaced_it(
+    repo: Path, extra: dict[str, str], code: str
+) -> None:
+    assert superseded_case(repo, **extra) == [code]
+
+
+def test_a_correct_superseded_by_passes(repo: Path) -> None:
+    assert superseded_case(repo, superseded_by="E1:new") == []
+
+
+def test_only_a_superseded_entry_may_name_a_successor() -> None:
+    with pytest.raises(ValidationError):
+        registry({"id": "E1:x", "report": REPORT, "recorded_at": "c" * 40, "superseded_by": "E1:y"})
+
+
+def test_every_real_superseded_entry_names_its_final_entry() -> None:
+    reg = load_registry()
+    by_id = {e.id: e for e in reg.experiments}
+    superseded = [e for e in reg.experiments if e.role == "superseded"]
+    assert len(superseded) == 11
+    for e in superseded:
+        assert e.superseded_by is not None
+        final = by_id[e.superseded_by]
+        assert final.role == "final" and final.experiment == e.experiment, e.id

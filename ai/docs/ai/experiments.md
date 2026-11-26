@@ -1,6 +1,6 @@
 # Experiments: the log, and how each result is reproduced (AI-25)
 
-**Done-when: "Results reproducible from tracked runs."** Every committed report under `ai/evaluation/<area>/reports/` has an entry in [`ai/evaluation/experiments.yaml`](../../evaluation/experiments.yaml). Every **final** entry reproduces: **18 of 18** (25 Nov 2026).
+**Done-when: "Results reproducible from tracked runs."** Every committed report under `ai/evaluation/<area>/reports/` has an entry in [`ai/evaluation/experiments.yaml`](../../evaluation/experiments.yaml). **21 final entries: 18 reproduce, 3 not run yet** (pending merge: their reports are on other branches). Every final entry on this branch reproduces (26 Nov 2026).
 
 ```bash
 cd ai
@@ -60,9 +60,12 @@ cd ai
 
 ## Roles
 - **final:** a decision rests on it. **The done-when: every final entry reproduces.** `check` fails on a final entry recorded as `reproduces: false`.
-- **superseded:** an earlier round, replaced by a later report. It may stay `reproduces: false`, with the reason recorded.
+- **superseded:** an earlier round, replaced by a later report. It names that report's entry in `superseded_by`, which must be a final entry of the same experiment. It may stay `reproduces: false`, with the reason recorded.
 - **invalid:** a run that measured nothing. Like superseded, it never counts toward the done-when. Listed on its own below.
-- **pending-merge (a status, not a role):** the report is on another branch. `check` skips the entry while the report is absent and checks it fully once it's present, so merging in any order is safe. When an open branch adds a new report, its PR adds the entry.
+- **pending-merge (a status, not a role):** the report is on another branch.
+  - `check` skips the entry while the report is absent, and counts a final one as "not run yet". Once the report is present, `check` checks the entry fully and lists it to be set to `status: active`. So merging in any order is safe.
+  - A pending-merge report that was ever in this branch's history and is now gone was deleted, not pending: `check` fails.
+  - When an open branch adds a new report, its PR adds the entry.
 
 ## The experiments
 

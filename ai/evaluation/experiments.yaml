@@ -25,6 +25,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E1:extraction-2026-11-25
     llm_backend: fake
     report: ai/evaluation/extraction/reports/extraction-2026-10-25.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -56,6 +57,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E2:sources-2026-10-26-5
     llm_backend: fake
     report: ai/evaluation/sources/reports/sources-2026-10-26.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -70,6 +72,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E2:sources-2026-10-26-5
     llm_backend: fake
     report: ai/evaluation/sources/reports/sources-2026-10-26-2.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -84,6 +87,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E2:sources-2026-10-26-5
     llm_backend: fake
     report: ai/evaluation/sources/reports/sources-2026-10-26-3.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -98,6 +102,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E2:sources-2026-10-26-5
     llm_backend: fake
     report: ai/evaluation/sources/reports/sources-2026-10-26-4.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -126,6 +131,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E3:recall-2026-11-01
     report: ai/evaluation/retrieval/reports/recall-2026-10-26.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: true
@@ -182,6 +188,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E5:injection-test-2026-10-28-3
     llm_backend: fake
     report: ai/evaluation/injection/reports/injection-dev-2026-10-28.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -196,6 +203,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E5:injection-test-2026-10-28-3
     llm_backend: fake
     report: ai/evaluation/injection/reports/injection-dev-2026-10-28-2.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -210,6 +218,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E5:injection-test-2026-10-28-3
     llm_backend: fake
     report: ai/evaluation/injection/reports/injection-dev-2026-10-28-3.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -224,6 +233,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E5:injection-test-2026-10-28-3
     llm_backend: fake
     report: ai/evaluation/injection/reports/injection-test-2026-10-28.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
@@ -238,6 +248,7 @@ experiments:
     kind: offline
     status: active
     role: superseded
+    superseded_by: E5:injection-test-2026-10-28-3
     llm_backend: fake
     report: ai/evaluation/injection/reports/injection-test-2026-10-28-2.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
