@@ -192,7 +192,11 @@ def test_falls_back_when_repair_call_fails(
 ) -> None:
     before = _package(tmp_path / "before")
     after = tmp_path / "refined"
-    original = (before / "agent.md").read_bytes()
+    markdown_path = before / "agent.md"
+    markdown_path.write_bytes(
+        markdown_path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    )
+    original = markdown_path.read_bytes()
     monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
     calls = 0
 
