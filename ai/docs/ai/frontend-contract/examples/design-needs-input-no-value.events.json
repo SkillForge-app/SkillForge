@@ -1,0 +1,14 @@
+[
+  {
+    "step": "design",
+    "stage": "started",
+    "attempt": null,
+    "message": "Starting the skill design"
+  },
+  {
+    "step": "design",
+    "stage": "failed",
+    "attempt": null,
+    "message": "Stopped: the request isn't ready"
+  }
+]

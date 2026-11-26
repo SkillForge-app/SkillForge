@@ -1,0 +1,59 @@
+{
+  "report_type": "benchmark",
+  "status": "completed",
+  "created": "2026-11-26T20:31:37Z",
+  "live": false,
+  "dataset": "skillforge-seed-benchmark",
+  "dataset_version": "1.0.0",
+  "dataset_sha256": "67bb9b8cb14183181ce8a80a260626e3006a5508a22e5a7523cb464b46b8b605",
+  "skill": "ai-engineer",
+  "skill_instructions_sha256": "53872db47afbde2eb8505104956b209c1d4696306787a85119f076bfbb859c29",
+  "review_status": "reviewed",
+  "prompts": {
+    "evaluation/answer": 2,
+    "evaluation/judge": 1
+  },
+  "models": {
+    "answer": "openrouter/anthropic/claude-sonnet-5.5",
+    "judge": "openrouter/anthropic/claude-sonnet-5.5"
+  },
+  "metrics": {
+    "n": 2,
+    "completed": 2,
+    "with_skill": {
+      "rubric_items": 12,
+      "passed": 12,
+      "pass_rate": 1.0,
+      "critical_items": 2,
+      "critical_passed": 2,
+      "critical_pass_rate": 1.0
+    },
+    "without_skill": {
+      "rubric_items": 12,
+      "passed": 10,
+      "pass_rate": 0.8333333333333334,
+      "critical_items": 2,
+      "critical_passed": 0,
+      "critical_pass_rate": 0.0
+    },
+    "uplift": 0.16666666666666663,
+    "errors": {}
+  },
+  "calibration": {
+    "n": 0,
+    "matches": 0,
+    "agreement": null,
+    "threshold": 0.8,
+    "passed": false,
+    "reason": "calibrate separately against reviewed human labels",
+    "cohen_kappa": null,
+    "status": "not_calibrated"
+  },
+  "usage": {
+    "calls": 0,
+    "errors": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  }
+}

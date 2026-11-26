@@ -1,0 +1,39 @@
+{
+  "step": "analyze",
+  "status": "ok",
+  "value": {
+    "kind": "role",
+    "domain": "marketing/strategy",
+    "risk": "low",
+    "audience": "a small marketing team",
+    "expected_outputs": [
+      "marketing plan",
+      "campaign brief"
+    ],
+    "skill_name": "marketing-strategist",
+    "summary": "A marketing strategist skill that turns business goals into positioning and campaign plans.",
+    "needs_clarification": false,
+    "questions": [],
+    "request": "a skill to get more customers",
+    "targets": [],
+    "answers": [],
+    "analyzer": {
+      "prompt_id": "analysis/request",
+      "prompt_version": 1
+    },
+    "safety": {
+      "conditions": [],
+      "prompt_version": 1
+    }
+  },
+  "user_message": null,
+  "error_code": null,
+  "issues": [],
+  "usage": {
+    "calls": 2,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  },
+  "pipeline_version": "0.1"
+}

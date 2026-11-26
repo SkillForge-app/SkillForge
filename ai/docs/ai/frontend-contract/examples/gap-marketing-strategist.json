@@ -1,0 +1,101 @@
+{
+  "verdict": "exists",
+  "matches": [
+    {
+      "skill": {
+        "id": "registry:marketing-strategist",
+        "name": "marketing-strategist",
+        "title": "Marketing Strategist",
+        "description": "Marketing strategist who turns business goals into positioning, campaign plans and measurable marketing work, with honest claims.",
+        "kind": "role",
+        "domain": "marketing/strategy",
+        "use_when": [
+          "planning a product launch, campaign or go-to-market strategy",
+          "defining positioning, target audiences or key messages",
+          "choosing marketing channels, budgets or success metrics",
+          "checking that marketing claims and endorsements are truthful and disclosed"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.901675
+    },
+    {
+      "skill": {
+        "id": "corpus:brand-style-guide",
+        "name": "brand-style-guide",
+        "title": "Brand Style Guide Builder",
+        "description": "Builds a brand style guide with logo rules, colour palette, typography and tone of voice for a small company.",
+        "kind": "task",
+        "domain": "design/branding",
+        "use_when": [
+          "creating brand guidelines for a new company",
+          "documenting colours, fonts and logo usage"
+        ],
+        "source": "corpus",
+        "url": "https://corpus.example/skills/brand-style-guide/SKILL.md",
+        "licence": "own"
+      },
+      "score": 0.700464
+    },
+    {
+      "skill": {
+        "id": "registry:social-media-copywriter",
+        "name": "social-media-copywriter",
+        "title": "Social Media Copywriter",
+        "description": "Writes short posts, captions and hashtags for X, LinkedIn and Instagram in a brand's voice, and plans a weekly posting calendar.",
+        "kind": "task",
+        "domain": "marketing/social-media",
+        "use_when": [
+          "writing tweets or LinkedIn posts to promote something",
+          "planning a week of social media posts"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.687777
+    },
+    {
+      "skill": {
+        "id": "registry:candidate-interview-coach",
+        "name": "candidate-interview-coach",
+        "title": "Candidate Interview Coach",
+        "description": "Helps job seekers prepare for interviews with practice questions, answer feedback and salary negotiation tips.",
+        "kind": "role",
+        "domain": "hr/careers",
+        "use_when": [
+          "a candidate is preparing for a job interview",
+          "practising answers to behavioural interview questions"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.673769
+    },
+    {
+      "skill": {
+        "id": "corpus:seo-content-writer",
+        "name": "seo-content-writer",
+        "title": "SEO Content Writer",
+        "description": "Writes search-optimised blog posts and landing page copy around chosen keywords, with titles, meta descriptions and internal links.",
+        "kind": "task",
+        "domain": "marketing/seo",
+        "use_when": [
+          "writing a blog post that should rank for a keyword",
+          "improving page titles and meta descriptions"
+        ],
+        "source": "corpus",
+        "url": "https://corpus.example/skills/seo-content-writer/SKILL.md",
+        "licence": "own"
+      },
+      "score": 0.671591
+    }
+  ],
+  "exists_threshold": 0.8584,
+  "similar_threshold": 0.7664,
+  "model": "local/BAAI/bge-small-en-v1.5",
+  "settings_version": "2026-10-28"
+}

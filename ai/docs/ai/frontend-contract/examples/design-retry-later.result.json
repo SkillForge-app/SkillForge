@@ -1,0 +1,15 @@
+{
+  "step": "design",
+  "status": "retry_later",
+  "value": null,
+  "user_message": "Something went wrong on our side. Please try again in a few minutes.",
+  "error_code": "deadline_exceeded",
+  "issues": [],
+  "usage": {
+    "calls": 1,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "cost_usd": 0.0
+  },
+  "pipeline_version": "0.1"
+}

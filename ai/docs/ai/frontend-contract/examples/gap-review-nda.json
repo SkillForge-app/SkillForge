@@ -1,0 +1,102 @@
+{
+  "verdict": "exists",
+  "matches": [
+    {
+      "skill": {
+        "id": "registry:review-nda",
+        "name": "review-nda",
+        "title": "Review an NDA",
+        "description": "Reviews a non-disclosure agreement under US law for a non-lawyer: flags unusual, one-sided or missing clauses and explains them in plain language. Not legal advice.",
+        "kind": "task",
+        "domain": "legal/contracts",
+        "use_when": [
+          "reviewing an NDA or confidentiality agreement before signing it",
+          "comparing an NDA with a company's usual positions",
+          "explaining what a confidentiality clause means in plain language"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.886836
+    },
+    {
+      "skill": {
+        "id": "corpus:draft-nda-template",
+        "name": "draft-nda-template",
+        "title": "Draft an NDA Template",
+        "description": "Drafts a company's own mutual or one-way non-disclosure agreement template from scratch, with standard clauses and fill-in fields.",
+        "kind": "task",
+        "domain": "legal/contracts",
+        "use_when": [
+          "a company needs its own NDA template",
+          "drafting a new confidentiality agreement rather than reviewing one"
+        ],
+        "source": "corpus",
+        "url": "https://corpus.example/skills/draft-nda-template/SKILL.md",
+        "licence": "own"
+      },
+      "score": 0.810762
+    },
+    {
+      "skill": {
+        "id": "registry:supplier-contract-reviewer",
+        "name": "supplier-contract-reviewer",
+        "title": "Supplier Contract Reviewer",
+        "description": "Reviews supplier, vendor and software service agreements for a small business, focusing on liability, indemnity, termination and payment terms.",
+        "kind": "task",
+        "domain": "legal/contracts",
+        "use_when": [
+          "reviewing a vendor or supplier agreement before signing",
+          "checking indemnity and limitation of liability clauses",
+          "reviewing SaaS terms of service for a business purchase"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.776298
+    },
+    {
+      "skill": {
+        "id": "corpus:contract-dispute-prep",
+        "name": "contract-dispute-prep",
+        "title": "Contract Dispute Preparation",
+        "description": "Helps a business prepare for a contract dispute or breach claim with a lawyer, organising facts, documents and a timeline.",
+        "kind": "workflow",
+        "domain": "legal/litigation",
+        "use_when": [
+          "being sued or threatened with a claim for breach of contract",
+          "preparing documents for a meeting with a litigation lawyer"
+        ],
+        "source": "corpus",
+        "url": "https://corpus.example/skills/contract-dispute-prep/SKILL.md",
+        "licence": "own"
+      },
+      "score": 0.735259
+    },
+    {
+      "skill": {
+        "id": "registry:code-reviewer",
+        "name": "code-reviewer",
+        "title": "Review Code Changes",
+        "description": "Reviews a code change for correctness, security and maintainability, and gives prioritised, actionable comments.",
+        "kind": "task",
+        "domain": "technology/software-engineering",
+        "use_when": [
+          "reviewing a pull request or diff before it is merged",
+          "checking a function or module for bugs and security holes",
+          "ranking review comments as blocking, should fix or nit"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.726953
+    }
+  ],
+  "exists_threshold": 0.8584,
+  "similar_threshold": 0.7664,
+  "model": "local/BAAI/bge-small-en-v1.5",
+  "settings_version": "2026-10-28"
+}

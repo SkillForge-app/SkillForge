@@ -1,0 +1,101 @@
+{
+  "verdict": "exists",
+  "matches": [
+    {
+      "skill": {
+        "id": "registry:ai-engineer",
+        "name": "ai-engineer",
+        "title": "AI Engineer",
+        "description": "Senior AI engineer who designs, builds and evaluates LLM applications, RAG systems and agents.",
+        "kind": "role",
+        "domain": "technology/ai",
+        "use_when": [
+          "designing, building or debugging LLM, RAG or agent systems",
+          "choosing models, embeddings, prompts or evaluation methods",
+          "planning how to measure the quality, cost or risk of an AI feature"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.917437
+    },
+    {
+      "skill": {
+        "id": "registry:llm-prompt-engineer",
+        "name": "llm-prompt-engineer",
+        "title": "LLM Prompt Engineer",
+        "description": "Writes, tests and improves prompts for large language models, with examples, output formats and small evaluation sets.",
+        "kind": "task",
+        "domain": "technology/ai",
+        "use_when": [
+          "a prompt gives inconsistent or wrong outputs",
+          "writing a system prompt for a new LLM feature"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.804959
+    },
+    {
+      "skill": {
+        "id": "corpus:tabular-ml-modeler",
+        "name": "tabular-ml-modeler",
+        "title": "Tabular Machine Learning Modeler",
+        "description": "Trains and evaluates classical machine learning models such as gradient boosting on tabular business data, with feature engineering and validation.",
+        "kind": "role",
+        "domain": "technology/machine-learning",
+        "use_when": [
+          "predicting churn, demand or prices from a table of data",
+          "choosing and validating a scikit-learn or XGBoost model"
+        ],
+        "source": "corpus",
+        "url": "https://corpus.example/skills/tabular-ml-modeler/SKILL.md",
+        "licence": "own"
+      },
+      "score": 0.711249
+    },
+    {
+      "skill": {
+        "id": "registry:code-reviewer",
+        "name": "code-reviewer",
+        "title": "Review Code Changes",
+        "description": "Reviews a code change for correctness, security and maintainability, and gives prioritised, actionable comments.",
+        "kind": "task",
+        "domain": "technology/software-engineering",
+        "use_when": [
+          "reviewing a pull request or diff before it is merged",
+          "checking a function or module for bugs and security holes",
+          "ranking review comments as blocking, should fix or nit"
+        ],
+        "source": "registry",
+        "url": null,
+        "licence": null
+      },
+      "score": 0.649598
+    },
+    {
+      "skill": {
+        "id": "corpus:ux-researcher",
+        "name": "ux-researcher",
+        "title": "UX Researcher",
+        "description": "Plans and runs user research for digital products, with interview guides, usability tests and synthesis of findings into insights.",
+        "kind": "role",
+        "domain": "research/user-research",
+        "use_when": [
+          "planning user interviews or usability tests",
+          "turning research notes into findings and recommendations"
+        ],
+        "source": "corpus",
+        "url": "https://corpus.example/skills/ux-researcher/SKILL.md",
+        "licence": "own"
+      },
+      "score": 0.64592
+    }
+  ],
+  "exists_threshold": 0.8584,
+  "similar_threshold": 0.7664,
+  "model": "local/BAAI/bge-small-en-v1.5",
+  "settings_version": "2026-10-28"
+}

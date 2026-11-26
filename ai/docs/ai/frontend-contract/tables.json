@@ -1,0 +1,373 @@
+{
+  "pipeline": {
+    "pipeline_version": "0.1",
+    "StepName": {
+      "values": [
+        "analyze",
+        "clarify",
+        "design"
+      ],
+      "source": "ai/core/pipeline/interface.py:71"
+    },
+    "StepStatus": {
+      "values": [
+        "ok",
+        "needs_input",
+        "blocked",
+        "retry_later",
+        "failed"
+      ],
+      "source": "ai/core/pipeline/interface.py:72"
+    },
+    "Stage": {
+      "values": [
+        "started",
+        "attempt",
+        "repairing",
+        "done",
+        "failed"
+      ],
+      "source": "ai/core/pipeline/interface.py:73"
+    },
+    "error_codes": [
+      {
+        "code": "provider_unavailable",
+        "source": "ai/core/pipeline/interface.py:353"
+      },
+      {
+        "code": "deadline_exceeded",
+        "source": "ai/core/pipeline/interface.py:351"
+      },
+      {
+        "code": "budget_exceeded",
+        "source": "ai/core/pipeline/interface.py:357"
+      },
+      {
+        "code": "invalid_request",
+        "source": "ai/core/pipeline/interface.py:179"
+      },
+      {
+        "code": "blocked.<blocked.category>",
+        "source": "ai/core/pipeline/interface.py:323"
+      },
+      {
+        "code": "analysis_failed.<type(exc).__name__>",
+        "source": "ai/core/pipeline/interface.py:338"
+      },
+      {
+        "code": "not_screened",
+        "source": "ai/core/pipeline/interface.py:270"
+      },
+      {
+        "code": "open_questions",
+        "source": "ai/core/pipeline/interface.py:273"
+      },
+      {
+        "code": "blocked.other",
+        "source": "ai/core/pipeline/interface.py:287"
+      },
+      {
+        "code": "invalid_spec",
+        "source": "ai/core/pipeline/interface.py:302"
+      }
+    ],
+    "messages": {
+      "BUDGET_MESSAGE": {
+        "text": "This skill needs more work than we can do for one request. Please narrow it down.",
+        "source": "ai/core/pipeline/interface.py:142"
+      },
+      "DESIGN_BLOCKED_MESSAGE": {
+        "text": "Stopped: this request can't be built",
+        "source": "ai/core/pipeline/interface.py:152"
+      },
+      "DESIGN_BUDGET_MESSAGE": {
+        "text": "Stopped: too much work for one request",
+        "source": "ai/core/pipeline/interface.py:153"
+      },
+      "DESIGN_INVALID_MESSAGE": {
+        "text": "Could not produce a valid design",
+        "source": "ai/core/pipeline/interface.py:150"
+      },
+      "DESIGN_NOT_READY_MESSAGE": {
+        "text": "Stopped: the request isn't ready",
+        "source": "ai/core/pipeline/interface.py:154"
+      },
+      "DESIGN_PAUSED_MESSAGE": {
+        "text": "Paused: we'll try again shortly",
+        "source": "ai/core/pipeline/interface.py:151"
+      },
+      "DESIGN_READY_MESSAGE": {
+        "text": "Design ready",
+        "source": "ai/core/pipeline/interface.py:149"
+      },
+      "FAILED_MESSAGE": {
+        "text": "We could not design this skill. Please rephrase or add detail and try again.",
+        "source": "ai/core/pipeline/interface.py:141"
+      },
+      "INVALID_ANSWERS_MESSAGE": {
+        "text": "Please answer only the questions shown, at most once each.",
+        "source": "ai/core/pipeline/interface.py:144"
+      },
+      "INVALID_REQUEST_MESSAGE": {
+        "text": "Please describe the skill you want in 1 to 4000 characters.",
+        "source": "ai/core/pipeline/interface.py:143"
+      },
+      "RETRY_LATER_MESSAGE": {
+        "text": "Something went wrong on our side. Please try again in a few minutes.",
+        "source": "ai/core/pipeline/interface.py:140"
+      }
+    },
+    "closing_event": {
+      "source": "ai/core/pipeline/interface.py:157",
+      "rows": [
+        {
+          "status": "ok",
+          "error_code": null,
+          "stage": "done",
+          "message": "Design ready"
+        },
+        {
+          "status": "needs_input",
+          "error_code": "open_questions",
+          "stage": "failed",
+          "message": "Stopped: the request isn't ready"
+        },
+        {
+          "status": "blocked",
+          "error_code": "blocked.other",
+          "stage": "failed",
+          "message": "Stopped: this request can't be built"
+        },
+        {
+          "status": "retry_later",
+          "error_code": "provider_unavailable",
+          "stage": "failed",
+          "message": "Paused: we'll try again shortly"
+        },
+        {
+          "status": "retry_later",
+          "error_code": "deadline_exceeded",
+          "stage": "failed",
+          "message": "Paused: we'll try again shortly"
+        },
+        {
+          "status": "failed",
+          "error_code": "budget_exceeded",
+          "stage": "failed",
+          "message": "Stopped: too much work for one request"
+        },
+        {
+          "status": "failed",
+          "error_code": "not_screened",
+          "stage": "failed",
+          "message": "Stopped: the request isn't ready"
+        },
+        {
+          "status": "failed",
+          "error_code": "invalid_spec",
+          "stage": "failed",
+          "message": "Could not produce a valid design"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "QuestionTopic": {
+      "values": [
+        "audience",
+        "outputs",
+        "platforms",
+        "scope",
+        "tone",
+        "constraints",
+        "domain"
+      ],
+      "source": "ai/core/analysis/types.py:17"
+    },
+    "HarmCategory": {
+      "values": [
+        "cyber_attack",
+        "fraud_scams",
+        "weapons",
+        "violence_harassment",
+        "self_harm",
+        "child_safety",
+        "hate_extremism",
+        "privacy_surveillance",
+        "illegal_drugs",
+        "disinformation",
+        "other"
+      ],
+      "source": "ai/core/analysis/types.py:30"
+    },
+    "SafetyCondition": {
+      "values": [
+        "authorized_use_only",
+        "no_operational_harm",
+        "professional_disclaimer",
+        "crisis_resources",
+        "privacy_protection",
+        "age_appropriate"
+      ],
+      "source": "ai/core/analysis/types.py:44"
+    },
+    "questions": {
+      "min": 3,
+      "max": 5,
+      "source": "ai/core/analysis/types.py:21"
+    },
+    "request_text_max_chars": 4000,
+    "answer_text_max_chars": 500
+  },
+  "spec_validator": {
+    "issue_codes": [
+      {
+        "code": "description_too_long",
+        "source": "ai/core/spec/validator.py:338"
+      },
+      {
+        "code": "duplicate_file",
+        "source": "ai/core/spec/validator.py:273"
+      },
+      {
+        "code": "duplicate_id",
+        "source": "ai/core/spec/validator.py:227"
+      },
+      {
+        "code": "high_risk_needs_disclaimer",
+        "source": "ai/core/spec/validator.py:288"
+      },
+      {
+        "code": "high_risk_needs_human_review",
+        "source": "ai/core/spec/validator.py:295"
+      },
+      {
+        "code": "name_taken",
+        "source": "ai/core/spec/validator.py:211"
+      },
+      {
+        "code": "not_a_mapping",
+        "source": "ai/core/spec/validator.py:118"
+      },
+      {
+        "code": "reserved_name",
+        "source": "ai/core/spec/validator.py:326"
+      },
+      {
+        "code": "role_needs_guardrail",
+        "source": "ai/core/spec/validator.py:281"
+      },
+      {
+        "code": "schema.<kind>",
+        "source": "ai/core/spec/validator.py:165"
+      },
+      {
+        "code": "schema.missing",
+        "source": "ai/core/spec/validator.py:160"
+      },
+      {
+        "code": "schema.unknown_field",
+        "source": "ai/core/spec/validator.py:158"
+      },
+      {
+        "code": "target_not_available_in_v1",
+        "source": "ai/core/spec/validator.py:317"
+      },
+      {
+        "code": "tool_listed_twice",
+        "source": "ai/core/spec/validator.py:307"
+      },
+      {
+        "code": "unknown_output",
+        "source": "ai/core/spec/validator.py:251"
+      },
+      {
+        "code": "unknown_reference",
+        "source": "ai/core/spec/validator.py:258"
+      },
+      {
+        "code": "unknown_source",
+        "source": "ai/core/spec/validator.py:243"
+      },
+      {
+        "code": "unused_output",
+        "source": "ai/core/spec/validator.py:359"
+      },
+      {
+        "code": "unused_source",
+        "source": "ai/core/spec/validator.py:350"
+      },
+      {
+        "code": "xml_in_text",
+        "source": "ai/core/spec/validator.py:334"
+      },
+      {
+        "code": "yaml_syntax",
+        "source": "ai/core/spec/validator.py:116"
+      }
+    ]
+  },
+  "gap": {
+    "Verdict": {
+      "values": [
+        "exists",
+        "similar",
+        "new"
+      ],
+      "source": "ai/core/analysis/gap_checker.py:39"
+    },
+    "SkillSource": {
+      "values": [
+        "registry",
+        "corpus"
+      ],
+      "source": "ai/core/analysis/gap_checker.py:40"
+    },
+    "settings": {
+      "version": "2026-10-28",
+      "exists": 0.8584,
+      "similar": 0.7664,
+      "same_area_for_exists": false,
+      "tuned_on": "evaluation/gap/reports/gap-dev-2026-10-28.md",
+      "source": "ai/core/analysis/gap_checker.yaml"
+    }
+  },
+  "extraction": {
+    "Reason": {
+      "values": [
+        "empty",
+        "paywall_or_login",
+        "boilerplate",
+        "wrong_language",
+        "too_short",
+        "injection",
+        "extraction_error"
+      ],
+      "source": "ai/core/knowledge/extract.py:50"
+    },
+    "EXTRACTION_VERSION": {
+      "value": 2,
+      "source": "ai/core/knowledge/extract.py:108"
+    },
+    "default_fingerprint": "474bd237fac3dc9db4018f1f0ad2b337cd4d99c4ec33b2b61feaad59c79d79c5"
+  },
+  "ai16": {
+    "error_codes": [
+      "budget_exceeded",
+      "configuration_error",
+      "invalid_input",
+      "invalid_model_output",
+      "model_refused",
+      "prompt_format_error",
+      "prompt_not_found",
+      "provider_unavailable",
+      "unexpected_error"
+    ],
+    "source": "ai/evaluation/harness/evaluate.py:107"
+  },
+  "skillspec": {
+    "spec_version": "0.2",
+    "schema": "ai/core/spec/schema.json",
+    "schema_sha256": "13e7120c68db54c7069963d9200a16b3bec363562ec2bd18e706bba991b40e36"
+  }
+}

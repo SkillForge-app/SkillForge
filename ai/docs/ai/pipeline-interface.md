@@ -4,6 +4,7 @@ These are the functions the backend worker calls. They live in `ai/core/pipeline
 - **Due:** Week 4 (about 20 Nov 2026).
 - **Changes:** need a pull request that both the AI and BE leads approve.
 - **Testing without a key:** use `FakePipeline`.
+- **For Frontend:** what the UI sees and should do, with generated examples, is in [frontend-contract.md](frontend-contract.md).
 
 ```python
 from core.pipeline import RealPipeline, FakePipeline, StepResult

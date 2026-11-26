@@ -1,6 +1,6 @@
 # Backend integration: running the AI pipeline in the worker (BE-06, BE-07)
 
-For Backend, building the RQ worker that runs a skill's design. It covers how to install `ai/`, the three pipeline calls, what each result means for the worker, and a complete job function. The contract itself is [pipeline-interface.md](pipeline-interface.md) (`ai/core/pipeline/interface.py`, frozen: changes need AI and BE approval).
+For Backend, building the RQ worker that runs a skill's design. It covers how to install `ai/`, the three pipeline calls, what each result means for the worker, and a complete job function. The contract itself is [pipeline-interface.md](pipeline-interface.md) (`ai/core/pipeline/interface.py`, frozen: changes need AI and BE approval). What Frontend sees, and the open points for Backend, are in [frontend-contract.md](frontend-contract.md).
 
 ## 1. Install `ai/` from `backend/`
 

@@ -1,0 +1,4 @@
+{
+  "error": "ConfigError",
+  "message": "a skill index holds 768-dimension vectors from local/another-embedding-model, not 384-dimension vectors from local/BAAI/bge-small-en-v1.5; rebuild it"
+}

@@ -1,0 +1,32 @@
+[
+  {
+    "step": "design",
+    "stage": "started",
+    "attempt": null,
+    "message": "Starting the skill design"
+  },
+  {
+    "step": "design",
+    "stage": "attempt",
+    "attempt": 1,
+    "message": "Designing the skill (attempt 1)"
+  },
+  {
+    "step": "design",
+    "stage": "repairing",
+    "attempt": 2,
+    "message": "Fixing problems in the design (attempt 2)"
+  },
+  {
+    "step": "design",
+    "stage": "repairing",
+    "attempt": 3,
+    "message": "Fixing problems in the design (attempt 3)"
+  },
+  {
+    "step": "design",
+    "stage": "failed",
+    "attempt": 3,
+    "message": "Could not produce a valid design"
+  }
+]

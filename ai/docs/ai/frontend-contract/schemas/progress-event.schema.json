@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Sent while a step runs, for the browser (BE-08). In order, per step.",
+  "properties": {
+    "step": {
+      "enum": [
+        "analyze",
+        "clarify",
+        "design"
+      ],
+      "title": "Step",
+      "type": "string"
+    },
+    "stage": {
+      "enum": [
+        "started",
+        "attempt",
+        "repairing",
+        "done",
+        "failed"
+      ],
+      "title": "Stage",
+      "type": "string"
+    },
+    "attempt": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Attempt"
+    },
+    "message": {
+      "title": "Message",
+      "type": "string"
+    }
+  },
+  "required": [
+    "step",
+    "stage",
+    "message"
+  ],
+  "title": "ProgressEvent",
+  "type": "object"
+}
