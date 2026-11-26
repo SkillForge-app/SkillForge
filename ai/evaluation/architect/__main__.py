@@ -2,7 +2,12 @@
 
 python -m evaluation.architect check-data
 python -m evaluation.architect run --set all --live              # real model calls, costs money
+python -m evaluation.architect run --set all --live --resume evaluation/architect/runs/<id>
 SKILLFORGE_LLM_BACKEND=fake python -m evaluation.architect run --set examples   # smoke test
+
+Every outcome is saved in the run folder as it finishes. If a run dies, `--resume <run folder>`
+runs only the requests that have no outcome yet (same prompts, model, data and items, or it
+refuses) and writes the report from everything saved.
 """
 
 import argparse
@@ -15,6 +20,7 @@ from core.agents.architect import GENERATE, MAX_ATTEMPTS
 from core.llm import load_config
 from evaluation.architect.data import GATE_SIZE, ArchitectItem, load_items
 from evaluation.architect.evaluate import render_markdown, run_eval, write_report
+from evaluation.architect.runlog import ResumeError
 from evaluation.common import AI_ROOT, live_guard, model_for, output_dirs
 
 REPORTS_DIR = AI_ROOT / "evaluation" / "architect" / "reports"  # tracked: .md + .json per live run
@@ -53,13 +59,30 @@ def run_command(args: argparse.Namespace) -> int:
         cost = estimate_cost(len(items))
         span = f", estimated ${cost[0]} to ${cost[1]}" if cost else ""
         print(f"about to design {len(items)} skills with live calls{span}")
-    report, outcomes = asyncio.run(
-        run_eval(sets, live=args.live, end_to_end=args.end_to_end, concurrency=args.concurrency)
-    )
-    reports_dir, run_dir = output_dirs(
-        args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
-    )
-    files = write_report(report, outcomes, label=args.set, reports_dir=reports_dir, run_dir=run_dir)
+    if args.resume is not None:
+        run_dir = args.resume
+        reports_dir = args.out or (REPORTS_DIR if args.live else run_dir)
+    else:  # the run folder exists before the first call: nothing paid for is kept only in memory
+        reports_dir, run_dir = output_dirs(
+            args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
+        )
+    print(f"run folder: {run_dir} (if the run dies: --resume {run_dir})")
+    try:
+        report, _ = asyncio.run(
+            run_eval(
+                sets,
+                live=args.live,
+                run_dir=run_dir,
+                label=args.set,
+                resume=args.resume is not None,
+                end_to_end=args.end_to_end,
+                concurrency=args.concurrency,
+            )
+        )
+    except ResumeError as exc:
+        print(exc, file=sys.stderr)
+        return 2
+    files = write_report(report, label=args.set, reports_dir=reports_dir, run_dir=run_dir)
     print(render_markdown(report))
     print(f"report written to {files.md} and {files.json.name}; generated specs in {files.run}")
     return 0 if report.passed in (None, True) else 1
@@ -79,6 +102,12 @@ def main(argv: list[str] | None = None) -> int:
         "--out", type=Path, default=None, help="report folder (default: reports/ for --live runs)"
     )
     run.add_argument("--runs", type=Path, default=None, help="raw outputs folder (default: runs/)")
+    run.add_argument(
+        "--resume",
+        type=Path,
+        default=None,
+        help="continue this run folder: only requests with no saved outcome are run",
+    )
     args = parser.parse_args(argv)
     if args.command == "check-data":
         return check_data_command()
