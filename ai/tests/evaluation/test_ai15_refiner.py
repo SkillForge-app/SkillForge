@@ -6,6 +6,7 @@ import yaml
 from pydantic import BaseModel
 
 from core.llm import load_prompt
+from core.llm.errors import LLMUnavailable
 from core.spec import validate_spec
 from evaluation.ai15_refiner import PROMPT_ID, main
 
@@ -144,6 +145,10 @@ def test_falls_back_to_original_when_repair_still_fails(
 ) -> None:
     before = _package(tmp_path / "before")
     after = tmp_path / "refined"
+    markdown_path = before / "agent.md"
+    markdown_path.write_bytes(
+        markdown_path.read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+    )
     original = (before / "agent.md").read_bytes()
     monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
     calls = 0
@@ -174,7 +179,98 @@ def test_falls_back_to_original_when_repair_still_fails(
     assert (after / "agent.md").read_bytes() == original
     report = json.loads((tmp_path / "refined.ai15-refiner.json").read_text(encoding="utf-8"))
     assert report["fallback_files"] == ["agent.md"]
+    assert report["refined_files"] == []
     assert "FALLBACK: original files restored: agent.md" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("repair_failure", ["empty", "error"])
+def test_falls_back_when_repair_call_fails(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    repair_failure: str,
+) -> None:
+    before = _package(tmp_path / "before")
+    after = tmp_path / "refined"
+    original = (before / "agent.md").read_bytes()
+    monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
+    calls = 0
+
+    async def fake_complete(
+        prompt_id: str, inputs: dict[str, str], output_model: type[BaseModel]
+    ) -> BaseModel:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return output_model(content=inputs["artifact_markdown"].replace("# Agent", "# Changed"))
+        if repair_failure == "error":
+            raise LLMUnavailable("provider unavailable")
+        return output_model(content="")
+
+    monkeypatch.setattr("evaluation.ai15_refiner.complete", fake_complete)
+
+    assert (
+        main(
+            [
+                "--before",
+                str(before),
+                "--after",
+                str(after),
+                "--platform",
+                "claude",
+            ]
+        )
+        == 0
+    )
+    assert calls == 2
+    assert (after / "agent.md").read_bytes() == original
+    report = json.loads((tmp_path / "refined.ai15-refiner.json").read_text(encoding="utf-8"))
+    assert report["refined_files"] == []
+    assert report["fallback_files"] == ["agent.md"]
+    assert "FALLBACK: repair failed for agent.md" in capsys.readouterr().err
+
+
+def test_report_lists_only_the_file_that_fell_back(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    before = _package(tmp_path / "before")
+    (before / "guide.md").write_text("# Guide\n\nOriginal guide prose.\n", encoding="utf-8")
+    after = tmp_path / "refined"
+    monkeypatch.setenv("SKILLFORGE_LLM_BACKEND", "fake")
+    calls: dict[str, int] = {}
+
+    async def fake_complete(
+        prompt_id: str, inputs: dict[str, str], output_model: type[BaseModel]
+    ) -> BaseModel:
+        path = inputs["artifact_path"]
+        calls[path] = calls.get(path, 0) + 1
+        content = inputs["artifact_markdown"]
+        if path == "agent.md":
+            return output_model(content=content.replace("# Agent", "# Changed"))
+        return output_model(
+            content=content.replace("Original guide prose.", "Refined guide prose.")
+        )
+
+    monkeypatch.setattr("evaluation.ai15_refiner.complete", fake_complete)
+
+    assert (
+        main(
+            [
+                "--before",
+                str(before),
+                "--after",
+                str(after),
+                "--platform",
+                "claude",
+            ]
+        )
+        == 0
+    )
+    report = json.loads((tmp_path / "refined.ai15-refiner.json").read_text(encoding="utf-8"))
+    assert report["fallback_files"] == ["agent.md"]
+    assert report["refined_files"] == ["guide.md"]
+    assert "Refined guide prose." in (after / "guide.md").read_text(encoding="utf-8")
+    assert calls == {"agent.md": 2, "guide.md": 1}
 
 
 def test_refuses_real_model_without_live_flag(

@@ -9,10 +9,11 @@ copies are kept as validation fixtures in `tests/fixtures/ai15/`.
 The AI refiner is an explicit step after Backend compilation. It sends each compiled Markdown
 artifact to the wording prompt, stages all results separately, and checks the package. If a
 refined artifact fails, it makes one repair call with that artifact's check errors; if the repair
-still fails, that artifact is restored byte-for-byte from the original package. The output
-directory is published after all package invariants pass. Non-Markdown files are copied
-byte-for-byte. A sibling `<output-name>.ai15-refiner.json` report lists refined files and any
-files that fell back to their originals. The check requires:
+still fails, returns empty content, or raises an LLM error, that artifact is restored byte-for-byte
+from the original package. The output directory is published after all package invariants pass.
+Non-Markdown files are copied byte-for-byte. A sibling `<output-name>.ai15-refiner.json` report
+lists successfully refined files separately from files that fell back to their originals. The
+check requires:
 
 - The same package files, frontmatter presence and keys, and unchanged frontmatter values except
   `description`.

@@ -11,6 +11,7 @@ from pathlib import Path
 from pydantic import BaseModel
 
 from core.llm import complete
+from core.llm.errors import LLMError
 from evaluation.ai15_package_check import compare_packages
 from evaluation.common import live_guard
 
@@ -77,12 +78,21 @@ async def _refine_package(before_root: Path, after_root: Path, platform: str) ->
             file_errors = _file_errors(relative, errors)
             if not file_errors:
                 continue
-            repaired = await _refine_markdown(
-                relative.as_posix(),
-                platform,
-                (staging / relative).read_text(encoding="utf-8"),
-                file_errors,
-            )
+            try:
+                repaired = await _refine_markdown(
+                    relative.as_posix(),
+                    platform,
+                    (staging / relative).read_text(encoding="utf-8"),
+                    file_errors,
+                )
+            except (LLMError, ValueError) as exc:
+                (staging / relative).write_bytes(original_bytes[relative])
+                fallback_files.add(relative.as_posix())
+                print(
+                    f"FALLBACK: repair failed for {relative.as_posix()}; original restored: {exc}",
+                    file=sys.stderr,
+                )
+                continue
             (staging / relative).write_text(repaired, encoding="utf-8", newline="\n")
             repair_errors = _file_errors(relative, compare_packages(before_root, staging, platform))
             if repair_errors:
@@ -101,14 +111,17 @@ async def _refine_package(before_root: Path, after_root: Path, platform: str) ->
 
         staging.rename(after_root)
 
+    refined_files = [
+        path.as_posix() for path in markdown_files if path.as_posix() not in fallback_files
+    ]
     report = {
         "status": "passed",
-        "refined_files": [path.as_posix() for path in markdown_files],
+        "refined_files": refined_files,
         "fallback_files": sorted(fallback_files),
     }
     with report_path.open("x", encoding="utf-8", newline="\n") as file:
         file.write(json.dumps(report, indent=2) + "\n")
-    print(f"PASS: refined {len(markdown_files)} Markdown files; package invariants hold.")
+    print(f"PASS: refined {len(refined_files)} Markdown files; package invariants hold.")
     if fallback_files:
         print(f"FALLBACK: original files restored: {', '.join(sorted(fallback_files))}")
     print(f"Refiner report written to {report_path}")
