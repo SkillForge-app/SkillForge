@@ -27,7 +27,9 @@ from core.llm.errors import ConfigError
 from core.llm.gateway import EMBEDDING_ROLE
 
 EMPTY_INDEX = (
-    "the knowledge index is empty; run ingest (python -m evaluation.retrieval build-index)"
+    "the knowledge index is empty; in production, DE's pipeline fills the pgvector view "
+    "(check SKILLFORGE_VECTOR_STORE and DE's active_config); for a local index, run ingest "
+    "(python -m evaluation.retrieval build-index)"
 )
 INFO_TTL_S = 60.0  # how long a passed index check is trusted
 

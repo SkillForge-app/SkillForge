@@ -7,7 +7,8 @@
 
 Every issue has a JSON Pointer `path` (e.g. /procedures/0/produces/1), a stable `code` and a
 short `message`. The frontend shows them next to the field; the Skill Architect gets them back
-in its repair loop. Messages never include the field's value, only its location.
+in its repair loop. Messages never quote free text, but some quote an id or a field name (e.g.
+`source "src-1" is not defined in /sources`, an unknown field and its closest match).
 """
 
 import difflib
