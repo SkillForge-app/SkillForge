@@ -551,7 +551,7 @@ def test_pgvector_reads_des_view_as_the_reader_role() -> None:
         "splitter": "sentence",
         "pipeline_version": "f22-test",
         # Five keys: valid under today's CHECK and under DE's coming one (all five required).
-        "extract_fingerprint": "f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483",
+        "extract_fingerprint": "474bd237fac3dc9db4018f1f0ad2b337cd4d99c4ec33b2b61feaad59c79d79c5",
     }
     config_json = json.dumps(config, sort_keys=True, separators=(",", ":"))
     config_hash = hashlib.sha256(config_json.encode()).hexdigest()

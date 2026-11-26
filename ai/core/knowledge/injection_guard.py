@@ -17,12 +17,14 @@ import asyncio
 import hashlib
 import html
 import re
-from collections.abc import Iterator, Sequence
+from collections.abc import Collection, Iterator, Sequence
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, Literal
 from urllib.parse import urlsplit
 
 from pydantic import Field
+from tld import get_fld
 
 from core.knowledge.types import Passage
 from core.llm import complete
@@ -79,6 +81,14 @@ class _Rule:
     # Fire only when the phrase is aimed at the reader, not described ("attackers tell the
     # model to ignore previous instructions" is about injection, not an injection).
     aimed: bool = True
+    # Not a finding when the rest of the clause after the match fits this (review F9: API
+    # docs say how to send a key safely, "in the x-api-key header", "through the vault"),
+    # unless the sentence names another site (review on #40): then OFFSITE_CODE, low.
+    unless_after: re.Pattern[str] | None = None
+    # A finding only when the sentence names a destination on another site than the page's.
+    offsite: bool = False
+    # The match is itself a safe channel (a credential header in a curl command).
+    channel: bool = False
 
 
 def _rx(pattern: str) -> re.Pattern[str]:
@@ -117,11 +127,43 @@ _USER_DATA = (
     r"(?:the )?users?'?s?(?: \w+)?|everything|contents?|context|files?|documents?|transcripts?|"
     r"emails?|memory|the above|this (?:conversation|chat|session))"
 )
-_DESTINATION = (
-    r"(?:https?://\S+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/\S*)?|"
-    r"(?:a |the |this |our )?(?:webhook|endpoint|server|url|address))"
-)
+# A concrete place: a URL, an email address or a host name. A bare "the endpoint" or "a server"
+# is how API docs talk ("send their data to the endpoint over TLS"), so it no longer counts
+# (review F9); every measured exfiltration names a real address.
+_DESTINATION = r"(?:https?://\S+|[\w.+-]+@[\w-]+(?:\.[\w-]+)+|(?:[a-z0-9-]+\.)+[a-z]{2,}(?:/\S*)?)"
 _URL = r"(?:https?://\S+|(?:www\.)?(?:[a-z0-9-]+\.)+[a-z]{2,}/\S*)"
+# The safe channel API docs name for a key: "in the x-api-key header", "via the Authorization
+# header", "through the vault", "in an environment variable" (review F9).
+_SAFE_CHANNEL = _rx(
+    r"^[^.!?]{0,40}?\b(?:in|via|through|using|with|from)\s+(?:an?\s+|the\s+|your\s+|their\s+|"
+    r"our\s+)?(?:[\w-]+\s+){0,2}?(?:headers?|authori[sz]ation|requests?|query (?:string|"
+    r"parameters?)|vault|password manager|secrets? manager|key ?vault|environment variables?|"
+    r"basic auth(?:entication)?)\b"
+)
+# The safe channel excuses an API credential only, never a system prompt, a card number or
+# hidden instructions, whatever the channel (review on #40).
+_CHANNEL_SECRET = _rx(
+    r"(?:(?<!private )(?<!ssh )(?<!public )(?:api[ -]?)?keys?|tokens?|secrets?|credentials|"
+    r"passwords?|passphrases?|cookies?)$"
+)
+# Review on #40: what a credential is when the sentence also names where it goes. _SECRETS,
+# plus the bare words, but only as the thing sent ("post your key to", "the token and cookie
+# to"), never as an adjective ("the key findings") and never a public key.
+_CREDENTIALS = (
+    rf"(?:{_SECRETS}|(?<!public )(?:keys?|tokens?|secrets?|passwords?|cookies?)\b(?=\s*(?:[,;:"
+    r".!?)]|$|(?:to|at|into|and|or|in|via|as|with|over|through|from|on|for|when|using)\b)))"
+)
+# Where a sentence sends something: a URL, an email address, a host after "to"/"at"/... (so
+# "config.yaml" is not one), or a webhook nobody can check ("to this webhook", not "your").
+_DEST_URL = _rx(r"https?://[^\s\"'<>)\]]+")
+_DEST_EMAIL = _rx(r"[\w.+-]+@((?:[a-z0-9-]+\.)+[a-z]{2,})\b")
+_DEST_HOST = _rx(r"\b(?:to|at|into|via|on)\s+((?:[a-z0-9-]+\.)+[a-z]{2,})\b(?![\w.-]*@)")
+_DEST_WEBHOOK = _rx(
+    r"\b(?:to|at|into)\s+(?:(?:this|that|a|an|our|my|the)\s+)?(?:(?!your\b|their\b)[\w-]+\s+)?"
+    r"webhooks?\b"
+)
+# The low finding for a credential sent through a safe channel to another site.
+OFFSITE_CODE = "exfil-credential-offsite"
 
 RULES: tuple[_Rule, ...] = (
     # -- override: tries to replace the instructions the model was given
@@ -225,9 +267,12 @@ RULES: tuple[_Rule, ...] = (
         "role-delimiter-tag",
         "role_marker",
         "high",
+        # Our own wrapper tags (wrap_passages: untrusted_passages, passage) and chat-role tags.
+        # Generic content tags (instructions, document, context, data) are left out: prompt and
+        # API docs use them all the time (review F9).
         _rx(
-            r"</?\s*(?:system|untrusted[\w-]*|passages?|instructions?|admin|developer|assistant|"
-            r"user_?input|tool_?output|document|context|data)\s*(?:\s[^<>]*)?>"
+            r"</?\s*(?:system|untrusted[\w-]*|passages?|admin|developer|assistant|"
+            r"user_?input|tool_?output)\s*(?:\s[^<>]*)?>"
         ),
         aimed=False,
     ),
@@ -294,6 +339,7 @@ RULES: tuple[_Rule, ...] = (
             r"exfiltrate|forward|provide|give|display|return|show|list|dump|disclose|repeat)\b"
             rf"[^.!?]{{0,60}}?\b{_SECRETS}"
         ),
+        unless_after=_SAFE_CHANNEL,
     ),
     _Rule(
         "secret-ask-user",
@@ -314,6 +360,31 @@ RULES: tuple[_Rule, ...] = (
             r"\b(?:send|post|forward|upload|submit|transmit|e-?mail|exfiltrate|leak|copy|sync)\s+"
             rf"(?:\w+\s+){{0,4}}?{_USER_DATA}\b[^.!?]{{0,60}}?\b(?:to|at|into)\s+{_DESTINATION}"
         ),
+    ),
+    # Review on #40: a credential sent to another site. High; low (OFFSITE_CODE) when the
+    # clause names a safe channel; nothing when every destination is the page's own site.
+    _Rule(
+        "exfil-send-credential",
+        "exfiltration",
+        "high",
+        _rx(
+            r"\b(?:send|post|forward|upload|submit|transmit|e-?mail|exfiltrate|leak|copy|sync|"
+            rf"share|paste|include|pass|attach)\b[^.!?]{{0,60}}?\b{_CREDENTIALS}"
+        ),
+        unless_after=_SAFE_CHANNEL,
+        offsite=True,
+    ),
+    _Rule(
+        "exfil-credential-header",
+        "exfiltration",
+        "high",
+        _rx(
+            r"\b(?:curl|wget)\b[^\n]{0,200}?(?:-H|--header)\s*[\"']?\s*(?:authori[sz]ation|"
+            r"x-api-key|api-key|x-auth-token|cookie)\s*:"
+        ),
+        aimed=False,
+        offsite=True,
+        channel=True,
     ),
     _Rule(
         "exfil-templated-url",
@@ -420,24 +491,68 @@ _SENTENCES = re.compile(r"(?<=[.!?])\s+(?=\S)")
 _CELLS = re.compile(r"\s+\|\s+")  # AI-10 joins table cells with " | "
 
 
-def screen_text(text: str) -> list[Finding]:
-    """Rule findings for one sentence, list item, table row or heading. Deterministic."""
+def screen_text(text: str, *, source_hosts: Collection[str] = ()) -> list[Finding]:
+    """Rule findings for one sentence, list item, table row or heading. Deterministic.
+
+    `source_hosts`: the page's URL or host (or several, for check_spec). A credential may go to
+    their sites (registered domains) through a safe channel; with none given, every
+    destination counts as another site."""
     text = INVISIBLE_CHARS.sub("", text)
+    offsite: bool | None = None  # computed once, only when a rule needs it
     found: list[Finding] = []
     for rule in RULES:
         for match in rule.pattern.finditer(text):
             if _described(rule, text, match):
                 continue
+            safe = rule.channel or _safe_after(rule, text, match)
+            if rule.offsite or safe:
+                if offsite is None:
+                    offsite = _names_another_site(text, _sites(tuple(source_hosts)))
+                if not offsite:
+                    continue
+            code, category, severity = rule.code, rule.category, rule.severity
+            if safe:
+                code, category, severity = OFFSITE_CODE, "exfiltration", "low"
+            if code in _ONCE and any(f.rule == code for f in found):
+                continue
             found.append(
                 Finding(
-                    rule=rule.code,
-                    category=rule.category,
-                    severity=rule.severity,
+                    rule=code,
+                    category=category,
+                    severity=severity,
                     start=match.start(),
                     length=match.end() - match.start(),
                 )
             )
     return sorted(found, key=lambda f: (f.start, f.rule))
+
+
+# One finding per sentence: several rules see the same credential sentence.
+_ONCE = frozenset({OFFSITE_CODE, "exfil-send-credential"})
+
+
+def _names_another_site(text: str, sites: frozenset[str]) -> bool:
+    """The sentence sends something to a site that is not one of `sites` (or to a webhook)."""
+    if _DEST_WEBHOOK.search(text):
+        return True
+    hosts = [_host(m.group(0)) for m in _DEST_URL.finditer(text)]
+    hosts += [m.group(1) for m in _DEST_EMAIL.finditer(text)]
+    hosts += [m.group(1) for m in _DEST_HOST.finditer(text)]
+    return any(_site(h) not in sites for h in hosts if h)
+
+
+@lru_cache(maxsize=4096)
+def _site(host: str) -> str:
+    """The registered domain (Public Suffix List, private part too: a.github.io and
+    b.github.io are two sites); the exact host when the list does not know it (.example,
+    .test, an IP address)."""
+    host = host.lower().rstrip(".").removeprefix("www.")
+    return get_fld(host, fail_silently=True, fix_protocol=True) or host
+
+
+@lru_cache(maxsize=256)
+def _sites(source_hosts: tuple[str, ...]) -> frozenset[str]:
+    return frozenset(_site(_host(h)) for h in source_hosts if _host(h))
 
 
 def _described(rule: _Rule, text: str, match: re.Match[str]) -> bool:
@@ -454,11 +569,30 @@ def _described(rule: _Rule, text: str, match: re.Match[str]) -> bool:
     return opened and bool(before.strip(" " + _QUOTES))
 
 
+def _safe_after(rule: _Rule, text: str, match: re.Match[str]) -> bool:
+    """The match is an API credential and its clause names a safe channel
+    (`_Rule.unless_after`), after the match or after its verb ("include your key in the
+    Authorization header as a bearer token")."""
+    if rule.unless_after is None or not _CHANNEL_SECRET.search(match.group(0)):
+        return False
+    verb_end = match.start() + len(match.group(0).split(None, 1)[0])
+    rests = (text[match.end() :], text[verb_end:])
+    return any(rule.unless_after.search(_CLAUSE_END.split(rest)[0]) for rest in rests)
+
+
 def rules_fingerprint() -> str:
     """sha256 (first 16 hex) of every rule and context pattern: reports record it, so a
     frozen rule set can be checked later."""
-    parts = [f"{r.code}|{r.severity}|{r.aimed}|{r.pattern.pattern}" for r in RULES]
+    parts = [
+        f"{r.code}|{r.severity}|{r.aimed}|{r.pattern.pattern}"
+        + (f"|unless:{r.unless_after.pattern}" if r.unless_after else "")
+        + (f"|offsite:{r.offsite}|channel:{r.channel}" if r.offsite or r.channel else "")
+        for r in RULES
+    ]
     parts += [p.pattern for p in (_DESCRIBED_ANYWHERE, _DESCRIBED_END, _DESCRIBED_TO, _NEGATED)]
+    parts += [OFFSITE_CODE] + [
+        p.pattern for p in (_DEST_URL, _DEST_EMAIL, _DEST_HOST, _DEST_WEBHOOK, _CHANNEL_SECRET)
+    ]
     return hashlib.sha256("\n".join(parts).encode("utf-8")).hexdigest()[:16]
 
 
@@ -466,23 +600,25 @@ def split_sentences(text: str) -> list[str]:
     return _SENTENCES.split(text) if text else []
 
 
-def screen_block(text: str, *, whole: bool = False) -> tuple[str, list[Finding]]:
+def screen_block(
+    text: str, *, whole: bool = False, source_hosts: Collection[str] = ()
+) -> tuple[str, list[Finding]]:
     """The block without its flagged sentences, and the findings (with `sentence` and `sha256`
     set). With `whole=True` (headings, list items, table rows) each cell and sentence is still
     screened on its own, so a rule that needs the start of a sentence fires mid-row too, but
-    any finding removes the whole block."""
+    any finding removes the whole block. `source_hosts`: as in screen_text (the page's URL)."""
     if whole:
         parts = [s for cell in _CELLS.split(text) for s in split_sentences(cell)]
-        _, findings = _screen_parts(parts)
+        _, findings = _screen_parts(parts, source_hosts)
         return ("" if findings else text), findings
-    return _screen_parts(split_sentences(text))
+    return _screen_parts(split_sentences(text), source_hosts)
 
 
-def _screen_parts(parts: list[str]) -> tuple[str, list[Finding]]:
+def _screen_parts(parts: list[str], source_hosts: Collection[str]) -> tuple[str, list[Finding]]:
     kept: list[str] = []
     findings: list[Finding] = []
     for i, sentence in enumerate(parts):
-        hits = screen_text(sentence)
+        hits = screen_text(sentence, source_hosts=source_hosts)
         if not hits:
             kept.append(sentence)
             continue
@@ -664,7 +800,7 @@ def check_spec(
                 issues.add(
                     Issue(path, "injection-url", "an email address whose domain is not a source")
                 )
-        for finding in screen_text(base_verb_forms(text)):
+        for finding in screen_text(base_verb_forms(text), source_hosts=allowed):
             code, severity, message = _SPEC_ISSUE[finding.category]
             issues.add(Issue(path, code, message, severity))  # type: ignore[arg-type]
     return sorted(issues, key=lambda i: (i.path, i.code))
@@ -683,7 +819,7 @@ _RULE_VERBS = (
     "insert", "append", "put", "inject", "place", "tell", "instruct", "direct", "redirect",
     "point", "advise", "urge", "recommend", "mention", "say", "visit", "use", "write", "reply",
     "respond", "answer", "remember", "type", "enter", "confirm", "supply", "download",
-    "install", "run", "open", "click", "register",
+    "install", "run", "open", "click", "register", "pass", "attach",
 )  # fmt: skip
 _IRREGULAR = {
     "sent": "send", "told": "tell", "gave": "give", "given": "give", "shown": "show",

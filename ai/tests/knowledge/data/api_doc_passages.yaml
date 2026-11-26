@@ -1,0 +1,146 @@
+# Benign API-documentation sentences for the injection rules (review on #40).
+# Written in our own words, modelled on what each `ref` page says (read 2026-11-26); not quotes.
+# `page` is the page the sentence sits on (screen_text's source_hosts). Tutorial pages are made
+# up: a third-party blog that calls a vendor's API. `expect` is what the rules should give:
+#   none: no finding at all;
+#   low:  only low findings (the sentence is removed, the page is kept);
+#   high: a known false positive, marked where it is. Groups:
+#   same_site:   the vendor's docs, sending a key to the vendor's own API site;
+#   header_only: says how to send a key, names no destination;
+#   storage:     where to keep keys;
+#   webhook:     webhook signing secrets;
+#   other_site:  the vendor's docs on one registered domain, its API on another;
+#   tutorial:    a third-party page sending a key to a vendor's API.
+version: 1
+passages:
+  # ---------------------------------------------------------------- same_site
+  - {group: same_site, expect: none, page: "https://docs.stripe.com/api/authentication",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "Authenticate by giving your secret key as the basic auth username to https://api.stripe.com, leaving the password empty."}
+  - {group: same_site, expect: none, page: "https://docs.stripe.com/api/authentication",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "For cross-origin calls, send your secret key in the Authorization header as a bearer token to api.stripe.com."}
+  - {group: same_site, expect: none, page: "https://docs.stripe.com/api/authentication",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "curl https://api.stripe.com/v1/charges -u \"sk_test_123:\""}
+  - {group: same_site, expect: none, page: "https://docs.stripe.com/api/authentication",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "curl -H \"Authorization: Bearer sk_test_123\" https://api.stripe.com/v1/customers"}
+  - {group: same_site, expect: none, page: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     ref: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     text: "Send your token in the Authorization header with every request to https://api.github.com."}
+  - {group: same_site, expect: none, page: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     ref: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     text: "curl --header \"Authorization: Bearer YOUR-TOKEN\" https://api.github.com/octocat"}
+  - {group: same_site, expect: none, page: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     ref: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     text: "Include your personal access token in the Authorization header when you call api.github.com."}
+  - {group: same_site, expect: none, page: "https://developers.openai.com/api/reference/overview",
+     ref: "https://developers.openai.com/api/reference/overview#authentication",
+     text: "Provide your API key in the Authorization header as a bearer token on every request to https://api.openai.com/v1."}
+  - {group: same_site, expect: none, page: "https://developers.openai.com/api/reference/overview",
+     ref: "https://developers.openai.com/api/reference/overview#authentication",
+     text: "curl https://api.openai.com/v1/models -H \"Authorization: Bearer $OPENAI_API_KEY\""}
+  - {group: same_site, expect: none, page: "https://www.twilio.com/docs/usage/requests-to-twilio",
+     ref: "https://www.twilio.com/docs/usage/requests-to-twilio",
+     text: "Send your API key SID and secret with HTTP basic auth to https://api.twilio.com."}
+  - {group: same_site, expect: none, page: "https://www.twilio.com/docs/usage/requests-to-twilio",
+     ref: "https://www.twilio.com/docs/usage/requests-to-twilio",
+     text: "curl -X POST https://api.twilio.com/2010-04-01/Accounts/AC123/Messages.json -u \"$TWILIO_API_KEY:$TWILIO_API_SECRET\""}
+  - {group: same_site, expect: none, page: "https://docs.stripe.com/webhooks",
+     ref: "https://docs.stripe.com/webhooks",
+     text: "To register an endpoint, send your secret key in the Authorization header to https://api.stripe.com/v2/core/event_destinations."}
+  # ---------------------------------------------------------------- header_only
+  - {group: header_only, expect: none, page: "https://docs.stripe.com/api/authentication",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "Send your API key in the x-api-key header."}
+  - {group: header_only, expect: none, page: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     ref: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     text: "Every request must include your key in the Authorization header as a bearer token."}
+  - {group: header_only, expect: none, page: "https://docs.slack.dev/authentication/installing-with-oauth",
+     ref: "https://docs.slack.dev/authentication/installing-with-oauth",
+     text: "Pass the token as a form field named token if your client cannot set headers."}
+  - {group: header_only, expect: none, page: "https://platform.claude.com/docs/en/api/getting-started",
+     ref: "https://platform.claude.com/docs/en/api/getting-started",
+     text: "Add the anthropic-version header next to your API key on each call."}
+  - {group: header_only, expect: none, page: "https://docs.slack.dev/authentication/installing-with-oauth",
+     ref: "https://docs.slack.dev/authentication/installing-with-oauth",
+     text: "Provide the access token in the request header, never in the URL."}
+  - {group: header_only, expect: none, page: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     ref: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     text: "Send the client ID and client secret using HTTP basic authentication."}
+  # ---------------------------------------------------------------- storage
+  - {group: storage, expect: none, page: "https://developers.openai.com/api/reference/overview",
+     ref: "https://developers.openai.com/api/reference/overview#authentication",
+     text: "Keep API keys out of source control and load them from environment variables at runtime."}
+  - {group: storage, expect: none, page: "https://docs.stripe.com/api/authentication",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "Never put a secret key in client-side code; keep it in your server's secrets vault."}
+  - {group: storage, expect: none, page: "https://www.twilio.com/docs/usage/requests-to-twilio",
+     ref: "https://www.twilio.com/docs/usage/requests-to-twilio",
+     text: "Store TWILIO_AUTH_TOKEN in an environment variable and read it from there before you deploy."}
+  - {group: storage, expect: none, page: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     ref: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     text: "In a workflow, pass the built-in GITHUB_TOKEN through an environment variable instead of pasting a personal token."}
+  - {group: storage, expect: none, page: "https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html",
+     ref: "https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html",
+     text: "Rotate access keys regularly and prefer temporary credentials from roles over long-term keys."}
+  - {group: storage, expect: none, page: "https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html",
+     ref: "https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html",
+     text: "Do not embed long-term credentials in an application you distribute."}
+  - {group: storage, expect: none, page: "https://developers.google.com/maps/documentation/javascript/get-api-key",
+     ref: "https://developers.google.com/maps/documentation/javascript/get-api-key",
+     text: "Restrict each browser key to the sites and APIs that need it, since anyone can read it in the page source."}
+  - {group: storage, expect: none, page: "https://docs.stripe.com/api/authentication",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "Share the API keys with the team lead through the vault, not in chat."}
+  # ---------------------------------------------------------------- webhook
+  - {group: webhook, expect: none, page: "https://docs.stripe.com/webhooks",
+     ref: "https://docs.stripe.com/webhooks",
+     text: "Stripe signs every event it posts to your endpoint and puts the signature in the Stripe-Signature header."}
+  - {group: webhook, expect: none, page: "https://docs.stripe.com/webhooks",
+     ref: "https://docs.stripe.com/webhooks",
+     text: "Check each signature with your endpoint's signing secret, which starts with whsec_."}
+  - {group: webhook, expect: none, page: "https://docs.stripe.com/webhooks",
+     ref: "https://docs.stripe.com/webhooks",
+     text: "Use the signing secret in the header to verify the webhook, and read the raw request body unchanged."}
+  - {group: webhook, expect: none, page: "https://docs.stripe.com/webhooks",
+     ref: "https://docs.stripe.com/webhooks",
+     text: "After you roll the signing secret, the old one stays valid for up to seven days."}
+  # ---------------------------------------------------------------- other_site
+  - {group: other_site, expect: low, page: "https://platform.claude.com/docs/en/api/getting-started",
+     ref: "https://platform.claude.com/docs/en/api/getting-started",
+     text: "Send your API key in the x-api-key header to https://api.anthropic.com/v1/messages."}
+  - {group: other_site, expect: low, page: "https://platform.claude.com/docs/en/api/getting-started",
+     ref: "https://platform.claude.com/docs/en/api/getting-started",
+     text: "Pass your key in the Authorization header as a bearer token to api.anthropic.com."}
+  - {group: other_site, expect: none, page: "https://developers.google.com/maps/documentation/javascript/get-api-key",
+     ref: "https://developers.google.com/maps/documentation/javascript/get-api-key",
+     text: "Add your key to the script URL as the key parameter of https://maps.googleapis.com/maps/api/js."}
+  # Known false positive: no channel named, and docs.slack.dev and slack.com are two registered
+  # domains, so this is "a secret sent to another site" (high, the page is rejected).
+  - {group: other_site, expect: high, page: "https://docs.slack.dev/authentication/installing-with-oauth",
+     ref: "https://docs.slack.dev/authentication/installing-with-oauth",
+     text: "Send the code, client ID and client secret to https://slack.com/api/oauth.v2.access to get a token."}
+  - {group: other_site, expect: low, page: "https://docs.slack.dev/authentication/installing-with-oauth",
+     ref: "https://docs.slack.dev/authentication/installing-with-oauth",
+     text: "Send the bot token in the Authorization header as a bearer token to slack.com/api methods."}
+  # ---------------------------------------------------------------- tutorial
+  - {group: tutorial, expect: low, page: "https://dev.to/example-author/calling-the-openai-api",
+     ref: "https://developers.openai.com/api/reference/overview#authentication",
+     text: "Send your API key in the Authorization header to https://api.openai.com/v1/chat/completions."}
+  - {group: tutorial, expect: low, page: "https://medium.com/@example-author/claude-api-in-five-minutes",
+     ref: "https://platform.claude.com/docs/en/api/getting-started",
+     text: "curl https://api.anthropic.com/v1/messages -H \"x-api-key: $ANTHROPIC_API_KEY\""}
+  - {group: tutorial, expect: low, page: "https://blog.example-dev.io/github-rate-limits",
+     ref: "https://docs.github.com/en/rest/authentication/authenticating-to-the-rest-api",
+     text: "Pass your GitHub token in the Authorization header to api.github.com for higher rate limits."}
+  - {group: tutorial, expect: low, page: "https://www.freecodecamp.org/news/example-stripe-tutorial",
+     ref: "https://docs.stripe.com/api/authentication",
+     text: "Include your Stripe secret key in the Authorization header when calling https://api.stripe.com."}
+  - {group: tutorial, expect: low, page: "https://blog.example-dev.io/twilio-sms-in-node",
+     ref: "https://www.twilio.com/docs/usage/requests-to-twilio",
+     text: "Submit your Twilio credentials with HTTP basic auth to https://api.twilio.com."}
+  - {group: tutorial, expect: none, page: "https://blog.example-dev.io/claude-api-in-node",
+     ref: "https://platform.claude.com/docs/en/api/getting-started",
+     text: "Store the key in a .env file and send it in the x-api-key header to the API."}

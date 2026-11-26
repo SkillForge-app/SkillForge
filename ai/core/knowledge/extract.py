@@ -48,7 +48,13 @@ from core.spec.models import Line, SpecModel
 PASSAGE_MAX_CHARS: int = get_args(PassageText)[1].max_length
 
 Reason = Literal[
-    "empty", "paywall_or_login", "boilerplate", "wrong_language", "too_short", "injection"
+    "empty",
+    "paywall_or_login",
+    "boilerplate",
+    "wrong_language",
+    "too_short",
+    "injection",
+    "extraction_error",
 ]
 REASONS: tuple[Reason, ...] = (
     "empty",
@@ -57,6 +63,10 @@ REASONS: tuple[Reason, ...] = (
     "wrong_language",
     "too_short",
     "injection",
+    # review F8: the page passed every check, but its chunks or page could not be built (a
+    # validation error). It is rejected instead of raising, so no page text ends up in a
+    # caller's error log.
+    "extraction_error",
 )
 Extractor = Literal["trafilatura", "bs4", "none"]
 # Languages with a spaCy pipeline wired in (nlp.SPACY_MODEL). Add a pipeline before a language.
@@ -94,7 +104,8 @@ class ExtractionInputError(ValueError):
 
 # ExtractConfig.fingerprint() (for DE's chunk_config). Bump EXTRACTION_VERSION when this module's
 # code changes the chunks a config produces; bump FINGERPRINT_VERSION if the hashed form changes.
-EXTRACTION_VERSION = 1
+# 2 (review F9): narrower injection rules keep sentences version 1 removed, so chunks change.
+EXTRACTION_VERSION = 2
 FINGERPRINT_VERSION = 1
 # Per-site hashes, not a setting of the pipeline: hashing them would give every site its own config.
 FINGERPRINT_EXCLUDED = frozenset({"site_boilerplate"})
@@ -255,7 +266,7 @@ def extract_page(
         )
     screening = ScreeningReport(invisible_chars=signals.invisible_chars)
     if config.injection_screen:
-        blocks, screening = _screen(content.blocks, screening, config)
+        blocks, screening = _screen(content.blocks, screening, config, url)
         content = replace(content, blocks=blocks)
 
     text, quality = _assess(content, signals, config, screening)
@@ -266,7 +277,8 @@ def extract_page(
         content = replace(content, blocks=_drop_unchunkable_tokens(content.blocks))
         text, quality = _assess(content, signals, config, screening)
     title = _title(content.title, content.sitename, tree, url)
-    if not quality.ok:
+
+    def rejected(quality: QualityReport) -> ExtractedPage:
         return ExtractedPage(
             url=page_url,
             title=title,
@@ -279,6 +291,9 @@ def extract_page(
             screening=screening,
         )
 
+    if not quality.ok:
+        return rejected(quality)
+
     analysed = nlp.analyse([title] + [b.text for b in content.blocks])
     title_terms, block_sentences = analysed[0], analysed[1:]
     units = _units(content.blocks, block_sentences)
@@ -287,22 +302,27 @@ def extract_page(
         + [t for u in units if u.new_section for t in u.terms]
     )
     raw_chunks = chunk_units(units, config.chunking)
-    return ExtractedPage(
-        url=page_url,
-        title=title,
-        retrieved=retrieved,
-        extractor=content.extractor,
-        text=text,
-        quality=quality,
-        concepts=nlp.rank_concepts(
-            (t for u in units for t in u.terms), boost=boost, top=config.page_concepts
-        ),
-        chunks=[
-            _chunk(raw, i, page_url, title, retrieved, boost, config)
-            for i, raw in enumerate(raw_chunks)
-        ],
-        screening=screening,
-    )
+    try:
+        return ExtractedPage(
+            url=page_url,
+            title=title,
+            retrieved=retrieved,
+            extractor=content.extractor,
+            text=text,
+            quality=quality,
+            concepts=nlp.rank_concepts(
+                (t for u in units for t in u.terms), boost=boost, top=config.page_concepts
+            ),
+            chunks=[
+                _chunk(raw, i, page_url, title, retrieved, boost, config)
+                for i, raw in enumerate(raw_chunks)
+            ],
+            screening=screening,
+        )
+    except ValidationError:
+        # Review F8: a page that passed every check but can't be built (e.g. a chunk over the
+        # passage limit) is rejected, not raised: its message would carry the page's text.
+        return rejected(quality.model_copy(update={"reasons": ("extraction_error",)}))
 
 
 def _chunk(
@@ -883,16 +903,17 @@ def _drop_site_boilerplate(blocks: list[_Block], keys: set[str]) -> list[_Block]
 
 
 def _screen(
-    blocks: list[_Block], screening: ScreeningReport, config: ExtractConfig
+    blocks: list[_Block], screening: ScreeningReport, config: ExtractConfig, url: str
 ) -> tuple[list[_Block], ScreeningReport]:
     """Remove flagged sentences (and whole headings, items and rows) before chunking, so an
-    injected page gives the same chunks as the page without the injection."""
+    injected page gives the same chunks as the page without the injection. `url` is the
+    page's own site: a credential may go there, not elsewhere (review on #40)."""
     kept: list[_Block] = []
     findings = []
     removed = 0
     for i, block in enumerate(blocks):
         whole = block.kind != "paragraph"
-        text, hits = screen_block(block.text, whole=whole)
+        text, hits = screen_block(block.text, whole=whole, source_hosts=(url,))
         findings += [h.model_copy(update={"block": i}) for h in hits]
         removed += (1 if hits else 0) if whole else len({h.sentence for h in hits})
         if text:

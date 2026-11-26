@@ -10,7 +10,8 @@ from core.knowledge.extract import FINGERPRINT_EXCLUDED, _canonical
 
 # The default config's fingerprint. If this changes, DE rebuilds its chunks: change it only on
 # purpose (a new default, a new setting, or EXTRACTION_VERSION), and tell DE.
-FROZEN_DEFAULT = "f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483"
+# EXTRACTION_VERSION 2 (review F9); version 1 gave f33bf1b5…5483.
+FROZEN_DEFAULT = "474bd237fac3dc9db4018f1f0ad2b337cd4d99c4ec33b2b61feaad59c79d79c5"
 
 # One different, valid value for every hashed setting.
 CHANGED: dict[str, dict[str, Any]] = {
