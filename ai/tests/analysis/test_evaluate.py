@@ -8,12 +8,20 @@ from typing import Any, TypeVar
 import pytest
 from pydantic import BaseModel
 
-from core.llm import LLMUnavailable, load_prompt, use_fake
+from core.llm import FakeGateway, LLMUnavailable, load_config, load_prompt, use_fake
 from core.llm.gateway import BACKEND_ENV
 from evaluation.analyzer import data
-from evaluation.analyzer.__main__ import main
+from evaluation.analyzer.__main__ import RETRY_ALLOWANCE, TOKENS_PER_CALL, estimate_cost, main
 from evaluation.analyzer.data import EvalItem
-from evaluation.analyzer.evaluate import compute_metrics, gate_verdict, run_eval, write_report
+from evaluation.analyzer.evaluate import (
+    RETRY_RULE,
+    VALIDITY_RULE,
+    compute_metrics,
+    gate_verdict,
+    render_markdown,
+    run_eval,
+    write_report,
+)
 from evaluation.common import output_dirs
 
 T = TypeVar("T", bound=BaseModel)
@@ -149,7 +157,7 @@ async def test_report_files_record_versions_and_hashes(tmp_path: Path) -> None:
     assert files.md.name == f"analyzer-gate-{report.created[:10]}.md"
     assert files.md.parent == files.json.parent == tmp_path / "reports"
     saved = json.loads(files.json.read_text(encoding="utf-8"))
-    assert saved["prompt"] == {"id": "analysis/request", "version": 1}
+    assert saved["prompt"] == {"id": "analysis/request", "version": 3}
     assert [s["name"] for s in saved["data_sources"]][0] == "skillforge-seed-benchmark"
     assert all(len(s["sha256"]) == 64 for s in saved["data_sources"])
     assert saved["run"] == "run"  # the report names the folder with its raw outputs
@@ -212,3 +220,199 @@ def test_live_runs_report_to_the_tracked_folder(tmp_path: Path) -> None:
     assert reports == tmp_path / "r" and run.parent == tmp_path
     reports, run = output_dirs(False, None, None, reports_dir=tmp_path / "r", runs_dir=tmp_path)
     assert reports == run
+
+
+# ------------------------------------------------------------------ the cost budget (live runs)
+
+
+def _live_env(monkeypatch: pytest.MonkeyPatch) -> list[object]:
+    """A live-looking environment where any real evaluation would be recorded, not run."""
+    monkeypatch.delenv(BACKEND_ENV, raising=False)
+    monkeypatch.setenv("OPENROUTER_API_KEY", "test-key-not-used")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-used")
+    monkeypatch.setattr("evaluation.analyzer.__main__.load_dotenv", lambda *a, **k: False)
+    started: list[object] = []
+
+    async def no_run(*args: Any, **kwargs: Any) -> Any:
+        started.append(args)
+        raise AssertionError("no evaluation may start")
+
+    monkeypatch.setattr("evaluation.analyzer.__main__.run_eval", no_run)
+    return started
+
+
+def test_cli_live_needs_a_budget(monkeypatch: pytest.MonkeyPatch) -> None:
+    started = _live_env(monkeypatch)
+    assert main(["run", "--set", "dev", "--live", "--limit", "1"]) == 2
+    assert started == []
+
+
+def test_cli_refuses_a_run_whose_estimate_is_over_the_budget(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    started = _live_env(monkeypatch)
+    assert main(["run", "--set", "gate", "--live", "--budget-usd", "0.05"]) == 2
+    assert started == []
+    out = capsys.readouterr()
+    assert "about to make ~100 live calls, estimated $" in out.out
+    assert "no call was made" in out.err
+
+
+def test_cli_rejects_a_budget_of_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    assert main(["run", "--set", "dev", "--limit", "1", "--budget-usd", "0"]) == 2
+
+
+def test_estimate_uses_the_measured_call_size() -> None:
+    model = load_config().role(load_prompt("analysis/request").meta.model_role).model
+    info = load_config().info_for(model)
+    assert info, "the analysis model needs known prices for the estimate"
+    tokens_in, tokens_out = TOKENS_PER_CALL
+    per_call = tokens_in * info["input_cost_per_token"] + tokens_out * info["output_cost_per_token"]
+    assert estimate_cost(100) == round(100 * float(per_call) * RETRY_ALLOWANCE, 2)
+    assert TOKENS_PER_CALL == (3300, 250) and RETRY_ALLOWANCE == 1.15
+
+
+async def test_the_budget_stops_a_run_and_it_does_not_count() -> None:
+    items = data.load_set("gate")
+    fake = FakeGateway(cost_usd=0.40)  # every analysis costs $0.40
+    with use_fake(fake):
+        report, predictions = await run_eval(
+            {"gate": items}, live=False, concurrency=1, budget_usd=1.00
+        )
+    answered = [p for p in predictions["gate"] if p.error is None]
+    refused = [p for p in predictions["gate"] if p.error == "BudgetExceeded"]
+    assert len(answered) == 3  # $1.20 spent after 3 calls: every later call is refused
+    assert len(refused) == len(items) - 3
+    assert report.usage["cost_usd"] == 1.2  # refused calls cost nothing
+    assert report.stopped and "does not count" in report.stopped
+    assert report.gate is not None and report.gate["passed"] is False
+    assert "stopped by the cost budget" in report.gate["reasons"]
+    assert "**STOPPED: budget.**" in render_markdown(report)
+
+
+async def test_a_run_within_its_budget_is_not_stopped() -> None:
+    items = data.load_set("dev")[:3]
+    with use_fake(FakeGateway(cost_usd=0.01)):
+        report, _ = await run_eval({"dev": items}, live=False, budget_usd=1.00)
+    assert report.stopped is None and report.budget_usd == 1.00
+
+
+def test_cli_exits_3_when_the_budget_stops_the_run(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    real_run_eval = run_eval
+
+    async def costly_run(*args: Any, **kwargs: Any) -> Any:
+        with use_fake(FakeGateway(cost_usd=0.40)):
+            return await real_run_eval(*args, **{**kwargs, "concurrency": 1})
+
+    monkeypatch.setattr("evaluation.analyzer.__main__.run_eval", costly_run)
+    args = ["run", "--set", "dev", "--limit", "5", "--budget-usd", "0.50"]
+    code = main([*args, "--runs", str(tmp_path / "runs"), "--out", str(tmp_path / "reports")])
+    assert code == 3
+    (md,) = (tmp_path / "reports").glob("analyzer-dev-*.md")
+    assert "STOPPED: budget" in md.read_text(encoding="utf-8")
+
+
+# ------------------------------------------------------------------ the retry rule (2026-11-25)
+
+
+class FlakyGateway(OracleGateway):
+    """Fails the listed requests a set number of times with a provider error, then answers."""
+
+    def __init__(self, items: Sequence[EvalItem], failures: Mapping[str, int]) -> None:
+        super().__init__(items)
+        self.left = dict(failures)
+
+    async def complete(
+        self,
+        prompt_id: str,
+        inputs: Mapping[str, Any],
+        output_model: type[T],
+        *,
+        model_role: str | None = None,
+    ) -> T:
+        item = self.by_text[inputs["request_text"]]
+        if self.left.get(item.id, 0) > 0:
+            self.left[item.id] -= 1
+            raise LLMUnavailable("provider down")
+        return await super().complete(prompt_id, inputs, output_model, model_role=model_role)
+
+
+async def test_retry_rule_runs_each_failed_request_once_more() -> None:
+    items = gate_items()
+    first, second = items[0].id, items[1].id
+    gateway = FlakyGateway(items, {first: 1, second: 2})  # first recovers, second fails twice
+    with use_fake(gateway):  # type: ignore[arg-type]
+        report, predictions = await run_eval({"gate": items}, live=False, retry_errors=True)
+    assert report.retry_rule == RETRY_RULE
+    assert report.retries == [
+        {"set": "gate", "id": first, "first_error": "LLMUnavailable", "retry": "ok"},
+        {"set": "gate", "id": second, "first_error": "LLMUnavailable", "retry": "LLMUnavailable"},
+    ]
+    by_id = {p.item.id: p for p in predictions["gate"]}
+    assert by_id[first].error is None and by_id[second].error == "LLMUnavailable"
+    assert report.sets["gate"]["fields"]["kind"]["correct"] == len(items) - 1  # still wrong once
+    text = render_markdown(report)
+    assert RETRY_RULE in text and "Retried: 2; succeeded on retry: 1; still failed" in text
+
+
+async def test_without_the_rule_nothing_is_retried() -> None:
+    items = gate_items()
+    gateway = FlakyGateway(items, {items[0].id: 1})
+    with use_fake(gateway):  # type: ignore[arg-type]
+        report, predictions = await run_eval({"gate": items}, live=False)
+    assert report.retry_rule is None and report.retries == []
+    assert predictions["gate"][0].error == "LLMUnavailable"
+
+
+async def test_budget_refusals_are_not_retried() -> None:
+    items = data.load_set("dev")[:5]
+    with use_fake(FakeGateway(cost_usd=0.40)):
+        report, predictions = await run_eval(
+            {"dev": items}, live=False, concurrency=1, budget_usd=1.00, retry_errors=True
+        )
+    assert report.retries == []
+    assert report.stopped
+    assert sum(p.error == "BudgetExceeded" for p in predictions["dev"]) == 2
+
+
+# ------------------------------------------------------------------ the validity rule (2026-11-25)
+
+
+async def test_a_run_with_95_percent_predicted_is_valid() -> None:
+    items = gate_items()
+    out = await evaluate(items, fail={i.id for i in items[:5]})  # 95 of 100 predicted
+    report = out["report"]
+    assert report.invalid is None
+    assert "invalid run" not in " ".join(out["gate"]["reasons"])
+    assert VALIDITY_RULE in render_markdown(report)
+
+
+async def test_a_run_under_95_percent_predicted_is_invalid() -> None:
+    items = gate_items()
+    out = await evaluate(items, fail={i.id for i in items[:6]})  # 94 of 100 predicted
+    report = out["report"]
+    assert report.invalid == (
+        "INVALID: provider failure (requests with no prediction, gate: 6 of 100). "
+        "Not a measurement of the prompt."
+    )
+    assert out["gate"]["passed"] is False
+    assert "invalid run (validity rule): repeat it" in out["gate"]["reasons"]
+    assert render_markdown(report).startswith(f"**{report.invalid}**")
+
+
+def test_cli_exits_4_for_an_invalid_run(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv(BACKEND_ENV, "fake")
+    real_run_eval = run_eval
+
+    async def failing_run(sets: Any, **kwargs: Any) -> Any:
+        items = [i for v in sets.values() for i in v]
+        with use_fake(OracleGateway(items, fail={i.id for i in items})):  # type: ignore[arg-type]
+            return await real_run_eval(sets, **kwargs)
+
+    monkeypatch.setattr("evaluation.analyzer.__main__.run_eval", failing_run)
+    args = ["run", "--set", "dev", "--limit", "3", "--runs", str(tmp_path / "runs")]
+    assert main([*args, "--out", str(tmp_path / "reports")]) == 4

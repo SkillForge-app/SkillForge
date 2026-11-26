@@ -1,7 +1,7 @@
 {
   "analysis/request": {
-    "sha256": "9703ecce02392c18a5f7f3e82c66e73f4917fa91b97299e4991198e408867964",
-    "version": 1
+    "sha256": "5c7d1a70ec0530a952dca242c042ebf0adf5b638bc281e6df8309ea163748260",
+    "version": 3
   },
   "analysis/safety": {
     "sha256": "dfa42e383ae2e1a3d29bafa95ede6011b83991b4a29e7c4701b057cbe0223a0e",

@@ -48,7 +48,14 @@ The JSON Schema for BE and FE is `ai/core/analysis/analyzed_request.schema.json`
 - **After answers:** questions are kept, answers are stored, and `needs_clarification` becomes `false`. The analyzer never asks a second round.
 - **Prompt input:** the vocabularies are passed in from `core.spec`, so the prompt can't drift from the contract. The user's text is wrapped in `<request>` tags and treated as data.
 
-The prompt is `ai/prompts/analysis/request.md`, version 1, role `analysis` (Claude Sonnet 5.5). Its 3 few-shot examples come from the **dev set** only.
+The prompt is `ai/prompts/analysis/request.md`, version 3, role `analysis` (Claude Sonnet 5.5). Its 3 few-shot examples come from the **dev set** only.
+
+**v3 (25 Nov) adds the `LABELLING.md` rules as text.** It was written from the rules only, not from any labelled request, and has no new examples:
+- **One job is a task:** the existing rule is strengthened, "This holds even when the request uses a job title or 'act as'". The 2 Nov gate's kind errors were one-job requests read as role.
+- **Vague:** "A vague request (it does not say what the skill should do or produce) is a role."
+- **Tutor:** "A request to learn a subject is a tutor: a role in the education area, with the subject as the sub-area." The example sub-area, `education/chemistry`, is in no labelled set.
+- **Fitness:** "Fitness and nutrition for healthy people (calories, protein, workouts) is general; it is medical only when the request names a condition, a medication or a treatment."
+- **The version number:** v2 was skipped, because "v2" already names the uncommitted 2 Nov dev trial below. The 2 Nov gate measured v1.
 
 Safety screening of harmful requests is AI-06 (`safety.py`). It is not part of this analyzer.
 
@@ -77,10 +84,27 @@ Safety screening of harmful requests is AI-06 (`safety.py`). It is not part of t
 ```bash
 cd ai
 .venv/Scripts/python -m evaluation.analyzer check-data             # validate the labels and coverage
-.venv/Scripts/python -m evaluation.analyzer run --set all --live   # REAL model: about US$1.30, needs OPENROUTER_API_KEY
+.venv/Scripts/python -m evaluation.analyzer run --set gate --live --budget-usd 1.20   # REAL model, needs OPENROUTER_API_KEY
 ```
 
 - **The `--live` guard:** without `--live` the tool refuses to call a real model. For a quick end-to-end check without a key, use `SKILLFORGE_LLM_BACKEND=fake ... run --limit 5`. Its numbers are meaningless, because the fake gives every request the same answer.
+- **The budget guard:** `--live` needs `--budget-usd`, the most the run may spend.
+  - **Before any call:** the tool prints its estimate. If the estimate is over the budget, it stops (exit 2).
+    - The estimate uses the 2 Nov gate's measured call size (about 3,300 input and 250 output tokens) plus 15% for retries.
+    - For reference: dev (50) about $0.50, gate (100) about $1.00, holdout (24) about $0.25.
+  - **During the run:** the calls run inside a skill budget (AI-21). Once the spend reaches the budget, every further call is refused before it is made, fallbacks included. The report then says **STOPPED: budget**, the run doesn't count, and the exit code is 3.
+- **The validity rule:** decided by Ziad on 2026-11-25. **It was added after the invalid v3 gate run of 2026-11-24T23:41Z,** in which 48 of 100 requests got no prediction because of a provider failure, and before any rerun.
+  - A run is valid only if at least 95% of its requests get a prediction, after the one retry.
+  - Otherwise the run is invalid and is repeated with the same prompt and data.
+  - An invalid run's report starts with "INVALID: provider failure …", its gate fails with the reason "invalid run", and the command exits 4.
+  - Every report states the rule.
+- **Provider error details in the call log** (2026-11-25): each failed attempt records `error_status` (the HTTP status) and `error_detail`.
+  - `error_detail` holds the provider, code, message and upstream type and message, read only from the provider's structured error JSON.
+  - Words that also occur in the call's input are removed, as are key-like strings, and it's capped at 300 characters. See `docs/ai/models-and-gateway.md`.
+- **The retry rule (`--retry-errors`):** decided by Ziad on 2026-11-25, before the v3 gate run. It isn't tuning, because no prompt or data changes.
+  - A request that fails with a provider error, so with no prediction at all, is retried **once** at the end of the run, with the same prompt and settings.
+  - If it fails again, it counts as wrong.
+  - The report states the rule and lists every retry and how it ended. A call refused by the budget is not retried.
 - **What a run writes:**
   - **The report**, tracked in Git: `ai/evaluation/analyzer/reports/analyzer-<set>-<date>.md` and `.json`, with accuracy per field with confusion tables, joint accuracy, clarification precision and recall, targets match, errors, tokens and cost, prompt version and data versions. A second run on the same day gets `-2`, `-3`, …, so a reviewed report is never overwritten. Only `--live` runs go here.
   - **The raw outputs**, ignored by Git: `ai/evaluation/analyzer/runs/<UTC time>/predictions.jsonl`, one line per request. The report's `run` field names this folder. A fake smoke run keeps its report here too.

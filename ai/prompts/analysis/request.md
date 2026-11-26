@@ -1,6 +1,6 @@
 ---
 id: analysis/request
-version: 1
+version: 3
 model_role: analysis
 description: Classify a skill request (kind, domain, risk), extract its fields, and write clarifying questions when it is vague
 inputs: [request_text, answers, kinds, domain_areas, high_risk_areas]
@@ -16,12 +16,18 @@ Return one JSON object with these fields.
   - role: the agent acts as a professional who handles many kinds of tasks in a field.
   - task: one repeatable job with a clear input and output.
   - workflow: a process with several stages done in order, often over time or with several people.
-  A request for someone who does one job only is a task.
+  A request for someone who does one job only is a task. This holds even when the request uses
+  a job title or "act as": if the person does one job only, it is a task.
+  A vague request (it does not say what the skill should do or produce) is a role.
+  A request to learn a subject is a tutor: a role in the education area, with the subject as
+  the sub-area (e.g. "education/chemistry").
 - domain: "<area>/<sub-area>". The area is the expertise the skill applies, not the user's
   industry (budgeting for a bakery is finance; emails to a hospital's patients about
   appointment times are customer-support). Use exactly one of these areas:
-  {{ domain_areas | join(", ") }}. Use "general" for everyday personal tasks. The sub-area is a
-  short lowercase kebab-case phrase, e.g. "lesson-planning".
+  {{ domain_areas | join(", ") }}. Use "general" for everyday personal tasks. Fitness and
+  nutrition for healthy people (calories, protein, workouts) is general; it is medical only when
+  the request names a condition, a medication or a treatment. The sub-area is a short lowercase
+  kebab-case phrase, e.g. "lesson-planning".
 - risk: "high" exactly when the area is one of {{ high_risk_areas | join(", ") }}. Otherwise
   "medium" when the skill's core work handles personal data about specific people, supports
   decisions about people (hiring, grading, performance), or works with children; else "low".
