@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
+from evaluation.common import text_sha256
 from evaluation.reproduce.__main__ import main
 from evaluation.reproduce.check import check, repo_root
 from evaluation.reproduce.registry import AI_DIR, Entry, Registry, load_registry
@@ -315,14 +316,15 @@ def test_the_registry_runs_the_model_experiments_on_the_local_model() -> None:
 def test_the_done_when_counts_final_entries_only(repo: Path) -> None:
     sha = commit_files(repo, {REPORT: b"{}", REPORT[:-5] + ".md": b"# d"}, "report")
     entry = {"id": "E1:demo", "report": REPORT, "recorded_at": sha}
-    ok = check(registry({**entry, "reproduces": True}), repo)
+    ran = {**entry, "report_sha256": text_sha256(b"{}")}  # a run records the report's hash
+    ok = check(registry({**ran, "reproduces": True}), repo)
     assert ok.issues == [] and ok.final_reproduces == ["E1:demo"]
     not_run = check(registry(entry), repo)
     assert not_run.issues == [] and not_run.final_not_run == ["E1:demo"]
-    failing = check(registry({**entry, "reproduces": False}), repo)
+    failing = check(registry({**ran, "reproduces": False}), repo)
     assert codes(failing) == ["final_not_reproducing"]
     for role in ("superseded", "invalid"):  # never count toward the done-when
-        other = check(registry({**entry, "reproduces": False, "role": role}), repo)
+        other = check(registry({**ran, "reproduces": False, "role": role}), repo)
         assert other.issues == [] and other.final_reproduces == other.final_not_run == []
 
 
@@ -366,3 +368,28 @@ def test_git_ignores_everything_under_reports_runs_but_predictions_jsonl(
 ) -> None:
     out = subprocess.run(["git", "check-ignore", "--no-index", "-q", path], cwd=repo_root(AI_DIR))
     assert (out.returncode == 0) is ignored, path
+
+
+# ------------------------------------------------------------------ review fix 2: integrity
+
+
+def test_an_offline_entry_that_was_run_pins_its_report_hash(repo: Path) -> None:
+    content = b'{"score": 1}\n'
+    sha = commit_files(repo, {REPORT: content, REPORT[:-5] + ".md": b"# d"}, "report")
+    entry = {"id": "E1:demo", "report": REPORT, "recorded_at": sha}
+    assert check(registry(entry), repo).issues == []  # not run yet: no hash needed
+    for result in ({"reproduces": True}, {"reproduces": False, "role": "superseded"}):
+        missing = check(registry({**entry, **result}), repo)  # a run recorded a result
+        assert codes(missing) == ["no_report_hash"]
+    ran = {**entry, "reproduces": True, "report_sha256": text_sha256(content)}
+    assert check(registry(ran), repo).issues == []
+    (repo / REPORT).write_bytes(content.replace(b"\n", b"\r\n"))  # a CRLF checkout: same
+    assert check(registry(ran), repo).issues == []
+    (repo / REPORT).write_bytes(b'{"score": 2}\n')  # edited after the run
+    assert codes(check(registry(ran), repo)) == ["changed_report"]
+
+
+def test_run_reports_the_hash_of_the_report_it_compared(tmp_path: Path) -> None:
+    from evaluation.reproduce.run import Outcome
+
+    assert "report_sha256" in Outcome.__dataclass_fields__

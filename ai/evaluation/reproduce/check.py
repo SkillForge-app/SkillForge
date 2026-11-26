@@ -5,6 +5,9 @@
   this branch's history (an ancestor of HEAD);
 - a pending-merge entry is skipped while its report is absent and checked fully once present;
 - every recorded input still has its recorded hash at `recorded_at` (git history is needed);
+- an offline entry whose `reproduces` is set has the report_sha256 its run compared;
+- a live report's .md is what its .json renders to (twins.py);
+- a live/rescore entry is re-scored from its tracked run and must match its report;
 - a live/rescore entry's tracked run exists, has its recorded hash and line count, only
   allowlisted fields and unique ids, and every id is well-formed and (with history) one of the
   ids in the label files at `recorded_at`; a rescore's source hash equals its report's.
@@ -18,9 +21,10 @@ from pathlib import Path
 from core.spec import Issue
 from evaluation.common import match_recorded_hash, text_sha256
 from evaluation.reproduce.registry import Entry, Registry
-from evaluation.reproduce.rescore import known_ids
+from evaluation.reproduce.rescore import known_ids, rescore
 from evaluation.reproduce.strict import DuplicateKeyError, loads_unique
 from evaluation.reproduce.track import bad_fields, parse_lines
+from evaluation.reproduce.twins import markdown_issues
 
 REPORT_GLOB = "ai/evaluation/*/reports/*.json"
 RUNS_GLOB = "ai/evaluation/*/reports/runs"  # tracked runs only: see _unlisted_run_files
@@ -87,7 +91,7 @@ def check(registry: Registry, repo: Path, *, history: bool = True) -> CheckResul
         if entry.status == "pending-merge" and not present:
             result.pending_skipped.append(entry.id)
             continue
-        issues += _check_entry(entry, repo, present, history=history)
+        issues += _check_entry(entry, registry, repo, present, history=history)
         result.checked.append(entry.id)
         if entry.role != "final":
             continue
@@ -125,7 +129,9 @@ def _unlisted_run_files(registry: Registry, repo: Path) -> list[Issue]:
     return issues
 
 
-def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> list[Issue]:
+def _check_entry(
+    entry: Entry, registry: Registry, repo: Path, present: bool, *, history: bool
+) -> list[Issue]:
     issues = []
     where = entry.id
     if not present:
@@ -141,13 +147,32 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
             return [*issues, Issue(where, "report_duplicate_key", str(exc))]
     if entry.kind == "offline" and not entry.command:
         issues.append(Issue(where, "no_command", "an offline entry needs its command"))
+    if entry.kind == "offline" and entry.reproduces is not None:
+        if entry.report_sha256 is None:
+            issues.append(
+                Issue(
+                    where,
+                    "no_report_hash",
+                    "reproduces is set: record report_sha256 too (reproduce run prints it)",
+                )
+            )
+        elif text_sha256(repo / entry.report) != entry.report_sha256:
+            issues.append(
+                Issue(
+                    where,
+                    "changed_report",
+                    f"{entry.report} changed after the run that set reproduces",
+                )
+            )
+    issues += markdown_issues(entry, repo)
     known = None  # without history: the id format only
     if history and entry.tracked_run is not None:
         if _git_ok(repo, "cat-file", "-e", f"{entry.recorded_at}^{{commit}}"):
             known = known_ids(repo, entry.recorded_at)
         else:
             known = frozenset()  # unknown_commit is reported below; no id can pass
-    issues += _check_tracked_run(entry, repo, known)
+    tracked_issues = _check_tracked_run(entry, repo, known)
+    issues += tracked_issues
     if not history:
         return issues
     if not _git_ok(repo, "cat-file", "-e", f"{entry.recorded_at}^{{commit}}"):
@@ -178,6 +203,18 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
             )
         elif match_recorded_hash(item.sha256, content, item.hash) is None:
             issues.append(Issue(where, "changed_input", f"{item.path} no longer has its hash"))
+    if entry.kind != "offline" and entry.tracked_run is not None and not tracked_issues:
+        # Re-score the tracked run against the labels at recorded_at (no model, ~0.2 s each):
+        # a report edited after its run fails here, not only in `reproduce run`.
+        diffs, _ = rescore(entry, registry, repo)
+        if diffs:
+            issues.append(
+                Issue(
+                    where,
+                    "rescore_differs",
+                    f"{len(diffs)} difference(s) with the report, first: {diffs[0]}",
+                )
+            )
     return issues
 
 

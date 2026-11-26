@@ -34,11 +34,10 @@ from typing import Any
 
 from evaluation.common import text_sha256
 from evaluation.reproduce.check import git_show
-from evaluation.reproduce.registry import AI_DIR, Entry, Registry
+from evaluation.reproduce.registry import AI_DIR, TEMP_ROOT, Entry, Registry
 from evaluation.reproduce.rescore import rescore
 from evaluation.reproduce.strict import loads_unique
 
-TEMP_ROOT = Path(tempfile.gettempdir()) / "skillforge-reproduce"
 VENVS = AI_DIR / ".data" / "reproduce" / "venvs"
 MODEL_CACHE = Path(os.environ.get("SKILLFORGE_MODEL_CACHE") or AI_DIR / ".data" / "models")
 SECRET_ENV = ("API_KEY", "TOKEN", "SECRET", "PASSWORD", "DSN")
@@ -51,6 +50,9 @@ class Outcome:
     detail: str = ""
     diffs: list[str] = field(default_factory=list)
     seconds: float = 0.0
+    # offline: the sha256-lf of the committed report this run compared (record it in the
+    # registry as report_sha256 with `reproduces`)
+    report_sha256: str = ""
 
 
 def strip(value: Any, ignore: set[str]) -> Any:
@@ -183,6 +185,7 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
     if not entry.command:
         return Outcome(entry.id, "skipped", "no command")
     committed = (repo / entry.report).read_bytes()
+    pinned = text_sha256(committed)
     reports_dir = tree / Path(entry.report).relative_to("ai").parent
     reports_dir.mkdir(parents=True, exist_ok=True)
     if "/reports/" in entry.report:
@@ -202,9 +205,8 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
     seconds = time.perf_counter() - start
     if entry.report.endswith("manifest.json"):
         ok = proc.returncode == 0
-        return Outcome(
-            entry.id, "match" if ok else "differs", proc.stdout.strip()[-200:], [], seconds
-        )
+        detail = proc.stdout.strip()[-200:]
+        return Outcome(entry.id, "match" if ok else "differs", detail, [], seconds, pinned)
     new = _new_json(reports_dir, before)
     if new is None:
         tail = (proc.stderr or proc.stdout).strip().splitlines()[-3:]
@@ -215,7 +217,7 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
     old = strip(loads_unique(committed), ignore)
     fresh = strip(loads_unique(new.read_text(encoding="utf-8")), ignore)
     diffs = differences(old, fresh)
-    return Outcome(entry.id, "differs" if diffs else "match", "", diffs, seconds)
+    return Outcome(entry.id, "differs" if diffs else "match", "", diffs, seconds, pinned)
 
 
 def reproduce(

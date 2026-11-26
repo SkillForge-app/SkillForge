@@ -51,8 +51,12 @@ def loads_unique(text: str | bytes, names: Collection[str] | None = None) -> Any
     return json.loads(text, object_pairs_hook=unique)
 
 
-class _UniqueKeyLoader(yaml.SafeLoader):
-    """yaml.SafeLoader that refuses a duplicate key in any mapping (merge keys `<<` aside)."""
+# The C parser when PyYAML has it (much faster on the label files); same safe constructors.
+_SafeBase: Any = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
+
+class _UniqueKeyLoader(_SafeBase):  # type: ignore[misc]
+    """A safe YAML loader that refuses a duplicate key in any mapping (merge keys aside)."""
 
 
 def _construct_unique(loader: yaml.SafeLoader, node: yaml.MappingNode) -> dict[Any, Any]:
@@ -72,7 +76,7 @@ _UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
 
 def yaml_unique(text: str | bytes) -> Any:
     """yaml.safe_load, refusing a duplicate key in any mapping."""
-    return yaml.load(text, Loader=_UniqueKeyLoader)  # noqa: S506 (a SafeLoader subclass)
+    return yaml.load(text, Loader=_UniqueKeyLoader)  # noqa: S506 (a safe loader subclass)
 
 
 __all__ = ["DuplicateKeyError", "loads_unique", "yaml_unique"]

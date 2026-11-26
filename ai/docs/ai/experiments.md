@@ -30,6 +30,10 @@ cd ai
   - This leaves the folder as it was when the report was written. A tool that reads earlier reports (for example the sources review's history) then sees what it saw.
   - Only reports of that series are removed, never inputs or data files.
 - **Metrics a tracked run can't support** are listed per entry in `not_recomputable`, with the reason. Any other metric left out of a comparison makes the entry fail.
+- **What `check` re-verifies on every PR** (no model, no network):
+  - **Offline reports are pinned.** Once `reproduces` is set, the entry also records `report_sha256`: the sha256-lf of the report that run compared (`run` prints it). `check` fails if the report changes later.
+  - **Live and rescore entries are re-scored** from their tracked runs, exactly as `run` does. A report edited after its run fails.
+  - **A live report's `.md` must be what its `.json` renders to** (`evaluation/reproduce/twins.py`). Today's renderer is tried first, then the one at `recorded_at`. A section added by hand after the generated part must be declared in `md_addendum`, with its reason; only `safety-all-2026-11-17` has one (its 18 Nov "Completion"). Not covered: E8, written by a one-off script, and the offline reports, whose `.md` `run` regenerates but doesn't compare.
 
 ## Hashes: the same on Windows and Linux
 - Data-file hashes in reports are `sha256` of the content with **CRLF turned into LF** (`evaluation.common.text_sha256`). New report entries say so: `"hash": "sha256-lf"`.

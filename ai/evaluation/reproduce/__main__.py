@@ -59,6 +59,8 @@ def run_command(only: list[str], no_model: bool) -> int:
         )
         for d in outcome.diffs:
             print(f"           {d}")
+        if outcome.report_sha256:
+            print(f"           report_sha256: {outcome.report_sha256}")
     summary = TEMP_ROOT / "last-run.json"
     summary.write_text(json.dumps(rows, indent=2), encoding="utf-8")
     bad = [r for r in rows if r["status"] in ("differs", "error")]

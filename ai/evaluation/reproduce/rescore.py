@@ -53,8 +53,10 @@ def load_tracked(repo: Path, entry: Entry) -> list[dict[str, Any]]:
 # ------------------------------------------------------------------ analyzer (AI-05)
 
 
+@lru_cache(maxsize=32)
 def analyzer_labels(repo: Path, commit: str, seed_release: str = "0.1.0") -> dict[str, Any]:
-    """The labels at `commit`, keyed "<set>:<id>" as in the tracked runs."""
+    """The labels at `commit`, keyed "<set>:<id>" as in the tracked runs. Cached per commit:
+    callers only read it."""
     out: dict[str, Any] = {}
     seed = _show(
         repo, commit, f"ai/evaluation/benchmarks/seed/releases/{seed_release}/requests.jsonl"
@@ -164,6 +166,7 @@ def analyzer_gate(metrics: dict[str, Any]) -> dict[str, Any]:
 # ------------------------------------------------------------------ safety (AI-06)
 
 
+@lru_cache(maxsize=32)
 def safety_items(repo: Path, commit: str) -> tuple[dict[str, Any], str]:
     """Item facts the metrics need (category, attack, expected conditions), and redteam's status."""
     items: dict[str, Any] = {}

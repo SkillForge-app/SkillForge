@@ -3,16 +3,24 @@
 import hashlib
 import json
 import subprocess
+from collections.abc import Callable
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from evaluation.analyzer.evaluate import Prediction, write_report
+from evaluation.analyzer.evaluate import EvalReport, Prediction, render_markdown, write_report
 from evaluation.common import text_sha256
 from evaluation.reproduce.check import check, repo_root
 from evaluation.reproduce.registry import AI_DIR, Registry, RegistryError, load_registry
-from evaluation.reproduce.rescore import _compare, analyzer_metrics, known_ids, safety_metrics
+from evaluation.reproduce.rescore import (
+    _compare,
+    analyzer_gate,
+    analyzer_metrics,
+    known_ids,
+    safety_metrics,
+)
 from evaluation.reproduce.strict import DuplicateKeyError, loads_unique, yaml_unique
 from evaluation.reproduce.track import FIELDS, TrackError, bad_fields, convert, convert_line
 
@@ -232,24 +240,51 @@ def git(repo: Path, *args: str) -> str:
     return out.stdout.strip()
 
 
+def eval_report(line: dict[str, Any], edit: Callable[[EvalReport], None] | None) -> EvalReport:
+    """The report a live run of this one tracked line writes (`edit` changes it first)."""
+    metrics = analyzer_metrics([line], {"gate:t-01": {"mentioned_targets": []}}, relabel=False)
+    report = EvalReport(
+        created="2026-11-25T00:00:00Z",
+        live=True,
+        prompt={"id": "analysis/request", "version": 3},
+        model="m",
+        data_sources=[],
+        sets={"gate": metrics},
+        gate=analyzer_gate(metrics),
+        usage={"calls": 1, "errors": 0, "input_tokens": 1, "output_tokens": 1, "cost_usd": 0.0},
+    )
+    if edit is not None:
+        edit(report)
+    return report
+
+
 def live_repo(
-    tmp_path: Path, tracked_id: str, *, run: str | None = None, report: str | None = None
+    tmp_path: Path,
+    tracked_id: str,
+    *,
+    run: str | None = None,
+    report: str | None = None,
+    edit: Callable[[EvalReport], None] | None = None,
+    markdown: str | None = None,
 ) -> tuple[Path, Registry]:
-    """A throwaway repo: labels for gate:t-01, a live report of n=1, and its tracked run (or the
-    raw `run` / `report` text given)."""
+    """A throwaway repo: labels for gate:t-01, a live report of n=1 (a real EvalReport and its
+    rendered .md, as `analyzer run --live` writes them) and its tracked run; or the raw `run` /
+    `report` / `markdown` text given, or the report changed by `edit` (and its .md with it)."""
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "test@example.invalid")
     git(tmp_path, "config", "user.name", "test")
     git(tmp_path, "config", "core.autocrlf", "false")
     line = {**convert_line(ANALYZER_ROW, KNOWN), "id": tracked_id}
     run = run if run is not None else json.dumps(line, sort_keys=True) + "\n"
+    made = eval_report(line, edit)
+    generated = json.dumps({**asdict(made), "run": "20261125T000000Z"}, indent=2) + "\n"
     files = {
         LABELS: (
             "requests:\n  - {id: t-01, kind: task, domain: writing/cv, risk: low,"
             " needs_clarification: false}\n"
         ),
-        REPORT: report if report is not None else json.dumps({"sets": {"gate": {"n": 1}}}),
-        REPORT[: -len(".json")] + ".md": "# demo",
+        REPORT: report if report is not None else generated,
+        REPORT[: -len(".json")] + ".md": render_markdown(made) if markdown is None else markdown,
         RUN: run,
     }
     for rel, content in files.items():
@@ -280,6 +315,29 @@ def live_repo(
 def test_check_passes_a_tracked_run_whose_ids_are_in_the_labels(tmp_path: Path) -> None:
     repo, reg = live_repo(tmp_path, "gate:t-01")
     assert check(reg, repo).issues == []
+
+
+# ------------------------------------------------------------------ review fix 2: integrity
+
+
+def wrong_count(report: EvalReport) -> None:
+    report.sets["gate"]["fields"]["kind"]["correct"] = 1  # the tracked line has kind wrong
+
+
+def test_check_rescores_a_live_entry_and_fails_an_edited_metric(tmp_path: Path) -> None:
+    # The .json and its .md agree (both edited): only the rescore can see the change.
+    repo, reg = live_repo(tmp_path, "gate:t-01", edit=wrong_count)
+    issues = check(reg, repo).issues
+    assert [i.code for i in issues] == ["rescore_differs"]
+    assert "sets.gate.fields.kind.correct: report 1 | re-score 0" in issues[0].message
+
+
+def test_check_fails_a_markdown_that_its_json_does_not_render_to(tmp_path: Path) -> None:
+    made = render_markdown(eval_report(convert_line(ANALYZER_ROW, KNOWN), None))
+    edited = made.replace("Mode: LIVE", "Mode: LIVE, gate PASSED")
+    assert edited != made
+    repo, reg = live_repo(tmp_path, "gate:t-01", markdown=edited)
+    assert [i.code for i in check(reg, repo).issues] == ["markdown_mismatch"]
 
 
 @pytest.mark.parametrize(

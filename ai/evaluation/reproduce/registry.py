@@ -1,6 +1,7 @@
 """The experiment registry (AI-25): ai/evaluation/experiments.yaml, one entry per report."""
 
 import json
+import tempfile
 from pathlib import Path
 from typing import Any, Literal
 
@@ -11,6 +12,8 @@ from evaluation.reproduce.strict import DuplicateKeyError, yaml_unique
 
 AI_DIR = Path(__file__).resolve().parents[2]
 REGISTRY = AI_DIR / "evaluation" / "experiments.yaml"
+# Everything `reproduce` extracts goes under here, in folders it creates and removes itself.
+TEMP_ROOT = Path(tempfile.gettempdir()) / "skillforge-reproduce"
 Kind = Literal["offline", "live", "rescore"]
 Status = Literal["active", "pending-merge"]
 # final: the report a decision rests on (the done-when: every final entry reproduces);
@@ -86,6 +89,12 @@ class Entry(_Model):
     not_recomputable: list[NotRecomputable] = Field(default_factory=list)
     reproduces: bool | None = None  # set by `reproduce run`; None = not run yet
     reproduces_note: str | None = None
+    # Offline: the report's sha256-lf as the run that set `reproduces` compared it (`reproduce
+    # run` prints it). Required once `reproduces` is set; check fails if the report changes.
+    report_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    # A section added by hand after the generated part of a live report's .md, and why
+    # (evaluation/reproduce/twins.py). It may only follow that part, never change it.
+    md_addendum: str | None = Field(default=None, min_length=10)
     limitations: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")

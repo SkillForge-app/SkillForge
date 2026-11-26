@@ -29,6 +29,7 @@ experiments:
     report: ai/evaluation/extraction/reports/extraction-2026-10-25.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: 8b454da265fa7cb6bd3f4a4b4e47aca0ba36473f79dd5fb0bc373c5831ecbbab
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. The extraction config gained injection_screen/injection_max_low, so the sampled chunks differ. Replaced by extraction-2026-11-25."
     command: ["python", "-m", "evaluation.extraction", "report", "--sample", "20", "--seed", "7"]
   - id: E1:extraction-2026-11-25
@@ -42,6 +43,7 @@ experiments:
     report: ai/evaluation/extraction/reports/extraction-2026-11-25.json
     recorded_at: ecc27addccc5c489336d2f1e1869708fa2973db8
     reproduces: true
+    report_sha256: 248ae539225c35639973c2f87a6d9858479844bc79dc6032932f660b89097644
     reproduces_note: "Exact match at recorded_at (2026-11-25)."
     command: ["python", "-m", "evaluation.extraction", "report", "--sample", "20", "--seed", "7"]
     limitations:
@@ -58,6 +60,7 @@ experiments:
     report: ai/evaluation/sources/reports/sources-2026-10-26.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: bef7b445e38972c35c4860feadcdfc4020cfa0581a80abe4f9c546db82faba1c
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. Checks were renamed and fields added (listed, more queries)."
     command: ["python", "-m", "evaluation.sources", "review"]
   - id: E2:sources-2026-10-26-2
@@ -71,6 +74,7 @@ experiments:
     report: ai/evaluation/sources/reports/sources-2026-10-26-2.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: 91570b6d924cdc1b27f74e8714828af78c44e325087ac6bfb1c71db80b9bb536
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. Registry 1.1.0 then, 1.4.0 at da5241c; checks renamed."
     command: ["python", "-m", "evaluation.sources", "review"]
   - id: E2:sources-2026-10-26-3
@@ -84,6 +88,7 @@ experiments:
     report: ai/evaluation/sources/reports/sources-2026-10-26-3.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: 21b2d62805f354638653bd73eb53156fd57bffa29236242b2c5b99168a81eea9
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. Registry 1.2.0 then, 1.4.0 at da5241c; checks renamed."
     command: ["python", "-m", "evaluation.sources", "review"]
   - id: E2:sources-2026-10-26-4
@@ -97,6 +102,7 @@ experiments:
     report: ai/evaluation/sources/reports/sources-2026-10-26-4.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: 40bcecfc4b5a1c7723790d33dcaa3404862ba4ddf14e96607758d8fa5ac9ed09
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. Registry 1.3.0 then, 1.4.0 at da5241c; checks renamed."
     command: ["python", "-m", "evaluation.sources", "review"]
   - id: E2:sources-2026-10-26-5
@@ -110,6 +116,7 @@ experiments:
     report: ai/evaluation/sources/reports/sources-2026-10-26-5.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: true
+    report_sha256: 19f231c980bdee7198408fe34157242b6e41b1082a78165a5552ab76d8950fda
     reproduces_note: "Exact match, with later reports of the series removed first (method rule)."
     command: ["python", "-m", "evaluation.sources", "review"]
   - id: E3:recall-2026-10-26
@@ -122,6 +129,7 @@ experiments:
     report: ai/evaluation/retrieval/reports/recall-2026-10-26.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: true
+    report_sha256: 6baa9794f52e395449faa3b04b926f80e56c3ae00b3da87c3aba4fd170e045d5
     reproduces_note: "Exact match with the local models (timing fields ignored globally)."
     llm_backend: local-model
     command: ["python", "-m", "evaluation.retrieval", "run", "--models", "all", "--choose", "bge-small:180", "--chosen-by", "Ziad Abdullah (AI lead)", "--why", "All 9 model and chunk-size combinations are within noise of each other (30-35 of 40). bge-small keeps AI-10's reviewed 180-word chunks, has 384 dimensions and a 512-token window, and is stronger than MiniLM on public retrieval benchmarks."]
@@ -135,6 +143,7 @@ experiments:
     report: ai/evaluation/retrieval/reports/recall-2026-11-01.json
     recorded_at: 78dadd68b18165245665081dbc9720018f8f8584
     reproduces: true
+    report_sha256: 3cad60c9a8b66b4ca515b6704605c8edcb6d5f91651cb4161fe16c30168ad4c7
     reproduces_note: "Exact match with the local models (timing fields ignored globally)."
     llm_backend: local-model
     command: ["python", "-m", "evaluation.retrieval", "run", "--models", "all", "--choose", "bge-small:180", "--chosen-by", "Ziad Abdullah (AI lead), carried over from recall-2026-10-26", "--why", "Re-run on 1 Nov after canonical URLs (normalise_url) changed the OWASP page chunk_ids. Models, chunking and questions are unchanged, so the 26 Oct decision stands."]
@@ -148,6 +157,7 @@ experiments:
     report: ai/evaluation/gap/reports/gap-dev-2026-10-28.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: true
+    report_sha256: 165ac35ff0a963955927376531a0661ccd8c150c66f6a535e1c86cb09ef46bc2
     reproduces_note: "Exact match with the local bge-small model."
     llm_backend: local-model
     command: ["python", "-m", "evaluation.gap", "tune"]
@@ -161,6 +171,7 @@ experiments:
     report: ai/evaluation/gap/reports/gap-test-2026-10-28.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: true
+    report_sha256: 0096902d4bacd4b42e9beaadd8d65414888e06c6254d9f714e2b6f38beb658fe
     reproduces_note: "Exact match with the local bge-small model."
     llm_backend: local-model
     command: ["python", "-m", "evaluation.gap", "report"]
@@ -175,6 +186,7 @@ experiments:
     report: ai/evaluation/injection/reports/injection-dev-2026-10-28.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: b6301e52a837995138f3b5602be753b96ee442c414b7c7b1d88ed08d40201526
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. An earlier tuning round: fewer injections per technique and an older gate list."
     command: ["python", "-m", "evaluation.injection", "report", "--split", "dev"]
   - id: E5:injection-dev-2026-10-28-2
@@ -188,6 +200,7 @@ experiments:
     report: ai/evaluation/injection/reports/injection-dev-2026-10-28-2.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: 16cda51b53fcee30ca81b3ef5a5db2d706914efce0c22c1d0af06b75fe143f3d
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. An earlier tuning round: older rules and gate list."
     command: ["python", "-m", "evaluation.injection", "report", "--split", "dev"]
   - id: E5:injection-dev-2026-10-28-3
@@ -201,6 +214,7 @@ experiments:
     report: ai/evaluation/injection/reports/injection-dev-2026-10-28-3.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: 7088aa1bd574161184a1beae6e148c9c5a25aab5998529f0490d5f456669630b
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. An earlier tuning round: an older gate list (7 gates then, 9 now)."
     command: ["python", "-m", "evaluation.injection", "report", "--split", "dev"]
   - id: E5:injection-test-2026-10-28
@@ -214,6 +228,7 @@ experiments:
     report: ai/evaluation/injection/reports/injection-test-2026-10-28.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: d3e6e87c2551919ede8dad73ed13b47e6e476338a898217b48d45a548b4ee416
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. An earlier round: fewer injections per technique and an older gate list."
     command: ["python", "-m", "evaluation.injection", "report", "--split", "test"]
   - id: E5:injection-test-2026-10-28-2
@@ -227,6 +242,7 @@ experiments:
     report: ai/evaluation/injection/reports/injection-test-2026-10-28-2.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: false
+    report_sha256: 4c948d4fbf8357aa81f7b9163ae1856b8741cad2deeb7e8d1f6292e8ee2f1c1f
     reproduces_note: "Recorded at da5241c, the commit that imported ai/ into Git; it holds code and data newer than this report, so the code that produced it is not in Git history. An earlier round: an older gate list (7 gates then, 9 now)."
     command: ["python", "-m", "evaluation.injection", "report", "--split", "test"]
   - id: E5:injection-test-2026-10-28-3
@@ -240,6 +256,7 @@ experiments:
     report: ai/evaluation/injection/reports/injection-test-2026-10-28-3.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: true
+    report_sha256: ed247f7e165ef0d72e569630281717f59e4f4cd9a7ee29d3f7e91227c7b51bcd
     reproduces_note: "Exact match."
     command: ["python", "-m", "evaluation.injection", "report", "--split", "test"]
   - id: E6:injection-test-2026-11-02
@@ -253,6 +270,7 @@ experiments:
     report: ai/evaluation/injection/reports/injection-test-2026-11-02.json
     recorded_at: 2ab805312d7c2527bc251389020fd4ebb914adf2
     reproduces: true
+    report_sha256: eb8ac2957f2b68af0a1057843fce9413e11c6801e1fdae258f531088f83368b9
     reproduces_note: "Exact match, offline from the saved LLM verdicts (no model call)."
     command: ["python", "-m", "evaluation.injection", "report", "--split", "test", "--llm", "--verdicts", "evaluation/injection/reports/llm-verdicts-test-2026-11-02.json"]
   - id: E7:analyzer-dev-2026-11-02
@@ -421,6 +439,7 @@ experiments:
     report: ai/evaluation/safety/reports/safety-all-2026-11-17.json
     recorded_at: c345c83c1676ad4ac00ad88a3266ee701b278483
     reproduces: true
+    md_addendum: "Completion (added 2026-11-18, by hand): the 20 normal requests left unscreened by provider errors were screened again in safety-normal-ids-2026-11-17; final normal false blocks 0 of 130."
     reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every metric, the gate verdict and the false-block targets match."
     tracked_run:
       path: ai/evaluation/safety/reports/runs/20261117T215949Z/predictions.jsonl
@@ -462,6 +481,7 @@ experiments:
     report: ai/evaluation/benchmarks/seed/releases/0.1.0/manifest.json
     recorded_at: da5241ca7b054cca1ac7f59e35662a99bba14094
     reproduces: true
+    report_sha256: 97d92924281c985735269edb4f695ece56e055d93772fdc4a4cd74602f5edb8c
     reproduces_note: "validate seed: OK."
     command: ["python", "-m", "evaluation.benchmarks", "validate", "seed"]
   - id: E10:seed-1.0.0
@@ -475,6 +495,7 @@ experiments:
     report: ai/evaluation/benchmarks/seed/releases/1.0.0/manifest.json
     recorded_at: d05488b9982ed4518b7f89fcd967fd116f856a8a
     reproduces: true
+    report_sha256: e06c7fd1d39b1b0a46dc96b0fbd724e26eb25747f89d89a5c2d32ea5660b4ed5
     reproduces_note: "validate seed: OK."
     command: ["python", "-m", "evaluation.benchmarks", "validate", "seed"]
   - id: E6:injection-test-2026-11-18
