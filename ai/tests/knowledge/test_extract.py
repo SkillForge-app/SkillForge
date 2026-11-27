@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 import yaml
 from lxml import etree
-from pydantic import ValidationError
+from pydantic import TypeAdapter, ValidationError
 
 from core.knowledge import (
     ChunkSettings,
@@ -23,7 +23,7 @@ from core.knowledge import (
     find_site_boilerplate,
     normalise_url,
 )
-from core.knowledge.extract import _Block, _drop_chrome, _norm, _xml_text
+from core.knowledge.extract import REASONS, _Block, _drop_chrome, _norm, _xml_text
 from evaluation.extraction.data import PageLabel, load_pages
 from evaluation.extraction.report import page_configs
 
@@ -497,7 +497,8 @@ GIANT = "0123456789" * 260  # 2600 characters, one token: longer than any passag
 def extract_as_before(
     monkeypatch: pytest.MonkeyPatch, html: str, config: ExtractConfig | None = None
 ) -> ExtractedPage:
-    """extract_page as it was before the fix: over-long tokens are never looked at."""
+    """extract_page without the F8a fix: over-long tokens are never looked at. Such a page used
+    to raise a ValidationError; since F8b it comes back with the reason `extraction_error`."""
     with monkeypatch.context() as m:
         m.setattr(EXTRACT, "_has_unchunkable_token", lambda blocks: False)
         return extract_page(html, url="https://example.org/a", retrieved=DAY, config=config)
@@ -511,8 +512,8 @@ def test_a_token_longer_than_a_passage_is_dropped_instead_of_raising(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     html = html_page(article(300) + f"<p>{GIANT}</p>" + article(60))
-    with pytest.raises(ValidationError, match="at most 2000 characters"):
-        extract_as_before(monkeypatch, html)  # what DE's pipeline saw on every crawl
+    # Without F8a the page can't be built (it raised before F8b; now it's extraction_error).
+    assert extract_as_before(monkeypatch, html).quality.reasons == ("extraction_error",)
     page = extract_now(html)
     assert page.quality.ok and page.chunks
     assert all(len(c.text) <= 2000 for c in page.chunks)
@@ -523,8 +524,8 @@ def test_a_page_left_too_short_gets_the_existing_reason(monkeypatch: pytest.Monk
     html = html_page(article(300) + f"<p>{GIANT}</p>")
     words = extract_now(html).quality.word_count  # the page without its giant token
     exactly_long_enough = ExtractConfig(min_words=words + 1)  # only with the token counted
-    with pytest.raises(ValidationError):
-        extract_as_before(monkeypatch, html, exactly_long_enough)
+    before = extract_as_before(monkeypatch, html, exactly_long_enough)
+    assert before.quality.reasons == ("extraction_error",)  # passed quality, couldn't be built
     page = extract_now(html, exactly_long_enough)
     assert page.quality.reasons == ("too_short",) and not page.chunks
 
@@ -548,3 +549,32 @@ def test_tokens_that_fit_in_a_passage_give_the_same_page_as_before(
     page = extract_now(html)
     assert any(len(c.text) == length for c in page.chunks)
     assert page.model_dump() == extract_as_before(monkeypatch, html).model_dump()
+
+
+def test_a_page_that_cannot_be_built_is_rejected_with_extraction_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Review F8: any validation error while building an accepted page's chunks becomes the
+    reason `extraction_error`, never an exception (whose message would hold page text)."""
+
+    def broken(*args: object, **kwargs: object) -> None:
+        TypeAdapter(int).validate_python("PAGE TEXT")
+
+    html = html_page(article(300))
+    assert extract_now(html).quality.ok  # a good page
+    monkeypatch.setattr(EXTRACT, "_chunk", broken)
+    page = extract_now(html)
+    assert page.quality.reasons == ("extraction_error",) and not page.quality.ok
+    assert page.chunks == [] and page.concepts == []
+
+
+def test_reasons_keep_their_order_with_extraction_error_last() -> None:
+    assert REASONS[-1] == "extraction_error"
+    assert REASONS[:-1] == (
+        "empty",
+        "paywall_or_login",
+        "boilerplate",
+        "wrong_language",
+        "too_short",
+        "injection",
+    )

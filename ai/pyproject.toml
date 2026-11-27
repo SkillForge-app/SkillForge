@@ -37,6 +37,7 @@ dependencies = [
     "huggingface-hub>=1,<2",  # local model download
     "openai>=2,<3",  # LiteLLM's error classes subclass the openai SDK's
     "pydantic-core>=2,<3",  # schema export (core/spec)
+    "tld>=0.13,<1",  # registered domains, Public Suffix List (injection rules); via courlan
 ]
 
 [project.optional-dependencies]

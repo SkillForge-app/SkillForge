@@ -26,8 +26,8 @@ class Passage(SpecModel):
         description="Stable id of the chunk, e.g. mkt-ftc-endorsements-01. Same chunk, same id."
     )
     text: PassageText = Field(
-        description="A short summary of what the source says here. Summarised, never a long "
-        "copied passage."
+        description="The source's own words: one extracted chunk of the page, up to 2000 "
+        "characters. Cite it; a skill must summarise it, never paste long parts of it."
     )
     source_url: HttpUrl = Field(description="The page this chunk comes from.")
     title: Line = Field(description="The page's own title.")

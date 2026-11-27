@@ -18,7 +18,7 @@ else:
     page.quality.reasons     # e.g. ("paywall_or_login",): store the verdict, make no chunks
 ```
 
-`raw_html` can be `str` or `bytes`. Bytes are decoded as UTF-8, and other encodings are detected. A URL that is not http(s) raises `ExtractionInputError`. A bad page never raises: it comes back with `quality.reasons` set. A single token longer than a passage (over 2000 characters, e.g. base64 or minified code) can't be chunked, so it's dropped and the page is judged again without it; if too little is left, the usual reason (`too_short`, `empty`) applies. Pages without such a token are not affected, so the fingerprint is unchanged.
+`raw_html` can be `str` or `bytes`. Bytes are decoded as UTF-8, and other encodings are detected. A URL that is not http(s) raises `ExtractionInputError`. A bad page never raises: it comes back with `quality.reasons` set (`extraction_error` when the page can't be built at all). A single token longer than a passage (over 2000 characters, e.g. base64 or minified code) can't be chunked, so it's dropped and the page is judged again without it; if too little is left, the usual reason (`too_short`, `empty`) applies. Pages without such a token are not affected, so the fingerprint is unchanged.
 
 ## For DE-05: from a fetched page to rows in the knowledge view
 Data Engineering owns storage. DE-05 runs AI's code and writes the result into DE's tables. AI reads it back through the read-only view `knowledge.knowledge_chunks` (the columns are in [retrieval.md](retrieval.md#for-data-engineering-the-knowledge-view)). The same steps as `ingest_pages`, AI's local equivalent:
@@ -73,13 +73,15 @@ else:
 `ExtractConfig.fingerprint()` returns 64 hex characters: the sha256 of every extraction setting except `site_boilerplate`, plus AI's `EXTRACTION_VERSION`.
 
 - **Store it** in `chunk_config` (suggested key: `extract_fingerprint`). A new value means a new chunk set.
-- **The default config** gives `f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483`. A test pins this value, so it changes only on purpose, and AI tells DE when it does.
+- **The default config** gives `474bd237fac3dc9db4018f1f0ad2b337cd4d99c4ec33b2b61feaad59c79d79c5` (`EXTRACTION_VERSION` 2). A test pins this value, so it changes only on purpose, and AI tells DE when it does.
+  - **History:** version 1 gave `f33bf1b5f2bab420ecf719317d4e792bedd401f8957c9503cea0814553545483`. Version 2 (review F9) narrowed three injection rules, so sentences that version 1 removed from API and prompt documentation now stay. **DE re-chunks and re-embeds every current document** under the new fingerprint, then switches `active_config`; documents whose raw HTML has expired (30 days) are re-fetched first.
+  - **Before version 2 merged** (review on #40, 2026-11-26), its injection rules were tightened again: a credential sent to another site than the page's is now removed. The fingerprint didn't change, because no version of these chunks had been stored yet. Version 2 is the code that merges, so re-chunk from the merged branch, never from an earlier checkout of `AI-review-fixes-c2`. The result now also depends on the page URL passed to `extract_page`, and on `tld`'s Public Suffix List (pinned in `uv.lock`).
 - **It changes when:**
   - any hashed setting changes;
   - AI bumps `EXTRACTION_VERSION` (when AI's extraction code changes the chunks a config gives);
   - AI bumps `FINGERPRINT_VERSION` (when the hashed form below changes).
 - **It doesn't change** with `site_boilerplate`: those are per-site sentence hashes, not a pipeline setting. Every host's config gives the same fingerprint, so DE's one-row `active_config` keeps working.
-- **What's hashed:** `{"fingerprint_version": 1, "extraction_version": 1, "config": {…}}` as canonical JSON: sorted keys, no spaces, UTF-8, float settings always as floats (so `1` and `1.0` are one value) in Python's shortest round-trip form, tuples as lists.
+- **What's hashed:** `{"fingerprint_version": 1, "extraction_version": 2, "config": {…}}` as canonical JSON: sorted keys, no spaces, UTF-8, float settings always as floats (so `1` and `1.0` are one value) in Python's shortest round-trip form, tuples as lists.
 - **The hashed settings:**
 
 | Setting | Default | Setting | Default |
@@ -157,6 +159,7 @@ A page is rejected when it has any of these reasons. They are always listed in t
 | `wrong_language` | The language is not in `languages` (default `("en",)`), or its confidence is below 0.80 |
 | `too_short` | Fewer than 150 words of main text |
 | `injection` | AI-19: any high-severity prompt-injection finding, or `injection_max_low` (3) low ones ([injection-defence.md](injection-defence.md)) |
+| `extraction_error` | The page passed every check above, but its chunks or page could not be built (a validation error). Always alone. It replaces an exception, so no page text reaches the caller's error log |
 
 - **Word-count guards:** these keep normal pages from being flagged. A long article with an "Already a subscriber? Sign in" footer, or a login box in the sidebar, passes.
 - **Languages:** only `en` has a spaCy pipeline. `ExtractConfig(languages=("fr",))` is rejected until a pipeline is added. To add Arabic, wire in a pipeline and an Arabic concept extractor first.
