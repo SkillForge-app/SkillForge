@@ -88,7 +88,7 @@ def _examples_hash() -> str:
 
     digest = hashlib.sha256()
     for path in sorted(EXAMPLES_DIR.glob("*.json")):
-        digest.update(path.name.encode() + b"\0" + path.read_bytes())
+        digest.update(path.name.encode() + b"\0" + path.read_bytes().replace(b"\r\n", b"\n"))
     return digest.hexdigest()
 
 

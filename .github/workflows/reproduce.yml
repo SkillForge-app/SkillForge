@@ -1,0 +1,54 @@
+# AI-25: re-run every offline experiment at its recorded commit and re-score the live ones from
+# their tracked runs; each result must match its committed report exactly
+# (docs/ai/experiments.md). About 30 minutes without the model entries, so not on every PR.
+# Informational: not called by ci.yml, so not part of ci-ok and blocks no PR.
+#
+# GitHub runs `workflow_dispatch` and `schedule` only for workflows on the default branch
+# (main): both start working once this file reaches main (the AI -> main merge). The model
+# entries (E3, E4) are skipped (--no-model) until the OPS-03 model cache can be used here.
+name: reproduce
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 4 * * 1"  # Mondays 04:17 UTC
+
+permissions:
+  contents: read
+
+concurrency:
+  group: reproduce
+  cancel-in-progress: false
+
+jobs:
+  run:
+    name: run
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      UV_PYTHON: "3.11"
+    defaults:
+      run:
+        working-directory: ai
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0  # every recorded commit is extracted with `git archive`
+
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.0"
+          enable-cache: true
+          cache-dependency-glob: ai/uv.lock
+          cache-python: true
+
+      - name: Install from uv.lock (hash-checked)
+        run: uv sync --locked --extra dev
+
+      - name: reproduce check
+        run: uv run --no-sync python -m evaluation.reproduce check
+
+      - name: reproduce run (no model entries)
+        # Each recorded commit gets its own venv from its uv.lock (cached under ai/.data).
+        run: uv run --no-sync python -m evaluation.reproduce run --no-model

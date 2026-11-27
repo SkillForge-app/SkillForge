@@ -1,0 +1,873 @@
+{
+  "date": "2026-11-25",
+  "config": {
+    "min_words": 150,
+    "extraction_mode": "precision",
+    "languages": [
+      "en"
+    ],
+    "min_language_confidence": 0.8,
+    "max_link_density": 0.5,
+    "max_short_line_ratio": 0.6,
+    "short_line_words": 5,
+    "consent_max_words": 300,
+    "password_max_words": 300,
+    "paywall_phrase_max_words": 400,
+    "page_concepts": 10,
+    "chunk_concepts": 5,
+    "chunking": {
+      "target_words": 180,
+      "max_words": 250,
+      "max_chars": 1800,
+      "min_words": 50,
+      "overlap_sentences": 2,
+      "overlap_words": 40
+    },
+    "site_boilerplate": [],
+    "injection_screen": true,
+    "injection_max_low": 3
+  },
+  "site_boilerplate": {
+    "www.ftc.gov": 9
+  },
+  "seed": 7,
+  "pages": [
+    {
+      "file": "ftc-endorsement-faq.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "FTC's Endorsement Guides: What People Are Asking",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 14536,
+      "link_density": 0.0089,
+      "chunks": 128,
+      "chunk_words_median": 112.5,
+      "chunk_words_max": 225,
+      "concepts": [
+        "disclosure",
+        "product",
+        "endorsement",
+        "review",
+        "company"
+      ],
+      "facts_missing": [],
+      "facts_total": 3,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "ftc-can-spam.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "CAN-SPAM Act: A Compliance Guide for Business",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 2538,
+      "link_density": 0.0073,
+      "chunks": 16,
+      "chunk_words_median": 160.0,
+      "chunk_words_max": 235,
+      "concepts": [
+        "message",
+        "can-spam act",
+        "recipient",
+        "email",
+        "commercial content"
+      ],
+      "facts_missing": [],
+      "facts_total": 3,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "ftc-advertising-hub.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "Advertising and Marketing",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 467,
+      "link_density": 0.1395,
+      "chunks": 3,
+      "chunk_words_median": 156,
+      "chunk_words_max": 162,
+      "concepts": [
+        "advertising",
+        "children online privacy protection act",
+        "company",
+        "consumer",
+        "ftc"
+      ],
+      "facts_missing": [],
+      "facts_total": 3,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "nist-ai-rmf.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "AI Risk Management Framework",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 319,
+      "link_density": 0.1781,
+      "chunks": 2,
+      "chunk_words_median": 159.5,
+      "chunk_words_max": 193,
+      "concepts": [
+        "ai rmf",
+        "nist",
+        "public comment",
+        "ai product",
+        "ai program"
+      ],
+      "facts_missing": [],
+      "facts_total": 3,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "google-seo-starter.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "SEO Starter Guide: The Basics",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 3342,
+      "link_density": 0.0487,
+      "chunks": 29,
+      "chunk_words_median": 119,
+      "chunk_words_max": 201,
+      "concepts": [
+        "site",
+        "search result",
+        "page",
+        "content",
+        "google"
+      ],
+      "facts_missing": [],
+      "facts_total": 2,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "google-helpful-content.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "Creating Helpful, Reliable, People-First Content",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 2170,
+      "link_density": 0.0247,
+      "chunks": 16,
+      "chunk_words_median": 144.0,
+      "chunk_words_max": 229,
+      "concepts": [
+        "content",
+        "e-e-a-t",
+        "search engine",
+        "people-first content",
+        "main content"
+      ],
+      "facts_missing": [],
+      "facts_total": 3,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "owasp-llm01.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "LLM01:2025 Prompt Injection",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 1108,
+      "link_density": 0.1299,
+      "chunks": 7,
+      "chunk_words_median": 166,
+      "chunk_words_max": 215,
+      "concepts": [
+        "model",
+        "prompt injection",
+        "scenario",
+        "attacker",
+        "prompt injection vulnerability"
+      ],
+      "facts_missing": [],
+      "facts_total": 3,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "wikipedia-rag.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "Retrieval-augmented generation",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 1542,
+      "link_density": 0.0553,
+      "chunks": 13,
+      "chunk_words_median": 114,
+      "chunk_words_max": 194,
+      "concepts": [
+        "llm",
+        "rag",
+        "language model",
+        "retrieval-augmented generation",
+        "model"
+      ],
+      "facts_missing": [],
+      "facts_total": 2,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-subscriber-footer.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "How to Write a Clear Email Opt-in Form",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 330,
+      "link_density": 0.0,
+      "chunks": 4,
+      "chunk_words_median": 82.0,
+      "chunk_words_max": 110,
+      "concepts": [
+        "form",
+        "people",
+        "clear email opt",
+        "subscriber",
+        "choice"
+      ],
+      "facts_missing": [],
+      "facts_total": 2,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-short-faq.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "Gift Card FAQ",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 171,
+      "link_density": 0.0,
+      "chunks": 2,
+      "chunk_words_median": 85.5,
+      "chunk_words_max": 89,
+      "concepts": [
+        "gift card",
+        "card",
+        "card number",
+        "gift card faq",
+        "balance"
+      ],
+      "facts_missing": [],
+      "facts_total": 2,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-div-soup.html",
+      "expected": [],
+      "reasons": [],
+      "extractor": "trafilatura",
+      "title": "Writing Release Notes Users Actually Read",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 235,
+      "link_density": 0.0,
+      "chunks": 2,
+      "chunk_words_median": 131.5,
+      "chunk_words_max": 180,
+      "concepts": [
+        "user",
+        "change",
+        "added csv export service",
+        "breaking change",
+        "changelog page"
+      ],
+      "facts_missing": [],
+      "facts_total": 2,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-paywall-jsonld.html",
+      "expected": [
+        "paywall_or_login"
+      ],
+      "reasons": [
+        "paywall_or_login"
+      ],
+      "extractor": "trafilatura",
+      "title": "Five Checks Before You Launch a Loyalty Programme",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 176,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-paywall-phrase.html",
+      "expected": [
+        "paywall_or_login"
+      ],
+      "reasons": [
+        "paywall_or_login"
+      ],
+      "extractor": "bs4",
+      "title": "Why Small Agencies Lose Clients in the Second Year",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 151,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-login-wall.html",
+      "expected": [
+        "paywall_or_login",
+        "too_short"
+      ],
+      "reasons": [
+        "paywall_or_login",
+        "too_short"
+      ],
+      "extractor": "trafilatura",
+      "title": "Sign in to continue",
+      "title_ok": null,
+      "language": "en",
+      "language_ok": null,
+      "words": 21,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-cookie-only.html",
+      "expected": [
+        "boilerplate",
+        "too_short"
+      ],
+      "reasons": [
+        "boilerplate",
+        "too_short"
+      ],
+      "extractor": "bs4",
+      "title": "Your privacy choices",
+      "title_ok": null,
+      "language": "en",
+      "language_ok": null,
+      "words": 85,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-link-farm.html",
+      "expected": [
+        "boilerplate",
+        "too_short"
+      ],
+      "reasons": [
+        "boilerplate",
+        "too_short"
+      ],
+      "extractor": "bs4",
+      "title": "Marketing Resources Directory",
+      "title_ok": null,
+      "language": "en",
+      "language_ok": null,
+      "words": 15,
+      "link_density": 0.8762,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-stub.html",
+      "expected": [
+        "too_short"
+      ],
+      "reasons": [
+        "too_short"
+      ],
+      "extractor": "trafilatura",
+      "title": "Pricing Strategy for Online Courses",
+      "title_ok": true,
+      "language": "en",
+      "language_ok": null,
+      "words": 36,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-js-shell.html",
+      "expected": [
+        "empty"
+      ],
+      "reasons": [
+        "empty"
+      ],
+      "extractor": "none",
+      "title": "Quanta Analytics",
+      "title_ok": true,
+      "language": null,
+      "language_ok": null,
+      "words": 0,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-french.html",
+      "expected": [
+        "wrong_language"
+      ],
+      "reasons": [
+        "wrong_language"
+      ],
+      "extractor": "trafilatura",
+      "title": "Référencement local: les bases pour un commerce de quartier",
+      "title_ok": null,
+      "language": "fr",
+      "language_ok": true,
+      "words": 206,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    },
+    {
+      "file": "synthetic-arabic.html",
+      "expected": [
+        "wrong_language"
+      ],
+      "reasons": [
+        "wrong_language"
+      ],
+      "extractor": "trafilatura",
+      "title": "أساسيات التسويق عبر البريد الإلكتروني للمتاجر الصغيرة",
+      "title_ok": null,
+      "language": "ar",
+      "language_ok": true,
+      "words": 157,
+      "link_density": 0.0,
+      "chunks": 0,
+      "chunk_words_median": null,
+      "chunk_words_max": null,
+      "concepts": [],
+      "facts_missing": [],
+      "facts_total": 0,
+      "leaks": [],
+      "verdict_ok": true
+    }
+  ],
+  "checks": {
+    "verdicts": 1.0,
+    "titles": 1.0,
+    "languages": 1.0,
+    "facts": 1.0,
+    "chunk_size": 1.0,
+    "valid_passages": 1.0,
+    "clean_ends": 0.9955
+  },
+  "leaks": 0,
+  "gates_passed": true,
+  "sample": [
+    {
+      "file": "nist-ai-rmf.html",
+      "chunk_id": "nist.gov-54dbc154-25768e49",
+      "section": [],
+      "words": 126,
+      "concepts": [
+        "ai rmf",
+        "ai product",
+        "ai program",
+        "ai rmf profile",
+        "ai-enabled capability"
+      ],
+      "text": "On April 7, 2026, NIST released a concept note for an AI RMF Profile on Trustworthy AI in Critical Infrastructure. The profile will guide critical infrastructure operators towards specific risk management practices to consider when engaging AI-enabled capabilities.\nThe AI RMF 1.0 is being revised as part of the White House AI Action Plan.\nLed by the Information Technology Laboratory (ITL) AI Program, and in collaboration with the private and public sectors, NIST has developed a framework to better manage risks to individuals, organizations, and society associated with artificial intelligence (AI). The NIST AI Risk Management Framework (AI RMF) is intended for voluntary use and to improve the ability to incorporate trustworthiness considerations into the design, development, use, and evaluation of AI products, services, and systems."
+    },
+    {
+      "file": "owasp-llm01.html",
+      "chunk_id": "genai.owasp.org-742d684f-4d5c9bd8",
+      "section": [
+        "Prevention and Mitigation Strategies"
+      ],
+      "words": 116,
+      "concepts": [
+        "prevention and mitigation strategies",
+        "4. enforce privilege control",
+        "access control",
+        "adversarial testing",
+        "breach simulation"
+      ],
+      "text": "Prevention and Mitigation Strategies\n4. Enforce privilege control and least privilege access\nProvide the application with its own API tokens for extensible functionality, and handle these functions in code rather than providing them to the model. Restrict the model’s access privileges to the minimum necessary for its intended operations.\n5. Require human approval for high-risk actions\nImplement human-in-the-loop controls for privileged operations to prevent unauthorized actions.\n6. Segregate and identify external content\nSeparate and clearly denote untrusted content to limit its influence on user prompts.\n7. Conduct adversarial testing and attack simulations\\\nPerform regular penetration testing and breach simulations, treating the model as an untrusted user to test the effectiveness of trust boundaries and access controls."
+    },
+    {
+      "file": "google-seo-starter.html",
+      "chunk_id": "developers.google.com-0af9dc7e-03a39f4f",
+      "section": [
+        "Search Engine Optimization (SEO) Starter Guide",
+        "Help Google find your content"
+      ],
+      "words": 144,
+      "concepts": [
+        "site",
+        "google",
+        "content",
+        "google search",
+        "page"
+      ],
+      "text": "Help Google find your content\nBefore you actually do anything mentioned in this section, check if Google has already found your content (maybe you don't need to do anything!). Try searching on Google for your site with the\n.\nIf you see results pointing to your site, you're in the index. For example, a search for site: search operator\nsite:wikipedia.org\nreturns\nthese results. If you don't see your site, check out the technical requirements to make sure there's nothing technically preventing your site from showing in Google Search, and then come back here.\nGoogle primarily finds pages through links from other pages it already crawled. In many cases, these are other websites that are linking to your pages. Other sites linking to you is something that happens naturally over time, and you can also encourage people to discover your content by promoting your site."
+    },
+    {
+      "file": "wikipedia-rag.html",
+      "chunk_id": "en.wikipedia.org-b43f8e16-53337ff0",
+      "section": [
+        "Improvements",
+        "Retriever-centric methods"
+      ],
+      "words": 99,
+      "concepts": [
+        "retriever-centric method",
+        "document retrieval",
+        "generated response perplexity",
+        "generator model likelihood distribution",
+        "given prompt"
+      ],
+      "text": "Retriever-centric methods\nThese methods aim to enhance the quality of document retrieval in vector databases:\n- Pre-training the retriever using the Inverse Cloze Task (ICT), a technique that helps the model learn retrieval patterns by predicting masked text within documents.\n- Supervised retriever optimization aligns retrieval probabilities with the generator model's likelihood distribution. This involves retrieving the top-k vectors for a given prompt, scoring the generated response's perplexity, and minimizing KL divergence between the retriever's selections and the model's likelihoods to refine retrieval.\n- Reranking techniques can refine retriever performance by prioritizing the most relevant retrieved documents during training."
+    },
+    {
+      "file": "ftc-advertising-hub.html",
+      "chunk_id": "ftc.gov-5c252d1a-1a1a2d4e",
+      "section": [],
+      "words": 149,
+      "concepts": [
+        "u.s. content",
+        "company",
+        "product",
+        "advertising claim",
+        "competent and reliable scientific evidence"
+      ],
+      "text": "Companies are offering consumers an ever-growing assortment of “green” options. But whether your environmental claims are about the product or the packaging, you'll need competent and reliable scientific evidence to support what you say. Find out more by consulting the FTC’s revised Green Guides. Have you spotted what you think might be a deceptive claim or practice? File a complaint.\nCompanies must support their advertising claims with solid proof. This is especially true for businesses that market food, over-the-counter drugs, dietary supplements, contact lenses, and other health-related products.\nDo you promote your products as “Made in the USA”? Under the law, some products must disclose U.S. content. For others, manufacturers and marketers who choose to make claims about the amount of U.S. content need to know about the FTC’s Made in USA Labeling Rule and Enforcement Policy Statement on U.S. Origin Claims. Is your company up on what's required?"
+    },
+    {
+      "file": "ftc-endorsement-faq.html",
+      "chunk_id": "ftc.gov-629fbc85-245336c9",
+      "section": [
+        "HOW SHOULD I DISCLOSE THAT I WAS GIVEN SOMETHING FOR MY ENDORSEMENT?",
+        "I have attended sneak peek events and use #comped or #hosted. Can influencers/bloggers use #comped and #hosted for non-paid endorsements?"
+      ],
+      "words": 56,
+      "concepts": [
+        "non-paid endorsement",
+        "sneak peek event",
+        "brand",
+        "efg resort",
+        "example"
+      ],
+      "text": "I have attended sneak peek events and use #comped or #hosted. Can influencers/bloggers use #comped and #hosted for non-paid endorsements?\nNeither #comped nor #hosted is sufficiently clear. It would be fine to say, for example, “XYZ brand flew me to Hawaii for their launch event at the EFG Resort,” assuming that is all the brand did."
+    },
+    {
+      "file": "google-helpful-content.html",
+      "chunk_id": "developers.google.com-8d7d5b41-19ceeaab",
+      "section": [
+        "Creating helpful, reliable, people-first content",
+        "Ask \"Who, How, and Why\" about your content"
+      ],
+      "words": 154,
+      "concepts": [
+        "content",
+        "e-e-a-t",
+        "byline",
+        "accurate authorship information",
+        "author"
+      ],
+      "text": "Ask \"Who, How, and Why\" about your content\nConsider evaluating your content in terms of \"Who, How, and Why\" as a way to stay on course with what our systems seek to reward.\nWho (created the content)\nSomething that helps people intuitively understand the E-E-A-T of content is when it's clear who created it. That's the \"Who\" to consider. When creating content, here are some who-related questions to ask yourself:\n- Is it self-evident to your visitors who authored your content?\n- Do pages carry a byline, where one might be expected?\n- Do bylines lead to further information about the author or authors involved, giving background about them and the areas they write about?\nIf you're clearly indicating who created the content, you're likely aligned with the concepts of E-E-A-T and on a path to success. We strongly encourage adding accurate authorship information, such as bylines to content where readers might expect it."
+    },
+    {
+      "file": "synthetic-short-faq.html",
+      "chunk_id": "lanternbooks.example-ee6351af-955ee7a1",
+      "section": [
+        "Gift Card FAQ",
+        "What happens if I lose my card?"
+      ],
+      "words": 82,
+      "concepts": [
+        "gift card",
+        "card",
+        "card number",
+        "cash",
+        "new card"
+      ],
+      "text": "What happens if I lose my card?\nTreat a gift card like cash. If you still have the receipt or the email with the card number, contact our shop team and we can move the remaining balance to a new card for you.\nCan I get a refund on a gift card?\nGift cards cannot be exchanged for cash, but if a card was bought by mistake we can cancel it within 14 days as long as it has not been used."
+    },
+    {
+      "file": "synthetic-subscriber-footer.html",
+      "chunk_id": "northwind-notes.example-8fee64f3-32ff4174",
+      "section": [
+        "How to Write a Clear Email Opt-in Form",
+        "Ask only for what you need"
+      ],
+      "words": 59,
+      "concepts": [
+        "email address",
+        "extra field",
+        "form",
+        "most newsletter",
+        "other detail"
+      ],
+      "text": "Ask only for what you need\nEvery extra field lowers the number of people who finish the form. For most newsletters an email address is enough at the start. If you want a first name for personalisation, make it optional and explain why you ask. Collect other details later, once the subscriber trusts you and can see the benefit."
+    },
+    {
+      "file": "synthetic-div-soup.html",
+      "chunk_id": "shipwright.example-a339dbca-ef4df88e",
+      "section": [],
+      "words": 180,
+      "concepts": [
+        "change",
+        "user",
+        "added csv export service",
+        "breaking change",
+        "first line"
+      ],
+      "text": "Most release notes are written for the team that shipped the change, not for the people who have to live with it. They list ticket numbers, internal code names and refactors that no user will ever notice, while the one change that breaks a workflow is buried in the middle.\nStart with the changes that require action. If a setting moved, an old behaviour was removed or an integration needs to be reconnected, say so in the first lines and explain what to do. Users forgive a breaking change much more easily when the notes tell them exactly how to adapt.\nNext, describe new features in terms of what users can now do, not what the team built. A sentence such as \"you can now export reports as spreadsheets from the dashboard\" is clearer than \"added CSV export service\". Link to a short guide when a feature needs more than two sentences.\nGroup small fixes into a single list at the end and keep each item to one line. People scan this part, so plain words matter more than completeness."
+    },
+    {
+      "file": "ftc-can-spam.html",
+      "chunk_id": "ftc.gov-194ba0c8-92897893",
+      "section": [
+        "Q. What if the email includes information from more than one company? Who is the “sender” responsible for CAN-SPAM compliance?"
+      ],
+      "words": 203,
+      "concepts": [
+        "sender",
+        "can-spam compliance",
+        "email",
+        "message",
+        "can-spam act"
+      ],
+      "text": "Q. What if the email includes information from more than one company? Who is the “sender” responsible for CAN-SPAM compliance?\nA. If an email advertises or promotes the goods, services, or websites of more than one marketer, there’s a straightforward method for determining who’s responsible for the duties the CAN-SPAM Act imposes on “senders” of commercial email. Marketers whose goods, services, or websites are advertised or promoted in a message can designate one of the marketers as the “sender” for purposes of CAN-SPAM compliance as long as the designated sender:\n- meets the CAN-SPAM Act’s definition of “sender,” meaning that they initiate a commercial message advertising or promoting their own goods, services, or website;\n- is specifically identified in the “from” line of the message; and\n- complies with the “initiator” provisions of the Act – for example, making sure the email does not contain deceptive transmission information or a deceptive subject heading, and ensuring that the email includes a valid postal address, a working opt-out link, and proper identification of the message’s commercial or sexually explicit nature.\nIf the designated sender doesn’t comply with the responsibilities the law gives to initiators, all marketers in the message may be held liable as senders."
+    },
+    {
+      "file": "nist-ai-rmf.html",
+      "chunk_id": "nist.gov-54dbc154-0615c612",
+      "section": [],
+      "words": 193,
+      "concepts": [
+        "ai rmf",
+        "public comment",
+        "nist",
+        "ai risk management effort",
+        "ai rmf crosswalk"
+      ],
+      "text": "Released on January 26, 2023, the Framework was developed through a consensus-driven, open, transparent, and collaborative process that included a Request for Information, several draft versions for public comments, multiple workshops, and other opportunities to provide input. It is intended to build on, align with, and support AI risk management efforts by others (Fact Sheet).\nA companion NIST AI RMF Playbook also has been published by NIST along with an AI RMF Roadmap, AI RMF Crosswalk, and various Perspectives.\nOn March 30, 2023, NIST launched the Trustworthy and Responsible AI Resource Center, which will facilitate implementation of, and international alignment with, the AI RMF. Examples of how other organizations are building on and using the AI RMF can be found via the AIRC’s Use Case page.\nOn July 26, 2024, NIST released NIST-AI-600-1, Artificial Intelligence Risk Management Framework: Generative Artificial Intelligence Profile. The profile can help organizations identify unique risks posed by generative AI and proposes actions for generative AI risk management that best aligns with their goals and priorities.\nTo view public comments received on the previous drafts of the AI RMF and Requests for Information, see the AI RMF Development page."
+    },
+    {
+      "file": "owasp-llm01.html",
+      "chunk_id": "genai.owasp.org-742d684f-e8cd56a3",
+      "section": [],
+      "words": 209,
+      "concepts": [
+        "prompt injection",
+        "model",
+        "prompt injection vulnerability",
+        "input",
+        "jailbreaking"
+      ],
+      "text": "A Prompt Injection Vulnerability occurs when user prompts alter the LLM’s behavior or output in unintended ways. These inputs can affect the model even if they are imperceptible to humans, therefore prompt injections do not need to be human-visible/readable, as long as the content is parsed by the model.\nPrompt Injection vulnerabilities exist in how models process prompts, and how input may force the model to incorrectly pass prompt data to other parts of the model, potentially causing them to violate guidelines, generate harmful content, enable unauthorized access, or influence critical decisions. While techniques like Retrieval Augmented Generation (RAG) and fine-tuning aim to make LLM outputs more relevant and accurate, research shows that they do not fully mitigate prompt injection vulnerabilities.\nWhile prompt injection and jailbreaking are related concepts in LLM security, they are often used interchangeably. Prompt injection involves manipulating model responses through specific inputs to alter its behavior, which can include bypassing safety measures. Jailbreaking is a form of prompt injection where the attacker provides inputs that cause the model to disregard its safety protocols entirely. Developers can build safeguards into system prompts and input handling to help mitigate prompt injection attacks, but effective prevention of jailbreaking requires ongoing updates to the model’s training and safety mechanisms."
+    },
+    {
+      "file": "google-seo-starter.html",
+      "chunk_id": "developers.google.com-0af9dc7e-3a1cb345",
+      "section": [
+        "Search Engine Optimization (SEO) Starter Guide",
+        "How does Google Search work?"
+      ],
+      "words": 82,
+      "concepts": [
+        "google",
+        "google search",
+        "site",
+        "web",
+        "fully automated search engine"
+      ],
+      "text": "How does Google Search work?\nGoogle is a fully automated search engine that uses programs called crawlers to explore the web constantly, looking for pages to add to our index. You usually don't need to do anything except publish your site on the web. In fact, the vast majority of sites listed in our results are found and added automatically as we crawl the web. If you're hungry for more, we have documentation about how Google discovers, crawls, and serves web pages."
+    },
+    {
+      "file": "wikipedia-rag.html",
+      "chunk_id": "en.wikipedia.org-b43f8e16-4fb36358",
+      "section": [],
+      "words": 148,
+      "concepts": [
+        "rag",
+        "llm",
+        "ai hallucination",
+        "ars technica",
+        "check retrieved content"
+      ],
+      "text": "According to Ars Technica, \"RAG is a way of improving LLM performance, in essence by blending the LLM process with a web search or other document look-up process to help LLMs stick to the facts.\" This method helps reduce AI hallucinations, which have caused chatbots to describe policies that don't exist, or recommend nonexistent legal cases to lawyers that are looking for citations to support their arguments.\nRAG also reduces the need to retrain LLMs with new data, saving on computational and financial costs. Beyond efficiency gains, RAG also allows LLMs to include sources in their responses, so users can verify the cited sources. This provides greater transparency, as users can cross-check retrieved content to ensure accuracy and relevance.\nThe term retrieval-augmented generation (RAG) was introduced in a 2020 paper that described combining a parametric language model with a non-parametric external memory accessed through retrieval at inference time."
+    },
+    {
+      "file": "ftc-advertising-hub.html",
+      "chunk_id": "ftc.gov-5c252d1a-99b8bfd1",
+      "section": [],
+      "words": 162,
+      "concepts": [
+        "consumer",
+        "advertising",
+        "certain protection",
+        "children online privacy protection act",
+        "fraudulent telemarketing call"
+      ],
+      "text": "The internet connects marketers to customers across the country and around the world. If you advertise online, remember the rules and guidelines that protect consumers also help businesses by maintaining the credibility of the Internet as a marketing medium. In addition, truth-in-advertising standards apply if you sell computers, software, apps, or other products or services. The FTC also enforces the INFORM Consumers Act, which requires online marketplaces to verify the identity of high-volume third-party sellers on their platforms and make it easier for consumers to report suspicious conduct. (Question about kids' online privacy privacy? Read about the Children's Online Privacy Protection Act.)\nThe FTC’s Telemarketing Sales Rule helps protect consumers from fraudulent telemarketing calls and gives them certain protections under the National Do Not Call Registry. Companies also need to be familiar with rules banning most forms of robocalling. If you or someone working on your behalf is telemarketing products or services, know the dos and don’ts before you plan your strategy."
+    },
+    {
+      "file": "ftc-endorsement-faq.html",
+      "chunk_id": "ftc.gov-629fbc85-c701a532",
+      "section": [
+        "WHAT ABOUT AFFILIATE OR NETWORK MARKETING?",
+        "Our company’s policy says that employees shouldn’t post positive reviews online about our products without clearly disclosing their relationship to the company. All of our employees agree to abide by…"
+      ],
+      "words": 214,
+      "concepts": [
+        "employee",
+        "company policy",
+        "company website",
+        "review",
+        "social medium"
+      ],
+      "text": "Our company’s policy says that employees shouldn’t post positive reviews online about our products without clearly disclosing their relationship to the company. All of our employees agree to abide by this policy when they’re hired. But we have several thousand people working here and we can’t monitor what they all do on their own computers and other devices when they aren’t at work. Are we liable if an employee posts a review of one of our products, either on our company website, on a third-party review site, or on social media, and doesn’t disclose that relationship?\nIt wouldn’t be reasonable to expect you to monitor every social media posting by all of your employees. However, you should establish a formal program to remind employees periodically of your policy. Also, if you learn that employees have posted reviews on the company’s website or a social media site without adequately disclosing their relationship to the company, you should remind them of your company policy and ask them to remove those reviews or adequately disclose that they’re employees.\nIf, however, you actively encouraged your employees to write reviews of your products, you would be responsible for monitoring them (both in terms of disclosing that they are employees and for problematic claims) despite any difficulty in doing so."
+    },
+    {
+      "file": "google-helpful-content.html",
+      "chunk_id": "developers.google.com-8d7d5b41-e3710a11",
+      "section": [
+        "Creating helpful, reliable, people-first content",
+        "Avoid creating search engine-first content"
+      ],
+      "words": 142,
+      "concepts": [
+        "content",
+        "first content",
+        "search engine",
+        "lot",
+        "new content"
+      ],
+      "text": "Avoid creating search engine-first content\n- Are you writing to a particular word count because you've heard or read that Google has a preferred word count? (No, we don't.)\n- Did you decide to enter some niche topic area without any real expertise, but instead mainly because you thought you'd get search traffic?\n- Does your content promise to answer a question that actually has no answer, such as suggesting there's a release date for a product, movie, or TV show when one isn't confirmed?\n- Are you changing the date of pages to make them seem fresh when the content has not substantially changed?\n- Are you adding a lot of new content or removing a lot of older content primarily because you believe it will help your search rankings overall by somehow making your site seem \"fresh?\" (No, it won't)"
+    },
+    {
+      "file": "synthetic-short-faq.html",
+      "chunk_id": "lanternbooks.example-ee6351af-a6e39b6f",
+      "section": [
+        "Gift Card FAQ"
+      ],
+      "words": 89,
+      "concepts": [
+        "gift card",
+        "card",
+        "card number",
+        "gift card faq",
+        "balance"
+      ],
+      "text": "Gift Card FAQ\nDo your gift cards expire?\nNo. Our gift cards never expire, and any balance left after a purchase stays on the card for your next visit. You can check the balance at the till or by entering the card number on our help page.\nCan I use a gift card online?\nYes. Enter the card number and the four-digit code at checkout. If the order costs more than the balance on the card, you can pay the difference with a bank card or another gift card."
+    },
+    {
+      "file": "synthetic-subscriber-footer.html",
+      "chunk_id": "northwind-notes.example-8fee64f3-1e2762f5",
+      "section": [
+        "How to Write a Clear Email Opt-in Form",
+        "Confirm and follow through"
+      ],
+      "words": 105,
+      "concepts": [
+        "form",
+        "double opt-in",
+        "long legal text",
+        "many people",
+        "mobile screen"
+      ],
+      "text": "Confirm and follow through\nSend a short confirmation message straight away. It should repeat what the person signed up for, show when the next issue will arrive, and include a working unsubscribe link. A double opt-in, where the subscriber clicks a link to confirm, removes typing mistakes and keeps the list clean, although it costs a small share of sign-ups.\nFinally, test the form on a phone. Many people sign up from a mobile screen, where long legal text and tiny checkboxes are hard to use. A form that is easy to read on a small screen is usually easy to read everywhere else too."
+    }
+  ]
+}
