@@ -33,12 +33,13 @@ groups:
 
       - alert: AILLMAllModelsFailing
         expr: |
-          sum(rate(skillforge_step_total{status="retry_later",error_code="provider_unavailable"}[10m]))
+          sum(rate(skillforge_step_total{status="retry_later",error_code=~"provider_unavailable|deadline_exceeded"}[10m]))
             / sum(rate(skillforge_step_total[10m])) > 0.05
         for: 10m
         labels: {severity: page, team: ai}
         annotations:
-          summary: "More than 5% of pipeline steps fail because every model in the chain failed"
+          # deadline_exceeded: a step passed its deadline. Counted here as before the code existed.
+          summary: "More than 5% of pipeline steps fail because every model in the chain failed or was too slow"
           threshold: "0.05"
           runbook_url: ai/docs/ai/runbook.md#aillmallmodelsfailing
 

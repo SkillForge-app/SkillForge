@@ -2,6 +2,8 @@
 # test: locked, hash-checked install; lint, format, strict types, prompt lock and schema checks;
 # tests without network. The live, model and pgvector tests stay off (ai/pyproject.toml addopts).
 # pgvector: the pgvector tests against DE's real schema and view, as the reader role (F22).
+# test also runs `reproduce check` (AI-25): every report registered, its commit in history,
+# tracked runs intact. It reads git history, so the test job checks out with fetch-depth: 0.
 name: ai
 
 on:
@@ -24,6 +26,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history for `reproduce check`: it confirms each report's recorded commit is an
+          # ancestor of HEAD, which a shallow fetch of only those commits cannot show (~6 s more).
+          fetch-depth: 0
 
       - name: Check ai/ is in this branch
         id: present
@@ -69,6 +74,11 @@ jobs:
           uv run --no-sync python -m core.llm.prompt_lock
           uv run --no-sync python -m core.spec export-schema --check
           uv run --no-sync python -m core.analysis export-schema --check
+
+      - name: Experiments are registered and reproducible from tracked runs (AI-25)
+        if: steps.present.outputs.present == 'true' && hashFiles('ai/evaluation/reproduce/check.py') != ''
+        # Seconds, no model, no network: the re-runs themselves are in reproduce.yml.
+        run: uv run --no-sync python -m evaluation.reproduce check
 
       - name: pytest (no network)
         if: steps.present.outputs.present == 'true'

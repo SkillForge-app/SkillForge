@@ -10,7 +10,6 @@ Sets:
 Rules for labels: LABELLING.md.
 """
 
-import hashlib
 import json
 import re
 from collections import Counter
@@ -24,6 +23,7 @@ from pydantic import Field, ValidationError
 from core.spec import DOMAIN_AREAS, HIGH_RISK_AREAS, Issue, Kind, RiskLevel, Target, schema_issues
 from core.spec.models import Domain, Id, Line, SpecModel, TargetList
 from evaluation.benchmarks.dataset import SEED_DIR, RequestStyle
+from evaluation.common import HASH_SCHEME, text_sha256
 
 ANALYZER_DIR = Path(__file__).resolve().parent
 SEED_RELEASE = "0.1.0"  # move to 1.0.0 once the reviewed seed benchmark is released
@@ -92,6 +92,7 @@ class DataSource:
     name: str
     version: str
     sha256: str
+    hash: str = HASH_SCHEME  # how sha256 was computed (evaluation.common, AI-25)
 
 
 class DataError(ValueError):
@@ -160,15 +161,10 @@ def sources(release: str = SEED_RELEASE) -> list[DataSource]:
     manifest = json.loads(
         (SEED_DIR / "releases" / release / "manifest.json").read_text(encoding="utf-8")
     )
-    out = [DataSource(manifest["dataset"], manifest["version"], manifest["dataset_sha256"])]
+    seed = manifest["dataset_sha256"]  # the release's own hash of its byte-exact files
+    out = [DataSource(manifest["dataset"], manifest["version"], seed, "manifest-dataset-sha256")]
     for split, path in FILES.items():
-        out.append(
-            DataSource(
-                load_file(split).name,
-                load_file(split).version,
-                hashlib.sha256(path.read_bytes()).hexdigest(),
-            )
-        )
+        out.append(DataSource(load_file(split).name, load_file(split).version, text_sha256(path)))
     return out
 
 

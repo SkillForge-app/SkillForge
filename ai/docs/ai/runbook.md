@@ -40,8 +40,8 @@ What each AI alert means and what to do. The rules are in `ai/ops/alerts.yaml` a
   2. If the primary model is the problem, switch the role to its first fallback with `SKILLFORGE_MODEL_<ROLE>`.
 
 ### AILLMAllModelsFailing
-- **Means:** more than 5% of pipeline steps return `retry_later` / `provider_unavailable`: every model in a role's chain failed, so users' jobs are being retried.
-- **Likely causes:** an OpenRouter outage with no `ANTHROPIC_API_KEY` for the direct hop; exhausted credits; a revoked key; steps passing their deadline (`step_timeout_s`: the cut-off calls are logged with `error_type: "CancelledError"`).
+- **Means:** more than 5% of pipeline steps return `retry_later` with `provider_unavailable` (every model in a role's chain failed) or `deadline_exceeded` (a step passed its deadline), so users' jobs are being retried.
+- **Likely causes:** an OpenRouter outage with no `ANTHROPIC_API_KEY` for the direct hop; exhausted credits; a revoked key; with `deadline_exceeded`, slow providers (`step_timeout_s`: the cut-off calls are logged with `error_type: "CancelledError"`).
 - **Do:**
   1. Check OpenRouter's status and credits. If the records show `CancelledError`, the provider is slow rather than down: see AILatencyHigh.
   2. Set `ANTHROPIC_API_KEY` to enable the direct hop.

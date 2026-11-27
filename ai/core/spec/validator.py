@@ -7,7 +7,8 @@
 
 Every issue has a JSON Pointer `path` (e.g. /procedures/0/produces/1), a stable `code` and a
 short `message`. The frontend shows them next to the field; the Skill Architect gets them back
-in its repair loop. Messages never include the field's value, only its location.
+in its repair loop. Messages never quote free text, but some quote an id or a field name (e.g.
+`source "src-1" is not defined in /sources`, an unknown field and its closest match).
 """
 
 import difflib
@@ -130,6 +131,10 @@ def draft_description(spec: SkillSpec) -> str:
     if spec.triggers.avoid_when:
         text += f" Not for: {'; '.join(spec.triggers.avoid_when)}."
     return text
+
+
+def contains_xml_tag(text: str) -> bool:
+    return _XML_TAG.search(text) is not None
 
 
 # ------------------------------------------------------------------ schema errors
@@ -325,7 +330,7 @@ def _platform_rules(spec: SkillSpec) -> Iterator[Issue]:
     texts += [(f"/triggers/use_when/{i}", t) for i, t in enumerate(spec.triggers.use_when)]
     texts += [(f"/triggers/avoid_when/{i}", t) for i, t in enumerate(spec.triggers.avoid_when)]
     for path, text in texts:
-        if _XML_TAG.search(text):
+        if contains_xml_tag(text):
             yield Issue(path, "xml_in_text", "remove XML-like tags (<...>); platforms reject them")
     limit, target = min((PLATFORM_LIMITS[t].description, t) for t in spec.targets)
     length = len(draft_description(spec))

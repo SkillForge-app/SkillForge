@@ -12,7 +12,7 @@ Do not call a provider SDK or LiteLLM directly. If you do, the call is not logge
 |------|-------|
 | `complete()` / `embed()` contract and `FakeGateway` | Ready (PR 1) |
 | Prompt file format, loader, version lock | Ready (PR 1) |
-| Real LiteLLM backend: retries, fallbacks, JSON repair, cost per call (AI-02) | Ready (PR 2). It is the default backend. Live check is pending an API key |
+| Real LiteLLM backend: retries, fallbacks, JSON repair, cost per call (AI-02) | Ready (PR 2). It is the default backend. Checked live through OpenRouter by the AI-05 and AI-06 evaluation runs (reports in `ai/evaluation/*/reports/`) |
 
 ## Setup
 

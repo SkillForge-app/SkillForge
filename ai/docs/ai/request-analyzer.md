@@ -32,7 +32,7 @@ architect_input = analyzed                                               # A3, n
 | `audience`, `expected_outputs` | Extracted from the request. They may be empty |
 | `skill_name`, `summary` | A suggested kebab-case name, and a one-sentence restatement in English |
 | `needs_clarification`, `questions` | If the request is vague: `true` plus 3 to 5 questions (`id` q1 to q5, `text` in the request's language, and `about`, one of audience, outputs, platforms, scope, tone, constraints or domain) |
-| `answers` | After the second pass: one entry per answered question. `text: null` means the user skipped it |
+| `answers` | After the second pass: the answers `clarify` got, at most one per question. `text: null` means the user skipped it. When `clarify` got no answers at all, every question has an entry with `text: null` |
 | `analyzer` | The `prompt_id` and `prompt_version` that produced the analysis |
 
 **Rules:**
@@ -166,7 +166,7 @@ Prompt `analysis/request` **v1**, model `openrouter/anthropic/claude-sonnet-5.5`
 | 2 | trial v2 | 100% | 95% | 100% | `analyzer-dev-2026-11-02-2.md` |
 
 - **Run 1's only miss:** d-04, "a senior UX researcher": labelled research, predicted design.
-- **The v2 trial** added one sentence applying the "expertise, not the subject" rule to research ("a role that studies users, markets or literature is research, even when what it studies is a product's design"). It fixed d-04, but d-18 (research papers → one-page summaries) moved from research to writing. Dev stayed at 95%.
+- **The v2 trial** added one sentence applying the "expertise, not the subject" rule to research ("a role that studies users, markets or literature is research, even when what it studies is a product's design"). It fixed d-04, but d-18 (research papers → one-page summaries) moved from research to writing. Dev stayed at 95%. The v2 text was never committed: `prompts/analysis/request.md` is still v1, and the "prompt version 2" in `analyzer-dev-2026-11-02-2.json` is this trial (the sentence it added is quoted above).
 - **Why we kept v1:**
   - The trial showed no gain on dev, and with 20 requests, one request moving is within run-to-run noise.
   - Changing the prompt further would have meant fitting single dev items.

@@ -5,7 +5,6 @@ warnings and the AI-06 gate cannot pass. Once its status is `draft` or `reviewed
 is an error. Rules: LABELLING.md.
 """
 
-import hashlib
 import json
 import os
 import re
@@ -23,6 +22,7 @@ from core.spec import Issue, schema_issues
 from core.spec.models import Id, Line, SpecModel, Text
 from core.spec.validator import IssueSeverity
 from evaluation.analyzer import data as analyzer_data
+from evaluation.common import HASH_SCHEME, text_sha256
 
 SAFETY_DIR = Path(__file__).resolve().parent
 FILES: dict[str, Path] = {
@@ -250,7 +250,8 @@ def sources() -> list[dict[str, str]]:
                 "name": f.name,
                 "version": f.version,
                 "status": f.status,
-                "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                "sha256": text_sha256(path),
+                "hash": HASH_SCHEME,
             }
         )
     out += [

@@ -10,10 +10,19 @@ store it as JSON (`model_dump_json()`) and decide what to do from `status`:
 - ok           continue with `value`
 - needs_input  show the clarifying questions in `value.questions`, then call clarify()
 - blocked      show `user_message`; start no job (BE-14)
-- retry_later  a provider or the safety screen was unavailable; retry the job later
+- retry_later  a provider or the safety screen was unavailable ("provider_unavailable"), or the
+                 step passed its deadline ("deadline_exceeded"); retry the job later
 - failed       no usable result (e.g. no valid spec after 3 tries); `issues` say why
-                 (error_code "budget_exceeded": the skill's model budget is used up, AI-21)
+                 (error_code "budget_exceeded": the skill's model budget is used up, AI-21;
+                 "invalid_request": the input broke a rule below, checked before any model call)
 Changes to this file need a PR approved by AI and BE.
+
+Input rules (checked by both RealPipeline and FakePipeline, before any model call):
+- analyze: the request text is 1 to 4000 characters after trimming spaces (AnalyzedRequest's
+  own rule). Otherwise `failed` / "invalid_request".
+- clarify: answers only to questions that were asked, at most one each. No answers at all
+  means every question was skipped; so does one empty answer (text None) per question.
+  Otherwise `failed` / "invalid_request".
 
 Cost budget (AI-21): wrap each step of one job in `core.llm.skill_run(skill_id,
 spent_usd=<cost of earlier steps>)`; the budget then covers the whole skill. Without it, each
@@ -25,7 +34,7 @@ from collections.abc import Awaitable, Callable, Collection, Iterator, Sequence
 from contextlib import contextmanager, nullcontext
 from typing import Any, Generic, Literal, Protocol, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 from core.agents import (
     ArchitectRefused,
@@ -43,8 +52,10 @@ from core.analysis import (
     refusal_message,
     screen_and_analyze,
 )
+from core.analysis.types import RequestText
 from core.llm import (
     BudgetExceeded,
+    DeadlineExceeded,
     LLMError,
     LLMUnavailable,
     current_skill_run,
@@ -129,6 +140,62 @@ class AIPipeline(Protocol):
 RETRY_LATER_MESSAGE = "Something went wrong on our side. Please try again in a few minutes."
 FAILED_MESSAGE = "We could not design this skill. Please rephrase or add detail and try again."
 BUDGET_MESSAGE = "This skill needs more work than we can do for one request. Please narrow it down."
+INVALID_REQUEST_MESSAGE = "Please describe the skill you want in 1 to 4000 characters."
+INVALID_ANSWERS_MESSAGE = "Please answer only the questions shown, at most once each."
+_REQUEST_TEXT: TypeAdapter[str] = TypeAdapter(RequestText)
+
+# The closing progress event of `design` (review F12): exactly one, whatever the outcome. The
+# outcome itself is StepResult.status; the last event never decides it.
+DESIGN_READY_MESSAGE = "Design ready"
+DESIGN_INVALID_MESSAGE = "Could not produce a valid design"
+DESIGN_PAUSED_MESSAGE = "Paused: we'll try again shortly"
+DESIGN_BLOCKED_MESSAGE = "Stopped: this request can't be built"
+DESIGN_BUDGET_MESSAGE = "Stopped: too much work for one request"
+DESIGN_NOT_READY_MESSAGE = "Stopped: the request isn't ready"
+
+
+def closing_event(status: StepStatus, error_code: str | None) -> tuple[Stage, str]:
+    """(stage, message) of the event that closes a `design` with this result."""
+    if status == "ok":
+        return "done", DESIGN_READY_MESSAGE
+    if status == "retry_later":
+        return "failed", DESIGN_PAUSED_MESSAGE
+    if status == "blocked":
+        return "failed", DESIGN_BLOCKED_MESSAGE
+    if error_code == "budget_exceeded":
+        return "failed", DESIGN_BUDGET_MESSAGE
+    if status == "needs_input" or error_code == "not_screened":
+        return "failed", DESIGN_NOT_READY_MESSAGE
+    return "failed", DESIGN_INVALID_MESSAGE
+
+
+def check_text(text: str) -> "StepResult[AnalyzedRequest] | None":
+    """analyze's `failed` / "invalid_request" result for text the analyzer can't take (blank,
+    or over 4000 characters), or None when the text is fine. Makes no model call."""
+    try:
+        _REQUEST_TEXT.validate_python(text)
+    except ValidationError:
+        return _result(
+            "analyze", "failed", error_code="invalid_request", user_message=INVALID_REQUEST_MESSAGE
+        )
+    return None
+
+
+def prepare_answers(
+    analyzed: AnalyzedRequest, answers: Sequence[Answer]
+) -> "tuple[list[Answer], StepResult[AnalyzedRequest] | None]":
+    """clarify's answers, checked before any model call: (answers to use, None), or
+    ([], the `failed` / "invalid_request" result). No answers at all means every question was
+    skipped, the same as one empty answer per question."""
+    asked = [q.id for q in analyzed.questions]
+    answered = [a.question_id for a in answers]
+    if len(set(answered)) != len(answered) or set(answered) - set(asked):
+        return [], _result(
+            "clarify", "failed", error_code="invalid_request", user_message=INVALID_ANSWERS_MESSAGE
+        )
+    if not answers:
+        return [Answer(question_id=q, text=None) for q in asked], None
+    return list(answers), None
 
 
 class RealPipeline:
@@ -139,9 +206,13 @@ class RealPipeline:
     ) -> StepResult[AnalyzedRequest]:
         start = time.perf_counter()
         with _step_budget("analyze"), track_usage() as usage:
-            outcome = await _analysis_step(
-                "analyze", screen_and_analyze(text, selected_targets=selected_targets)
-            )
+            invalid = check_text(text)
+            if invalid is not None:
+                outcome = invalid
+            else:
+                outcome = await _analysis_step(
+                    "analyze", screen_and_analyze(text, selected_targets=selected_targets)
+                )
         return _finish(outcome, usage, start)
 
     async def clarify(
@@ -149,7 +220,13 @@ class RealPipeline:
     ) -> StepResult[AnalyzedRequest]:
         start = time.perf_counter()
         with _step_budget("clarify"), track_usage() as usage:
-            outcome = await _analysis_step("clarify", answer_questions_safely(analyzed, answers))
+            checked, invalid = prepare_answers(analyzed, answers)
+            if invalid is not None:
+                outcome = invalid
+            else:
+                outcome = await _analysis_step(
+                    "clarify", answer_questions_safely(analyzed, checked)
+                )
         return _finish(outcome, usage, start)
 
     async def design(
@@ -159,18 +236,25 @@ class RealPipeline:
         existing_names: Collection[str] = (),
         on_progress: OnProgress | None = None,
     ) -> StepResult[SkillSpec]:
+        closed = False  # a closing event ("done" or "failed") was sent
+        last_attempt: int | None = None
+
         def emit(stage: Stage, attempt: int | None, message: str) -> None:
+            nonlocal closed
+            closed = closed or stage in ("done", "failed")
             if on_progress:
                 on_progress(
                     ProgressEvent(step="design", stage=stage, attempt=attempt, message=message)
                 )
 
         def from_architect(stage: str, attempt: int) -> None:
+            nonlocal last_attempt
+            last_attempt = attempt
             messages = {
                 "attempt": f"Designing the skill (attempt {attempt})",
                 "repairing": f"Fixing problems in the design (attempt {attempt})",
-                "done": "Design ready",
-                "failed": "Could not produce a valid design",
+                "done": DESIGN_READY_MESSAGE,
+                "failed": DESIGN_INVALID_MESSAGE,
             }
             emit(stage, attempt, messages.get(stage, stage))  # type: ignore[arg-type]
 
@@ -187,11 +271,11 @@ class RealPipeline:
                 )
             except NotReady:
                 outcome = _result("design", "needs_input", error_code="open_questions")
-            except ArchitectUnavailable:
+            except ArchitectUnavailable as exc:
                 outcome = _result(
                     "design",
                     "retry_later",
-                    error_code="provider_unavailable",
+                    error_code=_retry_code(exc),
                     user_message=RETRY_LATER_MESSAGE,
                 )
             except BudgetExceeded:
@@ -219,6 +303,9 @@ class RealPipeline:
                         user_message=FAILED_MESSAGE,
                         issues=[IssueRecord.of(i) for i in result.issues],
                     )
+        if not closed:  # review F12: every design ends with exactly one closing event
+            stage, message = closing_event(outcome.status, outcome.error_code)
+            emit(stage, last_attempt, message)
         if outcome.status == "ok" and outcome.value is not None:
             _maybe_sample(outcome.value.skill.name)
         return _finish(outcome, usage, start)
@@ -238,11 +325,13 @@ async def _analysis_step(
         )
     except BudgetExceeded:
         return _budget_result(step)
-    except (SafetyUnavailable, LLMUnavailable):
+    except (SafetyUnavailable, LLMUnavailable) as exc:
         return _result(
-            step, "retry_later", error_code="provider_unavailable", user_message=RETRY_LATER_MESSAGE
+            step, "retry_later", error_code=_retry_code(exc), user_message=RETRY_LATER_MESSAGE
         )
-    except LLMError as exc:
+    except (LLMError, ValidationError) as exc:
+        # ValidationError: a rule the input checks above don't cover. Its message holds the
+        # user's text, so only the class name goes into error_code (review F2).
         return _result(
             step,
             "failed",
@@ -251,6 +340,17 @@ async def _analysis_step(
         )
     status: StepStatus = "needs_input" if analyzed.needs_clarification else "ok"
     return _result(step, status, value=analyzed)
+
+
+def _retry_code(exc: BaseException) -> str:
+    """ "deadline_exceeded" when the step passed its deadline (step_timeout_s), anywhere in the
+    exception's cause chain; else "provider_unavailable". Both are `retry_later`."""
+    seen: BaseException | None = exc
+    while seen is not None:
+        if isinstance(seen, DeadlineExceeded):
+            return "deadline_exceeded"
+        seen = seen.__cause__
+    return "provider_unavailable"
 
 
 def _budget_result(step: StepName) -> StepResult[Any]:

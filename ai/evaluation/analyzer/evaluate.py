@@ -281,6 +281,17 @@ def write_report(
                         "expected": p.item.needs_clarification,
                         "predicted": None if p.result is None else p.result.needs_clarification,
                     },
+                    # AI-25: labels and a boolean only (never question text), so the tracked
+                    # run can re-score mentioned_targets and question_rule_kept.
+                    "mentioned_targets": {
+                        "expected": None
+                        if p.item.mentioned_targets is None
+                        else list(p.item.mentioned_targets),
+                        "predicted": None if p.result is None else list(p.result.targets),
+                    },
+                    "question_rule_kept": None
+                    if p.result is None or not p.result.needs_clarification
+                    else 3 <= len(p.result.questions) <= 5,
                     "error": p.error,
                 }
                 f.write(json.dumps(row, ensure_ascii=False) + "\n")

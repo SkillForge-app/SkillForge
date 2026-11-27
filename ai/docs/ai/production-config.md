@@ -27,7 +27,7 @@ The budgets and limits are **provisional** until AI-20 measures the real cost pe
 - **Where the values come from:** the latency alerts. Analyze and clarify get 4 × `AILatencyHigh`'s 30 s (one call and its repair, each with one fallback hop). Design gets 3 Architect attempts × `AIArchitectLatencyHigh`'s 180 s, plus 60 s.
 - **What happens when a step passes its deadline:**
   - its calls still running are cancelled, and each one is logged as a `CallRecord` with `error_type: "CancelledError"` and no cost;
-  - the step returns `retry_later` with `error_code: "provider_unavailable"`.
+  - the step returns `retry_later` with `error_code: "deadline_exceeded"`.
 - **Without a profile** there is no deadline.
 
 **At startup (BE worker, API process):**
@@ -114,7 +114,7 @@ install_json_logs(sys.stdout)
 | Alert | Severity | Fires when |
 |---|---|---|
 | AILLMErrorRateHigh / AILLMErrorRateCritical | ticket / page | a role's attempt error rate is above 10% for 10 min / above 25% for 5 min |
-| AILLMAllModelsFailing | page | more than 5% of steps are `retry_later` / `provider_unavailable` |
+| AILLMAllModelsFailing | page | more than 5% of steps are `retry_later` / `provider_unavailable` or `deadline_exceeded` |
 | AIFallbackRateHigh | ticket | more than 5% of a role's attempts use a fallback |
 | AILatencyHigh / AIArchitectLatencyHigh | ticket | p95 latency is above 30 s / above 180 s |
 | AIUnpricedModel | ticket | a call has an unknown cost |
