@@ -189,10 +189,17 @@ def _labels(values: object) -> dict[str, Any]:
     if not isinstance(values, dict):
         raise TrackError("the labels are not an object (value not shown)")
     out: dict[str, Any] = {}
+    try:
+        return _checked(values, out)
+    except TypeError:  # e.g. an unhashable key or value: never a vocabulary label
+        raise TrackError("a label of an unexpected type (value not shown)") from None
+
+
+def _checked(values: dict[Any, Any], out: dict[str, Any]) -> dict[str, Any]:
     for key, value in values.items():
         if key in LISTS:
             if value is not None and (
-                not isinstance(value, list) or any(c not in LISTS[key] for c in value)
+                not isinstance(value, list) or not all(_in_vocab(c, LISTS[key]) for c in value)
             ):
                 raise TrackError(f"{key}: the value is outside the vocabulary (value not shown)")
             out[key] = value
@@ -259,6 +266,11 @@ def convert_line(row: dict[str, Any], known: Collection[str]) -> dict[str, Any]:
     }
 
 
+def canonical(lines: Iterable[dict[str, Any]]) -> str:
+    """The one form a tracked file may have: one json.dumps(sort_keys=True) line each, LF."""
+    return "".join(json.dumps(line, sort_keys=True) + "\n" for line in lines)
+
+
 def convert(source: Path, target: Path, known: Collection[str]) -> dict[str, Any]:
     """Write the id-only file; return its record (hashes, line count). Reads `source` only.
     `known`: rescore.known_ids(repo, recorded_at). Nothing is written if any line is refused."""
@@ -278,7 +290,7 @@ def convert(source: Path, target: Path, known: Collection[str]) -> dict[str, Any
     if len(set(ids)) != len(ids):
         raise TrackError("duplicate ids in the source run")
     target.parent.mkdir(parents=True, exist_ok=True)
-    body = "".join(json.dumps(line, sort_keys=True) + "\n" for line in lines)
+    body = canonical(lines)
     target.write_text(body, encoding="utf-8", newline="\n")
     return {
         "source_sha256": hashlib.sha256(raw).hexdigest(),
@@ -335,6 +347,7 @@ __all__ = [
     "TrackError",
     "architect_rows",
     "bad_fields",
+    "canonical",
     "convert",
     "convert_line",
     "id_problem",

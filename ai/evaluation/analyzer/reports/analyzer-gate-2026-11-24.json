@@ -1,5 +1,4 @@
 {
-  "invalid": "INVALID: provider failure (48 of 100 requests got no prediction). Not a measurement of the prompt.",
   "created": "2026-11-24T23:41:09Z",
   "live": true,
   "prompt": {

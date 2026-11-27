@@ -34,14 +34,13 @@ from typing import Any
 
 from evaluation.common import text_sha256
 from evaluation.reproduce.check import git_show
-from evaluation.reproduce.registry import AI_DIR, Entry, Registry
+from evaluation.reproduce.registry import AI_DIR, TEMP_ROOT, Entry, Registry
 from evaluation.reproduce.rescore import rescore
+from evaluation.reproduce.sandbox import refuse_env_file, sandbox_env
 from evaluation.reproduce.strict import loads_unique
 
-TEMP_ROOT = Path(tempfile.gettempdir()) / "skillforge-reproduce"
 VENVS = AI_DIR / ".data" / "reproduce" / "venvs"
 MODEL_CACHE = Path(os.environ.get("SKILLFORGE_MODEL_CACHE") or AI_DIR / ".data" / "models")
-SECRET_ENV = ("API_KEY", "TOKEN", "SECRET", "PASSWORD", "DSN")
 
 
 @dataclass
@@ -51,6 +50,9 @@ class Outcome:
     detail: str = ""
     diffs: list[str] = field(default_factory=list)
     seconds: float = 0.0
+    # offline: the sha256-lf of the committed report this run compared (record it in the
+    # registry as report_sha256 with `reproduces`)
+    report_sha256: str = ""
 
 
 def strip(value: Any, ignore: set[str]) -> Any:
@@ -124,25 +126,14 @@ def venv_for(tree: Path) -> tuple[Path, str]:
 
 
 def clean_env(needs_model: bool) -> dict[str, str]:
-    """The environment for one entry: no secrets, offline hub, and the entry's own backend
-    (fake, or the real gateway with the local model). Nothing is inherited for the backend."""
-    env = {k: v for k, v in os.environ.items() if not any(s in k.upper() for s in SECRET_ENV)}
-    env.pop("SKILLFORGE_LLM_BACKEND", None)
-    env.update(
-        SKILLFORGE_SEARCH="fake",
-        HF_HUB_OFFLINE="1",
-        PYTHONUTF8="1",
-        PYTHONHASHSEED="0",
-    )
-    env.pop("VIRTUAL_ENV", None)
+    """The whole environment for one entry's command (old-commit code): sandbox.sandbox_env,
+    an allowlist with every proxy at a dead port, and the entry's own backend: fake, or the
+    real gateway with the local model (and no key). Nothing else is inherited."""
     if not needs_model:
-        env["SKILLFORGE_LLM_BACKEND"] = "fake"
-    else:
-        # The real gateway with the local model (no key, no network: hub offline, keys removed).
-        if not MODEL_CACHE.is_dir():
-            raise RuntimeError(f"model cache not found: {MODEL_CACHE} (set SKILLFORGE_MODEL_CACHE)")
-        env["SKILLFORGE_MODEL_CACHE"] = str(MODEL_CACHE)
-    return env
+        return sandbox_env()
+    if not MODEL_CACHE.is_dir():
+        raise RuntimeError(f"model cache not found: {MODEL_CACHE} (set SKILLFORGE_MODEL_CACHE)")
+    return sandbox_env(model_cache=MODEL_CACHE)
 
 
 _SERIES = re.compile(r"^(?P<series>.+?)-(?P<date>\d{4}-\d{2}-\d{2})(?:-(?P<n>\d+))?(?P<rest>.*)$")
@@ -173,6 +164,15 @@ def remove_later_reports(reports_dir: Path, target_stem: str, keep: set[str]) ->
     return removed
 
 
+def reports_dir_for(tree: Path, report: str) -> Path:
+    """The extracted tree's folder of `report`; refuses one outside the temp root, so the
+    series rule can never remove a file anywhere else (e.g. in the repository)."""
+    reports_dir = (tree / Path(report).relative_to("ai").parent).resolve()
+    if not reports_dir.is_relative_to(TEMP_ROOT.resolve()):
+        raise RuntimeError(f"refusing to touch reports outside {TEMP_ROOT}: {reports_dir}")
+    return reports_dir
+
+
 def _new_json(reports_dir: Path, before: set[Path]) -> Path | None:
     made = sorted(p for p in reports_dir.glob("*.json") if p not in before)
     return made[-1] if len(made) == 1 else None
@@ -182,14 +182,16 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
     start = time.perf_counter()
     if not entry.command:
         return Outcome(entry.id, "skipped", "no command")
+    refuse_env_file(tree)  # the gateway would load keys from an extracted ai/.env
     committed = (repo / entry.report).read_bytes()
-    reports_dir = tree / Path(entry.report).relative_to("ai").parent
+    pinned = text_sha256(committed)
+    reports_dir = reports_dir_for(tree, entry.report)
     reports_dir.mkdir(parents=True, exist_ok=True)
     if "/reports/" in entry.report:
         keep = {Path(d.path).name for d in registry.data_files}
         remove_later_reports(reports_dir, Path(entry.report).stem, keep)
     before = set(reports_dir.glob("*.json"))
-    argv = [str(python), *entry.command[1:]] if entry.command[0] == "python" else entry.command
+    argv = [str(python), *entry.command[1:]]  # `python -m evaluation.*` only (the registry)
     proc = subprocess.run(
         argv,
         cwd=tree,
@@ -202,9 +204,8 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
     seconds = time.perf_counter() - start
     if entry.report.endswith("manifest.json"):
         ok = proc.returncode == 0
-        return Outcome(
-            entry.id, "match" if ok else "differs", proc.stdout.strip()[-200:], [], seconds
-        )
+        detail = proc.stdout.strip()[-200:]
+        return Outcome(entry.id, "match" if ok else "differs", detail, [], seconds, pinned)
     new = _new_json(reports_dir, before)
     if new is None:
         tail = (proc.stderr or proc.stdout).strip().splitlines()[-3:]
@@ -215,7 +216,7 @@ def run_entry(entry: Entry, registry: Registry, repo: Path, tree: Path, python: 
     old = strip(loads_unique(committed), ignore)
     fresh = strip(loads_unique(new.read_text(encoding="utf-8")), ignore)
     diffs = differences(old, fresh)
-    return Outcome(entry.id, "differs" if diffs else "match", "", diffs, seconds)
+    return Outcome(entry.id, "differs" if diffs else "match", "", diffs, seconds, pinned)
 
 
 def reproduce(

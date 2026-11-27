@@ -1,6 +1,6 @@
 # Experiments: the log, and how each result is reproduced (AI-25)
 
-**Done-when: "Results reproducible from tracked runs."** Every committed report under `ai/evaluation/<area>/reports/` has an entry in [`ai/evaluation/experiments.yaml`](../../evaluation/experiments.yaml). Every **final** entry reproduces: **18 of 18** (25 Nov 2026).
+**Done-when: "Results reproducible from tracked runs."** Every committed report under `ai/evaluation/<area>/reports/` has an entry in [`ai/evaluation/experiments.yaml`](../../evaluation/experiments.yaml). **21 final entries: 19 reproduce, 2 not run yet** (pending merge: their reports are on other branches). Every final entry on this branch reproduces (27 Nov 2026).
 
 ```bash
 cd ai
@@ -15,10 +15,15 @@ cd ai
 - **Offline entries are re-run at the commit that produced them** (`recorded_at`).
   1. `git archive <recorded_at> ai` is extracted with `core.autocrlf` off, so the tree is the same on every OS. It goes into a new folder under `%TEMP%\skillforge-reproduce\`. Nothing is written inside the repository, and only folders this run created are deleted.
   2. The venv comes from that commit's `uv.lock` (`uv sync --locked`), cached by the lock's hash in `ai/.data/reproduce/`, which Git ignores.
-  3. The command runs with no API keys, the Hugging Face hub offline, and the **entry's own backend**:
-     - `llm_backend: fake` means the fake LLM backend, with no model at all;
-     - `llm_backend: local-model` means the real gateway with the pinned local embedding model.
-     - There is no global setting. `check` rejects `fake` for an entry whose code embeds text (looked up at `recorded_at`), because fake vectors would give a meaningless report.
+  3. The command runs in a **sandbox environment** (`evaluation/reproduce/sandbox.py`), and so does any other code from an old commit (the `.md` check's renderer at `recorded_at`):
+     - **An allowlist only:** `PATH`, `SYSTEMROOT`, `TEMP`/`TMP`, `HOME`/`USERPROFILE` and `LANG`, plus the settings below. Everything else is dropped whatever its name: any `*_KEY`, `*_TOKEN` or `*_SECRET`, `DATABASE_URL`, and any variable not on the list.
+     - **No HTTP:** `HTTP_PROXY`, `HTTPS_PROXY` and `ALL_PROXY` point at `http://127.0.0.1:0` (fails at once on every OS) and `NO_PROXY` is empty, so httpx, requests and urllib fail. `HF_HUB_OFFLINE=1`.
+     - **No `.env`:** an extracted tree that holds `ai/.env` is refused (the gateway would load keys from it; none was ever committed).
+     - **Tested** with a fake old commit that reports which secret-named variables it sees and tries HTTP to a live local server, through both `run` and the renderer (`tests/evaluation/test_sandbox.py`).
+     - **The entry's own backend:**
+       - `llm_backend: fake` means `SKILLFORGE_LLM_BACKEND=fake`, with no model at all;
+       - `llm_backend: local-model` means the real gateway with the pinned local embedding model (`SKILLFORGE_MODEL_CACHE`), and no key to call anything else with.
+       - There is no global setting. `check` rejects `fake` for an entry whose code embeds text (looked up at `recorded_at`), because fake vectors would give a meaningless report.
 - **Live entries are never re-run** (their model calls cost money and aren't deterministic).
   - Their raw predictions are **tracked id-only** (below) and **re-scored offline**, with the same formulas as `analyzer/` and `safety/evaluate.py` and the labels at `recorded_at`.
   - A rescore entry (E8) is scored the same way, against its newer labels.
@@ -28,8 +33,13 @@ cd ai
   - **No tolerances:** no entry has a numeric tolerance.
 - **The series rule.** Before re-running, the target report and every **later** report of its series are removed from the extracted reports folder. The series is the name before the date; later means a later date, or the same date with a higher `-N`.
   - This leaves the folder as it was when the report was written. A tool that reads earlier reports (for example the sources review's history) then sees what it saw.
-  - Only reports of that series are removed, never inputs or data files.
+  - Only reports of that series are removed, never inputs or data files, and only inside the extracted tree: `run` refuses a reports folder outside the temp root.
+- **What the registry may name.** Every path (`report`, `inputs[].path`, `tracked_run.path`, `data_files[].path`) is under `ai/`, with no `.` or `..` segment. The only command `run` executes is `python -m evaluation.<module> [args]`, with the recorded commit's venv.
 - **Metrics a tracked run can't support** are listed per entry in `not_recomputable`, with the reason. Any other metric left out of a comparison makes the entry fail.
+- **What `check` re-verifies on every PR** (no model, no network):
+  - **Offline reports are pinned.** Once `reproduces` is set, the entry also records `report_sha256`: the sha256-lf of the report that run compared (`run` prints it). `check` fails if the report changes later.
+  - **Live and rescore entries are re-scored** from their tracked runs, exactly as `run` does. A report edited after its run fails.
+  - **A live report's `.md` must be what its `.json` renders to** (`evaluation/reproduce/twins.py`). Today's renderer is tried first, then the one at `recorded_at`. A section added by hand after the generated part must be declared in `md_addendum`, with its reason; two have one: `safety-all-2026-11-17` (its 18 Nov "Completion") and `analyzer-gate-2026-11-24` (its "INVALID" notice, see Invalid below). Not covered: E8, written by a one-off script, and the offline reports, whose `.md` `run` regenerates but doesn't compare.
 
 ## Hashes: the same on Windows and Linux
 - Data-file hashes in reports are `sha256` of the content with **CRLF turned into LF** (`evaluation.common.text_sha256`). New report entries say so: `"hash": "sha256-lf"`.
@@ -53,12 +63,16 @@ cd ai
   - `source_sha256`: the original local file. For E8 it equals the report's `predictions_sha256`.
   - `sha256`: the tracked file, LF-normalised.
 - **What `check` verifies:** both hashes, the line count (equal to the report's n), the allowlist, unique ids, and that each id is in the label files at `recorded_at`. Without git history, it checks the id format only.
+- **One form only:** a tracked file must equal its canonical form, `"".join(json.dumps(line, sort_keys=True) + "\n" for line in lines)` (`track.canonical`, which the converter writes). Nothing can ride along in spacing, key order, escapes or blank lines.
 
 ## Roles
 - **final:** a decision rests on it. **The done-when: every final entry reproduces.** `check` fails on a final entry recorded as `reproduces: false`.
-- **superseded:** an earlier round, replaced by a later report. It may stay `reproduces: false`, with the reason recorded.
+- **superseded:** an earlier round, replaced by a later report. It names that report's entry in `superseded_by`, which must be a final entry of the same experiment. It may stay `reproduces: false`, with the reason recorded.
 - **invalid:** a run that measured nothing. Like superseded, it never counts toward the done-when. Listed on its own below.
-- **pending-merge (a status, not a role):** the report is on another branch. `check` skips the entry while the report is absent and checks it fully once it's present, so merging in any order is safe. When an open branch adds a new report, its PR adds the entry.
+- **pending-merge (a status, not a role):** the report is on another branch.
+  - `check` skips the entry while the report is absent, and counts a final one as "not run yet". Once the report is present, `check` checks the entry fully and lists it to be set to `status: active`. So merging in any order is safe.
+  - A pending-merge report that was ever in this branch's history and is now gone was deleted, not pending: `check` fails.
+  - When an open branch adds a new report, its PR adds the entry.
 
 ## The experiments
 
@@ -121,14 +135,21 @@ cd ai
 ### E10, AI-04 seed benchmark
 - **Final:** releases 0.1.0 and 1.0.0. `validate seed` passes: every file has its byte hash.
 
+### E12, AI-05 request analyzer, prompt v3 (live)
+- **Final:** `analyzer-dev-2026-11-24` (v3, dev 50, run 1 of 3): kind 92%, domain 88%, risk 92%. Sonnet 5.5, $0.44.
+- **Invalid:** `analyzer-gate-2026-11-24`, see Invalid below.
+- **Re-scored** from tracked runs (`runs/20261124T233621Z`, `runs/20261124T234253Z`); every recomputable metric matches.
+- **`not_recomputable`:** the same two metrics as E7: the 24 Nov raw runs predate 25 Nov and never saved predicted targets or questions.
+- **Next:** the 28 Nov dev run and gate rerun, same prompt and data. Their raw rows keep targets and `question_rule_kept`, so they need no `not_recomputable`.
+
 ## Invalid
-- **E12, `analyzer-gate-2026-11-24`** (prompt v3; on `AI-05-prompt-v3`, pending merge). Provider failure: 48% of requests got no prediction. The 95% validity rule was added after it. Never used for any decision; replaced by the 28 Nov rerun.
+- **E12, `analyzer-gate-2026-11-24`** (prompt v3). Provider failure: 48 of 100 requests got no prediction. The 95% validity rule was added after it. Never used for any decision; replaced by the 28 Nov rerun.
+  - The INVALID notice is a declared `md_addendum` at the end of its `.md`. Until 27 Nov it was a hand-added line at the top of the `.md` and an `invalid` key in the `.json`. Both were removed so the generated part is exactly what the `.json` renders to at `recorded_at`; nothing else in the report changed.
 
 ## Pending merge
 These are checked once their branch merges:
 - **E6 `injection-test-2026-11-18`** (#40): F9, (c) recomputed offline, 54 of 54.
 - **E11 `support-calibration-2026-11-21`** (AI-12): the AI-13 support threshold, `local-model`.
-- **E12 `analyzer-dev-2026-11-24`** (AI-05-prompt-v3): the v3 dev run.
 
 ## Adding an experiment
 1. **Run it.** Live runs need `--budget-usd`; for analyzer runs, `--retry-errors` and the 95% validity rule apply. Commit the report (`.md` and `.json`).
@@ -142,3 +163,10 @@ These are checked once their branch merges:
    - required: `id`, `experiment`, `task`, `question`, `kind`, `role`, `report`, `recorded_at` (the code commit), `command`;
    - offline entries also need `llm_backend`; live entries also need `tracked_run` (its two hashes and lines), plus `not_recomputable` if anything applies.
 4. **Run** `reproduce run --only <id>`, record `reproduces` and `reproduces_note`, then run `reproduce check`.
+
+## Follow-ups (from the review of #41)
+- **Done in #41:** old-commit code runs with an allowlisted environment and every HTTP proxy at `127.0.0.1:0` (step 3 above). This replaced the `SECRET_ENV` denylist.
+  - Before it, E2's re-runs made real `robots.txt` requests; the sandbox blocks them, and E2 still reproduces exactly.
+- **Not done yet: E2 makes many `robots.txt` attempts once the first fetch fails (why?).** With HTTP blocked, its re-run takes far longer than the 3 s it took with the network. The sources code is unchanged here.
+- **Not done yet: OS-level network isolation.** A raw socket ignores proxy settings. Run old-commit code in a network namespace, like the CI pytest step (`unshare --net`), or an equivalent on Windows. `uv sync` builds the recorded venv outside the sandbox, because it needs the network; it installs only the hash-pinned packages of that commit's `uv.lock` and runs none of the commit's code.
+- **Not done yet: the `last-run.json` path.** `run` writes its summary to one fixed, shared file, `%TEMP%\skillforge-reproduce\last-run.json`, which every run overwrites. Write a new file per run (or to an explicit `--out` path), created by `run` itself.

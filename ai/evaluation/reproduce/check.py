@@ -5,6 +5,9 @@
   this branch's history (an ancestor of HEAD);
 - a pending-merge entry is skipped while its report is absent and checked fully once present;
 - every recorded input still has its recorded hash at `recorded_at` (git history is needed);
+- an offline entry whose `reproduces` is set has the report_sha256 its run compared;
+- a live report's .md is what its .json renders to (twins.py);
+- a live/rescore entry is re-scored from its tracked run and must match its report;
 - a live/rescore entry's tracked run exists, has its recorded hash and line count, only
   allowlisted fields and unique ids, and every id is well-formed and (with history) one of the
   ids in the label files at `recorded_at`; a rescore's source hash equals its report's.
@@ -18,11 +21,13 @@ from pathlib import Path
 from core.spec import Issue
 from evaluation.common import match_recorded_hash, text_sha256
 from evaluation.reproduce.registry import Entry, Registry
-from evaluation.reproduce.rescore import known_ids
+from evaluation.reproduce.rescore import known_ids, rescore
 from evaluation.reproduce.strict import DuplicateKeyError, loads_unique
-from evaluation.reproduce.track import bad_fields, parse_lines
+from evaluation.reproduce.track import bad_fields, canonical, parse_lines
+from evaluation.reproduce.twins import markdown_issues
 
 REPORT_GLOB = "ai/evaluation/*/reports/*.json"
+RUNS_GLOB = "ai/evaluation/*/reports/runs"  # tracked runs only: see _unlisted_run_files
 # Code that loads the embedding model: under a fake backend it would get random vectors.
 EMBEDS = re.compile(rb"core\.llm\.local_embed|embed\(")
 
@@ -34,7 +39,10 @@ class CheckResult:
     pending_skipped: list[str] = field(default_factory=list)
     # The done-when, over checked FINAL entries only (superseded and invalid never count).
     final_reproduces: list[str] = field(default_factory=list)
-    final_not_run: list[str] = field(default_factory=list)
+    final_not_run: list[str] = field(default_factory=list)  # includes final_pending
+    final_pending: list[str] = field(default_factory=list)  # pending-merge: not run here yet
+    # pending-merge entries whose report is here: checked fully; set them to status: active
+    pending_arrived: list[str] = field(default_factory=list)
 
 
 def repo_root(start: Path) -> Path:
@@ -79,13 +87,30 @@ def check(registry: Registry, repo: Path, *, history: bool = True) -> CheckResul
     for data_file in registry.data_files:
         if not (repo / data_file.path).is_file():
             issues.append(Issue(data_file.path, "missing_file", "listed data file is missing"))
+    issues += _unlisted_run_files(registry, repo)
+    issues += _superseded_issues(registry)
 
     for entry in registry.experiments:
         present = (repo / entry.report).is_file()
         if entry.status == "pending-merge" and not present:
+            if history and _in_history(repo, entry.report):
+                issues.append(
+                    Issue(
+                        entry.id,
+                        "pending_report_in_history",
+                        f"{entry.report} was in this branch's history and is gone: deleted, "
+                        "not pending (restore it, or remove the entry)",
+                    )
+                )
+                continue
             result.pending_skipped.append(entry.id)
+            if entry.role == "final":
+                result.final_not_run.append(entry.id)
+                result.final_pending.append(entry.id)
             continue
-        issues += _check_entry(entry, repo, present, history=history)
+        if entry.status == "pending-merge":
+            result.pending_arrived.append(entry.id)
+        issues += _check_entry(entry, registry, repo, present, history=history)
         result.checked.append(entry.id)
         if entry.role != "final":
             continue
@@ -100,7 +125,70 @@ def check(registry: Registry, repo: Path, *, history: bool = True) -> CheckResul
     return result
 
 
-def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> list[Issue]:
+def _in_history(repo: Path, path: str) -> bool:
+    """Did `path` ever exist in HEAD's history (added, changed or deleted)?"""
+    out = subprocess.run(
+        ["git", "log", "-1", "--format=%H", "HEAD", "--", path],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    return out.returncode == 0 and bool(out.stdout.strip())
+
+
+def _superseded_issues(registry: Registry) -> list[Issue]:
+    """A superseded entry names the final entry of the same experiment that replaced it."""
+    by_id = {e.id: e for e in registry.experiments}
+    issues = []
+    for e in registry.experiments:
+        if e.role != "superseded":
+            continue
+        if e.superseded_by is None:
+            issues.append(Issue(e.id, "no_superseded_by", "name the final entry that replaced it"))
+            continue
+        final = by_id.get(e.superseded_by)
+        if (
+            final is None
+            or final.id == e.id
+            or final.role != "final"
+            or final.experiment != e.experiment
+        ):
+            issues.append(
+                Issue(
+                    e.id,
+                    "bad_superseded_by",
+                    f"{e.superseded_by} is not another final entry of {e.experiment}",
+                )
+            )
+    return issues
+
+
+def _unlisted_run_files(registry: Registry, repo: Path) -> list[Issue]:
+    """Every file under ai/evaluation/*/reports/runs/ (on disk, tracked or not) must be some
+    entry's tracked_run.path: anything else could hold request text. Reported per folder with a
+    count, never a file name (a name could carry text too)."""
+    listed = {e.tracked_run.path for e in registry.experiments if e.tracked_run is not None}
+    issues = []
+    for runs in sorted(repo.glob(RUNS_GLOB)):
+        stray = [
+            p
+            for p in runs.rglob("*")
+            if p.is_file() and p.relative_to(repo).as_posix() not in listed
+        ]
+        if stray:
+            issues.append(
+                Issue(
+                    runs.relative_to(repo).as_posix(),
+                    "unlisted_run_file",
+                    f"{len(stray)} file(s) here are no entry's tracked_run.path (names not shown)",
+                )
+            )
+    return issues
+
+
+def _check_entry(
+    entry: Entry, registry: Registry, repo: Path, present: bool, *, history: bool
+) -> list[Issue]:
     issues = []
     where = entry.id
     if not present:
@@ -116,13 +204,32 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
             return [*issues, Issue(where, "report_duplicate_key", str(exc))]
     if entry.kind == "offline" and not entry.command:
         issues.append(Issue(where, "no_command", "an offline entry needs its command"))
+    if entry.kind == "offline" and entry.reproduces is not None:
+        if entry.report_sha256 is None:
+            issues.append(
+                Issue(
+                    where,
+                    "no_report_hash",
+                    "reproduces is set: record report_sha256 too (reproduce run prints it)",
+                )
+            )
+        elif text_sha256(repo / entry.report) != entry.report_sha256:
+            issues.append(
+                Issue(
+                    where,
+                    "changed_report",
+                    f"{entry.report} changed after the run that set reproduces",
+                )
+            )
+    issues += markdown_issues(entry, repo)
     known = None  # without history: the id format only
     if history and entry.tracked_run is not None:
         if _git_ok(repo, "cat-file", "-e", f"{entry.recorded_at}^{{commit}}"):
             known = known_ids(repo, entry.recorded_at)
         else:
             known = frozenset()  # unknown_commit is reported below; no id can pass
-    issues += _check_tracked_run(entry, repo, known)
+    tracked_issues = _check_tracked_run(entry, repo, known)
+    issues += tracked_issues
     if not history:
         return issues
     if not _git_ok(repo, "cat-file", "-e", f"{entry.recorded_at}^{{commit}}"):
@@ -153,6 +260,18 @@ def _check_entry(entry: Entry, repo: Path, present: bool, *, history: bool) -> l
             )
         elif match_recorded_hash(item.sha256, content, item.hash) is None:
             issues.append(Issue(where, "changed_input", f"{item.path} no longer has its hash"))
+    if entry.kind != "offline" and entry.tracked_run is not None and not tracked_issues:
+        # Re-score the tracked run against the labels at recorded_at (no model, ~0.2 s each):
+        # a report edited after its run fails here, not only in `reproduce run`.
+        diffs, _ = rescore(entry, registry, repo)
+        if diffs:
+            issues.append(
+                Issue(
+                    where,
+                    "rescore_differs",
+                    f"{len(diffs)} difference(s) with the report, first: {diffs[0]}",
+                )
+            )
     return issues
 
 
@@ -173,8 +292,19 @@ def _check_tracked_run(entry: Entry, repo: Path, known: frozenset[str] | None) -
     issues = []
     if text_sha256(path) != run.sha256:
         issues.append(Issue(where, "changed_tracked_run", f"{run.path} no longer has its hash"))
-    lines, problems = parse_lines(path.read_text(encoding="utf-8"))
+    text = path.read_bytes().replace(b"\r\n", b"\n").decode("utf-8")  # a CRLF checkout too
+    lines, problems = parse_lines(text)
     issues += [Issue(where, "tracked_run_json", p) for p in problems[:5]]
+    if not problems and text != canonical(lines):
+        # One form only (sorted keys, json.dumps separators, no blank line or extra space):
+        # nothing can ride along in the layout, and the file's hash depends on its data alone.
+        issues.append(
+            Issue(
+                where,
+                "tracked_run_not_canonical",
+                "the file is not in its canonical form (track.canonical)",
+            )
+        )
     if len(lines) + len(problems) != run.lines:
         issues.append(
             Issue(

@@ -26,10 +26,19 @@ def check_command() -> int:
         f"{len(result.checked)} entries checked; {len(result.pending_skipped)} pending-merge "
         f"skipped (report not on this branch): {', '.join(result.pending_skipped) or '-'}"
     )
+    finals = sum(e.role == "final" for e in registry.experiments)
+    not_run = [i for i in result.final_not_run if i not in result.final_pending]
+    which = [f"pending-merge: {', '.join(result.final_pending)}"] if result.final_pending else []
+    which += [f"not run: {', '.join(not_run)}"] if not_run else []
     print(
-        f"done-when (final entries): {len(result.final_reproduces)} reproduce, "
-        f"{len(result.final_not_run)} not run yet: {', '.join(result.final_not_run) or '-'}"
+        f"done-when: {finals} final entries: {len(result.final_reproduces)} reproduce, "
+        f"{len(result.final_not_run)} not run yet ({'; '.join(which) or '-'})"
     )
+    if result.pending_arrived:
+        print(
+            "pending-merge entries whose report is here (checked fully; set status: active): "
+            + ", ".join(result.pending_arrived)
+        )
     print("FAIL" if result.issues else "OK")
     return 1 if result.issues else 0
 
@@ -59,6 +68,8 @@ def run_command(only: list[str], no_model: bool) -> int:
         )
         for d in outcome.diffs:
             print(f"           {d}")
+        if outcome.report_sha256:
+            print(f"           report_sha256: {outcome.report_sha256}")
     summary = TEMP_ROOT / "last-run.json"
     summary.write_text(json.dumps(rows, indent=2), encoding="utf-8")
     bad = [r for r in rows if r["status"] in ("differs", "error")]

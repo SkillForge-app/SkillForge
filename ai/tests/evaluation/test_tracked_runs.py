@@ -3,16 +3,24 @@
 import hashlib
 import json
 import subprocess
+from collections.abc import Callable
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from evaluation.analyzer.evaluate import Prediction, write_report
+from evaluation.analyzer.evaluate import EvalReport, Prediction, render_markdown, write_report
 from evaluation.common import text_sha256
 from evaluation.reproduce.check import check, repo_root
 from evaluation.reproduce.registry import AI_DIR, Registry, RegistryError, load_registry
-from evaluation.reproduce.rescore import _compare, analyzer_metrics, known_ids, safety_metrics
+from evaluation.reproduce.rescore import (
+    _compare,
+    analyzer_gate,
+    analyzer_metrics,
+    known_ids,
+    safety_metrics,
+)
 from evaluation.reproduce.strict import DuplicateKeyError, loads_unique, yaml_unique
 from evaluation.reproduce.track import FIELDS, TrackError, bad_fields, convert, convert_line
 
@@ -202,7 +210,7 @@ def test_convert_reads_the_source_and_records_both_hashes(tmp_path: Path) -> Non
 
 
 def test_the_committed_tracked_runs_are_clean() -> None:
-    """All 8 tracked files: allowlisted fields, and every id in the label files at recorded_at."""
+    """All 10 tracked files: allowlisted fields, and every id in the label files at recorded_at."""
     repo = repo_root(AI_DIR)
     files = set()
     for entry in load_registry().experiments:
@@ -217,7 +225,7 @@ def test_the_committed_tracked_runs_are_clean() -> None:
         assert bad_fields(lines, known) == [], entry.id
         assert all(set(line) <= set(FIELDS) for line in lines)
         files.add(entry.tracked_run.path)
-    assert len(files) == 8
+    assert len(files) == 10
 
 
 # ------------------------------------------------------------------ `reproduce check`
@@ -232,24 +240,51 @@ def git(repo: Path, *args: str) -> str:
     return out.stdout.strip()
 
 
+def eval_report(line: dict[str, Any], edit: Callable[[EvalReport], None] | None) -> EvalReport:
+    """The report a live run of this one tracked line writes (`edit` changes it first)."""
+    metrics = analyzer_metrics([line], {"gate:t-01": {"mentioned_targets": []}}, relabel=False)
+    report = EvalReport(
+        created="2026-11-25T00:00:00Z",
+        live=True,
+        prompt={"id": "analysis/request", "version": 3},
+        model="m",
+        data_sources=[],
+        sets={"gate": metrics},
+        gate=analyzer_gate(metrics),
+        usage={"calls": 1, "errors": 0, "input_tokens": 1, "output_tokens": 1, "cost_usd": 0.0},
+    )
+    if edit is not None:
+        edit(report)
+    return report
+
+
 def live_repo(
-    tmp_path: Path, tracked_id: str, *, run: str | None = None, report: str | None = None
+    tmp_path: Path,
+    tracked_id: str,
+    *,
+    run: str | None = None,
+    report: str | None = None,
+    edit: Callable[[EvalReport], None] | None = None,
+    markdown: str | None = None,
 ) -> tuple[Path, Registry]:
-    """A throwaway repo: labels for gate:t-01, a live report of n=1, and its tracked run (or the
-    raw `run` / `report` text given)."""
+    """A throwaway repo: labels for gate:t-01, a live report of n=1 (a real EvalReport and its
+    rendered .md, as `analyzer run --live` writes them) and its tracked run; or the raw `run` /
+    `report` / `markdown` text given, or the report changed by `edit` (and its .md with it)."""
     git(tmp_path, "init", "-q")
     git(tmp_path, "config", "user.email", "test@example.invalid")
     git(tmp_path, "config", "user.name", "test")
     git(tmp_path, "config", "core.autocrlf", "false")
     line = {**convert_line(ANALYZER_ROW, KNOWN), "id": tracked_id}
     run = run if run is not None else json.dumps(line, sort_keys=True) + "\n"
+    made = eval_report(line, edit)
+    generated = json.dumps({**asdict(made), "run": "20261125T000000Z"}, indent=2) + "\n"
     files = {
         LABELS: (
             "requests:\n  - {id: t-01, kind: task, domain: writing/cv, risk: low,"
             " needs_clarification: false}\n"
         ),
-        REPORT: report if report is not None else json.dumps({"sets": {"gate": {"n": 1}}}),
-        REPORT[: -len(".json")] + ".md": "# demo",
+        REPORT: report if report is not None else generated,
+        REPORT[: -len(".json")] + ".md": render_markdown(made) if markdown is None else markdown,
         RUN: run,
     }
     for rel, content in files.items():
@@ -280,6 +315,29 @@ def live_repo(
 def test_check_passes_a_tracked_run_whose_ids_are_in_the_labels(tmp_path: Path) -> None:
     repo, reg = live_repo(tmp_path, "gate:t-01")
     assert check(reg, repo).issues == []
+
+
+# ------------------------------------------------------------------ review fix 2: integrity
+
+
+def wrong_count(report: EvalReport) -> None:
+    report.sets["gate"]["fields"]["kind"]["correct"] = 1  # the tracked line has kind wrong
+
+
+def test_check_rescores_a_live_entry_and_fails_an_edited_metric(tmp_path: Path) -> None:
+    # The .json and its .md agree (both edited): only the rescore can see the change.
+    repo, reg = live_repo(tmp_path, "gate:t-01", edit=wrong_count)
+    issues = check(reg, repo).issues
+    assert [i.code for i in issues] == ["rescore_differs"]
+    assert "sets.gate.fields.kind.correct: report 1 | re-score 0" in issues[0].message
+
+
+def test_check_fails_a_markdown_that_its_json_does_not_render_to(tmp_path: Path) -> None:
+    made = render_markdown(eval_report(convert_line(ANALYZER_ROW, KNOWN), None))
+    edited = made.replace("Mode: LIVE", "Mode: LIVE, gate PASSED")
+    assert edited != made
+    repo, reg = live_repo(tmp_path, "gate:t-01", markdown=edited)
+    assert [i.code for i in check(reg, repo).issues] == ["markdown_mismatch"]
 
 
 @pytest.mark.parametrize(
@@ -477,3 +535,68 @@ def test_loads_unique_refuses_duplicates_at_any_depth() -> None:
     assert loads_unique('{"a": [{"b": 1}, {"b": 2}]}') == {"a": [{"b": 1}, {"b": 2}]}
     with pytest.raises(DuplicateKeyError, match="'b'"):
         loads_unique('{"a": [{"c": {"b": 1, "b": 1}}]}')  # even with equal values
+
+
+# ------------------------------------------------------------------ review fix 5: canonical form
+
+
+def canonical_line() -> str:
+    return json.dumps(convert_line(ANALYZER_ROW, KNOWN), sort_keys=True)
+
+
+NOT_CANONICAL: dict[str, Callable[[str], str]] = {
+    "compact separators": lambda s: json.dumps(
+        json.loads(s), sort_keys=True, separators=(",", ":")
+    ),
+    "unsorted keys": lambda s: json.dumps(dict(reversed(list(json.loads(s).items())))),
+    "a leading space": lambda s: " " + s,
+    "trailing spaces": lambda s: s + "   ",
+    "a blank line": lambda s: s + "\n",
+    "an escaped character": lambda s: s.replace('"gate:t-01"', '"gate:t-\\u0030\\u0031"'),
+}
+
+
+@pytest.mark.parametrize("case", NOT_CANONICAL)
+def test_a_tracked_file_must_be_in_its_canonical_form(tmp_path: Path, case: str) -> None:
+    text = NOT_CANONICAL[case](canonical_line())
+    assert text != canonical_line()
+    assert json.loads(text) == json.loads(canonical_line())  # the same data: only the form differs
+    repo, reg = live_repo(tmp_path, "gate:t-01", run=text + "\n")
+    issues = check(reg, repo).issues
+    assert [i.code for i in issues] == ["tracked_run_not_canonical"]
+
+
+def test_the_canonical_form_passes_also_from_a_crlf_checkout(tmp_path: Path) -> None:
+    repo, reg = live_repo(tmp_path, "gate:t-01")
+    path = repo / RUN
+    path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+    assert check(reg, repo).issues == []
+
+
+UNHASHABLE: list[tuple[dict[str, Any], dict[str, Any]]] = [
+    (  # a list where a label belongs, in a list label
+        {"mentioned_targets": [["claude"]]},
+        {**ANALYZER_ROW, "mentioned_targets": {"expected": [], "predicted": [["claude"]]}},
+    ),
+    (
+        {"mentioned_targets": [{"name": TEXT}]},
+        {**ANALYZER_ROW, "mentioned_targets": {"expected": [], "predicted": [{"name": TEXT}]}},
+    ),
+    ({"conditions": [[TEXT]]}, {**SAFETY_ROW, "conditions": [[TEXT]]}),
+    (
+        {"kind": {"text": TEXT}},
+        {**ANALYZER_ROW, "predicted": {**ANALYZER_ROW["predicted"], "kind": {"text": TEXT}}},
+    ),
+]
+
+
+@pytest.mark.parametrize(("labels", "row"), UNHASHABLE)
+def test_an_unhashable_label_is_a_problem_not_a_crash(
+    labels: dict[str, Any], row: dict[str, Any]
+) -> None:
+    clean = convert_line(ANALYZER_ROW, KNOWN)
+    problems = bad_fields([{**clean, "predicted": labels}], KNOWN)
+    assert len(problems) == 1 and "not shown" in problems[0] and "cover" not in problems[0]
+    with pytest.raises(TrackError) as caught:
+        convert_line(row, KNOWN)
+    assert "not shown" in str(caught.value) and "cover" not in str(caught.value)

@@ -193,7 +193,8 @@ def skill_run(
     BE wraps each step of one job and passes what earlier steps spent (`StepResult.usage`), so
     the budget covers the whole skill without changing the pipeline's signatures. Once spent +
     this block's cost reaches the budget, the next model call raises BudgetExceeded instead of
-    calling. A call already running finishes and is counted, so at most one call overruns.
+    calling. A call already running finishes and is counted, so the budget can be overrun by
+    the calls in flight at that moment: one when calls run one at a time, more when concurrent.
     Runs can be nested; every active budget is checked.
 
     Without `budget_usd` the environment's budget per skill applies (`skill_budget_usd` of the
