@@ -442,8 +442,8 @@ def test_pending_merge_finals_count_as_not_run_yet(repo: Path) -> None:
 def test_the_summary_counts_every_final_entry(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["check"]) == 0
     out = capsys.readouterr().out
-    assert "21 final entries: 18 reproduce, 3 not run yet" in out
-    assert "pending-merge: E6:injection-test-2026-11-18" in out
+    assert "21 final entries: 19 reproduce, 2 not run yet" in out
+    assert "pending-merge: E11:support-calibration-2026-11-21" in out
 
 
 def superseded_case(repo: Path, **extra: str) -> list[str]:
@@ -496,7 +496,7 @@ def test_every_real_superseded_entry_names_its_final_entry() -> None:
     reg = load_registry()
     by_id = {e.id: e for e in reg.experiments}
     superseded = [e for e in reg.experiments if e.role == "superseded"]
-    assert len(superseded) == 11
+    assert len(superseded) == 13
     for e in superseded:
         assert e.superseded_by is not None
         final = by_id[e.superseded_by]
