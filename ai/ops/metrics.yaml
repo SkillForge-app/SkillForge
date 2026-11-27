@@ -47,7 +47,7 @@ metrics:
   # ---------------------------------------------------------------- pipeline steps (StepEvent)
   - name: skillforge_step_total
     type: counter
-    help: Pipeline steps by step, status and error code (budget_exceeded, provider_unavailable, ...).
+    help: Pipeline steps by step, status and error code (budget_exceeded, provider_unavailable, deadline_exceeded, ...).
     logger: skillforge.pipeline
     record: StepEvent
     labels: {step: step, status: status, error_code: error_code}

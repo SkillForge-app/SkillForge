@@ -57,16 +57,19 @@ await pipeline.design(analyzed: AnalyzedRequest, *, existing_names: Collection[s
 | `needs_input` | none (`analyze`, `clarify`) | Store `value` and show `value.questions` (3 to 5). When the user answers, enqueue `clarify` |
 | `needs_input` | `open_questions` (`design`) | `value` is `None`: the request still has open questions. Run `clarify` first |
 | `blocked` | `blocked.<category>`, e.g. `blocked.fraud_scams`; `blocked.other` from `design` | Show `user_message`. **No retry, no package** (BE-14) |
-| `retry_later` | `provider_unavailable` | Re-enqueue the same step later, on purpose (section 3). Show `user_message` if it keeps happening |
+| `retry_later` | `provider_unavailable` or `deadline_exceeded` | Re-enqueue the same step later, on purpose (section 3). Show `user_message` if it keeps happening. Treat both codes the same |
 | `failed` | `budget_exceeded` | The skill used up its model budget. Show `user_message`; don't retry |
 | `failed` | `invalid_spec` (`design`) | No valid spec after 3 attempts; `issues` say why. Show `user_message` |
 | `failed` | `not_screened` (`design`) | The `AnalyzedRequest` has no safety clearance: always pass the one `analyze`/`clarify` returned, from your own database |
+| `failed` | `invalid_request` (`analyze`, `clarify`) | The input broke a rule (see "Input rules" below). No model was called. Show `user_message`; don't retry the same input |
 | `failed` | `analysis_failed.<ErrorType>` | The analysis could not be used. Show `user_message` |
 
-- **A step deadline shows as `retry_later` / `provider_unavailable`** for now.
-  - **The deadlines:** each profile sets one per step (analyze and clarify 120 s, design 600 s). The step's calls are cut off at the deadline.
-  - **Why the same code:** a separate code would need a change to the frozen interface. In the logs the cut-off calls have `error_type: "CancelledError"`.
-- **`not_screened` is a safety rule.** Only an `AnalyzedRequest` that the pipeline returned to you carries a valid clearance. Never take one back from the browser.
+- **A step deadline shows as `retry_later` / `deadline_exceeded`.**
+  - **The deadlines:** each profile sets one per step (analyze and clarify 120 s, design 600 s). The step's calls are cut off at the deadline; in the logs they have `error_type: "CancelledError"`.
+  - **Handle it like `provider_unavailable`:** branch on `status`, not on `error_code`. The separate code is for logs and alerts.
+- **Keep every `AnalyzedRequest` on the server** (review F10). Store the one `analyze`/`clarify` returned, and pass that stored copy to the next step.
+  - **Never accept one back from the browser,** not even to "save a round trip". Its `safety` clearance is not tied to the request text, so a copy edited after screening would still look screened, and `design` would build it.
+  - The browser sends only the request text and the answers (`question_id`, `text`). `not_screened` catches a missing clearance, not an edited one.
 
 ## 3. The RQ job
 
@@ -137,9 +140,11 @@ def design_job(skill_id: str, attempt: int = 0) -> None:
 - **No automatic retries.** A model call costs money, and the gateway already retries transient errors and falls back to other models. A blind retry would pay for the same calls twice. `retry_later` is the only case to re-run, on purpose, with `enqueue_in`.
 - **`job_timeout` must stay above the step deadline,** so the pipeline stops first and returns `retry_later` cleanly. RQ's timeout only catches a stuck job.
 - **Analyze and clarify jobs** follow the same pattern, with `job_timeout=300`.
-  - Before enqueueing `analyze`, check that the text is 1 to 4000 characters and not blank.
-  - For `clarify`, when the user skips everything, send one `Answer(question_id=q.id, text=None)` per question, not an empty list. Today a blank text, a text over 4000 characters or an empty answer list raises a `ValidationError` after the model calls (review F2). Never log that exception's message, because it contains the user's text.
-- **Progress (BE-08):** `design` sends no closing progress event when it ends in `retry_later`, `blocked`, `failed/budget_exceeded` or `not_screened` (review F12). Treat the saved result as the end of the stream.
+- **Input rules** (the same in `pipeline-interface.md`; checked before any model call, by `RealPipeline` and `FakePipeline`):
+  - **`analyze`:** the text is 1 to 4000 characters after trimming spaces. A blank text or a longer one returns `failed` / `invalid_request` with no model call. Checking it in the API first saves a job, but isn't required.
+  - **`clarify`:** answers only to the questions that were asked, at most one each. An answer to another question, or two answers to one question, returns `failed` / `invalid_request`.
+  - **Skipping:** when the user skips everything, send either an empty list or one `Answer(question_id=q.id, text=None)` per question. Both mean every question was skipped. Skipping some questions is fine too: send only the answers you have.
+- **Progress (BE-08):** every `design` ends with exactly one closing progress event (`done` or `failed`; the messages are in `pipeline-interface.md`). Pass the events to the browser as they come, but take the job's outcome from the saved `StepResult.status`: a `failed` event can mean "paused, will retry".
 
 ## 4. Environment and keys
 

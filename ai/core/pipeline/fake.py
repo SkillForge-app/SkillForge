@@ -6,6 +6,8 @@
 
 By default it returns the example AnalyzedRequests and SkillSpecs from ai/examples/, and emits
 the same progress events as the real pipeline. Every call is recorded in `fake.calls`.
+It applies the real input rules first (interface.py): blank or over-4000-character text, or
+answers to questions that weren't asked, give `failed` / "invalid_request" whatever is scripted.
 """
 
 from collections.abc import Collection, Sequence
@@ -21,6 +23,9 @@ from core.pipeline.interface import (
     StepResult,
     StepStatus,
     Usage,
+    check_text,
+    closing_event,
+    prepare_answers,
 )
 from core.spec import SkillSpec, Target, load_spec
 
@@ -79,6 +84,9 @@ class FakePipeline:
         self, text: str, *, selected_targets: Sequence[Target] = ()
     ) -> StepResult[AnalyzedRequest]:
         self.calls.append(("analyze", {"text": text, "selected_targets": list(selected_targets)}))
+        invalid = check_text(text)
+        if invalid is not None:
+            return invalid
         script = self._scripts.get("analyze")
         default = example_request(
             "marketing-strategist" if script and script.status == "needs_input" else "ai-engineer"
@@ -91,6 +99,9 @@ class FakePipeline:
         self, analyzed: AnalyzedRequest, answers: Sequence[Answer]
     ) -> StepResult[AnalyzedRequest]:
         self.calls.append(("clarify", {"analyzed": analyzed, "answers": list(answers)}))
+        _, invalid = prepare_answers(analyzed, answers)
+        if invalid is not None:
+            return invalid
         return self._answer("clarify", example_request("marketing-strategist"))
 
     async def design(
@@ -116,10 +127,8 @@ class FakePipeline:
                     message="Designing the skill (attempt 1)",
                 )
             )
-            final = "done" if result.status == "ok" else "failed"
-            on_progress(
-                ProgressEvent(step="design", stage=final, attempt=1, message=f"Design {final}")
-            )
+            stage, message = closing_event(result.status, result.error_code)  # as the real one
+            on_progress(ProgressEvent(step="design", stage=stage, attempt=1, message=message))
         return result
 
 

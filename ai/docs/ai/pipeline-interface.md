@@ -22,7 +22,15 @@ d = await pipeline.design(r.value, existing_names=registry_names, on_progress=se
 | Step | Input | Output `value` | What it does |
 |---|---|---|---|
 | `analyze` | request text, the platforms picked in the UI | `AnalyzedRequest` (A3) | The safety screen and the analysis run at the same time |
-| `clarify` | the AnalyzedRequest, the answers (skipped is allowed) | `AnalyzedRequest` | Screens the request together with the answers, then re-analyzes. It never asks a second round |
+| `clarify` | the AnalyzedRequest, the answers (skipped is allowed; see Input rules) | `AnalyzedRequest` | Screens the request together with the answers, then re-analyzes. It never asks a second round |
+
+**Keep every `AnalyzedRequest` on the server** (review F10). Pass `clarify` and `design` the copy that `analyze`/`clarify` returned and you stored, never one sent back by a client. Its `safety` clearance is not tied to the request text, so an edited copy would still look screened.
+
+## Input rules
+Both pipelines check these **before any model call**. A broken rule returns `failed` with `error_code` `invalid_request` and a `user_message`; nothing is charged. The same rules are in `backend-integration.md`.
+- **`analyze`:** the request text is 1 to 4000 characters after trimming spaces.
+- **`clarify`:** answers only to the questions that were asked, at most one each.
+- **Skipping:** an empty answer list means every question was skipped, and so does one `Answer(question_id=…, text=None)` per question. Answering only some questions is fine.
 | `design` | the AnalyzedRequest, the names already in the registry | `SkillSpec` (B1) | The Skill Architect: generate, validate, repair, at most 3 attempts |
 
 ## StepResult
@@ -34,7 +42,7 @@ Every step **returns** a `StepResult`; it never raises for an expected outcome. 
 | `status` | See below |
 | `value` | The result when `ok`, and also for `needs_input` (the AnalyzedRequest with its questions) |
 | `user_message` | Safe to show the user. Set for `blocked`, `retry_later` and `failed` |
-| `error_code` | For logs and metrics, e.g. `blocked.fraud_scams`, `provider_unavailable`, `invalid_spec`, `not_screened` |
+| `error_code` | For logs and metrics, e.g. `blocked.fraud_scams`, `provider_unavailable`, `deadline_exceeded`, `invalid_request`, `invalid_spec`, `not_screened`. Decide what to do from `status`, not from this |
 | `issues` | Validation issues (`path`, `code`, `message`, `severity`). For a failed design they say why; for an ok design they are warnings |
 | `usage` | `calls`, `input_tokens`, `output_tokens`, `cost_usd` for this step |
 | `pipeline_version` | `"0.1"` |
@@ -42,10 +50,10 @@ Every step **returns** a `StepResult`; it never raises for an expected outcome. 
 | Status | What the worker does |
 |---|---|
 | `ok` | Continue with `value` |
-| `needs_input` | Show `value.questions` (3 to 5). Then call `clarify` |
+| `needs_input` | `analyze`/`clarify`: show `value.questions` (3 to 5), then call `clarify`. `design` (`error_code` `open_questions`): `value` is `None`; the request still has open questions, so call `clarify` first |
 | `blocked` | Show `user_message`. **Start no job, store no skill** (BE-14) |
-| `retry_later` | A provider or the safety screen was down. Retry the job later, and show `user_message` if it keeps failing |
-| `failed` | No usable result, for example no valid spec after 3 attempts. Show `user_message`; `issues` say why |
+| `retry_later` | A provider or the safety screen was down (`provider_unavailable`), or the step passed its time limit (`deadline_exceeded`). Retry the job later, and show `user_message` if it keeps failing |
+| `failed` | No usable result, for example no valid spec after 3 attempts, or input that broke a rule above (`invalid_request`). Show `user_message`; `issues` say why |
 
 ## Progress events (BE-08)
 `design(on_progress=…)` calls your function with a `ProgressEvent` (`step`, `stage`, `attempt`, `message`), in order:
@@ -56,6 +64,20 @@ started → attempt 1 → (repairing 2 → repairing 3) → done | failed
 
 The `message` is short and safe to show, for example "Fixing problems in the design (attempt 2)".
 
+**Every `design` ends with exactly one closing event** (`done` or `failed`), whatever happens:
+
+| Result | Closing event |
+|---|---|
+| `ok` | `done`, "Design ready" |
+| `failed` / `invalid_spec` | `failed`, "Could not produce a valid design" |
+| `retry_later` | `failed`, "Paused: we'll try again shortly" |
+| `blocked` | `failed`, "Stopped: this request can't be built" |
+| `failed` / `budget_exceeded` | `failed`, "Stopped: too much work for one request" |
+| `needs_input` / `open_questions`, `failed` / `not_screened` | `failed`, "Stopped: the request isn't ready" |
+
+- **The closing event shows progress, not the outcome:** a `failed` stage can mean "paused, will retry". Decide what happened from `StepResult.status` (the job status), not from the last event.
+- When the design stops before any attempt (`not_screened`, `open_questions`), the closing event comes right after `started`, with `attempt` `None`.
+
 ## FakePipeline (for backend tests)
 ```python
 fake = FakePipeline()                                   # every step returns "ok" with example data
@@ -65,5 +87,6 @@ fake.set("design", "failed", error_code="invalid_spec")
 fake.calls                                              # every call, in order
 ```
 - **Data:** it returns the example AnalyzedRequests and SkillSpecs from `ai/examples/`.
-- **Events:** it sends the same progress events as the real pipeline.
+- **Events:** `started`, `attempt 1`, then the same closing event the real pipeline sends for the scripted result (table above).
+- **Input rules:** it applies the real input rules first, so a blank text or an unknown answer gives `invalid_request` whatever is scripted.
 - **Pairing:** use it together with `SKILLFORGE_LLM_BACKEND=fake` when you also want the real pipeline code to run without a key.

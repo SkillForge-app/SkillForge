@@ -15,6 +15,11 @@ evaluation/analyzer/runs/
 evaluation/safety/runs/
 evaluation/architect/runs/
 evaluation/harness/runs/
+# Tracked runs (AI-25): only the id-only reports/runs/<run>/predictions.jsonl may be committed.
+# Anything else there stays local; `reproduce check` also fails on any file no entry lists.
+evaluation/*/reports/runs/**
+!evaluation/*/reports/runs/*/
+!evaluation/*/reports/runs/*/predictions.jsonl
 
 # Local model files and the local knowledge index (AI-11): downloaded / built, not source
 .data/

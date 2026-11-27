@@ -37,7 +37,7 @@ The model is strict and frozen, and unknown fields are rejected. The list order 
   - A passage matches when the domains are equal, or one is a path prefix of the other. So `marketing/strategy` gets `marketing` passages, and `technology` gets `technology/ai` passages.
   - In the real index a chunk can serve several domains; it matches when any of them does. It is still returned once.
   - No matching passage returns `[]`. That is not an error, so the Architect can carry on without sources.
-  - **The real backend only:** an *empty* index raises `ConfigError` ("the knowledge index is empty; run ingest"), and so does an index built with a different embedding model. Neither is a "no match": both are a setup problem, so they fail loudly.
+  - **The real backend only:** an *empty* index raises `ConfigError` ("the knowledge index is empty; …": in production DE's pipeline fills it; locally, run ingest), and so does an index built with a different embedding model. Neither is a "no match": both are a setup problem, so they fail loudly.
     - **The check is cached for 60 s** (`INFO_TTL_S`): on pgvector it's a count over the whole view, too heavy for every query. Only a passed check is trusted; a failing one runs again on the next query. So an index that is emptied *after* a passed check is noticed within 60 s, and until then a query returns `[]`.
     - The store's blocking calls (`info`, `search`) run in a worker thread, so a query doesn't hold up the event loop.
 - **`k`:** 1 to 20; the default is 5. You get at most `k` passages.
