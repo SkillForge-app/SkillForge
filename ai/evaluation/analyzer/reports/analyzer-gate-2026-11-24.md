@@ -1,5 +1,3 @@
-**INVALID: provider failure (48 of 100 requests got no prediction). Not a measurement of the prompt.**
-
 # Request Analyzer evaluation, 2026-11-24T23:41:09Z
 
 Mode: LIVE. Prompt analysis/request v3, model `openrouter/anthropic/claude-sonnet-5.5`.
@@ -72,3 +70,11 @@ Retried: 49; succeeded on retry: 1; still failed (counted wrong): 48.
 Usage: 355 calls, 213048 input / 13917 output tokens, $0.5742 (budget $1.3).
 
 Data: skillforge-seed-benchmark 0.1.0 (f0a92ff2f445), analyzer-requests-test 0.3.0 (2a96507e736e), analyzer-requests-dev 0.3.0 (44f94ce3f577), analyzer-requests-arabic 0.2.0 (6d4d6fb52f4a), analyzer-requests-holdout 0.1.0 (c849f354948f)
+
+## INVALID (added 2026-11-27, by hand)
+
+**This gate run is INVALID: a provider failure, not a measurement of the prompt.** 48 of 100 requests got no prediction (provider errors, `LLMUnavailable`, still failing after the one retry). The figures above count those 48 as wrong, so they do not measure the prompt, and the 90% gate is not decided by this run. Under the 95% validity rule (decided on 2026-11-25, after this run), a run needs at least 95% of its requests predicted; this one had 52%. It was never used for any decision.
+
+The valid measurement is the rerun on 2026-11-28, with the same prompt (analysis/request v3), data and settings: registry entry `E12:analyzer-gate-2026-11-28`, once recorded.
+
+Until 2026-11-27 this notice was a line at the top of this file and an `invalid` key in the `.json`. It moved here so the generated part stays exactly what the `.json` renders to (AI-25).

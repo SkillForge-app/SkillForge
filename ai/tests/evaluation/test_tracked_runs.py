@@ -210,7 +210,7 @@ def test_convert_reads_the_source_and_records_both_hashes(tmp_path: Path) -> Non
 
 
 def test_the_committed_tracked_runs_are_clean() -> None:
-    """All 8 tracked files: allowlisted fields, and every id in the label files at recorded_at."""
+    """All 10 tracked files: allowlisted fields, and every id in the label files at recorded_at."""
     repo = repo_root(AI_DIR)
     files = set()
     for entry in load_registry().experiments:
@@ -225,7 +225,7 @@ def test_the_committed_tracked_runs_are_clean() -> None:
         assert bad_fields(lines, known) == [], entry.id
         assert all(set(line) <= set(FIELDS) for line in lines)
         files.add(entry.tracked_run.path)
-    assert len(files) == 8
+    assert len(files) == 10
 
 
 # ------------------------------------------------------------------ `reproduce check`
