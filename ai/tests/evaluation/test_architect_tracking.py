@@ -142,13 +142,16 @@ async def a_run(tmp_path: Path, failing: Sequence[int]) -> tuple[Path, Path]:
         pause_after=0,
         build=build,
     )
-    files = write_report(
-        report, label="all", reports_dir=tmp_path / "architect" / "reports", run_dir=run
-    )
+    files = write_report(report, label="all", reports_dir=tmp_path / REPORTS, run_dir=run)
     return run, files.json
 
 
-def entry_for(report: Path, tracked: Path, record: dict[str, Any]) -> Entry:
+# `tmp_path` stands in for the repo root: registry paths must be repo-relative under ai/ (#41),
+# and the architect re-score reads only the report and the tracked run, relative to the root.
+REPORTS = "ai/evaluation/architect/reports"
+
+
+def entry_for(root: Path, report: Path, tracked: Path, record: dict[str, Any]) -> Entry:
     return Entry.model_validate(
         {
             "id": "E13:architect-test",
@@ -157,9 +160,9 @@ def entry_for(report: Path, tracked: Path, record: dict[str, Any]) -> Entry:
             "question": "test",
             "kind": "live",
             "role": "final",
-            "report": report.as_posix(),
+            "report": report.relative_to(root).as_posix(),
             "recorded_at": HEAD,
-            "tracked_run": {"path": tracked.as_posix(), **record},
+            "tracked_run": {"path": tracked.relative_to(root).as_posix(), **record},
         }
     )
 
@@ -169,7 +172,7 @@ async def test_a_tracked_architect_run_rescores_to_the_report(
     tmp_path: Path, failing: Sequence[int]
 ) -> None:
     run, report_json = await a_run(tmp_path, failing)
-    tracked = tmp_path / "architect" / "reports" / "runs" / "r1" / "predictions.jsonl"
+    tracked = tmp_path / REPORTS / "runs" / "r1" / "predictions.jsonl"
     record = convert(run / "predictions.jsonl", tracked, known_ids(REPO, HEAD))
     assert record["lines"] == 103  # the retried request: one line, the retry's
     lines = [json.loads(x) for x in tracked.read_text(encoding="utf-8").splitlines()]
@@ -181,15 +184,15 @@ async def test_a_tracked_architect_run_rescores_to_the_report(
     assert bool(report["invalid"]) is bool(failing)  # 6 of 103 with no prediction: invalid
     assert report["sets"]["all"]["top_failure_codes"]  # there are failures to re-score
 
-    entry = entry_for(report_json, tracked, record)
+    entry = entry_for(tmp_path, report_json, tracked, record)
     registry = Registry.model_validate({"version": 1, "ignore": [], "experiments": []})
-    diffs, left = rescore(entry, registry, REPO)
+    diffs, left = rescore(entry, registry, tmp_path)
     assert diffs == [] and left == []
 
     # and it is a real comparison: one changed number in the report is a difference
     report["sets"]["all"]["top_failure_codes"]["reserved_name"] += 1
     report_json.write_text(json.dumps(report), encoding="utf-8")
-    diffs, _ = rescore(entry, registry, REPO)
+    diffs, _ = rescore(entry, registry, tmp_path)
     assert diffs
 
 
