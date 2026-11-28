@@ -15,7 +15,10 @@ import copy
 import os
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass, field
-from typing import Any, TypedDict
+from types import NoneType, UnionType
+from typing import Any, TypedDict, Union, get_args, get_origin
+
+from pydantic import BaseModel, StringConstraints
 
 from core.analysis import AnalyzedRequest
 from core.analysis.safety import CONDITION_DESCRIPTIONS
@@ -31,6 +34,7 @@ from core.llm import (
 )
 from core.spec import (
     CAPABILITIES,
+    DESCRIPTION_PARTS,
     GUARDRAIL_CATEGORIES,
     HIGH_RISK_AREAS,
     PLATFORM_LIMITS,
@@ -39,7 +43,17 @@ from core.spec import (
     TARGETS,
     Issue,
     SkillSpec,
+    reserved_name_words,
     validate_spec,
+)
+from core.spec.models import (
+    Evaluation,
+    Expertise,
+    Guardrail,
+    Output,
+    Procedure,
+    SkillMeta,
+    Triggers,
 )
 
 # LangGraph ships with LangSmith tracing support. Keep it off unless someone turns it on on
@@ -163,6 +177,11 @@ def required_guardrails(analyzed: AnalyzedRequest) -> list[dict[str, str]]:
     return guardrails
 
 
+def spec_targets(analyzed: AnalyzedRequest) -> list[str]:
+    """The targets every spec for this request gets (`enforce` sets them)."""
+    return list(analyzed.targets) or list(DEFAULT_TARGETS)
+
+
 def enforce(
     analyzed: AnalyzedRequest, draft: Mapping[str, Any], existing_names: Collection[str] = ()
 ) -> dict[str, Any]:
@@ -174,7 +193,7 @@ def enforce(
     skill["domain"] = analyzed.domain
     if analyzed.skill_name and analyzed.skill_name not in existing_names:
         skill["name"] = analyzed.skill_name
-    spec["targets"] = list(analyzed.targets) or list(DEFAULT_TARGETS)
+    spec["targets"] = spec_targets(analyzed)
     required = required_guardrails(analyzed)
     ours = {g["id"] for g in required}
     theirs = [g for g in spec.get("guardrails", []) if g.get("id") not in ours]
@@ -183,6 +202,47 @@ def enforce(
 
 
 # ------------------------------------------------------------------ prompt inputs
+
+# The text fields the prompt states a length limit for, in the order it lists them. The limits
+# themselves are read from the SkillSpec models (core/spec/models.py), never typed here, so the
+# prompt cannot drift from what validate_spec enforces.
+LIMITED_FIELDS: tuple[tuple[str, type[BaseModel], str], ...] = (
+    ("skill.name", SkillMeta, "name"),
+    ("every id", Procedure, "id"),
+    ("skill.title, procedure and output titles", SkillMeta, "title"),
+    ("skill.summary", SkillMeta, "summary"),
+    ("each triggers.use_when / avoid_when item", Triggers, "use_when"),
+    ("each expertise principle", Expertise, "principles"),
+    ("each procedure step", Procedure, "steps"),
+    ("each output section heading", Output, "sections"),
+    ("each guardrail rule", Guardrail, "rule"),
+    ("each evaluation test_prompt and should_not_trigger prompt", Evaluation, "test_prompts"),
+    ("each evaluation rubric item", Evaluation, "rubric"),
+)
+
+
+def max_length(model: type[BaseModel], name: str) -> int:
+    """The max_length of a string field, or of the strings in a list field."""
+    info = model.model_fields[name]
+    annotation: Any = info.annotation
+    found = list(info.metadata)
+    while True:
+        origin = get_origin(annotation)
+        if origin in (Union, UnionType):
+            annotation = next(a for a in get_args(annotation) if a is not NoneType)
+        elif origin is list:
+            annotation = get_args(annotation)[0]
+        else:
+            break
+    found += list(get_args(annotation)[1:])  # Annotated[str, StringConstraints(...)]
+    for meta in found:
+        if isinstance(meta, StringConstraints) and meta.max_length is not None:
+            return meta.max_length
+    raise ValueError(f"{model.__name__}.{name} has no max_length")
+
+
+def length_limits() -> list[dict[str, Any]]:
+    return [{"field": label, "max": max_length(m, f)} for label, m, f in LIMITED_FIELDS]
 
 
 def _generate_inputs(analyzed: AnalyzedRequest, existing_names: Collection[str]) -> dict[str, Any]:
@@ -196,6 +256,13 @@ def _generate_inputs(analyzed: AnalyzedRequest, existing_names: Collection[str])
         "severities": list(SEVERITIES),
         "guardrail_categories": list(GUARDRAIL_CATEGORIES),
         "description_limit": min(PLATFORM_LIMITS[t].description for t in TARGETS),
+        "description_parts": dict(DESCRIPTION_PARTS),
+        "length_limits": length_limits(),
+        # Only the words validate_spec will apply to this request's targets: none for a request
+        # whose targets have no reserved words, and then the prompt does not state the rule.
+        "reserved_name_words": sorted(
+            {w for words in reserved_name_words(spec_targets(analyzed)).values() for w in words}
+        ),
         "required_guardrails": required_guardrails(analyzed),
         "name_hint": name_hint,
     }

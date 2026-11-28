@@ -53,7 +53,17 @@ START → write → enforce → check ─(valid)──────────�
 - **A model refusal** raises `ArchitectRefused`.
 - **Progress events** (`attempt`, `repairing`, `done` or `failed`, plus the attempt number) go to `on_progress`.
 
-**Prompts and model.** The prompts are in `ai/prompts/architect/` (version 1). Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
+**Prompts and model.** The prompts are in `ai/prompts/architect/`: `generate` version 3, `repair` version 1. Since version 2 (2026-11-26, before any live run), `generate` also tells the model three rules `validate_spec` enforces:
+- the field length limits;
+- the exact way the description is built from the summary and triggers, and its limit;
+- the words a skill name must not contain.
+
+Version 3 (after review on #44) states the reserved-words rule only when the validator applies it to the request's targets. Those are the targets `enforce` will set: today, only when claude is among them, which includes the default claude and codex. Each value is a template input computed from `core/spec`, never typed into the prompt:
+- `core.agents.architect.length_limits`;
+- `DESCRIPTION_PARTS`;
+- `reserved_name_words(targets)`, the one function the validator's `reserved_name` rule also uses.
+
+`tests/agents/test_architect_prompt.py` checks each value against the code. For every combination of targets, it also checks that the prompt states the rule exactly when the validator applies it. Their example spec is a synthetic `meeting-minutes` skill, not one of the test requests, and a test checks that it is valid. The model role is `architect`: Claude Sonnet 5.5, `max_tokens` 24000, timeout 300 s.
 
 **Tracing is off.** LangGraph comes with LangSmith tracing, which the Architect switches off by default (`LANGSMITH_TRACING=false`), because traces would contain users' requests.
 
@@ -61,13 +71,23 @@ START → write → enforce → check ─(valid)──────────�
 ```bash
 cd ai
 .venv/Scripts/python -m evaluation.architect check-data              # the 103 test requests
-.venv/Scripts/python -m evaluation.architect run --set all --live    # REAL calls: about $10–20
+.venv/Scripts/python -m evaluation.architect run --set all --live --budget-usd 30 --retry-errors   # REAL calls
+.venv/Scripts/python -m evaluation.architect run --set dev --ids d-02,d-03 --live --budget-usd 2  # a dev pilot
 ```
+- **Run rules for live runs** (decided 2026-11-26, before the first live architect run; each report states them):
+  - **Budget:** `--live` needs `--budget-usd`. The run refuses before any call when the high estimate is over it, and stops calling once the spend of all its segments reaches it (exit 3, does not count).
+  - **Retry (`--retry-errors`):** a request that ends in a provider error is retried once, at the end of the segment. If it fails again it counts as not valid.
+  - **Pause:** after 5 requests in a row end in a provider error (`--pause-after`), no new request starts (exit 5). Resume it later with `--resume`.
+  - **Validity:** a complete run where under 95% of the requests got a prediction (98 of 103) is INVALID (exit 4): a provider failure, not a measurement. It is repeated.
+  - **Call log:** `runs/<UTC>/calls.jsonl` has every call attempt (metadata only, with the sanitized provider error detail). The report counts the failed attempts by error, HTTP status, provider and model link.
+- **Cost estimate (no call):** `estimate --set all` renders every request's prompt as it will be sent, adds the response schema, and converts characters to tokens with a ratio measured on the AI-05 v3 dev run (`evaluation/architect/estimate.py`). Output tokens are assumed until a pilot runs. After that, `--tokens-from <pilot run folder>` takes the measured tokens per call and calls per request from its `calls.jsonl`. It prints expected, high (3 attempts for every request) and worst (also gateway repairs, replies near `max_tokens`, and the Opus fallback). On 2026-11-26 the 103 came to $7.86 expected, $30.79 high and $344 worst. `run --live` refuses when the expected cost is over `--budget-usd`, as AI-05 does; the budget cap bounds the rest.
+- **Dev pilots:** `--set dev` builds the analyzer's dev requests the same way. It is for pilots and prompt work only and is never part of the 103. The gate set is never used for tuning.
 - **The test requests:** the 3 example AnalyzedRequests, plus the 100 analyzer gate requests built **from their labels**. So the score measures the Architect alone. Vague requests count as "questions skipped".
 - **End to end:** `--end-to-end` runs the real safety screen and analyzer first.
 - **What a run writes:**
   - **The report**, tracked in Git: `ai/evaluation/architect/reports/architect-<set>[-e2e]-<date>.md` and `.json`. A second run on the same day gets `-2`, `-3`, …, so a reviewed report is never overwritten. Only `--live` runs go here.
-  - **The raw outputs**, ignored by Git: `ai/evaluation/architect/runs/<UTC>/` holds `predictions.jsonl` and **every generated spec** in `specs/`, for review by hand. The report's `run` field names this folder. A fake smoke run keeps its report here too.
+  - **The raw outputs**, ignored by Git: `ai/evaluation/architect/runs/<UTC>/` holds `manifest.json` (what the run measures), `predictions.jsonl` and **every generated spec** in `specs/`, for review by hand. The folder is made before the first call, and each request's spec and line are saved the moment it finishes. The report's `run` field names this folder. A fake smoke run keeps its report here too.
+  - **Resume:** if a run dies, `run --set all --live --resume ai/evaluation/architect/runs/<UTC>` runs only the requests that have no saved outcome and writes the report from everything saved. It refuses when the prompts, model, data, items or mode differ from the manifest.
 - **The report:** valid rate, first-try rate, the attempts histogram, the most common failure codes, safety-guardrail compliance and identity fidelity.
 - **The gate:** exactly 103 requests, at least 90% valid. A fake run prints "does NOT count for AI-07", because the fake gives every request the same canned spec.
 

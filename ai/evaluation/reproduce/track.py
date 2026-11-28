@@ -14,6 +14,13 @@ text). `convert()` READS it (never moves, renames or deletes it) and writes
                asked). Never the question text.
     error      an error class (provider_error, parse_error, timeout, budget, other) or null
 
+The Skill Architect (AI-07) keeps, per request: expected = the labels its AnalyzedRequest was
+built from (kind, domain_area, risk); predicted = valid (bool), attempts (0-3), codes (the
+validation issue codes, in order, from a closed list: never the messages), safety_ok and
+identity_ok (booleans computed at run time on valid specs). Its raw run can hold a first try
+and a retry for one request: the last line counts (as in the report), and the tracked lines
+follow the run manifest's order, so the metrics re-score in the same order.
+
 No request text, no rationale or summary, no raw error message: every value is checked against
 the closed vocabularies and every id against the label files, so free text cannot get in.
 Problems never echo an id (it could be the text being kept out).
@@ -28,6 +35,8 @@ import re
 from collections.abc import Collection, Iterable
 from pathlib import Path
 from typing import Any, get_args
+
+from pydantic_core.core_schema import ErrorType
 
 from core.analysis.types import HarmCategory, SafetyCondition
 from core.spec import DOMAIN_AREAS, KINDS, RISK_LEVELS, TARGETS
@@ -49,7 +58,40 @@ _ERROR_CLASS = {
     "DeadlineExceeded": "timeout",
     "TimeoutError": "timeout",
     "BudgetExceeded": "budget",
+    # The Skill Architect (AI-07) wraps the LLM errors in its own.
+    "ArchitectUnavailable": "provider_error",
+    "ArchitectRefused": "provider_error",
 }
+# The issue codes a SkillSpec validation can give (core/spec/validator.py, the Architect's own
+# llm_output_invalid, and "schema.<pydantic error type>"). tests/evaluation/test_tracked_runs.py
+# checks that every code in validator.py and architect.py is here.
+ARCHITECT_CODES = frozenset(
+    {
+        "duplicate_id",
+        "unknown_source",
+        "unknown_output",
+        "unknown_reference",
+        "duplicate_file",
+        "role_needs_guardrail",
+        "high_risk_needs_disclaimer",
+        "high_risk_needs_human_review",
+        "tool_listed_twice",
+        "target_not_available_in_v1",
+        "reserved_name",
+        "xml_in_text",
+        "description_too_long",
+        "name_taken",
+        "unused_source",
+        "unused_output",
+        "yaml_syntax",
+        "not_a_mapping",
+        "llm_output_invalid",
+        "schema.unknown_field",
+        "schema.missing",
+        "schema.duplicate_item",  # core/spec/models.py _unique (PydanticCustomError)
+        *(f"schema.{t}" for t in get_args(ErrorType)),
+    }
+)
 VOCAB: dict[str, set[Any]] = {
     "kind": {*KINDS, ERROR},
     "domain_area": {*DOMAIN_AREAS, ERROR},
@@ -58,16 +100,46 @@ VOCAB: dict[str, set[Any]] = {
     "verdict": {"allow", "block", ERROR},
     "category": {*get_args(HarmCategory), None},
     "question_rule_kept": {True, False, None},
+    # architect
+    "valid": {True, False},
+    "attempts": {None, 0, 1, 2, 3},
+    "safety_ok": {True, False, None},
+    "identity_ok": {True, False, None},
+}
+# Fields whose values must also have the exact type (in Python True == 1, so a set alone would
+# let 1 pass for True, or True for 1).
+TYPES: dict[str, type | tuple[type, ...]] = {
+    "valid": bool,
+    "safety_ok": bool,
+    "identity_ok": bool,
+    "needs_clarification": bool,
+    "question_rule_kept": bool,
+    "attempts": int,
 }
 LISTS: dict[str, set[str]] = {
     "conditions": set(get_args(SafetyCondition)),
     "mentioned_targets": set(TARGETS),
+    "codes": set(ARCHITECT_CODES),
 }
+ARCHITECT_ROW = ("ok", "attempts", "codes", "expected")  # the keys of an architect run line
 
 
 # The keys a problem message may name: the tracked fields, the label fields, and the source
 # run's own. Any other key is "(name not shown)".
-NAMES = frozenset({*FIELDS, *VOCAB, *LISTS, "set", "text", "latency_ms"})
+NAMES = frozenset(
+    {
+        *FIELDS,
+        *VOCAB,
+        *LISTS,
+        "set",
+        "text",
+        "latency_ms",
+        *ARCHITECT_ROW,
+        "try",
+        "issues",
+        "usage",
+    }
+)
 
 
 class TrackError(ValueError):
@@ -132,7 +204,8 @@ def _checked(values: dict[Any, Any], out: dict[str, Any]) -> dict[str, Any]:
                 raise TrackError(f"{key}: the value is outside the vocabulary (value not shown)")
             out[key] = value
         elif key in VOCAB:
-            if not _in_vocab(value, VOCAB[key]):
+            wrong_type = value is not None and key in TYPES and type(value) is not TYPES[key]
+            if wrong_type or not _in_vocab(value, VOCAB[key]):
                 raise TrackError(f"{key}: the value is outside the vocabulary (value not shown)")
             out[key] = value
         else:
@@ -147,14 +220,27 @@ def _in_vocab(value: object, vocab: set[Any]) -> bool:
         return False
 
 
+def is_architect_row(row: dict[str, Any]) -> bool:
+    return all(key in row for key in ARCHITECT_ROW)
+
+
 def convert_line(row: dict[str, Any], known: Collection[str]) -> dict[str, Any]:
-    """One id-only line from an analyzer or safety prediction line. `known`: the ids in the label
-    files at the run's recorded_at (rescore.known_ids); any other id is refused."""
+    """One id-only line from an analyzer, safety or architect prediction line. `known`: the ids
+    in the label files at the run's recorded_at (rescore.known_ids); any other id is refused."""
     line_id = f"{row.get('set')}:{row.get('id')}"
     problem = id_problem(line_id, known)
     if problem:
         raise TrackError(problem)
-    if "predicted" in row:  # analyzer: expected/predicted are dicts of the gated fields
+    if is_architect_row(row):  # AI-07: expected labels, then what the Architect returned
+        expected = row["expected"]
+        predicted = {
+            "valid": row["ok"],
+            "attempts": row["attempts"],
+            "codes": row["codes"],
+            "safety_ok": row.get("safety_ok"),
+            "identity_ok": row.get("identity_ok"),
+        }
+    elif "predicted" in row:  # analyzer: expected/predicted are dicts of the gated fields
         clar = row.get("needs_clarification") or {}
         expected = {**row["expected"], "needs_clarification": clar.get("expected")}
         predicted = {**row["predicted"], "needs_clarification": clar.get("predicted")}
@@ -192,6 +278,8 @@ def convert(source: Path, target: Path, known: Collection[str]) -> dict[str, Any
     rows, problems = parse_lines(raw.decode("utf-8"))
     if problems:
         raise TrackError(problems[0])
+    if rows and all(is_architect_row(r) for r in rows):
+        rows = architect_rows(rows, source.parent / "manifest.json")
     lines = []
     for n, row in enumerate(rows, 1):
         try:
@@ -209,6 +297,22 @@ def convert(source: Path, target: Path, known: Collection[str]) -> dict[str, Any
         "sha256": text_sha256(target),
         "lines": len(lines),
     }
+
+
+def architect_rows(rows: list[dict[str, Any]], manifest: Path) -> list[dict[str, Any]]:
+    """An architect run's lines as the report scored them: the last line of each request (a
+    retry replaces the first try), in the run manifest's item order (the metrics depend on it:
+    ties in top_failure_codes keep the first code seen). Without a manifest: first-seen order."""
+    last: dict[tuple[str, str], dict[str, Any]] = {}
+    for row in rows:
+        last[(str(row.get("set")), str(row.get("id")))] = row
+    if not manifest.exists():
+        return list(last.values())
+    ids = loads_unique(manifest.read_text(encoding="utf-8")).get("ids", {})
+    order = [(name, i) for name, items in ids.items() for i in items]
+    if set(last) - set(order):
+        raise TrackError("a line names a request that is not in the run manifest (not shown)")
+    return [last[key] for key in order if key in last]
 
 
 def bad_fields(lines: Iterable[dict[str, Any]], known: Collection[str] | None) -> list[str]:
@@ -236,14 +340,17 @@ def bad_fields(lines: Iterable[dict[str, Any]], known: Collection[str] | None) -
 
 
 __all__ = [
+    "ARCHITECT_CODES",
     "ERROR_CLASSES",
     "FIELDS",
     "ID_FORMAT",
     "TrackError",
+    "architect_rows",
     "bad_fields",
     "canonical",
     "convert",
     "convert_line",
     "id_problem",
+    "is_architect_row",
     "parse_lines",
 ]

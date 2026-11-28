@@ -59,7 +59,7 @@ async def test_valid_spec_on_the_first_try(fake: FakeGateway) -> None:
     assert result.spec.skill.kind == analyzed.kind and result.spec.skill.domain == analyzed.domain
     assert result.spec.targets == ["codex"]  # from the analysis
     assert events == [("attempt", 1), ("done", 1)]
-    assert result.prompt_versions == {GENERATE: 1, REPAIR: 1}
+    assert result.prompt_versions == {GENERATE: 3, REPAIR: 1}
 
 
 async def test_issues_are_sent_back_and_repaired() -> None:

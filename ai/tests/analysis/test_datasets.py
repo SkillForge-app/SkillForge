@@ -89,6 +89,39 @@ def test_few_shot_examples_come_from_the_dev_set_only() -> None:
         assert norm(shot) not in measured
 
 
+def test_prompt_v3_states_the_labelling_rules() -> None:
+    """v3 adds the LABELLING.md rules on kind (one job, vague, tutor) and fitness, as text only:
+    no example in it may come from a labelled set."""
+    prompt = load_prompt("analysis/request")
+    assert prompt.version == 3
+    system = " ".join(
+        prompt.render(
+            {
+                "request_text": "x",
+                "answers": [],
+                "kinds": [],
+                "domain_areas": [],
+                "high_risk_areas": [],
+            }
+        )[0]["content"].split()
+    )
+    for rule in (
+        "A request for someone who does one job only is a task.",
+        'This holds even when the request uses a job title or "act as": if the person does one '
+        "job only, it is a task.",
+        "A vague request (it does not say what the skill should do or produce) is a role.",
+        "A request to learn a subject is a tutor: a role in the education area, with the subject "
+        'as the sub-area (e.g. "education/chemistry").',
+        "Fitness and nutrition for healthy people (calories, protein, workouts) is general; it is "
+        "medical only when the request names a condition, a medication or a treatment.",
+    ):
+        assert rule in system, rule[:50]
+    labelled = " ".join(
+        i.text.lower() for name in ("gate", "dev", "arabic", "holdout") for i in data.load_set(name)
+    )
+    assert "chemistry" not in labelled  # the tutor example is not taken from any set
+
+
 def test_prompt_lock_includes_the_analyzer_prompt() -> None:
     assert check_lock(PROMPTS_DIR) == []
     assert load_prompt("analysis/request").meta.model_role == "analysis"

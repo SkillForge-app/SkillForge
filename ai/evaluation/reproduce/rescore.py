@@ -270,12 +270,106 @@ NORMAL_FROM = ("gate", "dev", "arabic")  # safety/data.py normal_items: "normal:
 @lru_cache(maxsize=32)
 def known_ids(repo: Path, commit: str) -> frozenset[str]:
     """Every id a tracked run may hold, from the tracked label files at `commit`: the seed
-    release and analyzer requests-*.yaml, safety redteam/benign/dev, and the safety screen's
-    everyday requests (the analyzer's gate, dev and Arabic sets, prefixed "normal:")."""
+    release and analyzer requests-*.yaml, safety redteam/benign/dev, the safety screen's
+    everyday requests (the analyzer's gate, dev and Arabic sets, prefixed "normal:"), and the
+    Skill Architect's requests (architect_ids)."""
     analyzer = set(analyzer_labels(repo, commit))
     normal = {f"normal:{i}" for i in analyzer if i.split(":", 1)[0] in NORMAL_FROM}
     safety, _ = safety_items(repo, commit)
-    return frozenset(analyzer | normal | set(safety))
+    return frozenset(analyzer | normal | set(safety) | architect_ids(repo, commit, analyzer))
+
+
+# ------------------------------------------------------------------ Skill Architect (AI-07)
+
+ARCHITECT_GATE_SIZE = 103
+EXAMPLES_DIR = "ai/examples/analyzed-request"
+
+
+def architect_ids(repo: Path, commit: str, analyzer: set[str]) -> set[str]:
+    """ "<set>:<item id>" for evaluation/architect/data.py's sets at `commit`: its items are the
+    analyzer's gate and dev requests ("gate:<id>", "dev:<id>", the same keys) and the example
+    AnalyzedRequests ("example:<file stem>"); the sets are all (examples + gate), gate, examples
+    and dev."""
+    out = subprocess.run(
+        ["git", "ls-tree", "--name-only", f"{commit}:{EXAMPLES_DIR}"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+    )
+    names = out.stdout.splitlines() if out.returncode == 0 else []
+    examples = {f"example:{n[: -len('.json')]}" for n in names if n.endswith(".json")}
+    gate = {i for i in analyzer if i.startswith("gate:")}
+    dev = {i for i in analyzer if i.startswith("dev:")}
+    return (
+        {f"all:{i}" for i in gate | examples}
+        | {f"gate:{i}" for i in gate}
+        | {f"examples:{i}" for i in examples}
+        | {f"dev:{i}" for i in dev}
+    )
+
+
+def architect_metrics(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    """architect/evaluate.py compute_metrics, from tracked lines (in the run's item order)."""
+    n = len(rows)
+    valid = [r for r in rows if not r["error"] and r["predicted"]["valid"]]
+    failed = [r for r in rows if not r["error"] and not r["predicted"]["valid"]]
+    attempts = Counter(r["predicted"]["attempts"] for r in valid)
+    codes: Counter[str] = Counter()
+    for r in failed:
+        codes.update(r["predicted"]["codes"])
+    safe = sum(bool(r["predicted"]["safety_ok"]) for r in valid)
+    same = sum(bool(r["predicted"]["identity_ok"]) for r in valid)
+    return {
+        "n": n,
+        "valid": len(valid),
+        "valid_rate": _ratio(len(valid), n),
+        "first_try_rate": _ratio(attempts.get(1, 0), n),
+        "attempts": {str(k): v for k, v in sorted(attempts.items())},
+        "failed": [str(r["id"]).split(":", 1)[1] for r in failed],
+        "top_failure_codes": dict(codes.most_common(10)),
+        "safety_guardrails_ok": _ratio(safe, len(valid)),
+        "identity_ok": _ratio(same, len(valid)),
+        "errors": dict(Counter(r["error"] for r in rows if r["error"])),
+    }
+
+
+def architect_gate(
+    sets: dict[str, Any], by_set: dict[str, list[dict[str, Any]]], report: dict[str, Any]
+) -> dict[str, Any]:
+    """architect/evaluate.py gate_verdict plus _verdicts. Recomputed from the tracked lines: the
+    valid rate, the size and the validity rule. Taken from the report, as facts about how the
+    run went rather than metrics: requests with no outcome, a budget stop, a pause."""
+    m = sets["all"]
+    reasons = []
+    if m["n"] != ARCHITECT_GATE_SIZE:
+        reasons.append(f"the gate needs exactly {ARCHITECT_GATE_SIZE} requests, got {m['n']}")
+    rate = m["valid_rate"]
+    if rate is None or rate < GATE_THRESHOLD:
+        shown = "n/a" if rate is None else f"{rate:.2f}"
+        reasons.append(f"valid rate {shown} < {GATE_THRESHOLD:.2f}")
+    missing = report.get("missing") or {}
+    if missing:
+        reasons.append(f"requests with no outcome: {sum(missing.values())} (resume)")
+    if report.get("stopped"):
+        reasons.append("stopped by the cost budget")
+    if report.get("paused"):
+        reasons.append("paused on a provider outage")
+    invalid = (
+        not missing
+        and not report.get("paused")
+        and any(
+            rows and sum(not r["error"] for r in rows) / len(rows) < 0.95
+            for rows in by_set.values()
+        )
+    )
+    if invalid:
+        reasons.append("invalid run (validity rule): repeat it")
+    return {
+        "passed": not reasons,
+        "counts": bool(report.get("live")),
+        "threshold": GATE_THRESHOLD,
+        "reasons": reasons,
+    }
 
 
 # ------------------------------------------------------------------ compare
@@ -325,7 +419,11 @@ def rescore(entry: Entry, registry: Registry, repo: Path) -> tuple[list[str], li
     for r in rows:
         by_set[str(r["id"]).split(":", 1)[0]].append(r)
     got: dict[str, Any] = {}
-    if "/analyzer/" in entry.report:
+    if "/architect/" in entry.report:
+        got["sets"] = {s: architect_metrics(v) for s, v in by_set.items()}
+        if "all" in got["sets"]:
+            got["gate"] = architect_gate(got["sets"], by_set, report)
+    elif "/analyzer/" in entry.report:
         labels = analyzer_labels(repo, entry.recorded_at)
         relabel = entry.kind == "rescore"
         got["sets"] = {s: analyzer_metrics(v, labels, relabel=relabel) for s, v in by_set.items()}
@@ -352,4 +450,11 @@ def rescore(entry: Entry, registry: Registry, repo: Path) -> tuple[list[str], li
     return diffs, left
 
 
-__all__ = ["analyzer_metrics", "known_ids", "rescore", "safety_metrics"]
+__all__ = [
+    "analyzer_metrics",
+    "architect_ids",
+    "architect_metrics",
+    "known_ids",
+    "rescore",
+    "safety_metrics",
+]

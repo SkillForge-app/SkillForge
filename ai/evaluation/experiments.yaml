@@ -538,11 +538,22 @@ experiments:
     task: AI-05
     question: AI-05 prompt v3 on dev (50), run 1 of 3
     kind: live
-    status: pending-merge
+    status: active
     role: final
-    branch: AI-05-prompt-v3
     report: ai/evaluation/analyzer/reports/analyzer-dev-2026-11-24.json
     recorded_at: 6f77d138865a5d6e1469a20bbc65f55f2c9b6942
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every recomputable metric matches."
+    tracked_run:
+      path: ai/evaluation/analyzer/reports/runs/20261124T233621Z/predictions.jsonl
+      source_sha256: 3fa1b6879f976177e83e4586921ee10ac80e1d94b39baa608db882a460422a34
+      sha256: 8e2e4f98a7c352e868f32969a9aa83ae99f1f7283fa328bd2456561e43bd690e
+      lines: 50
+    not_recomputable:
+      - metric: mentioned_targets.exact_match
+        reason: "the 24 Nov raw run predates 25 Nov and never saved predicted targets or questions"
+      - metric: needs_clarification.question_rule_kept
+        reason: "the 24 Nov raw run predates 25 Nov and never saved predicted targets or questions"
     model: openrouter/anthropic/claude-sonnet-5.5
     prompt: analysis/request v3
     cost_usd: 0.4416
@@ -552,11 +563,23 @@ experiments:
     task: AI-05
     question: "AI-05 prompt v3 gate run: INVALID (provider failure), not a measurement"
     kind: live
-    status: pending-merge
+    status: active
     role: invalid
-    branch: AI-05-prompt-v3
     report: ai/evaluation/analyzer/reports/analyzer-gate-2026-11-24.json
     recorded_at: 8bb4c1ba4021a8e625f6faa04fa765dbc7218a8d
+    reproduces: true
+    reproduces_note: "Re-scored offline from the tracked id-only run, against the labels at recorded_at: every recomputable metric matches, including the 48 requests with no prediction."
+    md_addendum: "INVALID (added 2026-11-27, by hand): the INVALID notice, its reason and a pointer to the 28 Nov rerun. It replaces the hand-added top line of the .md and the `invalid` key of the .json, so the generated part is exactly what the .json renders to."
+    tracked_run:
+      path: ai/evaluation/analyzer/reports/runs/20261124T234253Z/predictions.jsonl
+      source_sha256: 0f502fcbc8825fe68b89e16264ccbee405fb7cf5dc876901ce76366e28701ff5
+      sha256: 64cb3d2a8f7c4dfec582e72978c389c49f2cbcef188ce0cf4c2f80c17e5dad33
+      lines: 100
+    not_recomputable:
+      - metric: mentioned_targets.exact_match
+        reason: "the 24 Nov raw run predates 25 Nov and never saved predicted targets or questions"
+      - metric: needs_clarification.question_rule_kept
+        reason: "the 24 Nov raw run predates 25 Nov and never saved predicted targets or questions"
     limitations:
       - "Provider failure: 48% of requests got no prediction. The 95% validity rule was added after it. Never used for any decision; replaced by the 28 Nov rerun."
     model: openrouter/anthropic/claude-sonnet-5.5

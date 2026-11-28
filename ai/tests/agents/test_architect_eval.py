@@ -63,13 +63,9 @@ async def test_report_writes_specs(tmp_path: Path) -> None:
         return ArchitectResult(ok=True, spec=SPEC, attempts=1, issues=())
 
     sets: dict[str, Sequence[ArchitectItem]] = {"examples": load_items("examples")}
-    report, results = await run_eval(sets, live=False, build=build)
+    report, _ = await run_eval(sets, live=False, build=build, run_dir=tmp_path / "run")
     files = write_report(
-        report,
-        results,
-        label="examples",
-        reports_dir=tmp_path / "reports",
-        run_dir=tmp_path / "run",
+        report, label="examples", reports_dir=tmp_path / "reports", run_dir=tmp_path / "run"
     )
     assert files.md.name == f"architect-examples-{report.created[:10]}.md"
     assert len(list((tmp_path / "run" / "specs").glob("*.json"))) == 3  # specs stay out of Git

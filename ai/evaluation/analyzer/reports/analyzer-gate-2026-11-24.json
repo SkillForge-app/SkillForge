@@ -1,0 +1,492 @@
+{
+  "created": "2026-11-24T23:41:09Z",
+  "live": true,
+  "prompt": {
+    "id": "analysis/request",
+    "version": 3
+  },
+  "model": "openrouter/anthropic/claude-sonnet-5.5",
+  "data_sources": [
+    {
+      "name": "skillforge-seed-benchmark",
+      "version": "0.1.0",
+      "sha256": "f0a92ff2f445ef0e96099d1f2a9cbbc87b2bf598d8b16f13752e3b6a9e4d3337"
+    },
+    {
+      "name": "analyzer-requests-test",
+      "version": "0.3.0",
+      "sha256": "2a96507e736e648a605b608136270347ead5e416d21f5d185ad3fc6e204fdf68"
+    },
+    {
+      "name": "analyzer-requests-dev",
+      "version": "0.3.0",
+      "sha256": "44f94ce3f577629e0157cd8ecb795dd813c5e82636a3894a1a4aced9840e31d6"
+    },
+    {
+      "name": "analyzer-requests-arabic",
+      "version": "0.2.0",
+      "sha256": "6d4d6fb52f4a54f62866e09fbc258dbcb064de35f8b69a2be91155b5cd9d5ca2"
+    },
+    {
+      "name": "analyzer-requests-holdout",
+      "version": "0.1.0",
+      "sha256": "c849f354948ff028b95b2be36b286a6b60b4dfafb3a4ef12a9d2cc56a3937bd1"
+    }
+  ],
+  "sets": {
+    "gate": {
+      "n": 100,
+      "fields": {
+        "kind": {
+          "correct": 41,
+          "accuracy": 0.41,
+          "confusion": {
+            "role": {
+              "role": 17,
+              "task": 2,
+              "<error>": 16
+            },
+            "task": {
+              "task": 17,
+              "role": 6,
+              "workflow": 2,
+              "<error>": 22
+            },
+            "workflow": {
+              "workflow": 7,
+              "task": 1,
+              "<error>": 10
+            }
+          }
+        },
+        "domain_area": {
+          "correct": 49,
+          "accuracy": 0.49,
+          "confusion": {
+            "customer-support": {
+              "customer-support": 2,
+              "<error>": 3
+            },
+            "data": {
+              "data": 2,
+              "finance": 1,
+              "<error>": 3
+            },
+            "design": {
+              "design": 4,
+              "technology": 1
+            },
+            "education": {
+              "<error>": 4,
+              "education": 1
+            },
+            "finance": {
+              "finance": 3,
+              "<error>": 5
+            },
+            "general": {
+              "general": 1,
+              "<error>": 5
+            },
+            "hr": {
+              "hr": 5,
+              "<error>": 1
+            },
+            "legal": {
+              "legal": 3,
+              "<error>": 3
+            },
+            "marketing": {
+              "marketing": 4,
+              "<error>": 3
+            },
+            "medical": {
+              "medical": 3,
+              "<error>": 3
+            },
+            "operations": {
+              "<error>": 5
+            },
+            "product": {
+              "product": 5
+            },
+            "research": {
+              "<error>": 5
+            },
+            "sales": {
+              "sales": 4,
+              "<error>": 1
+            },
+            "technology": {
+              "technology": 9,
+              "general": 1,
+              "<error>": 3
+            },
+            "writing": {
+              "writing": 3,
+              "<error>": 4
+            }
+          }
+        },
+        "risk": {
+          "correct": 51,
+          "accuracy": 0.51,
+          "confusion": {
+            "high": {
+              "high": 9,
+              "<error>": 11
+            },
+            "low": {
+              "low": 34,
+              "high": 1,
+              "<error>": 31
+            },
+            "medium": {
+              "medium": 8,
+              "<error>": 6
+            }
+          }
+        }
+      },
+      "joint_accuracy": 0.38,
+      "needs_clarification": {
+        "accuracy": 0.86,
+        "precision": 1.0,
+        "recall": 0.4815,
+        "question_rule_kept": 1.0
+      },
+      "mentioned_targets": {
+        "n": 70,
+        "exact_match": 0.3143
+      },
+      "errors": {
+        "LLMUnavailable": 48
+      },
+      "latency_ms": {
+        "p50": 1406.7,
+        "max": 6379.8
+      }
+    }
+  },
+  "gate": {
+    "passed": false,
+    "threshold": 0.9,
+    "accuracy": {
+      "kind": 0.41,
+      "domain_area": 0.49,
+      "risk": 0.51
+    },
+    "reasons": [
+      "kind accuracy 0.41 < 0.90",
+      "domain_area accuracy 0.49 < 0.90",
+      "risk accuracy 0.51 < 0.90"
+    ]
+  },
+  "usage": {
+    "calls": 355,
+    "errors": 303,
+    "input_tokens": 213048,
+    "output_tokens": 13917,
+    "cost_usd": 0.5742
+  },
+  "budget_usd": 1.3,
+  "stopped": null,
+  "retry_rule": "A request that fails with a provider error (no prediction at all) is retried ONCE at the end of the run, with the same prompt and settings. If it fails again, it counts as wrong.",
+  "retries": [
+    {
+      "set": "gate",
+      "id": "t-15",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-16",
+      "first_error": "LLMUnavailable",
+      "retry": "ok"
+    },
+    {
+      "set": "gate",
+      "id": "t-18",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-19",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-20",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-21",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-22",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-23",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-24",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-25",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-26",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-27",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-29",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-30",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-31",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-32",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-33",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-34",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-35",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-37",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-38",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-39",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-40",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-42",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-43",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-44",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-45",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-46",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-48",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-49",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-50",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-51",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-52",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-55",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-56",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-57",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-58",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-59",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-60",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-61",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-62",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-63",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-64",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-65",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-66",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-67",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-68",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-69",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    },
+    {
+      "set": "gate",
+      "id": "t-70",
+      "first_error": "LLMUnavailable",
+      "retry": "LLMUnavailable"
+    }
+  ],
+  "run": "20261124T234253Z"
+}

@@ -33,9 +33,16 @@ class Outcome(Generic[I, R]):
 
 
 async def run_all(
-    items: Sequence[I], fn: Callable[[I], Awaitable[R]], *, concurrency: int = 4
+    items: Sequence[I],
+    fn: Callable[[I], Awaitable[R]],
+    *,
+    concurrency: int = 4,
+    on_done: Callable[[Outcome[I, R]], None] | None = None,
 ) -> list[Outcome[I, R]]:
-    """Run `fn` on every item, at most `concurrency` at a time. Errors are recorded, not raised."""
+    """Run `fn` on every item, at most `concurrency` at a time. Errors are recorded, not raised.
+
+    `on_done` is called with each outcome as soon as it is known (e.g. to save it to disk, so a
+    crash later in the run loses nothing)."""
     gate = asyncio.Semaphore(concurrency)
 
     async def one(item: I) -> Outcome[I, R]:
@@ -46,7 +53,10 @@ async def run_all(
                 error = None
             except Exception as exc:
                 result, error = None, type(exc).__name__
-            return Outcome(item, result, error, (time.perf_counter() - start) * 1000)
+            outcome = Outcome(item, result, error, (time.perf_counter() - start) * 1000)
+            if on_done is not None:
+                on_done(outcome)
+            return outcome
 
     return list(await asyncio.gather(*(one(i) for i in items)))
 

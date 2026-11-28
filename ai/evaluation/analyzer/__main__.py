@@ -1,7 +1,7 @@
 """Request Analyzer evaluation (AI-05) command line.
 
 python -m evaluation.analyzer check-data
-python -m evaluation.analyzer run --set gate --live          # real model calls, costs money
+python -m evaluation.analyzer run --set gate --live --budget-usd 1.20   # real calls, costs money
 SKILLFORGE_LLM_BACKEND=fake python -m evaluation.analyzer run --set gate --limit 5   # smoke test
 """
 
@@ -30,7 +30,10 @@ from evaluation.common import output_dirs
 
 REPORTS_DIR = ANALYZER_DIR / "reports"  # tracked: one .md + .json per live run
 RUNS_DIR = ANALYZER_DIR / "runs"  # ignored by Git: predictions.jsonl per run
-TOKENS_PER_CALL = (1500, 500)  # rough input/output size of one analysis call
+# Size of one analysis call, from the 2 Nov live gate run (3,198 input / 222 output tokens per
+# call on average), rounded up for the v3 rules text.
+TOKENS_PER_CALL = (3300, 250)
+RETRY_ALLOWANCE = 1.15  # 11.5% of the 2 Nov gate calls were retried (invalid output)
 
 
 def check_data_command() -> int:
@@ -62,7 +65,7 @@ def estimate_cost(calls: int) -> float | None:
         return None
     tokens_in, tokens_out = TOKENS_PER_CALL
     per_call = tokens_in * info["input_cost_per_token"] + tokens_out * info["output_cost_per_token"]
-    return round(calls * float(per_call), 2)
+    return round(calls * float(per_call) * RETRY_ALLOWANCE, 2)
 
 
 def run_command(args: argparse.Namespace) -> int:
@@ -75,6 +78,9 @@ def run_command(args: argparse.Namespace) -> int:
             return 2
         if backend == "fake":
             print(f"--live cannot be used with {BACKEND_ENV}=fake", file=sys.stderr)
+            return 2
+        if args.budget_usd is None:
+            print("--live needs --budget-usd (the most this run may spend)", file=sys.stderr)
             return 2
     elif backend != "fake":
         print(
@@ -90,11 +96,28 @@ def run_command(args: argparse.Namespace) -> int:
         name: load_set(name)[: args.limit] if args.limit else load_set(name) for name in names
     }
     calls = sum(len(items) for items in sets.values())
+    if args.budget_usd is not None and args.budget_usd <= 0:
+        print("--budget-usd must be more than 0", file=sys.stderr)
+        return 2
     if args.live:
         cost = estimate_cost(calls)
-        print(f"about to make ~{calls} live calls" + (f", estimated ${cost}" if cost else ""))
+        print(
+            f"about to make ~{calls} live calls, estimated "
+            f"{'unknown' if cost is None else f'${cost}'}, budget ${args.budget_usd}"
+        )
+        if cost is None or cost > args.budget_usd:
+            print("the estimate is unknown or over the budget: no call was made", file=sys.stderr)
+            return 2
 
-    report, predictions = asyncio.run(run_eval(sets, live=args.live, concurrency=args.concurrency))
+    report, predictions = asyncio.run(
+        run_eval(
+            sets,
+            live=args.live,
+            concurrency=args.concurrency,
+            budget_usd=args.budget_usd,
+            retry_errors=args.retry_errors,
+        )
+    )
     reports_dir, run_dir = output_dirs(
         args.live, args.out, args.runs, reports_dir=REPORTS_DIR, runs_dir=RUNS_DIR
     )
@@ -103,6 +126,10 @@ def run_command(args: argparse.Namespace) -> int:
     )
     print(render_markdown(report))
     print(f"report written to {files.md} and {files.json.name}; predictions in {files.run}")
+    if report.stopped:
+        return 3
+    if report.invalid:
+        return 4
     return 0 if report.passed in (None, True) else 1
 
 
@@ -115,6 +142,19 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--limit", type=int, default=0, help="only the first N of each set")
     run.add_argument("--concurrency", type=int, default=4)
     run.add_argument("--live", action="store_true", help="call the real model (costs money)")
+    run.add_argument(
+        "--retry-errors",
+        action="store_true",
+        help="retry each request with no prediction (provider error) once at the end of the run; "
+        "the report records the rule and every retry",
+    )
+    run.add_argument(
+        "--budget-usd",
+        type=float,
+        default=None,
+        help="the most this run may spend; required with --live. The run refuses to start when "
+        "the estimate is higher, and stops calling once the spend reaches it",
+    )
     run.add_argument(
         "--out", type=Path, default=None, help="report folder (default: reports/ for --live runs)"
     )

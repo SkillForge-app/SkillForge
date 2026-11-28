@@ -1,6 +1,6 @@
 # Experiments: the log, and how each result is reproduced (AI-25)
 
-**Done-when: "Results reproducible from tracked runs."** Every committed report under `ai/evaluation/<area>/reports/` has an entry in [`ai/evaluation/experiments.yaml`](../../evaluation/experiments.yaml). **21 final entries: 18 reproduce, 3 not run yet** (pending merge: their reports are on other branches). Every final entry on this branch reproduces (26 Nov 2026).
+**Done-when: "Results reproducible from tracked runs."** Every committed report under `ai/evaluation/<area>/reports/` has an entry in [`ai/evaluation/experiments.yaml`](../../evaluation/experiments.yaml). **21 final entries: 19 reproduce, 2 not run yet** (pending merge: their reports are on other branches). Every final entry on this branch reproduces (27 Nov 2026).
 
 ```bash
 cd ai
@@ -39,7 +39,7 @@ cd ai
 - **What `check` re-verifies on every PR** (no model, no network):
   - **Offline reports are pinned.** Once `reproduces` is set, the entry also records `report_sha256`: the sha256-lf of the report that run compared (`run` prints it). `check` fails if the report changes later.
   - **Live and rescore entries are re-scored** from their tracked runs, exactly as `run` does. A report edited after its run fails.
-  - **A live report's `.md` must be what its `.json` renders to** (`evaluation/reproduce/twins.py`). Today's renderer is tried first, then the one at `recorded_at`. A section added by hand after the generated part must be declared in `md_addendum`, with its reason; only `safety-all-2026-11-17` has one (its 18 Nov "Completion"). Not covered: E8, written by a one-off script, and the offline reports, whose `.md` `run` regenerates but doesn't compare.
+  - **A live report's `.md` must be what its `.json` renders to** (`evaluation/reproduce/twins.py`). Today's renderer is tried first, then the one at `recorded_at`. A section added by hand after the generated part must be declared in `md_addendum`, with its reason; two have one: `safety-all-2026-11-17` (its 18 Nov "Completion") and `analyzer-gate-2026-11-24` (its "INVALID" notice, see Invalid below). Not covered: E8, written by a one-off script, and the offline reports, whose `.md` `run` regenerates but doesn't compare.
 
 ## Hashes: the same on Windows and Linux
 - Data-file hashes in reports are `sha256` of the content with **CRLF turned into LF** (`evaluation.common.text_sha256`). New report entries say so: `"hash": "sha256-lf"`.
@@ -135,18 +135,30 @@ cd ai
 ### E10, AI-04 seed benchmark
 - **Final:** releases 0.1.0 and 1.0.0. `validate seed` passes: every file has its byte hash.
 
+### E12, AI-05 request analyzer, prompt v3 (live)
+- **Final:** `analyzer-dev-2026-11-24` (v3, dev 50, run 1 of 3): kind 92%, domain 88%, risk 92%. Sonnet 5.5, $0.44.
+- **Invalid:** `analyzer-gate-2026-11-24`, see Invalid below.
+- **Re-scored** from tracked runs (`runs/20261124T233621Z`, `runs/20261124T234253Z`); every recomputable metric matches.
+- **`not_recomputable`:** the same two metrics as E7: the 24 Nov raw runs predate 25 Nov and never saved predicted targets or questions.
+- **Next:** the 28 Nov dev run and gate rerun, same prompt and data. Their raw rows keep targets and `question_rule_kept`, so they need no `not_recomputable`.
+
 ## Invalid
-- **E12, `analyzer-gate-2026-11-24`** (prompt v3; on `AI-05-prompt-v3`, pending merge). Provider failure: 48% of requests got no prediction. The 95% validity rule was added after it. Never used for any decision; replaced by the 28 Nov rerun.
+- **E12, `analyzer-gate-2026-11-24`** (prompt v3). Provider failure: 48 of 100 requests got no prediction. The 95% validity rule was added after it. Never used for any decision; replaced by the 28 Nov rerun.
+  - The INVALID notice is a declared `md_addendum` at the end of its `.md`. Until 27 Nov it was a hand-added line at the top of the `.md` and an `invalid` key in the `.json`. Both were removed so the generated part is exactly what the `.json` renders to at `recorded_at`; nothing else in the report changed.
 
 ## Pending merge
 These are checked once their branch merges:
 - **E6 `injection-test-2026-11-18`** (#40): F9, (c) recomputed offline, 54 of 54.
 - **E11 `support-calibration-2026-11-21`** (AI-12): the AI-13 support threshold, `local-model`.
-- **E12 `analyzer-dev-2026-11-24`** (AI-05-prompt-v3): the v3 dev run.
 
 ## Adding an experiment
 1. **Run it.** Live runs need `--budget-usd`; for analyzer runs, `--retry-errors` and the 95% validity rule apply. Commit the report (`.md` and `.json`).
 2. **Live runs:** write the tracked run with `track.convert(source, target, rescore.known_ids(repo, recorded_at))` from your local `runs/<id>/predictions.jsonl`, and commit it.
+   - **Skill Architect (AI-07):**
+     - Its ids are `<set>:<item id>`, for example `all:gate:t-01` or `dev:dev:d-02`.
+     - Each line keeps the expected labels and `valid`, `attempts`, the issue `codes` (a closed list, never the messages), `safety_ok` and `identity_ok`.
+     - A retried request keeps only its last line, and the lines follow the run's `manifest.json` order.
+     - `reproduce run` re-scores every set metric and the gate. The gate's "no outcome", "stopped" and "paused" reasons are taken from the report: they are facts about the run, not metrics.
 3. **Add the entry to `experiments.yaml`:**
    - required: `id`, `experiment`, `task`, `question`, `kind`, `role`, `report`, `recorded_at` (the code commit), `command`;
    - offline entries also need `llm_backend`; live entries also need `tracked_run` (its two hashes and lines), plus `not_recomputable` if anything applies.
